@@ -1,0 +1,182 @@
+// Tests de la capa de datos: esquema y migraciones, repositorio, cifrado,
+// formato de las copias de seguridad y datos de demostración.
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const Esquema = require("../src/js/datos/esquema.js");
+const { crearRepositorio } = require("../src/js/datos/repositorio.js");
+const Copia = require("../src/js/datos/copia.js");
+const Demo = require("../src/js/datos/demo.js");
+const Cripto = require("../src/js/nucleo/cripto.js");
+const V = require("../src/js/nucleo/validar.js");
+
+// ── Esquema ────────────────────────────────────────────────────────────────
+test("un documento vacío ya está en la versión actual", () => {
+  const doc = Esquema.documentoVacio();
+  assert.equal(doc.esquema, Esquema.VERSION);
+  assert.deepEqual(Esquema.migrar(doc), doc);
+});
+
+test("migrar completa un documento antiguo o incompleto sin perder lo que tenía", () => {
+  const viejo = { asociacion: { nombre: "Peña El Ejemplo", domicilio: { municipio: "Villaejemplo" } }, junta: [{ id: "x", nombre: "A" }] };
+  const doc = Esquema.migrar(viejo);
+  assert.equal(doc.esquema, Esquema.VERSION);
+  assert.equal(doc.asociacion.nombre, "Peña El Ejemplo");
+  assert.equal(doc.asociacion.domicilio.municipio, "Villaejemplo");
+  assert.equal(doc.asociacion.domicilio.codigoPostal, "");
+  assert.equal(doc.junta.length, 1);
+  assert.equal(doc.meta.cambiosDesdeCopia, 0);
+  assert.equal(viejo.esquema, undefined, "no modifica el original");
+});
+
+test("migrar rechaza datos de una versión más nueva o de otra aplicación", () => {
+  assert.throws(() => Esquema.migrar({ app: "webkit_asociaciones", esquema: Esquema.VERSION + 1 }), /versión más nueva/);
+  assert.throws(() => Esquema.migrar({ app: "otra" }), /otra aplicación/);
+  assert.throws(() => Esquema.migrar(null));
+  assert.throws(() => Esquema.migrar([1, 2]));
+});
+
+// ── Repositorio ────────────────────────────────────────────────────────────
+function repoDePrueba() {
+  const doc = Esquema.documentoVacio(new Date("2026-01-01T10:00:00Z"));
+  let llamadas = 0, n = 0;
+  const reloj = () => `2026-01-01T10:00:${String(++n).padStart(2, "0")}Z`;
+  const repo = crearRepositorio(doc, () => { llamadas++; }, reloj);
+  return { doc, repo, llamadas: () => llamadas };
+}
+
+test("guardar crea con id y marcas de tiempo, y actualiza sin cambiar «creado»", async () => {
+  const { repo, llamadas } = repoDePrueba();
+  const a = await repo.guardar("junta", { cargo: "Presidencia", nombre: "Ana" });
+  assert.ok(a.id);
+  assert.equal(a.creado, a.modificado);
+  const b = await repo.guardar("junta", Object.assign({}, a, { nombre: "Ana María" }));
+  assert.equal(b.id, a.id);
+  assert.equal(b.creado, a.creado);
+  assert.notEqual(b.modificado, a.modificado);
+  assert.equal((await repo.listar("junta")).length, 1);
+  assert.equal(llamadas(), 2);
+});
+
+test("el repositorio devuelve copias: cambiar lo leído no cambia lo guardado", async () => {
+  const { repo } = repoDePrueba();
+  const a = await repo.guardar("junta", { nombre: "Ana" });
+  const leido = await repo.obtener("junta", a.id);
+  leido.nombre = "Cambiado sin guardar";
+  assert.equal((await repo.obtener("junta", a.id)).nombre, "Ana");
+  const asoc = await repo.leer("asociacion");
+  asoc.nombre = "X";
+  assert.equal((await repo.leer("asociacion")).nombre, "");
+});
+
+test("borrar y colecciones desconocidas", async () => {
+  const { repo } = repoDePrueba();
+  const a = await repo.guardar("junta", { nombre: "Ana" });
+  assert.equal(await repo.borrar("junta", a.id), true);
+  assert.equal(await repo.borrar("junta", a.id), false);
+  assert.equal(await repo.obtener("junta", a.id), null);
+  await assert.rejects(() => repo.listar("inventada"), /desconocida/);
+  await assert.rejects(() => repo.escribir("junta", []), /no se escribe/);
+});
+
+test("contador de cambios desde la última copia", async () => {
+  const { repo } = repoDePrueba();
+  await repo.escribir("asociacion", { nombre: "A" });
+  await repo.guardar("junta", { nombre: "B" });
+  assert.equal((await repo.estadoCopia()).cambiosDesdeCopia, 2);
+  await repo.marcarCopiaHecha();
+  const e = await repo.estadoCopia();
+  assert.equal(e.cambiosDesdeCopia, 0);
+  assert.ok(e.ultimaCopia);
+});
+
+// ── Cifrado ────────────────────────────────────────────────────────────────
+test("cifrar y descifrar con la contraseña correcta", async () => {
+  const doc = Demo.documentoDemo();
+  const llave = await Cripto.crearLlave("una frase bastante larga");
+  const bloque = await Cripto.cifrar(doc, llave);
+  assert.ok(Cripto.esBloque(bloque));
+  assert.ok(!JSON.stringify(bloque).includes("Almendros"), "nada en claro dentro del bloque");
+  const r = await Cripto.descifrar(bloque, "una frase bastante larga");
+  assert.deepEqual(r.objeto, doc);
+  // La llave devuelta sirve para seguir cifrando en la misma sesión.
+  const otro = await Cripto.cifrar({ a: 1 }, r.llave);
+  assert.equal(otro.sal, bloque.sal);
+  assert.notEqual(otro.iv, bloque.iv, "cada guardado usa un iv nuevo");
+  assert.deepEqual((await Cripto.descifrar(otro, "una frase bastante larga")).objeto, { a: 1 });
+});
+
+test("una contraseña incorrecta o un bloque manipulado no se descifran", async () => {
+  const llave = await Cripto.crearLlave("correcta-123");
+  const bloque = await Cripto.cifrar({ secreto: true }, llave);
+  await assert.rejects(() => Cripto.descifrar(bloque, "incorrecta"), (e) => e.codigo === "CONTRASENA");
+  const tocado = Object.assign({}, bloque, { ct: bloque.ct.slice(0, -4) + (bloque.ct.slice(-4) === "AAAA" ? "BBBB" : "AAAA") });
+  await assert.rejects(() => Cripto.descifrar(tocado, "correcta-123"), (e) => e.codigo === "CONTRASENA");
+  await assert.rejects(() => Cripto.descifrar({ v: 2 }, "x"), /No es un bloque/);
+});
+
+// ── Copias de seguridad ───────────────────────────────────────────────────
+test("copia cifrada: se arma y se vuelve a leer", async () => {
+  const doc = Demo.documentoDemo();
+  const llave = await Cripto.crearLlave("contraseña-copia");
+  const sobre = Copia.sobreCifrado(await Cripto.cifrar(doc, llave), doc.asociacion.nombre);
+  const leida = Copia.leer(JSON.stringify(sobre));
+  assert.equal(leida.cifrada, true);
+  assert.equal(leida.asociacion, doc.asociacion.nombre);
+  const r = await Cripto.descifrar(leida.bloque, "contraseña-copia");
+  assert.deepEqual(Esquema.migrar(r.objeto), doc);
+});
+
+test("copia sin cifrar y documento suelto", () => {
+  const doc = Demo.documentoDemo();
+  const leida = Copia.leer(JSON.stringify(Copia.sobreAbierto(doc)));
+  assert.equal(leida.cifrada, false);
+  assert.deepEqual(leida.documento, doc);
+  assert.equal(Copia.leer(JSON.stringify(doc)).cifrada, false);
+});
+
+test("archivos que no son copias dan un mensaje claro", () => {
+  assert.throws(() => Copia.leer("esto no es json"), /no es JSON/);
+  assert.throws(() => Copia.leer('{"hola":1}'), /no es una copia/);
+  assert.throws(() => Copia.leer(JSON.stringify({ formato: Copia.FORMATO, version: 1, cifrada: true })), /incompleta/);
+  assert.throws(() => Copia.leer(JSON.stringify({ formato: Copia.FORMATO, version: 99 })), /más nueva/);
+});
+
+test("nombre del archivo de copia", () => {
+  assert.equal(Copia.nombreArchivo("Asociación Cultural Los Almendros (ficticia)", "2026-10-01"),
+    "copia-asociacion-cultural-los-almendros-ficticia-2026-10-01.json");
+  assert.equal(Copia.nombreArchivo("", "2026-10-01", false), "copia-asociacion-2026-10-01-SIN-CIFRAR.json");
+});
+
+// ── Demostración ──────────────────────────────────────────────────────────
+test("los datos de demostración son ficticios y válidos", () => {
+  const doc = Demo.documentoDemo();
+  assert.deepEqual(Esquema.migrar(doc), doc);
+  const correos = JSON.stringify(doc).match(/[^\s"@]+@[^\s"]+/g) || [];
+  assert.ok(correos.length > 0);
+  for (const c of correos) assert.match(c, /@example\.org$/, `correo no ficticio: ${c}`);
+  assert.ok(V.nifEntidad(doc.asociacion.nif).valido);
+  assert.ok(V.iban(doc.asociacion.iban).valido);
+  for (const m of doc.junta) assert.match(m.telefono, /^600 000 0\d\d$/);
+});
+
+// ── Migración 1 → 2: domicilio por partes y sin «fines» ───────────────────
+test("migrar de la versión 1 reparte el domicilio y quita los fines", () => {
+  const v1 = {
+    app: "webkit_asociaciones", esquema: 1, meta: { creado: "x", modificado: "x", ultimaCopia: null, cambiosDesdeCopia: 0 },
+    asociacion: { nombre: "Peña El Ejemplo", fines: "Lo que sea",
+      domicilio: { via: "C/ Mayor, 15, 5° G", codigoPostal: "28013", municipio: "Madrid", provincia: "madrid" } },
+    junta: [],
+  };
+  const doc = Esquema.migrar(v1);
+  assert.equal(doc.esquema, 2);
+  assert.equal(doc.asociacion.fines, undefined);
+  const d = doc.asociacion.domicilio;
+  assert.deepEqual([d.tipoVia, d.nombreVia, d.numero, d.planta, d.puerta], ["Calle", "Mayor", "15", "5", "G"]);
+  assert.deepEqual([d.codigoPostal, d.municipio, d.provincia], ["28013", "Madrid", "Madrid"]);
+  assert.equal(d.via, undefined, "ya no queda el campo antiguo");
+});
+
+test("migrar de la versión 1 sin provincia la deduce del código postal", () => {
+  const doc = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: { domicilio: { via: "", codigoPostal: "29001", municipio: "", provincia: "" } }, junta: [] });
+  assert.equal(doc.asociacion.domicilio.provincia, "Málaga");
+});

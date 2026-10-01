@@ -1,0 +1,152 @@
+/*
+ * webkit_asociaciones — Componentes: botones, tarjetas, formularios, tablas,
+ * diálogos, avisos y pantalla de acceso.
+ */
+
+/* ── Botones ─────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  min-height: 44px;                 /* objetivo táctil cómodo */
+  padding: 0.55rem 1.1rem; border-radius: var(--radio-pequeno);
+  font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+  border: 1px solid transparent; transition: background 0.15s, border-color 0.15s;
+}
+.btn:disabled { opacity: 0.6; cursor: progress; }
+.btn-primario { background: var(--acento); color: var(--acento-texto); }
+.btn-primario:hover:not(:disabled) { background: var(--acento-hover); }
+.btn-secundario { background: var(--superficie); color: var(--texto); border-color: var(--borde-fuerte); }
+.btn-secundario:hover:not(:disabled) { background: var(--superficie-2); }
+.btn-peligro { background: var(--peligro); color: #fff; }
+:root[data-tema="oscuro"] .btn-peligro { color: #1a0d0c; }
+.btn-peligro-suave { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
+.btn-enlace { background: none; border: none; color: var(--enlace); text-decoration: underline; padding-inline: 0.25rem; font-weight: 500; }
+.btn-pequeno { min-height: 36px; padding: 0.3rem 0.75rem; font-size: 0.9rem; }
+.btn-icono {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: var(--radio-pequeno);
+  background: none; border: none; color: var(--texto); cursor: pointer; font-size: 1.1rem;
+}
+.btn-icono:hover { background: var(--superficie-2); }
+.acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+
+/* ── Tarjetas ────────────────────────────────────────────────────────── */
+.tarjeta {
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--sombra);
+}
+.tarjeta > :last-child { margin-bottom: 0; }
+.tarjeta-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.tarjeta-cabecera h2 { margin: 0; }
+.tarjeta-destacada { border-color: var(--acento); background: var(--acento-suave); box-shadow: none; }
+.tarjeta-error { border-color: var(--peligro); }
+.rejilla-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; }
+.rejilla-tarjetas .tarjeta { margin: 0; }
+.cifra { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.enlace-flecha { font-weight: 600; }
+.enlace-flecha::after { content: " →"; }
+.lista { padding-left: 1.2rem; margin: 0 0 0.75rem; }
+.lista li { margin-bottom: 0.35rem; }
+.lista-pasos { margin: 0; padding-left: 1.2rem; }
+.lista-pasos li { margin-bottom: 0.4rem; }
+.vacio { color: var(--texto-3); font-style: italic; }
+
+.estado { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-right: 0.35rem; }
+.estado-ok { background: var(--ok-fondo); color: var(--ok); }
+.estado-aviso { background: var(--aviso-fondo); color: var(--aviso); }
+
+.caja-aviso {
+  background: var(--aviso-fondo); border: 1px solid var(--aviso-borde); color: var(--texto);
+  border-radius: var(--radio-pequeno); padding: 0.75rem 1rem; margin: 0 0 1rem;
+}
+
+/* ── Franjas bajo la cabecera ───────────────────────────────────────── */
+.franja { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.5rem 1rem; font-size: 0.95rem; border-bottom: 1px solid; }
+.franja-aviso { background: var(--aviso-fondo); border-color: var(--aviso-borde); }
+.franja-info { background: var(--info-fondo); border-color: var(--info-borde); }
+
+/* ── Formularios ─────────────────────────────────────────────────────── */
+.formulario fieldset { border: none; padding: 0; margin: 0 0 1.25rem; }
+.formulario legend { font-weight: 700; font-size: 0.95rem; color: var(--texto-2); margin-bottom: 0.5rem; padding: 0; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.25rem 1rem; }
+.campo { display: flex; flex-direction: column; margin-bottom: 0.5rem; }
+.campo-completo { grid-column: 1 / -1; }
+/* Rejilla de 12 columnas para formularios con campos de anchos distintos (p. ej. la
+   dirección). En el móvil pasa a 2 columnas; .col-movil-completo ocupa las dos. */
+.rejilla-12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0.25rem 1rem; }
+.col-2 { grid-column: span 2; } .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; }
+.col-5 { grid-column: span 5; } .col-7 { grid-column: span 7; } .col-12 { grid-column: 1 / -1; }
+@media (max-width: 760px) {
+  .rejilla-12 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rejilla-12 > .campo { grid-column: span 1; }
+  .rejilla-12 > .col-movil-completo, .rejilla-12 > .col-12 { grid-column: 1 / -1; }
+}
+.vista-previa { grid-column: 1 / -1; background: var(--superficie-2); border-radius: var(--radio-pequeno); padding: 0.6rem 0.9rem; margin-top: 0.25rem; }
+.vista-previa strong { display: block; font-size: 0.82rem; color: var(--texto-3); font-weight: 600; }
+.vista-previa span { display: block; }
+.campo label, .acceso-form label { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
+.obligatorio { color: var(--peligro); }
+input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
+input[type="password"], input[type="number"], select, textarea {
+  width: 100%; min-height: 44px; padding: 0.55rem 0.7rem;
+  font: inherit; color: var(--texto); background: var(--superficie);
+  border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno);
+}
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: var(--foco); }
+.campo-ayuda { color: var(--texto-3); font-size: 0.85rem; margin: 0.2rem 0 0; }
+.campo-error { color: var(--peligro); font-size: 0.85rem; font-weight: 600; margin: 0.2rem 0 0; min-height: 0; }
+.campo-error:empty { display: none; }
+.con-error input, .con-error select, .con-error textarea { border-color: var(--peligro); }
+
+.grupo-opciones { border: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.grupo-opciones legend { font-weight: 600; margin-bottom: 0.5rem; padding: 0; }
+.opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.opcion span { display: inline-block; padding: 0.5rem 1rem; border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno); cursor: pointer; }
+.opcion input:checked + span { border-color: var(--acento); background: var(--acento-suave); font-weight: 700; box-shadow: inset 0 0 0 1px var(--acento); }
+.opcion input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
+.casilla { display: flex; gap: 0.7rem; align-items: flex-start; margin: 0.75rem 0; cursor: pointer; }
+.casilla input { width: 20px; height: 20px; margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--acento); }
+
+/* ── Tablas ──────────────────────────────────────────────────────────── */
+.tabla-envoltorio { overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.tabla th, .tabla td { text-align: left; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+.tabla thead th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); font-weight: 700; }
+.tabla tbody th { font-weight: 600; }
+.celda-acciones { text-align: right; white-space: nowrap; }
+.historico { margin-top: 1rem; }
+.historico summary { cursor: pointer; font-weight: 600; color: var(--texto-2); padding: 0.4rem 0; }
+
+/* ── Diálogos ────────────────────────────────────────────────────────── */
+.dialogo {
+  width: min(560px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem);
+  padding: 0; border: 1px solid var(--borde); border-radius: var(--radio);
+  background: var(--superficie); color: var(--texto); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.dialogo::backdrop { background: rgba(10, 15, 12, 0.5); }
+.dialogo-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem 0.5rem; }
+.dialogo-cabecera h2 { margin: 0; }
+.dialogo-cuerpo { padding: 0.5rem 1.25rem; overflow-y: auto; }
+.dialogo-cuerpo .rejilla { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.dialogo-botones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; padding: 0.75rem 1.25rem 1.25rem; }
+.dialogo-botones .btn-peligro-suave { margin-right: auto; }
+
+/* ── Avisos flotantes ────────────────────────────────────────────────── */
+.avisos { position: fixed; right: 1rem; bottom: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(420px, calc(100vw - 2rem)); }
+.aviso { padding: 0.75rem 1rem; border-radius: var(--radio-pequeno); background: var(--texto); color: var(--superficie); box-shadow: var(--sombra); font-weight: 500; transition: opacity 0.5s; }
+.aviso-error { background: var(--peligro); color: #fff; }
+:root[data-tema="oscuro"] .aviso-error { color: #1a0d0c; }
+.aviso.saliendo { opacity: 0; }
+
+/* ── Pantalla de acceso ──────────────────────────────────────────────── */
+.acceso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
+.acceso-panel { width: 100%; max-width: 420px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 2rem 1.75rem; box-shadow: var(--sombra); }
+.acceso-logo { width: 48px; height: 48px; margin-bottom: 1rem; }
+.acceso-sub { color: var(--texto-2); }
+.acceso-opciones { display: flex; flex-direction: column; gap: 0.6rem; margin: 1.25rem 0 0.5rem; }
+.acceso-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 1rem; }
+.acceso-form .btn { margin-top: 0.6rem; }
+.acceso-error { color: var(--peligro); font-weight: 600; margin: 0.4rem 0 0; }
+.acceso-nota { color: var(--texto-3); font-size: 0.88rem; text-align: center; margin-top: 0.75rem; }
+.acceso-olvido { margin-top: 1.25rem; border-top: 1px solid var(--borde); padding-top: 0.75rem; }
+.acceso-olvido summary { cursor: pointer; color: var(--texto-2); font-weight: 600; }

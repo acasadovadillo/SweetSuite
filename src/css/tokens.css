@@ -1,0 +1,69 @@
+/*
+ * webkit_asociaciones — Colores y medidas (tokens).
+ *
+ * Todo el CSS usa estas variables, nunca colores sueltos: así el tema oscuro
+ * es solo redefinirlas. tema.js pone data-tema="claro" u "oscuro" en <html>.
+ * Los pares texto/fondo cumplen contraste AA (4,5:1) en los dos temas.
+ */
+:root {
+  --fondo: #f5f6f3;
+  --superficie: #ffffff;
+  --superficie-2: #eef0ec;
+  --borde: #d5d9d2;
+  --borde-fuerte: #9aa39a;
+  --texto: #1b211d;
+  --texto-2: #4a544c;          /* secundario: 7:1 sobre blanco */
+  --texto-3: #5f6a62;          /* detalles: 5,4:1 sobre blanco */
+  --acento: #2f6f4f;           /* verde: botones principales, enlaces */
+  --acento-hover: #255a40;
+  --acento-texto: #ffffff;
+  --acento-suave: #e3efe8;
+  --enlace: #23613f;
+  --foco: #1f5fbf;
+  --peligro: #b3261e;
+  --peligro-suave: #fbe9e7;
+  --aviso: #8a5a00;
+  --aviso-fondo: #fff4d6;
+  --aviso-borde: #e7c56b;
+  --info-fondo: #e6effa;
+  --info-borde: #9dbbe6;
+  --ok: #1e6b3d;
+  --ok-fondo: #e1f2e7;
+  --sombra: 0 1px 2px rgba(20, 30, 20, 0.06), 0 4px 16px rgba(20, 30, 20, 0.06);
+
+  --radio: 10px;
+  --radio-pequeno: 6px;
+  --ancho-menu: 232px;
+  --alto-cabecera: 56px;
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+:root[data-tema="oscuro"] {
+  --fondo: #121614;
+  --superficie: #1a201c;
+  --superficie-2: #232a25;
+  --borde: #323b35;
+  --borde-fuerte: #5d6a61;
+  --texto: #e8ece9;
+  --texto-2: #b8c2bb;
+  --texto-3: #9aa59d;
+  --acento: #6fbf91;
+  --acento-hover: #8ad0a7;
+  --acento-texto: #0d1a12;
+  --acento-suave: #1f3328;
+  --enlace: #8ad0a7;
+  --foco: #8ab4f8;
+  --peligro: #f28b82;
+  --peligro-suave: #3a1d1b;
+  --aviso: #f3c969;
+  --aviso-fondo: #2e2610;
+  --aviso-borde: #6b5520;
+  --info-fondo: #172436;
+  --info-borde: #35507a;
+  --ok: #8ad0a7;
+  --ok-fondo: #183224;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
+}

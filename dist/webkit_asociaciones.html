@@ -1,0 +1,2842 @@
+<!--
+  webkit_asociaciones 0.1.0
+  Archivo generado por tools/build.mjs a partir de src/. No lo edites a mano.
+-->
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Gestión de asociaciones en un solo archivo: datos, socios, tesorería, actas. Sin servidores: todo se queda en tu navegador.">
+  <title>webkit_asociaciones</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232f6f4f'/%3E%3Cpath d='M14 33V19l10-6 10 6v14' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <script>window.WA_VERSION = "0.1.0";</script>
+  <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
+  <script>/* js/nucleo/tema.js */
+/*
+ * webkit_asociaciones — Tema: claro, oscuro o el del sistema («auto»).
+ *
+ * Se carga en <head>, ANTES que el CSS, a propósito: si se aplicara después de
+ * pintar, quien use el tema oscuro vería un fogonazo blanco en cada carga.
+ * Es una preferencia del dispositivo (no un dato de la asociación), así que
+ * vive en localStorage, fuera de los datos cifrados.
+ *
+ * Adaptado de tema.js de Solvento.
+ */
+(function () {
+  "use strict";
+  var CLAVE = "webkit_asociaciones_tema";
+  var VALIDOS = ["auto", "claro", "oscuro"];
+  var sistema = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+
+  function guardado() {
+    try { var v = localStorage.getItem(CLAVE); return VALIDOS.indexOf(v) >= 0 ? v : "auto"; }
+    catch (e) { return "auto"; }
+  }
+  function efectivo(pref) {
+    return pref === "auto" ? (sistema && sistema.matches ? "oscuro" : "claro") : pref;
+  }
+  function aplicar() {
+    document.documentElement.setAttribute("data-tema", efectivo(guardado()));
+  }
+  function poner(pref) {
+    if (VALIDOS.indexOf(pref) < 0) pref = "auto";
+    try { localStorage.setItem(CLAVE, pref); } catch (e) { /* sin almacenamiento: dura la sesión */ }
+    aplicar();
+  }
+
+  aplicar();
+  if (sistema && sistema.addEventListener) sistema.addEventListener("change", aplicar);
+
+  window.WA = window.WA || {};
+  window.WA.Tema = { poner: poner, actual: guardado, VALIDOS: VALIDOS };
+})();
+</script>
+  <style>/* css/tokens.css */
+/*
+ * webkit_asociaciones — Colores y medidas (tokens).
+ *
+ * Todo el CSS usa estas variables, nunca colores sueltos: así el tema oscuro
+ * es solo redefinirlas. tema.js pone data-tema="claro" u "oscuro" en <html>.
+ * Los pares texto/fondo cumplen contraste AA (4,5:1) en los dos temas.
+ */
+:root {
+  --fondo: #f5f6f3;
+  --superficie: #ffffff;
+  --superficie-2: #eef0ec;
+  --borde: #d5d9d2;
+  --borde-fuerte: #9aa39a;
+  --texto: #1b211d;
+  --texto-2: #4a544c;          /* secundario: 7:1 sobre blanco */
+  --texto-3: #5f6a62;          /* detalles: 5,4:1 sobre blanco */
+  --acento: #2f6f4f;           /* verde: botones principales, enlaces */
+  --acento-hover: #255a40;
+  --acento-texto: #ffffff;
+  --acento-suave: #e3efe8;
+  --enlace: #23613f;
+  --foco: #1f5fbf;
+  --peligro: #b3261e;
+  --peligro-suave: #fbe9e7;
+  --aviso: #8a5a00;
+  --aviso-fondo: #fff4d6;
+  --aviso-borde: #e7c56b;
+  --info-fondo: #e6effa;
+  --info-borde: #9dbbe6;
+  --ok: #1e6b3d;
+  --ok-fondo: #e1f2e7;
+  --sombra: 0 1px 2px rgba(20, 30, 20, 0.06), 0 4px 16px rgba(20, 30, 20, 0.06);
+
+  --radio: 10px;
+  --radio-pequeno: 6px;
+  --ancho-menu: 232px;
+  --alto-cabecera: 56px;
+  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fuente-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+:root[data-tema="oscuro"] {
+  --fondo: #121614;
+  --superficie: #1a201c;
+  --superficie-2: #232a25;
+  --borde: #323b35;
+  --borde-fuerte: #5d6a61;
+  --texto: #e8ece9;
+  --texto-2: #b8c2bb;
+  --texto-3: #9aa59d;
+  --acento: #6fbf91;
+  --acento-hover: #8ad0a7;
+  --acento-texto: #0d1a12;
+  --acento-suave: #1f3328;
+  --enlace: #8ad0a7;
+  --foco: #8ab4f8;
+  --peligro: #f28b82;
+  --peligro-suave: #3a1d1b;
+  --aviso: #f3c969;
+  --aviso-fondo: #2e2610;
+  --aviso-borde: #6b5520;
+  --info-fondo: #172436;
+  --info-borde: #35507a;
+  --ok: #8ad0a7;
+  --ok-fondo: #183224;
+  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
+  color-scheme: dark;
+}
+</style>
+  <style>/* css/base.css */
+/*
+ * webkit_asociaciones — Base: tipografía, estructura (cabecera, menú, contenido)
+ * y adaptación a móvil.
+ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--fondo);
+  color: var(--texto);
+  font-family: var(--fuente);
+  font-size: 1rem;
+  line-height: 1.5;
+}
+h1, h2, h3 { line-height: 1.25; margin: 0 0 0.5rem; }
+h1 { font-size: 1.6rem; letter-spacing: -0.01em; }
+h2 { font-size: 1.15rem; }
+p { margin: 0 0 0.75rem; }
+a { color: var(--enlace); }
+a:hover { text-decoration-thickness: 2px; }
+[hidden] { display: none !important; }
+
+/* El foco siempre visible al navegar con teclado. */
+:focus-visible { outline: 3px solid var(--foco); outline-offset: 2px; border-radius: 4px; }
+h1:focus { outline: none; }
+
+/* Solo para lectores de pantalla. */
+.sr { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
+
+.saltar { position: absolute; left: 0.5rem; top: -3rem; background: var(--acento); color: var(--acento-texto); padding: 0.5rem 1rem; border-radius: var(--radio-pequeno); z-index: 100; }
+.saltar:focus { top: 0.5rem; }
+
+/* ── Estructura ─────────────────────────────────────────────────────── */
+.cabecera {
+  position: sticky; top: 0; z-index: 20;
+  display: flex; align-items: center; gap: 0.75rem;
+  height: var(--alto-cabecera); padding: 0 1rem;
+  background: var(--superficie); border-bottom: 1px solid var(--borde);
+}
+.marca { font-weight: 700; color: var(--texto); text-decoration: none; letter-spacing: -0.01em; }
+.cabecera-acciones { margin-left: auto; display: flex; gap: 0.5rem; }
+
+.cuerpo { display: flex; min-height: calc(100vh - var(--alto-cabecera)); }
+.menu {
+  width: var(--ancho-menu); flex-shrink: 0;
+  background: var(--superficie); border-right: 1px solid var(--borde);
+  padding: 1rem 0.75rem;
+}
+.menu ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 2px; position: sticky; top: calc(var(--alto-cabecera) + 1rem); }
+.menu a {
+  display: flex; align-items: center; gap: 0.7rem;
+  padding: 0.6rem 0.75rem; border-radius: var(--radio-pequeno);
+  color: var(--texto-2); text-decoration: none; font-weight: 500;
+}
+.menu a svg { width: 20px; height: 20px; flex-shrink: 0; }
+.menu a:hover { background: var(--superficie-2); color: var(--texto); }
+.menu a[aria-current="page"] { background: var(--acento-suave); color: var(--texto); font-weight: 700; }
+.menu a[aria-current="page"] svg { color: var(--acento); }
+
+.principal { flex: 1; min-width: 0; padding: 2rem clamp(1rem, 4vw, 3rem) 4rem; max-width: 1100px; }
+.principal:focus { outline: none; }
+.intro { color: var(--texto-2); max-width: 65ch; margin-bottom: 1.5rem; }
+.detalle { color: var(--texto-3); font-size: 0.9rem; }
+.cargando { color: var(--texto-3); }
+
+/* Doble clase para ganar a .btn-icono, que se define después. */
+.solo-movil.solo-movil { display: none; }
+.velo { display: none; }
+
+/* ── Móvil: el menú se convierte en un panel lateral ───────────────── */
+@media (max-width: 800px) {
+  .solo-movil.solo-movil { display: inline-flex; }
+  .solo-ancho { display: none; }
+  .menu {
+    position: fixed; top: var(--alto-cabecera); bottom: 0; left: 0; z-index: 30;
+    transform: translateX(-100%); transition: transform 0.2s ease;
+    box-shadow: var(--sombra); overflow-y: auto;
+  }
+  .menu ul { position: static; }
+  body.menu-abierto .menu { transform: none; }
+  body.menu-abierto .velo { display: block; position: fixed; inset: var(--alto-cabecera) 0 0 0; background: rgba(0, 0, 0, 0.35); z-index: 25; }
+  .principal { padding-top: 1.25rem; }
+  h1 { font-size: 1.35rem; }
+  .cabecera-acciones .btn { padding-inline: 0.6rem; }
+}
+@media (max-width: 420px) {
+  .marca { font-size: 0.9rem; }
+  #btn-bloquear { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; }
+}
+</style>
+  <style>/* css/componentes.css */
+/*
+ * webkit_asociaciones — Componentes: botones, tarjetas, formularios, tablas,
+ * diálogos, avisos y pantalla de acceso.
+ */
+
+/* ── Botones ─────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
+  min-height: 44px;                 /* objetivo táctil cómodo */
+  padding: 0.55rem 1.1rem; border-radius: var(--radio-pequeno);
+  font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
+  border: 1px solid transparent; transition: background 0.15s, border-color 0.15s;
+}
+.btn:disabled { opacity: 0.6; cursor: progress; }
+.btn-primario { background: var(--acento); color: var(--acento-texto); }
+.btn-primario:hover:not(:disabled) { background: var(--acento-hover); }
+.btn-secundario { background: var(--superficie); color: var(--texto); border-color: var(--borde-fuerte); }
+.btn-secundario:hover:not(:disabled) { background: var(--superficie-2); }
+.btn-peligro { background: var(--peligro); color: #fff; }
+:root[data-tema="oscuro"] .btn-peligro { color: #1a0d0c; }
+.btn-peligro-suave { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
+.btn-enlace { background: none; border: none; color: var(--enlace); text-decoration: underline; padding-inline: 0.25rem; font-weight: 500; }
+.btn-pequeno { min-height: 36px; padding: 0.3rem 0.75rem; font-size: 0.9rem; }
+.btn-icono {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 40px; height: 40px; border-radius: var(--radio-pequeno);
+  background: none; border: none; color: var(--texto); cursor: pointer; font-size: 1.1rem;
+}
+.btn-icono:hover { background: var(--superficie-2); }
+.acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
+
+/* ── Tarjetas ────────────────────────────────────────────────────────── */
+.tarjeta {
+  background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--sombra);
+}
+.tarjeta > :last-child { margin-bottom: 0; }
+.tarjeta-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+.tarjeta-cabecera h2 { margin: 0; }
+.tarjeta-destacada { border-color: var(--acento); background: var(--acento-suave); box-shadow: none; }
+.tarjeta-error { border-color: var(--peligro); }
+.rejilla-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; }
+.rejilla-tarjetas .tarjeta { margin: 0; }
+.cifra { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.enlace-flecha { font-weight: 600; }
+.enlace-flecha::after { content: " →"; }
+.lista { padding-left: 1.2rem; margin: 0 0 0.75rem; }
+.lista li { margin-bottom: 0.35rem; }
+.lista-pasos { margin: 0; padding-left: 1.2rem; }
+.lista-pasos li { margin-bottom: 0.4rem; }
+.vacio { color: var(--texto-3); font-style: italic; }
+
+.estado { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-right: 0.35rem; }
+.estado-ok { background: var(--ok-fondo); color: var(--ok); }
+.estado-aviso { background: var(--aviso-fondo); color: var(--aviso); }
+
+.caja-aviso {
+  background: var(--aviso-fondo); border: 1px solid var(--aviso-borde); color: var(--texto);
+  border-radius: var(--radio-pequeno); padding: 0.75rem 1rem; margin: 0 0 1rem;
+}
+
+/* ── Franjas bajo la cabecera ───────────────────────────────────────── */
+.franja { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.5rem 1rem; font-size: 0.95rem; border-bottom: 1px solid; }
+.franja-aviso { background: var(--aviso-fondo); border-color: var(--aviso-borde); }
+.franja-info { background: var(--info-fondo); border-color: var(--info-borde); }
+
+/* ── Formularios ─────────────────────────────────────────────────────── */
+.formulario fieldset { border: none; padding: 0; margin: 0 0 1.25rem; }
+.formulario legend { font-weight: 700; font-size: 0.95rem; color: var(--texto-2); margin-bottom: 0.5rem; padding: 0; }
+.rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.25rem 1rem; }
+.campo { display: flex; flex-direction: column; margin-bottom: 0.5rem; }
+.campo-completo { grid-column: 1 / -1; }
+/* Rejilla de 12 columnas para formularios con campos de anchos distintos (p. ej. la
+   dirección). En el móvil pasa a 2 columnas; .col-movil-completo ocupa las dos. */
+.rejilla-12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0.25rem 1rem; }
+.col-2 { grid-column: span 2; } .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; }
+.col-5 { grid-column: span 5; } .col-7 { grid-column: span 7; } .col-12 { grid-column: 1 / -1; }
+@media (max-width: 760px) {
+  .rejilla-12 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .rejilla-12 > .campo { grid-column: span 1; }
+  .rejilla-12 > .col-movil-completo, .rejilla-12 > .col-12 { grid-column: 1 / -1; }
+}
+.vista-previa { grid-column: 1 / -1; background: var(--superficie-2); border-radius: var(--radio-pequeno); padding: 0.6rem 0.9rem; margin-top: 0.25rem; }
+.vista-previa strong { display: block; font-size: 0.82rem; color: var(--texto-3); font-weight: 600; }
+.vista-previa span { display: block; }
+.campo label, .acceso-form label { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
+.obligatorio { color: var(--peligro); }
+input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
+input[type="password"], input[type="number"], select, textarea {
+  width: 100%; min-height: 44px; padding: 0.55rem 0.7rem;
+  font: inherit; color: var(--texto); background: var(--superficie);
+  border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno);
+}
+textarea { resize: vertical; }
+input:focus, select:focus, textarea:focus { border-color: var(--foco); }
+.campo-ayuda { color: var(--texto-3); font-size: 0.85rem; margin: 0.2rem 0 0; }
+.campo-error { color: var(--peligro); font-size: 0.85rem; font-weight: 600; margin: 0.2rem 0 0; min-height: 0; }
+.campo-error:empty { display: none; }
+.con-error input, .con-error select, .con-error textarea { border-color: var(--peligro); }
+
+.grupo-opciones { border: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.grupo-opciones legend { font-weight: 600; margin-bottom: 0.5rem; padding: 0; }
+.opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.opcion span { display: inline-block; padding: 0.5rem 1rem; border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno); cursor: pointer; }
+.opcion input:checked + span { border-color: var(--acento); background: var(--acento-suave); font-weight: 700; box-shadow: inset 0 0 0 1px var(--acento); }
+.opcion input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
+.casilla { display: flex; gap: 0.7rem; align-items: flex-start; margin: 0.75rem 0; cursor: pointer; }
+.casilla input { width: 20px; height: 20px; margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--acento); }
+
+/* ── Tablas ──────────────────────────────────────────────────────────── */
+.tabla-envoltorio { overflow-x: auto; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.tabla th, .tabla td { text-align: left; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
+.tabla thead th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); font-weight: 700; }
+.tabla tbody th { font-weight: 600; }
+.celda-acciones { text-align: right; white-space: nowrap; }
+.historico { margin-top: 1rem; }
+.historico summary { cursor: pointer; font-weight: 600; color: var(--texto-2); padding: 0.4rem 0; }
+
+/* ── Diálogos ────────────────────────────────────────────────────────── */
+.dialogo {
+  width: min(560px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem);
+  padding: 0; border: 1px solid var(--borde); border-radius: var(--radio);
+  background: var(--superficie); color: var(--texto); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+.dialogo::backdrop { background: rgba(10, 15, 12, 0.5); }
+.dialogo-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem 0.5rem; }
+.dialogo-cabecera h2 { margin: 0; }
+.dialogo-cuerpo { padding: 0.5rem 1.25rem; overflow-y: auto; }
+.dialogo-cuerpo .rejilla { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
+.dialogo-botones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; padding: 0.75rem 1.25rem 1.25rem; }
+.dialogo-botones .btn-peligro-suave { margin-right: auto; }
+
+/* ── Avisos flotantes ────────────────────────────────────────────────── */
+.avisos { position: fixed; right: 1rem; bottom: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(420px, calc(100vw - 2rem)); }
+.aviso { padding: 0.75rem 1rem; border-radius: var(--radio-pequeno); background: var(--texto); color: var(--superficie); box-shadow: var(--sombra); font-weight: 500; transition: opacity 0.5s; }
+.aviso-error { background: var(--peligro); color: #fff; }
+:root[data-tema="oscuro"] .aviso-error { color: #1a0d0c; }
+.aviso.saliendo { opacity: 0; }
+
+/* ── Pantalla de acceso ──────────────────────────────────────────────── */
+.acceso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
+.acceso-panel { width: 100%; max-width: 420px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 2rem 1.75rem; box-shadow: var(--sombra); }
+.acceso-logo { width: 48px; height: 48px; margin-bottom: 1rem; }
+.acceso-sub { color: var(--texto-2); }
+.acceso-opciones { display: flex; flex-direction: column; gap: 0.6rem; margin: 1.25rem 0 0.5rem; }
+.acceso-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 1rem; }
+.acceso-form .btn { margin-top: 0.6rem; }
+.acceso-error { color: var(--peligro); font-weight: 600; margin: 0.4rem 0 0; }
+.acceso-nota { color: var(--texto-3); font-size: 0.88rem; text-align: center; margin-top: 0.75rem; }
+.acceso-olvido { margin-top: 1.25rem; border-top: 1px solid var(--borde); padding-top: 0.75rem; }
+.acceso-olvido summary { cursor: pointer; color: var(--texto-2); font-weight: 600; }
+</style>
+  <style>/* css/impresion.css */
+/*
+ * webkit_asociaciones — Impresión (y «Guardar como PDF» del navegador).
+ * Se quita todo lo que es de manejo (menú, botones, avisos) y queda el contenido.
+ * Los informes de la Fase 6 se apoyan en esto.
+ */
+@media print {
+  :root { --fondo: #fff; --superficie: #fff; --texto: #000; --texto-2: #222; --texto-3: #444; --borde: #bbb; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .cabecera, .menu, .velo, .franja, .avisos, .saltar, .acciones, .btn, .celda-acciones, .no-imprimir { display: none !important; }
+  .cuerpo { display: block; min-height: 0; }
+  .principal { padding: 0; max-width: none; }
+  .tarjeta { box-shadow: none; border: none; padding: 0; margin: 0 0 1.5rem; break-inside: avoid; }
+  a { color: #000; text-decoration: none; }
+  .tabla th, .tabla td { border-bottom: 1px solid #999; }
+  details { display: block; }
+  details > summary { list-style: none; }
+}
+</style>
+</head>
+<body>
+  <a class="saltar" href="#principal">Saltar al contenido</a>
+
+  <!-- Pantalla de acceso (crear / desbloquear / recuperar). La pinta modulos/acceso.js -->
+  <div id="acceso" class="acceso"></div>
+
+  <!-- La aplicación, visible solo con la sesión abierta -->
+  <div id="app" class="app" hidden>
+    <header class="cabecera">
+      <button type="button" id="btn-menu" class="btn-icono solo-movil" aria-expanded="false" aria-controls="menu-lateral" aria-label="Menú">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a class="marca" href="#/inicio">webkit_asociaciones</a>
+      <div class="cabecera-acciones">
+        <button type="button" id="btn-bloquear" class="btn btn-secundario btn-pequeno" title="Bloquear: pide la contraseña para volver a entrar">Bloquear</button>
+        <button type="button" id="btn-cerrar-sesion" class="btn btn-secundario btn-pequeno">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <div id="franja-demo" class="franja franja-info" hidden>
+      <span>Estás viendo una <strong>demostración</strong> con datos inventados. Nada de lo que hagas se guarda.</span>
+      <button type="button" id="btn-salir-demo" class="btn btn-pequeno btn-secundario">Salir de la demostración</button>
+    </div>
+    <div id="franja-copia" class="franja franja-aviso" role="status" hidden>
+      <span id="franja-copia-texto"></span>
+      <button type="button" id="btn-franja-copia" class="btn btn-pequeno btn-primario">Descargar copia</button>
+    </div>
+
+    <div class="cuerpo">
+      <nav id="menu-lateral" class="menu" aria-label="Secciones">
+        <ul id="menu-lista"></ul>
+      </nav>
+      <div id="velo-menu" class="velo" aria-hidden="true"></div>
+      <main id="principal" class="principal" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <div id="avisos" class="avisos"></div>
+
+  <noscript><p style="padding:2rem">Esta aplicación necesita JavaScript activado.</p></noscript>
+
+  <!-- Núcleo (sin dependencias entre sí, salvo el orden) -->
+  <script>/* js/nucleo/dinero.js */
+/*
+ * webkit_asociaciones — Dinero.
+ *
+ * REGLA DE ORO: todos los importes se guardan y se calculan en CÉNTIMOS
+ * ENTEROS (1234,56 € → 123456). Nunca en euros con decimales: en coma flotante
+ * 0,1 + 0,2 no da 0,3, y en una tesorería esos céntimos acaban descuadrando.
+ *
+ * Solo se pasa a euros con decimales para ENSEÑAR un importe (formatear) y solo
+ * se lee de texto al ESCRIBIRLO el usuario (desdeTexto).
+ *
+ * Redondeo: «la mitad se aleja del cero» (2,5 → 3; −2,5 → −3), que es el
+ * redondeo comercial habitual. Si en algún cálculo concreto (por ejemplo, la
+ * cuota de IVA de una factura) la norma exige otro criterio, se indicará allí.
+ *
+ * Funciona en el navegador (window.WA.Dinero) y en Node (require) para los tests.
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Dinero = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  /** Redondea un número al entero más cercano; la mitad se aleja del cero. */
+  function redondear(x) {
+    // toPrecision(15) quita el «ruido» de la coma flotante: 1.005 * 100 da
+    // 100.49999999999999, que sin esto redondearía a 100 en vez de a 101.
+    var limpio = Number(Math.abs(x).toPrecision(15));
+    var r = Math.round(limpio);
+    return x < 0 ? -r : r;
+  }
+
+  /** Euros (número) → céntimos (entero). Solo para datos que ya vienen como número. */
+  function aCentimos(euros) {
+    var n = Number(euros);
+    if (!isFinite(n)) return null;
+    return redondear(n * 100);
+  }
+
+  /** Céntimos → euros (número). Solo para mostrar o exportar; no calcular con ello. */
+  function aEuros(centimos) {
+    return centimos / 100;
+  }
+
+  /**
+   * Lee un importe escrito por una persona y lo devuelve en céntimos, o null si
+   * no se entiende. Acepta lo habitual en España y algún formato «de ordenador»:
+   *   "12"  "12,5"  "1.234,56"  "1234.56"  "-3,20"  "15 €"  "1 234,56"
+   * Caso ambiguo: "1.234" (solo un punto seguido de tres cifras) se lee como
+   * mil doscientos treinta y cuatro, que es como se escribe en español.
+   */
+  function desdeTexto(texto) {
+    if (typeof texto === "number") return aCentimos(texto);
+    var s = String(texto == null ? "" : texto).trim().replace(/[€\s\u00a0]/g, "");
+    if (!s) return null;
+    var negativo = false;
+    if (s[0] === "-" || s[0] === "−") { negativo = true; s = s.slice(1); }
+    else if (s[0] === "+") s = s.slice(1);
+
+    var ultPunto = s.lastIndexOf("."), ultComa = s.lastIndexOf(",");
+    var entera, decimales;
+    if (ultPunto >= 0 && ultComa >= 0) {
+      // Hay los dos: el que va el último es el separador decimal.
+      var sepDec = ultComa > ultPunto ? "," : ".";
+      var sepMil = sepDec === "," ? "." : ",";
+      var partes = s.split(sepDec);
+      if (partes.length !== 2) return null;
+      entera = partes[0].split(sepMil).join("");
+      decimales = partes[1];
+    } else if (ultComa >= 0) {
+      var p = s.split(",");
+      if (p.length !== 2) return null;
+      entera = p[0]; decimales = p[1];
+    } else if (ultPunto >= 0) {
+      if (/^\d{1,3}(\.\d{3})+$/.test(s)) { entera = s.split(".").join(""); decimales = ""; }
+      else {
+        var q = s.split(".");
+        if (q.length !== 2) return null;
+        entera = q[0]; decimales = q[1];
+      }
+    } else {
+      entera = s; decimales = "";
+    }
+    if (entera === "") entera = "0";
+    if (!/^\d+$/.test(entera) || !/^\d*$/.test(decimales)) return null;
+
+    // Aritmética con texto para no pasar nunca por coma flotante.
+    var dos = (decimales + "00").slice(0, 2);
+    var resto = decimales.slice(2);
+    var cent = parseInt(entera, 10) * 100 + parseInt(dos, 10);
+    if (resto && parseInt(resto[0], 10) >= 5) cent += 1; // la mitad se aleja del cero
+    if (!isFinite(cent) || cent > Number.MAX_SAFE_INTEGER) return null;
+    return negativo && cent !== 0 ? -cent : cent;
+  }
+
+  /**
+   * Céntimos → texto en formato español: 123456 → "1.234,56 €".
+   * Se hace a mano (no con Intl) para que el resultado sea idéntico en todos los
+   * navegadores y en los tests. Siempre agrupa los miles con punto, también en
+   * cifras de cuatro dígitos, porque en tablas de importes se lee mejor.
+   * opciones.simbolo = false → "1.234,56" (sin €), útil en campos de formulario.
+   */
+  function formatear(centimos, opciones) {
+    if (centimos == null || !isFinite(centimos)) return "—";
+    var conSimbolo = !opciones || opciones.simbolo !== false;
+    var neg = centimos < 0;
+    var abs = Math.abs(Math.trunc(centimos));
+    var entera = String(Math.floor(abs / 100)).replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    var dec = String(abs % 100).padStart(2, "0");
+    return (neg ? "−" : "") + entera + "," + dec + (conSimbolo ? "\u00a0€" : "");
+  }
+
+  /** Suma una lista de importes en céntimos (ignora vacíos). */
+  function sumar(lista) {
+    var t = 0;
+    for (var i = 0; i < (lista || []).length; i++) {
+      var v = lista[i];
+      if (typeof v === "number" && isFinite(v)) t += v;
+    }
+    return t;
+  }
+
+  /**
+   * Porcentaje de un importe, redondeado al céntimo: porcentaje(10000, 21) → 2100.
+   * El porcentaje puede tener decimales (10,5 %).
+   */
+  function porcentaje(centimos, pct) {
+    return redondear(centimos * pct / 100);
+  }
+
+  /**
+   * Reparte un importe en n partes que suman EXACTAMENTE el total. Los céntimos
+   * que sobran van a las primeras partes: repartir(1000, 3) → [334, 333, 333].
+   */
+  function repartir(centimos, n) {
+    if (!(n > 0)) return [];
+    var signo = centimos < 0 ? -1 : 1;
+    var abs = Math.abs(centimos);
+    var base = Math.floor(abs / n), sobra = abs - base * n;
+    var out = [];
+    for (var i = 0; i < n; i++) out.push(signo * (base + (i < sobra ? 1 : 0)));
+    return out;
+  }
+
+  return {
+    redondear: redondear, aCentimos: aCentimos, aEuros: aEuros,
+    desdeTexto: desdeTexto, formatear: formatear,
+    sumar: sumar, porcentaje: porcentaje, repartir: repartir,
+  };
+});
+</script>
+  <script>/* js/nucleo/fechas.js */
+/*
+ * webkit_asociaciones — Fechas.
+ *
+ * Todas las fechas se GUARDAN como texto ISO «aaaa-mm-dd» (2026-10-01): se
+ * ordenan bien como texto, no dependen de la zona horaria y cualquier hoja de
+ * cálculo las entiende. Solo se convierten a «01/10/2026» para enseñarlas.
+ *
+ * Se trabaja siempre con fechas LOCALES (sin hora): new Date(año, mes, día).
+ * Nunca new Date("2026-10-01"), que el navegador interpreta en UTC y en España
+ * puede devolver el día anterior.
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Fechas = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var MESES = ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio",
+    "agosto", "septiembre", "octubre", "noviembre", "diciembre"];
+
+  var dos = function (n) { return String(n).padStart(2, "0"); };
+
+  /** Date local → "aaaa-mm-dd". */
+  function aISO(fecha) {
+    return fecha.getFullYear() + "-" + dos(fecha.getMonth() + 1) + "-" + dos(fecha.getDate());
+  }
+
+  /** Fecha de hoy en ISO. Se puede inyectar «ahora» para los tests. */
+  function hoy(ahora) {
+    return aISO(ahora || new Date());
+  }
+
+  /** "aaaa-mm-dd" → Date local, o null si no es una fecha real (p. ej. 2026-02-30). */
+  function desdeISO(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ""));
+    if (!m) return null;
+    var a = +m[1], mes = +m[2], d = +m[3];
+    var f = new Date(a, mes - 1, d);
+    if (f.getFullYear() !== a || f.getMonth() !== mes - 1 || f.getDate() !== d) return null;
+    return f;
+  }
+
+  function esValida(iso) {
+    return desdeISO(iso) !== null;
+  }
+
+  /** "2026-10-01" → "01/10/2026" ("" si no es válida). */
+  function corta(iso) {
+    var f = desdeISO(iso);
+    return f ? dos(f.getDate()) + "/" + dos(f.getMonth() + 1) + "/" + f.getFullYear() : "";
+  }
+
+  /** "2026-10-01" → "1 de octubre de 2026". */
+  function larga(iso) {
+    var f = desdeISO(iso);
+    return f ? f.getDate() + " de " + MESES[f.getMonth()] + " de " + f.getFullYear() : "";
+  }
+
+  /** Lee "01/10/2026", "1/10/26" o "2026-10-01" y devuelve ISO, o null. */
+  function desdeTexto(texto) {
+    var s = String(texto || "").trim();
+    if (esValida(s)) return s;
+    var m = /^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2}|\d{4})$/.exec(s);
+    if (!m) return null;
+    var a = +m[3];
+    if (m[3].length === 2) a += 2000;
+    var iso = a + "-" + dos(+m[2]) + "-" + dos(+m[1]);
+    return esValida(iso) ? iso : null;
+  }
+
+  /** Días enteros de «desde» a «hasta» (positivo si hasta es posterior). */
+  function diasEntre(desde, hasta) {
+    var a = desdeISO(desde), b = desdeISO(hasta);
+    if (!a || !b) return null;
+    // Date.UTC evita que el cambio de hora de marzo/octubre reste o sume una hora.
+    var ua = Date.UTC(a.getFullYear(), a.getMonth(), a.getDate());
+    var ub = Date.UTC(b.getFullYear(), b.getMonth(), b.getDate());
+    return Math.round((ub - ua) / 864e5);
+  }
+
+  function sumarDias(iso, n) {
+    var f = desdeISO(iso);
+    if (!f) return null;
+    f.setDate(f.getDate() + n);
+    return aISO(f);
+  }
+
+  /** Marca de tiempo completa (para «creado» / «modificado»), en ISO con hora UTC. */
+  function marca(ahora) {
+    return (ahora || new Date()).toISOString();
+  }
+
+  return {
+    MESES: MESES, aISO: aISO, hoy: hoy, desdeISO: desdeISO, esValida: esValida,
+    corta: corta, larga: larga, desdeTexto: desdeTexto,
+    diasEntre: diasEntre, sumarDias: sumarDias, marca: marca,
+  };
+});
+</script>
+  <script>/* js/nucleo/validar.js */
+/*
+ * webkit_asociaciones — Comprobaciones de formato.
+ *
+ * IMPORTANTE: aquí solo se comprueba que un dato ESTÁ BIEN ESCRITO (que la letra
+ * de control de un NIF cuadra, que un IBAN pasa su prueba de dígitos). No se
+ * comprueba que exista ni que pertenezca a quien dice. Por eso la aplicación
+ * avisa, pero no impide guardar: puede haber casos raros legítimos.
+ *
+ * Los algoritmos de control (NIF/NIE, NIF de entidades, IBAN) son públicos y
+ * estables, pero conviene verificarlos con asesoría si algún día un dato
+ * tuviera efectos ante la Administración.
+ *
+ * Cada función devuelve { valido: bool, mensaje: texto corto para el usuario }.
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Validar = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var ok = { valido: true, mensaje: "" };
+  var mal = function (m) { return { valido: false, mensaje: m }; };
+  var limpiar = function (s) { return String(s || "").toUpperCase().replace(/[\s\-.]/g, ""); };
+
+  var LETRAS_DNI = "TRWAGMYFPDXBNJZSQVHLCKE";
+
+  /** DNI (12345678Z) o NIE (X1234567L) de una persona. */
+  function nifPersona(valor) {
+    var s = limpiar(valor);
+    if (!s) return mal("Falta el NIF.");
+    var m = /^([XYZ]?)(\d{7,8})([A-Z])$/.exec(s);
+    if (!m) return mal("Un NIF tiene 8 números y una letra (o X/Y/Z, 7 números y una letra).");
+    var numero = m[1] ? "XYZ".indexOf(m[1]) + m[2] : m[2];
+    if (LETRAS_DNI[parseInt(numero, 10) % 23] !== m[3]) return mal("La letra no corresponde a ese número.");
+    return ok;
+  }
+
+  /**
+   * NIF de una entidad (el antiguo CIF): letra + 7 números + control.
+   * Las asociaciones suelen llevar la letra G (verificar con asesoría).
+   */
+  function nifEntidad(valor) {
+    var s = limpiar(valor);
+    if (!s) return mal("Falta el NIF de la asociación.");
+    var m = /^([ABCDEFGHJNPQRSUVW])(\d{7})([0-9A-J])$/.exec(s);
+    if (!m) return mal("Un NIF de entidad es una letra, 7 números y un carácter de control (p. ej. G12345674).");
+    var d = m[2], suma = 0;
+    for (var i = 0; i < 7; i++) {
+      var n = +d[i];
+      if (i % 2 === 0) { n *= 2; suma += Math.floor(n / 10) + (n % 10); } // posiciones impares (1.ª, 3.ª…)
+      else suma += n;
+    }
+    var control = (10 - (suma % 10)) % 10;
+    var letraControl = "JABCDEFGHI"[control];
+    var tipo = m[1], c = m[3];
+    // Según el tipo de entidad, el control es letra, número, o vale cualquiera de los dos.
+    var soloLetra = "NPQRSW".indexOf(tipo) >= 0;
+    var soloNumero = "ABEH".indexOf(tipo) >= 0;
+    var valeNumero = c === String(control), valeLetra = c === letraControl;
+    if ((soloLetra && valeLetra) || (soloNumero && valeNumero) || (!soloLetra && !soloNumero && (valeNumero || valeLetra))) return ok;
+    return mal("El carácter de control no cuadra. Revisa que esté bien copiado.");
+  }
+
+  /** IBAN (cualquier país), con la prueba de dígitos «módulo 97». */
+  function iban(valor) {
+    var s = limpiar(valor);
+    if (!s) return mal("Falta el IBAN.");
+    if (!/^[A-Z]{2}\d{2}[A-Z0-9]{10,30}$/.test(s)) return mal("Un IBAN empieza por el país (ES) y dos números.");
+    if (s.slice(0, 2) === "ES" && s.length !== 24) return mal("Un IBAN español tiene 24 caracteres.");
+    var reordenado = s.slice(4) + s.slice(0, 4);
+    var resto = 0;
+    for (var i = 0; i < reordenado.length; i++) {
+      var ch = reordenado[i];
+      var trozo = /\d/.test(ch) ? ch : String(ch.charCodeAt(0) - 55);
+      for (var j = 0; j < trozo.length; j++) resto = (resto * 10 + +trozo[j]) % 97;
+    }
+    return resto === 1 ? ok : mal("Los dígitos de control no cuadran. Revisa que esté bien copiado.");
+  }
+
+  function email(valor) {
+    var s = String(valor || "").trim();
+    if (!s) return mal("Falta el correo.");
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) ? ok : mal("No parece un correo (falta @ o el dominio).");
+  }
+
+  /** Código postal español: 5 cifras, provincia 01–52. */
+  function codigoPostal(valor) {
+    var s = String(valor || "").trim();
+    if (!/^\d{5}$/.test(s)) return mal("El código postal tiene 5 cifras.");
+    var prov = +s.slice(0, 2);
+    return prov >= 1 && prov <= 52 ? ok : mal("Las dos primeras cifras deben ir de 01 a 52.");
+  }
+
+  /** Normaliza un NIF/IBAN para guardarlo: mayúsculas y sin espacios ni guiones. */
+  function normalizar(valor) {
+    return limpiar(valor);
+  }
+
+  return {
+    nifPersona: nifPersona, nifEntidad: nifEntidad, iban: iban,
+    email: email, codigoPostal: codigoPostal, normalizar: normalizar,
+  };
+});
+</script>
+  <script>/* js/nucleo/direccion.js */
+/*
+ * webkit_asociaciones — Direcciones postales españolas.
+ *
+ * Una dirección se guarda por partes (no como una línea de texto) para poder
+ * escribirla bien en convocatorias, recibos y certificados, y para comprobar
+ * que el código postal corresponde a la provincia.
+ *
+ *   { tipoVia, nombreVia, numero, km, bloque, portal, escalera, planta, puerta,
+ *     complemento, codigoPostal, municipio, provincia }
+ *
+ * Todo es texto. «numero» admite "s/n" (sin número).
+ *
+ * Funciones:
+ *   vacia()                 dirección vacía
+ *   formatear(d)            { linea1, linea2, completa } para enseñar o imprimir
+ *   provinciaDeCP(cp)       "28013" → "Madrid" (por las dos primeras cifras)
+ *   normalizarProvincia(t)  "malaga" → "Málaga"; "" si no la reconoce
+ *   desdeTexto(texto)       reparte una dirección escrita en una línea
+ *                           ("C/ Mayor, 15, 5º G") en sus partes. Se usa al
+ *                           migrar datos antiguos; es orientativo, no infalible.
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Direccion = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  /*
+   * Tipos de vía más habituales. [nombre, abreviaturas con las que suele
+   * escribirse] — las abreviaturas solo sirven para reconocerlos al leer texto.
+   */
+  var TIPOS_VIA = [
+    ["Calle", ["c/", "c.", "cl", "cl.", "calle", "c"]],
+    ["Avenida", ["avda.", "avda", "av.", "av", "avenida"]],
+    ["Plaza", ["pza.", "pza", "pl.", "plza.", "plaza"]],
+    ["Paseo", ["pº", "p.º", "p°", "pso.", "paseo"]],
+    ["Carretera", ["ctra.", "ctra", "carretera"]],
+    ["Camino", ["cmno.", "cno.", "camino"]],
+    ["Ronda", ["rda.", "ronda"]],
+    ["Travesía", ["trva.", "travesía", "travesia"]],
+    ["Glorieta", ["gta.", "glorieta"]],
+    ["Bulevar", ["blvr.", "bulevar"]],
+    ["Rambla", ["rbla.", "rambla"]],
+    ["Pasaje", ["pje.", "pasaje"]],
+    ["Callejón", ["cjón.", "callejón", "callejon"]],
+    ["Costanilla", ["costanilla"]],
+    ["Cuesta", ["cta.", "cuesta"]],
+    ["Vía", ["vía", "via"]],
+    ["Urbanización", ["urb.", "urbanización", "urbanizacion"]],
+    ["Polígono", ["pol.", "polígono", "poligono"]],
+    ["Barrio", ["bº", "b.º", "barrio"]],
+    ["Lugar", ["lugar"]],
+    ["Partida", ["partida"]],
+    ["Diseminado", ["diseminado"]],
+  ];
+
+  /*
+   * Provincias por las dos primeras cifras del código postal (01–52), con el
+   * nombre oficial (bilingüe donde lo es).
+   */
+  var PROVINCIAS_CP = {
+    "01": "Araba/Álava", "02": "Albacete", "03": "Alicante/Alacant", "04": "Almería", "05": "Ávila",
+    "06": "Badajoz", "07": "Illes Balears", "08": "Barcelona", "09": "Burgos", "10": "Cáceres",
+    "11": "Cádiz", "12": "Castellón/Castelló", "13": "Ciudad Real", "14": "Córdoba", "15": "A Coruña",
+    "16": "Cuenca", "17": "Girona", "18": "Granada", "19": "Guadalajara", "20": "Gipuzkoa",
+    "21": "Huelva", "22": "Huesca", "23": "Jaén", "24": "León", "25": "Lleida",
+    "26": "La Rioja", "27": "Lugo", "28": "Madrid", "29": "Málaga", "30": "Murcia",
+    "31": "Navarra", "32": "Ourense", "33": "Asturias", "34": "Palencia", "35": "Las Palmas",
+    "36": "Pontevedra", "37": "Salamanca", "38": "Santa Cruz de Tenerife", "39": "Cantabria", "40": "Segovia",
+    "41": "Sevilla", "42": "Soria", "43": "Tarragona", "44": "Teruel", "45": "Toledo",
+    "46": "Valencia/València", "47": "Valladolid", "48": "Bizkaia", "49": "Zamora", "50": "Zaragoza",
+    "51": "Ceuta", "52": "Melilla",
+  };
+
+  /** Lista de provincias ordenada alfabéticamente, para un desplegable. */
+  var PROVINCIAS = Object.keys(PROVINCIAS_CP).map(function (k) { return PROVINCIAS_CP[k]; })
+    .sort(function (a, b) { return a.localeCompare(b, "es"); });
+
+  /** Plantas habituales (sugerencias del campo; se puede escribir cualquier otra). */
+  var PLANTAS = ["Sótano", "Semisótano", "Bajo", "Entreplanta", "Principal", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "Ático", "Sobreático"];
+
+  var CAMPOS = ["tipoVia", "nombreVia", "numero", "km", "bloque", "portal", "escalera", "planta", "puerta",
+    "complemento", "codigoPostal", "municipio", "provincia"];
+
+  function vacia() {
+    var d = {};
+    CAMPOS.forEach(function (c) { d[c] = ""; });
+    return d;
+  }
+
+  var sinTildes = function (s) {
+    return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+  };
+
+  function provinciaDeCP(cp) {
+    var m = /^(\d{2})\d{3}$/.exec(String(cp || "").trim());
+    return m ? PROVINCIAS_CP[m[1]] || "" : "";
+  }
+
+  /** Reconoce una provincia escrita a mano ("malaga", "Alicante", "Álava"…). */
+  function normalizarProvincia(texto) {
+    var t = sinTildes(texto);
+    if (!t) return "";
+    for (var i = 0; i < PROVINCIAS.length; i++) {
+      var p = PROVINCIAS[i];
+      if (sinTildes(p) === t) return p;
+      // Cada mitad de un nombre bilingüe vale por sí sola: "Alicante", "Alacant".
+      if (p.indexOf("/") > 0 && p.split("/").some(function (x) { return sinTildes(x) === t; })) return p;
+    }
+    var alias = { "baleares": "Illes Balears", "islas baleares": "Illes Balears", "vizcaya": "Bizkaia",
+      "guipuzcoa": "Gipuzkoa", "la coruna": "A Coruña", "coruna": "A Coruña", "gerona": "Girona",
+      "lerida": "Lleida", "orense": "Ourense", "castellon": "Castellón/Castelló", "tenerife": "Santa Cruz de Tenerife" };
+    return alias[t] || "";
+  }
+
+  /** "5" → "5.º"; "Bajo" → "Bajo". Las plantas numéricas llevan ordinal. */
+  function textoPlanta(p) {
+    var s = String(p || "").trim();
+    return /^\d+$/.test(s) ? s + ".º" : s;
+  }
+
+  /**
+   * Compone la dirección como se escribe en una carta:
+   *   linea1: "Calle Mayor, 15, portal 2, esc. B, 5.º G"
+   *   linea2: "28013 Madrid (Madrid)"  — la provincia solo si no coincide con el municipio
+   */
+  function formatear(d) {
+    d = d || {};
+    var t = function (c) { return String(d[c] || "").trim(); };
+    var partes = [];
+    // «Otro» significa que el tipo va escrito dentro del nombre.
+    var via = [t("tipoVia") === "Otro" ? "" : t("tipoVia"), t("nombreVia")].filter(Boolean).join(" ");
+    if (via) partes.push(via);
+    if (t("numero")) partes.push(/^s\/?n$/i.test(t("numero")) ? "s/n" : t("numero"));
+    if (t("km")) partes.push("km " + t("km"));
+    if (t("bloque")) partes.push("bloque " + t("bloque"));
+    if (t("portal")) partes.push("portal " + t("portal"));
+    if (t("escalera")) partes.push("esc. " + t("escalera"));
+    var pisoPuerta = [textoPlanta(t("planta")), t("puerta")].filter(Boolean).join(" ");
+    if (pisoPuerta) partes.push(pisoPuerta);
+    if (t("complemento")) partes.push(t("complemento"));
+    var linea1 = partes.join(", ");
+
+    var prov = t("provincia");
+    var muni = t("municipio");
+    // "Madrid (Madrid)" sobra: la provincia solo se añade si se llama distinto que el municipio.
+    var mismoNombre = sinTildes(prov).split("/").indexOf(sinTildes(muni)) >= 0;
+    var lugar = [t("codigoPostal"), muni].filter(Boolean).join(" ");
+    var linea2 = prov && !mismoNombre ? (lugar ? lugar + " (" + prov + ")" : prov) : lugar;
+    return { linea1: linea1, linea2: linea2, completa: [linea1, linea2].filter(Boolean).join(", ") };
+  }
+
+  // ── Leer una dirección escrita en una sola línea ─────────────────────────
+  function tipoDesdeTexto(s) {
+    var bajo = s.toLowerCase();
+    var mejor = null;
+    TIPOS_VIA.forEach(function (tv) {
+      tv[1].forEach(function (abr) {
+        // La abreviatura tiene que ir seguida de espacio (o ser "c/", "pº"…, que ya se separan solas).
+        var cierraSola = /[\/.ºº°]$/.test(abr);
+        if (bajo.indexOf(abr) === 0 && (cierraSola || /\s/.test(bajo.charAt(abr.length)))) {
+          if (!mejor || abr.length > mejor.abr.length) mejor = { tipo: tv[0], abr: abr };
+        }
+      });
+    });
+    return mejor;
+  }
+
+  var RE_NUMERO = /^(?:n[º°o]?\.?\s*)?(\d+\s*[a-z]?|s\/?n)$/i;
+  var RE_PISO = /^(\d+)\s*(?:\.?\s*[º°ª])?\.?\s*(?:[-–]?\s*([a-z0-9]{1,5}\.?))?$/i;
+  var RE_PISO_NOMBRE = /^(bajo|bj\.?|entreplanta|entlo\.?|principal|pral\.?|[áa]tico|sobre[áa]tico|s[óo]tano|semis[óo]tano)\s*(?:[-–]?\s*([a-z0-9]{1,5}\.?))?$/i;
+  var PISO_NOMBRE = { bajo: "Bajo", bj: "Bajo", entreplanta: "Entreplanta", entlo: "Entreplanta", principal: "Principal", pral: "Principal",
+    atico: "Ático", sobreatico: "Sobreático", sotano: "Sótano", semisotano: "Semisótano" };
+
+  function desdeTexto(texto) {
+    var d = vacia();
+    var s = String(texto || "").trim().replace(/\s+/g, " ");
+    if (!s) return d;
+    var tv = tipoDesdeTexto(s);
+    if (tv) { d.tipoVia = tv.tipo; s = s.slice(tv.abr.length).trim(); }
+    var trozos = s.split(",").map(function (x) { return x.trim(); }).filter(Boolean);
+    d.nombreVia = trozos.shift() || "";
+    // "Mayor 15" sin coma: el número se separa del nombre.
+    var pegado = /^(.*\D)\s+(\d+\s*[a-z]?)$/i.exec(d.nombreVia);
+    if (pegado && trozos.every(function (x) { return !RE_NUMERO.test(x); })) {
+      d.nombreVia = pegado[1].trim();
+      trozos.unshift(pegado[2]);
+    }
+    var sobra = [];
+    trozos.forEach(function (x) {
+      var m;
+      if (!d.numero && (m = RE_NUMERO.exec(x))) { d.numero = /^s\/?n$/i.test(m[1]) ? "s/n" : m[1].replace(/\s+/g, "").toUpperCase(); return; }
+      if (!d.planta && (m = RE_PISO.exec(x))) { d.planta = m[1]; d.puerta = (m[2] || "").toUpperCase(); return; }
+      if (!d.planta && (m = RE_PISO_NOMBRE.exec(x))) {
+        d.planta = PISO_NOMBRE[sinTildes(m[1]).replace(/\./g, "")] || m[1];
+        d.puerta = (m[2] || "").toUpperCase();
+        return;
+      }
+      if ((m = /^portal\s+(.+)$/i.exec(x))) { d.portal = m[1]; return; }
+      if ((m = /^esc(?:alera|\.)?\s*(.+)$/i.exec(x))) { d.escalera = m[1]; return; }
+      if ((m = /^(?:bloque|blq\.?|bl\.)\s*(.+)$/i.exec(x))) { d.bloque = m[1]; return; }
+      if ((m = /^km\.?\s*(.+)$/i.exec(x))) { d.km = m[1]; return; }
+      if ((m = /^puerta\s+(.+)$/i.exec(x))) { d.puerta = m[1]; return; }
+      sobra.push(x);
+    });
+    d.complemento = sobra.join(", ");
+    return d;
+  }
+
+  return {
+    TIPOS_VIA: TIPOS_VIA.map(function (t) { return t[0]; }), PROVINCIAS: PROVINCIAS, PLANTAS: PLANTAS, CAMPOS: CAMPOS,
+    vacia: vacia, formatear: formatear, provinciaDeCP: provinciaDeCP,
+    normalizarProvincia: normalizarProvincia, desdeTexto: desdeTexto,
+  };
+});
+</script>
+  <script>/* js/nucleo/cripto.js */
+/*
+ * webkit_asociaciones — Cifrado (Web Crypto API del navegador, sin librerías).
+ *
+ * Es el ÚNICO sitio donde se cifra o descifra. La contraseña nunca se guarda ni
+ * sale del navegador: solo sirve para derivar una clave que vive en memoria
+ * mientras la sesión está abierta.
+ *
+ *   Derivación de la clave : PBKDF2-HMAC-SHA256, 310.000 iteraciones (OWASP 2023)
+ *   Cifrado                : AES-256-GCM (si la contraseña es incorrecta o el
+ *                            archivo se ha manipulado, el descifrado falla)
+ *   Formato del bloque     : JSON { v, kdf, iter, sal, iv, ct } (en base64)
+ *
+ * La MISMA contraseña cifra lo guardado en el navegador y la copia de seguridad:
+ * de hecho, la copia es ese mismo bloque cifrado metido en un sobre.
+ *
+ * Derivar la clave es lento a propósito (~0,3 s), para que adivinar contraseñas
+ * sea caro. Por eso se deriva una vez al entrar y se reutiliza en cada guardado
+ * con un vector (iv) nuevo cada vez, que es lo que exige AES-GCM.
+ *
+ * Adaptado de crypto.js de Solvento. Funciona en el navegador y en Node ≥ 20.
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Cripto = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var ITERACIONES = 310000;
+  var BYTES_SAL = 16;
+  var BYTES_IV = 12; // el tamaño recomendado para AES-GCM
+
+  var sutil = function () {
+    if (typeof crypto === "undefined" || !crypto.subtle) {
+      // Pasa al abrir el archivo en navegadores muy antiguos o en contextos no
+      // seguros. file:// y localhost sí son contextos seguros.
+      throw new Error("Este navegador no permite cifrar. Actualízalo o prueba con otro.");
+    }
+    return crypto.subtle;
+  };
+  var codificar = function (s) { return new TextEncoder().encode(s); };
+  var decodificar = function (b) { return new TextDecoder().decode(b); };
+
+  function aBase64(bytes) {
+    var bin = "", arr = new Uint8Array(bytes);
+    for (var i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
+    return btoa(bin);
+  }
+  function desdeBase64(b64) {
+    var bin = atob(b64), out = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+  }
+
+  function nuevaSal() {
+    return crypto.getRandomValues(new Uint8Array(BYTES_SAL));
+  }
+
+  /** Contraseña + sal → clave AES (no exportable: no se puede sacar de memoria). */
+  async function derivarClave(contrasena, sal, iteraciones) {
+    var base = await sutil().importKey("raw", codificar(contrasena), "PBKDF2", false, ["deriveKey"]);
+    return sutil().deriveKey(
+      { name: "PBKDF2", salt: sal, iterations: iteraciones || ITERACIONES, hash: "SHA-256" },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]
+    );
+  }
+
+  /**
+   * Prepara una «llave» lista para usar: la clave derivada más la sal y las
+   * iteraciones con las que se derivó (hacen falta para descifrar después).
+   */
+  async function crearLlave(contrasena) {
+    var sal = nuevaSal();
+    return { clave: await derivarClave(contrasena, sal, ITERACIONES), sal: sal, iter: ITERACIONES };
+  }
+
+  /** Cifra un objeto con una llave ya derivada. Devuelve el bloque cifrado. */
+  async function cifrar(objeto, llave) {
+    var iv = crypto.getRandomValues(new Uint8Array(BYTES_IV));
+    var ct = await sutil().encrypt({ name: "AES-GCM", iv: iv }, llave.clave, codificar(JSON.stringify(objeto)));
+    return { v: 1, kdf: "PBKDF2-SHA256", iter: llave.iter, sal: aBase64(llave.sal), iv: aBase64(iv), ct: aBase64(ct) };
+  }
+
+  /**
+   * Descifra un bloque con la contraseña. Devuelve { objeto, llave }: la llave
+   * se guarda en memoria para seguir cifrando en la sesión sin volver a derivar.
+   * Si la contraseña no es la buena lanza un error con codigo "CONTRASENA".
+   */
+  async function descifrar(bloque, contrasena) {
+    if (!esBloque(bloque)) throw new Error("No es un bloque cifrado de webkit_asociaciones.");
+    var sal = desdeBase64(bloque.sal);
+    var clave = await derivarClave(contrasena, sal, bloque.iter);
+    var plano;
+    try {
+      plano = await sutil().decrypt({ name: "AES-GCM", iv: desdeBase64(bloque.iv) }, clave, desdeBase64(bloque.ct));
+    } catch (e) {
+      var err = new Error("La contraseña no es correcta.");
+      err.codigo = "CONTRASENA";
+      throw err;
+    }
+    return { objeto: JSON.parse(decodificar(plano)), llave: { clave: clave, sal: sal, iter: bloque.iter } };
+  }
+
+  function esBloque(b) {
+    return !!(b && b.v === 1 && typeof b.sal === "string" && typeof b.iv === "string" && typeof b.ct === "string" && b.iter > 0);
+  }
+
+  return {
+    ITERACIONES: ITERACIONES, crearLlave: crearLlave, cifrar: cifrar,
+    descifrar: descifrar, esBloque: esBloque,
+  };
+});
+</script>
+  <script>/* js/nucleo/preferencias.js */
+/*
+ * webkit_asociaciones — Preferencias de ESTE dispositivo.
+ *
+ * No son datos de la asociación (por eso no van cifradas ni en la copia de
+ * seguridad): cada ordenador decide las suyas. Viven en localStorage.
+ *
+ *   bloqueoMinutos   minutos sin usar la aplicación antes de bloquearla (0 = nunca)
+ *   borrarAlSalir    al pulsar «Cerrar sesión», borrar los datos de este navegador
+ *                    (pensado para ordenadores compartidos: el local de la asociación,
+ *                    una biblioteca…). Los datos se recuperan con la copia de seguridad.
+ */
+(function (raiz) {
+  "use strict";
+  var CLAVE = "webkit_asociaciones_preferencias";
+  var POR_DEFECTO = { bloqueoMinutos: 15, borrarAlSalir: false };
+
+  function leer() {
+    try { return Object.assign({}, POR_DEFECTO, JSON.parse(localStorage.getItem(CLAVE) || "{}")); }
+    catch (e) { return Object.assign({}, POR_DEFECTO); }
+  }
+  function poner(cambios) {
+    var p = Object.assign(leer(), cambios);
+    try { localStorage.setItem(CLAVE, JSON.stringify(p)); } catch (e) { /* dura la sesión */ }
+    return p;
+  }
+
+  (raiz.WA = raiz.WA || {}).Preferencias = { leer: leer, poner: poner, POR_DEFECTO: POR_DEFECTO };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/nucleo/ui.js */
+/*
+ * webkit_asociaciones — Utilidades de interfaz compartidas por todos los módulos.
+ *
+ *   esc(texto)            escapa texto antes de meterlo en HTML. ÚSALO SIEMPRE con
+ *                         cualquier dato que haya escrito una persona: evita que un
+ *                         nombre como «<script>…» se ejecute.
+ *   campo({...})          HTML de un campo de formulario accesible (etiqueta, ayuda, error)
+ *   leerFormulario(form)  objeto { nombre: valor } con los campos de un <form>
+ *   marcarError(form, nombre, mensaje)  enseña (o quita) el error de un campo
+ *   aviso(texto, tipo)    mensaje breve abajo a la derecha (se lee en voz alta)
+ *   dialogo({...})        ventana modal; devuelve una promesa con el botón pulsado
+ *   confirmar(texto, {peligro})  atajo de dialogo() con Cancelar / Aceptar
+ *   descargar(nombre, contenido, tipo)  baja un archivo generado aquí mismo
+ *   elegirArchivo(accept) abre el selector de archivos y devuelve su texto
+ */
+(function (raiz) {
+  "use strict";
+
+  function esc(s) {
+    return String(s == null ? "" : s)
+      .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+  }
+
+  var contador = 0;
+  /**
+   * opciones: { nombre, etiqueta, tipo ("text", "email", "date", "textarea", "select"…),
+   *             valor, ayuda, requerido, opciones (para select: [valor] o [[valor, texto]]),
+   *             lista (sugerencias que se ofrecen al escribir, sin obligar a elegirlas),
+   *             atributos (texto extra), ancho ("completo" ocupa toda la fila),
+   *             clase (clases extra de la caja, p. ej. "col-3" dentro de una .rejilla-12) }
+   */
+  function campo(o) {
+    var id = "campo-" + o.nombre.replace(/[^a-z0-9]/gi, "-") + "-" + (++contador);
+    var ayudaId = id + "-ayuda", errorId = id + "-error";
+    var describe = (o.ayuda ? ayudaId + " " : "") + errorId;
+    var comunes = 'id="' + id + '" name="' + esc(o.nombre) + '" aria-describedby="' + describe + '"' +
+      (o.lista ? ' list="' + id + '-lista"' : "") +
+      (o.requerido ? " required" : "") + (o.atributos ? " " + o.atributos : "");
+    var control;
+    if (o.tipo === "textarea") {
+      control = "<textarea " + comunes + ' rows="' + (o.filas || 3) + '">' + esc(o.valor) + "</textarea>";
+    } else if (o.tipo === "select") {
+      control = "<select " + comunes + ">" + (o.opciones || []).map(function (op) {
+        var v = Array.isArray(op) ? op[0] : op, t = Array.isArray(op) ? op[1] : op;
+        return '<option value="' + esc(v) + '"' + (String(v) === String(o.valor == null ? "" : o.valor) ? " selected" : "") + ">" + esc(t) + "</option>";
+      }).join("") + "</select>";
+    } else {
+      control = '<input type="' + (o.tipo || "text") + '" ' + comunes + ' value="' + esc(o.valor) + '">';
+      if (o.lista) control += '<datalist id="' + id + '-lista">' + o.lista.map(function (v) { return '<option value="' + esc(v) + '">'; }).join("") + "</datalist>";
+    }
+    var clases = (o.ancho === "completo" ? " campo-completo" : "") + (o.clase ? " " + o.clase : "");
+    return '<div class="campo' + clases + '" data-campo="' + esc(o.nombre) + '">' +
+      '<label for="' + id + '">' + esc(o.etiqueta) + (o.requerido ? ' <span class="obligatorio" aria-hidden="true">*</span>' : "") + "</label>" +
+      control +
+      (o.ayuda ? '<p class="campo-ayuda" id="' + ayudaId + '">' + esc(o.ayuda) + "</p>" : "") +
+      '<p class="campo-error" id="' + errorId + '" aria-live="polite"></p></div>';
+  }
+
+  function leerFormulario(form) {
+    var datos = {};
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (!el.name || el.type === "submit" || el.type === "button") return;
+      datos[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
+    });
+    return datos;
+  }
+
+  function marcarError(form, nombre, mensaje) {
+    var caja = form.querySelector('[data-campo="' + nombre + '"]');
+    if (!caja) return;
+    var control = caja.querySelector("input, select, textarea");
+    caja.querySelector(".campo-error").textContent = mensaje || "";
+    caja.classList.toggle("con-error", !!mensaje);
+    if (control) control.setAttribute("aria-invalid", mensaje ? "true" : "false");
+  }
+
+  function aviso(texto, tipo) {
+    var zona = document.getElementById("avisos");
+    if (!zona) return;
+    var el = document.createElement("div");
+    el.className = "aviso aviso-" + (tipo || "ok");
+    el.setAttribute("role", tipo === "error" ? "alert" : "status");
+    el.textContent = texto;
+    zona.appendChild(el);
+    setTimeout(function () { el.classList.add("saliendo"); }, tipo === "error" ? 7000 : 3500);
+    setTimeout(function () { el.remove(); }, tipo === "error" ? 7600 : 4100);
+  }
+
+  /**
+   * Ventana modal accesible con <dialog> (atrapa el foco y se cierra con Esc).
+   * opciones: { titulo, contenido (HTML), botones: [{ texto, valor, estilo }], alAbrir(dialogo) }
+   * Si el contenido tiene un <form>, al enviarlo se resuelve con { valor: "enviar", form }
+   * — pero solo si opciones.validar(form) no devuelve false.
+   */
+  function dialogo(o) {
+    return new Promise(function (resolver) {
+      var d = document.createElement("dialog");
+      d.className = "dialogo";
+      d.setAttribute("aria-labelledby", "dialogo-titulo");
+      d.innerHTML = '<div class="dialogo-cabecera"><h2 id="dialogo-titulo">' + esc(o.titulo) + "</h2>" +
+        '<button type="button" class="btn-icono" data-valor="cancelar" aria-label="Cerrar">✕</button></div>' +
+        '<div class="dialogo-cuerpo">' + (o.contenido || "") + "</div>" +
+        ((o.botones || []).length ? '<div class="dialogo-botones">' + o.botones.map(function (b) {
+          return '<button type="' + (b.valor === "enviar" ? "submit" : "button") + '" class="btn ' + (b.estilo || "btn-secundario") + '" data-valor="' + esc(b.valor) + '"' +
+            (b.valor === "enviar" && d ? ' form="dialogo-form"' : "") + ">" + esc(b.texto) + "</button>";
+        }).join("") + "</div>" : "");
+      document.body.appendChild(d);
+      var hecho = false;
+      function cerrar(resultado) {
+        if (hecho) return;
+        hecho = true;
+        d.close();
+        d.remove();
+        resolver(resultado);
+      }
+      d.addEventListener("click", function (e) {
+        var b = e.target.closest("[data-valor]");
+        if (b && b.type !== "submit") cerrar({ valor: b.getAttribute("data-valor") });
+      });
+      d.addEventListener("cancel", function (e) { e.preventDefault(); cerrar({ valor: "cancelar" }); });
+      var form = d.querySelector("form");
+      if (form) {
+        form.id = "dialogo-form";
+        form.addEventListener("submit", function (e) {
+          e.preventDefault();
+          if (o.validar && o.validar(form) === false) return;
+          cerrar({ valor: "enviar", form: form, datos: leerFormulario(form) });
+        });
+      }
+      d.showModal();
+      var primero = d.querySelector(".dialogo-cuerpo input, .dialogo-cuerpo select, .dialogo-cuerpo textarea") ||
+        d.querySelector(".dialogo-botones .btn-primario, .dialogo-botones .btn-peligro");
+      if (primero) primero.focus();
+      if (o.alAbrir) o.alAbrir(d);
+    });
+  }
+
+  function confirmar(texto, opciones) {
+    var o = opciones || {};
+    return dialogo({
+      titulo: o.titulo || "¿Seguro?",
+      contenido: "<p>" + esc(texto) + "</p>",
+      botones: [
+        { texto: o.cancelar || "Cancelar", valor: "cancelar" },
+        { texto: o.aceptar || "Aceptar", valor: "aceptar", estilo: o.peligro ? "btn-peligro" : "btn-primario" },
+      ],
+    }).then(function (r) { return r.valor === "aceptar"; });
+  }
+
+  function descargar(nombre, contenido, tipo) {
+    var blob = contenido instanceof Blob ? contenido : new Blob([contenido], { type: tipo || "application/octet-stream" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = nombre;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
+
+  function elegirArchivo(accept) {
+    return new Promise(function (resolver) {
+      var input = document.createElement("input");
+      input.type = "file";
+      input.accept = accept || "";
+      input.addEventListener("change", function () {
+        var f = input.files && input.files[0];
+        if (!f) return resolver(null);
+        var lector = new FileReader();
+        lector.onload = function () { resolver({ nombre: f.name, texto: String(lector.result) }); };
+        lector.onerror = function () { resolver(null); };
+        lector.readAsText(f, "utf-8");
+      });
+      input.click();
+    });
+  }
+
+  (raiz.WA = raiz.WA || {}).UI = {
+    esc: esc, campo: campo, leerFormulario: leerFormulario, marcarError: marcarError,
+    aviso: aviso, dialogo: dialogo, confirmar: confirmar, descargar: descargar, elegirArchivo: elegirArchivo,
+  };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <!-- Datos -->
+  <script>/* js/datos/esquema.js */
+/*
+ * webkit_asociaciones — Forma de los datos (esquema) y migraciones.
+ *
+ * Todos los datos de una asociación son UN documento JSON:
+ *
+ *   {
+ *     app: "webkit_asociaciones",
+ *     esquema: 2,                 ← versión de esta forma; sube cuando cambia
+ *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
+ *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
+ *     junta: [ { id, cargo, nombre, ... } ],      ← colecciones: listas de registros
+ *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
+ *   }
+ *
+ * Reglas para todo registro de una colección:
+ *   · id        texto único (nunca se reutiliza)
+ *   · creado / modificado   marca de tiempo ISO
+ *   · importes en CÉNTIMOS enteros, fechas «aaaa-mm-dd» (ver dinero.js y fechas.js)
+ *
+ * CUANDO CAMBIE LA FORMA (p. ej. la Fase 2 añade «socios»):
+ *   1. sube VERSION,
+ *   2. añade una función a MIGRACIONES que lleve un documento de la versión
+ *      anterior a la nueva (sin perder nada),
+ *   3. añade un test en tests/esquema.test.js.
+ * Así, una copia de seguridad antigua siempre se puede abrir con la versión nueva.
+ *
+ * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines».
+ */
+(function (raiz, fabrica) {
+  var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
+  var modulo = fabrica(Direccion);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Esquema = modulo;
+})(typeof self !== "undefined" ? self : this, function (Direccion) {
+  "use strict";
+
+  var APP = "webkit_asociaciones";
+  var VERSION = 2;
+
+  /** Las colecciones (listas de registros) que existen en esta versión. */
+  var COLECCIONES = ["junta"];
+
+  /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
+   *  pueden llamarlos de otra forma: por eso existe «Otro». */
+  var CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vocalía", "Otro"];
+
+  function asociacionVacia() {
+    return {
+      nombre: "", siglas: "", nif: "",
+      registro: "",          // dónde está inscrita (registro nacional o autonómico)
+      numeroRegistro: "",
+      fechaConstitucion: "",
+      domicilio: Direccion.vacia(),   // por partes: ver nucleo/direccion.js
+      email: "", telefono: "", web: "",
+      iban: "",              // cuenta de la asociación (se usará en las remesas de cuotas)
+    };
+  }
+
+  function documentoVacio(ahora) {
+    var t = (ahora || new Date()).toISOString();
+    return {
+      app: APP,
+      esquema: VERSION,
+      meta: { creado: t, modificado: t, ultimaCopia: null, cambiosDesdeCopia: 0 },
+      asociacion: asociacionVacia(),
+      junta: [],
+    };
+  }
+
+  /*
+   * Migraciones: MIGRACIONES[n] lleva un documento de la versión n a la n+1.
+   * La 0 existe para documentos sin campo «esquema» (no debería haber, pero
+   * así una importación incompleta se rellena en vez de romperse).
+   */
+  var MIGRACIONES = {
+    // 0 → 1: rellena lo que falte con la forma que tenía la versión 1.
+    0: function (doc) {
+      var base = documentoVacio();
+      doc.app = APP;
+      doc.meta = Object.assign(base.meta, doc.meta || {});
+      doc.asociacion = Object.assign({ nombre: "", siglas: "", nif: "", registro: "", numeroRegistro: "",
+        fechaConstitucion: "", email: "", telefono: "", web: "", iban: "", fines: "" }, doc.asociacion || {});
+      doc.asociacion.domicilio = Object.assign({ via: "", codigoPostal: "", municipio: "", provincia: "" }, doc.asociacion.domicilio || {});
+      if (!Array.isArray(doc.junta)) doc.junta = [];
+      doc.esquema = 1;
+      return doc;
+    },
+
+    // 1 → 2: el domicilio pasa de una línea («via») a ir por partes, y se quitan
+    // los «fines» (vendrán de los estatutos adjuntos). Lo que no se consiga
+    // repartir de la línea antigua se guarda en «complemento»: no se pierde nada.
+    1: function (doc) {
+      var viejo = doc.asociacion.domicilio || {};
+      var nuevo = Object.assign(Direccion.vacia(), Direccion.desdeTexto(viejo.via));
+      nuevo.codigoPostal = String(viejo.codigoPostal || "").trim();
+      nuevo.municipio = String(viejo.municipio || "").trim();
+      nuevo.provincia = Direccion.normalizarProvincia(viejo.provincia) || String(viejo.provincia || "").trim() ||
+        Direccion.provinciaDeCP(nuevo.codigoPostal);
+      doc.asociacion.domicilio = nuevo;
+      delete doc.asociacion.fines;
+      doc.esquema = 2;
+      return doc;
+    },
+  };
+
+  /**
+   * Lleva cualquier documento a la versión actual. Lanza un error con un
+   * mensaje claro si viene de una versión MÁS NUEVA de la aplicación (no se
+   * puede adivinar qué significan sus campos nuevos).
+   */
+  function migrar(doc) {
+    if (!doc || typeof doc !== "object" || Array.isArray(doc)) throw new Error("El archivo no contiene datos de una asociación.");
+    if (doc.app && doc.app !== APP) throw new Error("Estos datos son de otra aplicación.");
+    var copia = JSON.parse(JSON.stringify(doc));
+    var v = typeof copia.esquema === "number" ? copia.esquema : 0;
+    if (v > VERSION) {
+      throw new Error("Estos datos se crearon con una versión más nueva de webkit_asociaciones. Descarga la última versión para abrirlos.");
+    }
+    while (v < VERSION) {
+      copia = MIGRACIONES[v](copia);
+      v = copia.esquema;
+    }
+    return copia;
+  }
+
+  /** Identificador único para un registro nuevo. */
+  function nuevoId() {
+    if (typeof crypto !== "undefined" && crypto.randomUUID) return crypto.randomUUID();
+    return "id-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 10);
+  }
+
+  return {
+    APP: APP, VERSION: VERSION, COLECCIONES: COLECCIONES, CARGOS: CARGOS,
+    documentoVacio: documentoVacio, asociacionVacia: asociacionVacia, direccionVacia: Direccion.vacia,
+    migrar: migrar, nuevoId: nuevoId,
+  };
+});
+</script>
+  <script>/* js/datos/repositorio.js */
+/*
+ * webkit_asociaciones — Capa de datos (repositorio).
+ *
+ * ES LA ÚNICA PUERTA A LOS DATOS. Los módulos de la interfaz (socios,
+ * tesorería…) nunca tocan el documento ni el almacenamiento directamente: piden
+ * y guardan a través de estas funciones. Por eso son todas asíncronas (devuelven
+ * promesas) aunque hoy los datos estén en memoria: el día que haya una versión
+ * con servidor, bastará con escribir otro repositorio con las MISMAS funciones
+ * que hable con una API (fetch), y ningún módulo tendrá que cambiar.
+ *
+ *   leer(clave)                  → copia de un objeto suelto (p. ej. "asociacion")
+ *   escribir(clave, valor)
+ *   listar(coleccion)            → copia de todos los registros
+ *   obtener(coleccion, id)       → copia de un registro o null
+ *   guardar(coleccion, registro) → lo crea (si no tiene id) o lo actualiza; devuelve la copia guardada
+ *   borrar(coleccion, id)        → true si existía
+ *   documento()                  → copia del documento completo (para copias de seguridad)
+ *
+ * Siempre se devuelven COPIAS: si un formulario modifica lo que recibió, no
+ * cambia nada guardado hasta que llame a guardar().
+ *
+ * crearRepositorio(doc, alCambiar): «alCambiar(doc)» se llama tras cada cambio;
+ * la sesión la usa para cifrar y guardar en el navegador. En los tests y en el
+ * modo demostración no hace nada.
+ */
+(function (raiz, fabrica) {
+  var Esquema = typeof require === "function" ? require("./esquema.js") : raiz.WA.Esquema;
+  var modulo = fabrica(Esquema);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Repositorio = modulo;
+})(typeof self !== "undefined" ? self : this, function (Esquema) {
+  "use strict";
+
+  var copiar = function (x) { return x == null ? x : JSON.parse(JSON.stringify(x)); };
+
+  function crearRepositorio(doc, alCambiar, reloj) {
+    var ahora = reloj || function () { return new Date().toISOString(); };
+    var avisar = alCambiar || function () {};
+
+    function coleccion(nombre) {
+      if (Esquema.COLECCIONES.indexOf(nombre) < 0) throw new Error("Colección desconocida: " + nombre);
+      if (!Array.isArray(doc[nombre])) doc[nombre] = [];
+      return doc[nombre];
+    }
+    function cambiado() {
+      doc.meta.modificado = ahora();
+      doc.meta.cambiosDesdeCopia = (doc.meta.cambiosDesdeCopia || 0) + 1;
+      return Promise.resolve(avisar(doc));
+    }
+
+    return {
+      leer: async function (clave) { return copiar(doc[clave]); },
+
+      escribir: async function (clave, valor) {
+        if (clave === "meta" || clave === "app" || clave === "esquema" || Esquema.COLECCIONES.indexOf(clave) >= 0) {
+          throw new Error("«" + clave + "» no se escribe con escribir().");
+        }
+        doc[clave] = copiar(valor);
+        await cambiado();
+      },
+
+      listar: async function (nombre) { return copiar(coleccion(nombre)); },
+
+      obtener: async function (nombre, id) {
+        var r = coleccion(nombre).find(function (x) { return x.id === id; });
+        return r ? copiar(r) : null;
+      },
+
+      guardar: async function (nombre, registro) {
+        var lista = coleccion(nombre);
+        var r = copiar(registro);
+        var t = ahora();
+        var i = r.id ? lista.findIndex(function (x) { return x.id === r.id; }) : -1;
+        if (i >= 0) {
+          r.creado = lista[i].creado;
+          r.modificado = t;
+          lista[i] = r;
+        } else {
+          r.id = r.id || Esquema.nuevoId();
+          r.creado = t;
+          r.modificado = t;
+          lista.push(r);
+        }
+        await cambiado();
+        return copiar(r);
+      },
+
+      borrar: async function (nombre, id) {
+        var lista = coleccion(nombre);
+        var i = lista.findIndex(function (x) { return x.id === id; });
+        if (i < 0) return false;
+        lista.splice(i, 1);
+        await cambiado();
+        return true;
+      },
+
+      documento: async function () { return copiar(doc); },
+
+      /** Estado de la copia de seguridad, para el aviso de la cabecera. */
+      estadoCopia: async function () {
+        return { ultimaCopia: doc.meta.ultimaCopia, cambiosDesdeCopia: doc.meta.cambiosDesdeCopia || 0 };
+      },
+
+      /** Se llama justo después de descargar una copia. No cuenta como cambio. */
+      marcarCopiaHecha: async function () {
+        doc.meta.ultimaCopia = ahora();
+        doc.meta.cambiosDesdeCopia = 0;
+        await avisar(doc);
+      },
+    };
+  }
+
+  return { crearRepositorio: crearRepositorio };
+});
+</script>
+  <script>/* js/datos/copia.js */
+/*
+ * webkit_asociaciones — Formato de la copia de seguridad.
+ *
+ * Una copia es un archivo .json con un «sobre» que dice qué es y, dentro, los
+ * datos. Hay dos variantes:
+ *
+ *   Cifrada (la normal):
+ *     { formato: "webkit_asociaciones-copia", version: 1, creada, cifrada: true,
+ *       asociacion: "Nombre", datos: <bloque cifrado de cripto.js> }
+ *
+ *   Sin cifrar (solo para revisar los datos o llevarlos a otro programa):
+ *     { formato: ..., cifrada: false, asociacion, documento: { ...todo en claro... } }
+ *
+ * El nombre de la asociación va fuera del cifrado para que sepas de quién es una
+ * copia sin abrirla. Es lo único que va en claro.
+ *
+ * Este archivo solo arma y lee sobres (sin DOM): se puede probar en Node.
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Copia = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var FORMATO = "webkit_asociaciones-copia";
+  var VERSION = 1;
+
+  function sobreCifrado(bloque, nombreAsociacion, ahora) {
+    return { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
+      cifrada: true, asociacion: nombreAsociacion || "", datos: bloque };
+  }
+
+  function sobreAbierto(documento, ahora) {
+    return { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
+      cifrada: false, asociacion: (documento.asociacion && documento.asociacion.nombre) || "", documento: documento };
+  }
+
+  /**
+   * Lee el texto de un archivo de copia. Devuelve
+   *   { cifrada: true,  bloque, asociacion, creada }   o
+   *   { cifrada: false, documento, asociacion, creada }
+   * Lanza un error con un mensaje claro si el archivo no es una copia válida.
+   * También acepta un documento suelto (sin sobre), por si alguien lo editó a mano.
+   */
+  function leer(texto) {
+    var j;
+    try { j = JSON.parse(texto); } catch (e) { throw new Error("El archivo no es una copia de seguridad (no es JSON válido)."); }
+    if (j && j.formato === FORMATO) {
+      if (j.version > VERSION) throw new Error("Esta copia es de una versión más nueva de la aplicación. Descarga la última versión.");
+      if (j.cifrada) {
+        if (!j.datos || typeof j.datos.ct !== "string") throw new Error("La copia está incompleta o dañada.");
+        return { cifrada: true, bloque: j.datos, asociacion: j.asociacion || "", creada: j.creada || null };
+      }
+      if (!j.documento || typeof j.documento !== "object") throw new Error("La copia está incompleta o dañada.");
+      return { cifrada: false, documento: j.documento, asociacion: j.asociacion || "", creada: j.creada || null };
+    }
+    if (j && j.app === "webkit_asociaciones") {
+      return { cifrada: false, documento: j, asociacion: (j.asociacion && j.asociacion.nombre) || "", creada: null };
+    }
+    throw new Error("El archivo no es una copia de seguridad de webkit_asociaciones.");
+  }
+
+  /** "copia-asociacion-los-almendros-2026-10-01.json" (o "-sin-cifrar"). */
+  function nombreArchivo(nombreAsociacion, fechaISO, cifrada) {
+    var slug = String(nombreAsociacion || "asociacion")
+      .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+      .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 60).replace(/-+$/, "") || "asociacion";
+    return "copia-" + slug + "-" + fechaISO + (cifrada === false ? "-SIN-CIFRAR" : "") + ".json";
+  }
+
+  return { FORMATO: FORMATO, sobreCifrado: sobreCifrado, sobreAbierto: sobreAbierto, leer: leer, nombreArchivo: nombreArchivo };
+});
+</script>
+  <script>/* js/datos/demo.js */
+/*
+ * webkit_asociaciones — Datos de demostración.
+ *
+ * TODO ES INVENTADO. Ninguna persona, asociación, NIF, correo ni teléfono de
+ * aquí es real:
+ *   · los correos usan el dominio example.org, reservado para ejemplos;
+ *   · los teléfonos son 600 000 0xx;
+ *   · el NIF G00000000 cuadra en formato pero no corresponde a ninguna entidad
+ *     conocida; el IBAN (ES91 2100 0418 4502 0005 1332) es un ejemplo que se
+ *     repite en documentación técnica de todo el mundo, no una cuenta de nadie.
+ *
+ * Si añades datos aquí, que sigan siendo claramente ficticios (hay un test que
+ * comprueba los correos).
+ */
+(function (raiz, fabrica) {
+  var Esquema = typeof require === "function" ? require("./esquema.js") : raiz.WA.Esquema;
+  var modulo = fabrica(Esquema);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Demo = modulo;
+})(typeof self !== "undefined" ? self : this, function (Esquema) {
+  "use strict";
+
+  function documentoDemo(ahora) {
+    var doc = Esquema.documentoVacio(ahora);
+    var t = doc.meta.creado;
+    doc.asociacion = {
+      nombre: "Asociación Cultural Los Almendros (ficticia)",
+      siglas: "ACLA",
+      nif: "G00000000",
+      registro: "Registro de Asociaciones de ejemplo",
+      numeroRegistro: "0000/EJEMPLO",
+      fechaConstitucion: "2015-03-21",
+      domicilio: Object.assign(Esquema.direccionVacia(), {
+        tipoVia: "Calle", nombreVia: "de Ejemplo", numero: "1", planta: "Bajo", puerta: "A",
+        complemento: "Local de la asociación", codigoPostal: "28000", municipio: "Villaejemplo", provincia: "Madrid",
+      }),
+      email: "junta@example.org",
+      telefono: "600 000 000",
+      web: "https://example.org",
+      iban: "ES9121000418450200051332",
+    };
+    var junta = [
+      ["Presidencia", "Lucía Ficticia Ejemplo", "presidencia@example.org", "600 000 001", "2024-03-16"],
+      ["Vicepresidencia", "Mateo Inventado Prueba", "vicepresidencia@example.org", "600 000 002", "2024-03-16"],
+      ["Secretaría", "Carmen Demo Muestra", "secretaria@example.org", "600 000 003", "2024-03-16"],
+      ["Tesorería", "Javier Supuesto Modelo", "tesoreria@example.org", "600 000 004", "2024-03-16"],
+      ["Vocalía", "Nora Imaginaria Caso", "vocal1@example.org", "600 000 005", "2025-03-15"],
+    ];
+    doc.junta = junta.map(function (j, i) {
+      return { id: "demo-junta-" + (i + 1), cargo: j[0], cargoOtro: "", nombre: j[1], email: j[2], telefono: j[3],
+        desde: j[4], hasta: "", creado: t, modificado: t };
+    });
+    // Una persona que ya salió de la junta, para que se vea el histórico.
+    doc.junta.push({ id: "demo-junta-6", cargo: "Tesorería", cargoOtro: "", nombre: "Pablo Antiguo Ejemplo",
+      email: "antiguo@example.org", telefono: "600 000 006", desde: "2020-03-14", hasta: "2024-03-16", creado: t, modificado: t });
+    return doc;
+  }
+
+  return { documentoDemo: documentoDemo };
+});
+</script>
+  <script>/* js/datos/boveda.js */
+/*
+ * webkit_asociaciones — Bóveda: dónde se guarda el bloque CIFRADO en el navegador.
+ *
+ * Por qué IndexedDB y no localStorage:
+ *   · localStorage admite unos 5 MB y solo texto; IndexedDB, cientos de MB y
+ *     archivos (útil si algún día se adjuntan facturas o actas en PDF).
+ *   · IndexedDB es asíncrono como lo sería una API: no bloquea la página al guardar.
+ * Si IndexedDB no está disponible (algún navegador abriendo el archivo con
+ * file://, o en modo privado), se usa localStorage como respaldo.
+ *
+ * Aquí NUNCA llega nada en claro: solo el bloque que devuelve Cripto.cifrar().
+ *
+ * ATENCIÓN (limitación conocida): el navegador guarda los datos asociados a
+ * él mismo y a la ubicación del archivo. Si abres el HTML con otro navegador, o
+ * lo mueves de carpeta, puede que aparezca vacío. Los datos no se han perdido:
+ * siguen donde estaban, o se recuperan con la copia de seguridad.
+ */
+(function (raiz) {
+  "use strict";
+
+  var BD = "webkit_asociaciones";
+  var ALMACEN = "boveda";
+  var CLAVE = "datos";
+  var CLAVE_LS = "webkit_asociaciones_boveda";
+
+  var abierta = null; // promesa de la base de datos (o null si no hay IndexedDB)
+
+  function abrir() {
+    if (abierta) return abierta;
+    abierta = new Promise(function (resolver) {
+      try {
+        if (!raiz.indexedDB) return resolver(null);
+        var pet = raiz.indexedDB.open(BD, 1);
+        pet.onupgradeneeded = function () { pet.result.createObjectStore(ALMACEN); };
+        pet.onsuccess = function () { resolver(pet.result); };
+        pet.onerror = function () { resolver(null); };
+        pet.onblocked = function () { resolver(null); };
+      } catch (e) {
+        resolver(null);
+      }
+    });
+    return abierta;
+  }
+
+  function operacion(modo, hacer) {
+    return abrir().then(function (bd) {
+      if (!bd) return { sinIndexedDB: true };
+      return new Promise(function (resolver, rechazar) {
+        var tx = bd.transaction(ALMACEN, modo);
+        var pet = hacer(tx.objectStore(ALMACEN));
+        var resultado;
+        if (pet) pet.onsuccess = function () { resultado = pet.result; };
+        tx.oncomplete = function () { resolver({ valor: resultado }); };
+        tx.onerror = function () { rechazar(tx.error || new Error("No se pudo guardar en el navegador.")); };
+        tx.onabort = function () { rechazar(tx.error || new Error("El navegador canceló el guardado (¿sin espacio?).")); };
+      });
+    });
+  }
+
+  var ls = {
+    leer: function () { try { var s = localStorage.getItem(CLAVE_LS); return s ? JSON.parse(s) : null; } catch (e) { return null; } },
+    escribir: function (b) { localStorage.setItem(CLAVE_LS, JSON.stringify(b)); },
+    borrar: function () { try { localStorage.removeItem(CLAVE_LS); } catch (e) { /* nada que borrar */ } },
+  };
+
+  /** Devuelve el bloque cifrado guardado, o null si no hay datos. */
+  async function leer() {
+    var r = await operacion("readonly", function (s) { return s.get(CLAVE); });
+    if (r.sinIndexedDB) return ls.leer();
+    return r.valor || ls.leer(); // por si se guardó con el respaldo en otra ocasión
+  }
+
+  async function escribir(bloque) {
+    var r = await operacion("readwrite", function (s) { return s.put(bloque, CLAVE); });
+    if (r.sinIndexedDB) ls.escribir(bloque);
+    else ls.borrar(); // que no quede una versión vieja en el respaldo
+  }
+
+  async function borrar() {
+    await operacion("readwrite", function (s) { return s.delete(CLAVE); });
+    ls.borrar();
+  }
+
+  async function hayDatos() {
+    return !!(await leer());
+  }
+
+  /** Dónde se está guardando, para enseñarlo en Ajustes. */
+  async function tipo() {
+    return (await abrir()) ? "IndexedDB" : "localStorage";
+  }
+
+  /**
+   * Pide al navegador que no borre estos datos cuando ande corto de espacio.
+   * El navegador puede decir que no; no pasa nada, pero se avisa en Ajustes.
+   */
+  async function pedirPersistencia() {
+    try {
+      if (navigator.storage && navigator.storage.persist) return await navigator.storage.persist();
+    } catch (e) { /* no soportado */ }
+    return false;
+  }
+
+  (raiz.WA = raiz.WA || {}).Boveda = { leer: leer, escribir: escribir, borrar: borrar, hayDatos: hayDatos, tipo: tipo, pedirPersistencia: pedirPersistencia };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/datos/sesion.js */
+/*
+ * webkit_asociaciones — Sesión: abrir, guardar y cerrar los datos.
+ *
+ * Une las piezas: Cripto (cifrar), Bóveda (guardar en el navegador), Esquema
+ * (migrar) y Repositorio (la puerta que usan los módulos).
+ *
+ * Estados:
+ *   · cerrada       no hay datos en memoria; se ve la pantalla de acceso
+ *   · abierta       datos reales descifrados en memoria; cada cambio se cifra y se guarda
+ *   · demostración  datos inventados en memoria; NADA se guarda
+ *
+ * Mientras la sesión está abierta, el documento descifrado vive SOLO en memoria.
+ * Al bloquear o cerrar, se suelta (y con él la clave).
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA;
+
+  var estado = { modo: "cerrada", doc: null, llave: null, repo: null };
+  var oyentes = [];
+  var cola = Promise.resolve();   // los guardados van en fila: nunca dos a la vez
+  var pendientes = 0;             // guardados en curso (para avisar si cierras la pestaña)
+
+  function avisar() { oyentes.forEach(function (f) { try { f(estado.modo); } catch (e) { console.error(e); } }); }
+
+  /** Cifra y guarda el documento actual. Se encadena para que no se pisen. */
+  function persistir() {
+    if (estado.modo !== "abierta") return Promise.resolve();
+    var doc = estado.doc, llave = estado.llave;
+    pendientes++;
+    cola = cola.then(function () {
+      return WA.Cripto.cifrar(doc, llave).then(WA.Boveda.escribir);
+    }).catch(function (e) {
+      console.error(e);
+      WA.UI && WA.UI.aviso("No se ha podido guardar en el navegador. Descarga una copia de seguridad ahora.", "error");
+    }).then(function () { pendientes--; avisar(); });
+    return cola;
+  }
+
+  function abrirCon(doc, llave, modo) {
+    estado.doc = doc;
+    estado.llave = llave;
+    estado.modo = modo;
+    estado.repo = WA.Repositorio.crearRepositorio(doc, modo === "abierta" ? persistir : null);
+    avisar();
+  }
+
+  var Sesion = {
+    get modo() { return estado.modo; },
+    get datos() { return estado.repo; },
+    hayGuardadosPendientes: function () { return pendientes > 0; },
+    alCambiar: function (f) { oyentes.push(f); },
+
+    /** Primera vez: crea unos datos vacíos protegidos con esta contraseña. */
+    crear: async function (contrasena) {
+      var llave = await WA.Cripto.crearLlave(contrasena);
+      abrirCon(WA.Esquema.documentoVacio(), llave, "abierta");
+      await persistir();
+      WA.Boveda.pedirPersistencia();
+    },
+
+    /** Descifra lo guardado en el navegador. Lanza error si la contraseña falla. */
+    desbloquear: async function (contrasena) {
+      var bloque = await WA.Boveda.leer();
+      if (!bloque) throw new Error("No hay datos guardados en este navegador.");
+      var r = await WA.Cripto.descifrar(bloque, contrasena);
+      var doc = WA.Esquema.migrar(r.objeto);
+      abrirCon(doc, r.llave, "abierta");
+      if (doc.esquema !== r.objeto.esquema) await persistir(); // se guardan ya migrados
+    },
+
+    /**
+     * Recupera una copia de seguridad. Si va cifrada hace falta SU contraseña;
+     * a partir de ahí, los datos quedan protegidos con «contrasenaNueva» (que
+     * puede ser la misma). Sustituye lo que hubiera en el navegador.
+     */
+    restaurar: async function (lectura, contrasenaCopia, contrasenaNueva) {
+      var objeto;
+      if (lectura.cifrada) objeto = (await WA.Cripto.descifrar(lectura.bloque, contrasenaCopia)).objeto;
+      else objeto = lectura.documento;
+      var doc = WA.Esquema.migrar(objeto);
+      // Recién restaurada, la copia ES una copia de seguridad: no hay cambios pendientes.
+      doc.meta.cambiosDesdeCopia = 0;
+      var llave = await WA.Cripto.crearLlave(contrasenaNueva || contrasenaCopia);
+      abrirCon(doc, llave, "abierta");
+      await persistir();
+      WA.Boveda.pedirPersistencia();
+    },
+
+    /** Modo demostración: datos inventados que no se guardan en ningún sitio. */
+    demostracion: function () {
+      abrirCon(WA.Demo.documentoDemo(), null, "demostración");
+    },
+
+    /** Bloquea: suelta datos y clave de la memoria. Lo guardado sigue cifrado. */
+    bloquear: async function () {
+      await cola;
+      estado.doc = null; estado.llave = null; estado.repo = null; estado.modo = "cerrada";
+      avisar();
+    },
+
+    /** Borra del navegador los datos guardados (no las copias descargadas). */
+    borrarDelNavegador: async function () {
+      await cola;
+      await WA.Boveda.borrar();
+    },
+
+    /** Cambia la contraseña: vuelve a cifrar con una sal nueva. */
+    cambiarContrasena: async function (actual, nueva) {
+      if (estado.modo !== "abierta") throw new Error("No hay una sesión abierta.");
+      var bloque = await WA.Boveda.leer();
+      await WA.Cripto.descifrar(bloque, actual); // lanza si «actual» no es la buena
+      estado.llave = await WA.Cripto.crearLlave(nueva);
+      await persistir();
+    },
+
+    /**
+     * Arma el contenido del archivo de copia. Cifrada: con la llave de la sesión
+     * (la misma contraseña). En demostración no hay llave: solo sin cifrar.
+     */
+    contenidoCopia: async function (cifrada) {
+      var doc = await estado.repo.documento();
+      if (cifrada) {
+        if (!estado.llave) throw new Error("En la demostración la copia no se puede cifrar.");
+        return WA.Copia.sobreCifrado(await WA.Cripto.cifrar(doc, estado.llave), doc.asociacion.nombre);
+      }
+      return WA.Copia.sobreAbierto(doc);
+    },
+  };
+
+  WA.Sesion = Sesion;
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <!-- Aplicación y módulos (cada módulo se registra solo) -->
+  <script>/* js/nucleo/app.js */
+/*
+ * webkit_asociaciones — Esqueleto de la aplicación: módulos, navegación y avisos.
+ *
+ * CÓMO SE AÑADE UN MÓDULO (p. ej. «Socios» en la Fase 2):
+ *   1. Crea src/js/modulos/socios.js
+ *   2. Dentro, llama a:
+ *        WA.App.registrar({
+ *          id: "socios",                 // aparece en la dirección: #/socios
+ *          titulo: "Socios",             // texto del menú y título de la página
+ *          icono: "<path d=…/>",          // trazos SVG de 24×24 (opcional)
+ *          orden: 20,                    // posición en el menú
+ *          pintar: async function (contenedor, datos) { … }  // datos = WA.Sesion.datos
+ *        });
+ *   3. Añade su <script> en src/index.html (antes de arranque.js).
+ *
+ * La navegación usa el «#» de la dirección (#/inicio, #/asociacion…) porque
+ * funciona abriendo el archivo directamente, sin servidor.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA;
+  var modulos = [];
+  var actual = null;
+  var temporizadorBloqueo = null;
+
+  var $ = function (id) { return document.getElementById(id); };
+
+  function registrar(m) {
+    modulos.push(m);
+    modulos.sort(function (a, b) { return (a.orden || 0) - (b.orden || 0); });
+  }
+
+  function rutaActual() {
+    var id = (location.hash || "").replace(/^#\/?/, "").split("/")[0];
+    return modulos.some(function (m) { return m.id === id; }) ? id : "inicio";
+  }
+
+  function pintarMenu() {
+    var lista = $("menu-lista");
+    lista.innerHTML = modulos.filter(function (m) { return !m.oculto; }).map(function (m) {
+      return '<li><a href="#/' + m.id + '" data-modulo="' + m.id + '">' +
+        '<svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + (m.icono || "") + "</svg>" +
+        "<span>" + WA.UI.esc(m.titulo) + "</span></a></li>";
+    }).join("");
+  }
+
+  /** Pinta el módulo de la dirección actual. */
+  async function navegar(opciones) {
+    if (WA.Sesion.modo === "cerrada") return;
+    var id = rutaActual();
+    var m = modulos.find(function (x) { return x.id === id; });
+    actual = id;
+    Array.prototype.forEach.call(document.querySelectorAll("#menu-lista a"), function (a) {
+      if (a.getAttribute("data-modulo") === id) a.setAttribute("aria-current", "page");
+      else a.removeAttribute("aria-current");
+    });
+    cerrarMenuMovil();
+    var principal = $("principal");
+    principal.innerHTML = '<p class="cargando">Cargando…</p>';
+    try {
+      principal.innerHTML = "";
+      await m.pintar(principal, WA.Sesion.datos);
+    } catch (e) {
+      console.error(e);
+      principal.innerHTML = '<div class="tarjeta tarjeta-error"><h1>Algo ha fallado</h1><p>' + WA.UI.esc(e.message) +
+        "</p><p>Tus datos no se han tocado. Si vuelve a pasar, descarga una copia de seguridad y avisa en el repositorio del proyecto.</p></div>";
+    }
+    document.title = m.titulo + " · webkit_asociaciones";
+    // Para lectores de pantalla: el foco va al título de la página nueva.
+    if (!opciones || opciones.foco !== false) {
+      var h1 = principal.querySelector("h1");
+      if (h1) { h1.setAttribute("tabindex", "-1"); h1.focus({ preventScroll: true }); }
+    }
+    window.scrollTo(0, 0);
+  }
+
+  /** Vuelve a pintar la página actual (tras guardar algo) sin mover el foco. */
+  function repintar() { return navegar({ foco: false }); }
+
+  // ── Menú en el móvil ──────────────────────────────────────────────────────
+  function abrirMenuMovil() {
+    document.body.classList.add("menu-abierto");
+    $("btn-menu").setAttribute("aria-expanded", "true");
+    var primero = document.querySelector("#menu-lista a");
+    if (primero) primero.focus();
+  }
+  function cerrarMenuMovil() {
+    document.body.classList.remove("menu-abierto");
+    var b = $("btn-menu");
+    if (b) b.setAttribute("aria-expanded", "false");
+  }
+
+  // ── Franjas de aviso (demostración / copia de seguridad) ─────────────────
+  async function actualizarFranjas() {
+    var demo = WA.Sesion.modo === "demostración";
+    $("franja-demo").hidden = !demo;
+    var franja = $("franja-copia");
+    if (demo || WA.Sesion.modo !== "abierta") { franja.hidden = true; return; }
+    var e = await WA.Sesion.datos.estadoCopia();
+    var texto = "";
+    if (!e.ultimaCopia && e.cambiosDesdeCopia > 0) texto = "Todavía no has hecho ninguna copia de seguridad.";
+    else if (e.cambiosDesdeCopia > 0) {
+      var dias = WA.Fechas.diasEntre(e.ultimaCopia.slice(0, 10), WA.Fechas.hoy());
+      texto = "Hay cambios sin copia de seguridad" + (dias > 0 ? " (la última es de hace " + dias + (dias === 1 ? " día)." : " días).") : ".");
+    }
+    $("franja-copia-texto").textContent = texto;
+    franja.hidden = !texto;
+  }
+
+  // ── Bloqueo por inactividad ──────────────────────────────────────────────
+  function reiniciarBloqueo() {
+    clearTimeout(temporizadorBloqueo);
+    var min = WA.Preferencias.leer().bloqueoMinutos;
+    if (WA.Sesion.modo !== "abierta" || !(min > 0)) return;
+    temporizadorBloqueo = setTimeout(function () {
+      WA.Sesion.bloquear().then(function () { WA.UI.aviso("Se ha bloqueado por inactividad. Tus datos siguen guardados.", "info"); });
+    }, min * 60000);
+  }
+
+  // ── Cerrar sesión (y, si está activado, borrar los datos de este navegador) ──
+  async function cerrarSesion() {
+    if (WA.Sesion.modo === "demostración") { await WA.Sesion.bloquear(); return; }
+    var borrar = WA.Preferencias.leer().borrarAlSalir;
+    if (!borrar) { await WA.Sesion.bloquear(); return; }
+    var e = await WA.Sesion.datos.estadoCopia();
+    if (e.cambiosDesdeCopia > 0) {
+      var r = await WA.UI.dialogo({
+        titulo: "Hay cambios sin copia de seguridad",
+        contenido: "<p>Este navegador está configurado para <strong>borrar los datos al cerrar la sesión</strong>. " +
+          "Si sales sin descargar una copia, perderás los cambios desde la última.</p>",
+        botones: [
+          { texto: "Cancelar", valor: "cancelar" },
+          { texto: "Salir sin copia", valor: "sin", estilo: "btn-peligro" },
+          { texto: "Descargar copia y salir", valor: "copia", estilo: "btn-primario" },
+        ],
+      });
+      if (r.valor === "cancelar") return;
+      if (r.valor === "copia") await WA.Copias.descargar(true);
+    }
+    await WA.Sesion.borrarDelNavegador();
+    await WA.Sesion.bloquear();
+    WA.UI.aviso("Sesión cerrada y datos borrados de este navegador.", "info");
+  }
+
+  function iniciar() {
+    pintarMenu();
+    window.addEventListener("hashchange", function () { navegar(); });
+    $("btn-menu").addEventListener("click", function () {
+      if (document.body.classList.contains("menu-abierto")) cerrarMenuMovil(); else abrirMenuMovil();
+    });
+    $("velo-menu").addEventListener("click", cerrarMenuMovil);
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape" && document.body.classList.contains("menu-abierto")) { cerrarMenuMovil(); $("btn-menu").focus(); }
+    });
+    $("btn-bloquear").addEventListener("click", function () { WA.Sesion.bloquear(); });
+    $("btn-cerrar-sesion").addEventListener("click", cerrarSesion);
+    $("btn-franja-copia").addEventListener("click", function () { WA.Copias.descargar(true); });
+    $("btn-salir-demo").addEventListener("click", function () { WA.Sesion.bloquear(); });
+    ["click", "keydown", "pointermove", "scroll"].forEach(function (ev) {
+      document.addEventListener(ev, reiniciarBloqueo, { passive: true });
+    });
+    window.addEventListener("beforeunload", function (e) {
+      if (WA.Sesion.hayGuardadosPendientes()) { e.preventDefault(); e.returnValue = ""; }
+    });
+
+    var modoAnterior = null;
+    WA.Sesion.alCambiar(function (modo) {
+      var cambioDeModo = modo !== modoAnterior;
+      modoAnterior = modo;
+      actualizarFranjas();
+      if (!cambioDeModo) return;
+      var abierta = modo !== "cerrada";
+      $("app").hidden = !abierta;
+      $("acceso").hidden = abierta;
+      $("btn-bloquear").hidden = modo !== "abierta";
+      if (abierta) { reiniciarBloqueo(); navegar(); }
+      else { $("principal").innerHTML = ""; WA.Acceso.mostrar(); }
+    });
+  }
+
+  WA.App = { registrar: registrar, iniciar: iniciar, navegar: navegar, repintar: repintar, actualizarFranjas: actualizarFranjas, reiniciarBloqueo: reiniciarBloqueo };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/acceso.js */
+/*
+ * webkit_asociaciones — Pantalla de acceso.
+ *
+ * Tres situaciones:
+ *   · No hay datos en este navegador → «Empezar»: crear contraseña, recuperar
+ *     una copia de seguridad o probar con datos de demostración.
+ *   · Hay datos → «Desbloquear» con la contraseña.
+ *   · Se ha olvidado la contraseña → no hay forma de recuperar lo cifrado
+ *     (es el precio de que nadie más pueda leerlo). Solo queda una copia
+ *     de seguridad o empezar de cero.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, esc = WA.UI.esc;
+  var MINIMO = 8;
+  var $ = function (id) { return document.getElementById(id); };
+
+  var LOGO = '<svg class="acceso-logo" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="var(--acento)"/>' +
+    '<path d="M14 33V19l10-6 10 6v14" fill="none" stroke="var(--acento-texto)" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M20 33v-8h8v8" fill="none" stroke="var(--acento-texto)" stroke-width="3" stroke-linejoin="round"/></svg>';
+
+  function pintar(html) {
+    $("acceso").innerHTML = '<main class="acceso-panel" id="acceso-principal">' + LOGO + html + "</main>";
+    var primero = $("acceso").querySelector("input, button");
+    if (primero) primero.focus();
+  }
+
+  function error(id, texto) {
+    var el = $(id);
+    el.textContent = texto || "";
+    el.hidden = !texto;
+  }
+
+  /** Bloquea el botón mientras se cifra (tarda medio segundo) para que no se pulse dos veces. */
+  async function ocupado(boton, texto, tarea) {
+    var antes = boton.textContent;
+    boton.disabled = true;
+    boton.textContent = texto;
+    try { return await tarea(); }
+    finally { boton.disabled = false; boton.textContent = antes; }
+  }
+
+  function camposContrasena(prefijo) {
+    return '<label for="' + prefijo + '-1">Contraseña</label>' +
+      '<input id="' + prefijo + '-1" type="password" autocomplete="new-password" minlength="' + MINIMO + '" required aria-describedby="' + prefijo + '-ayuda">' +
+      '<p class="campo-ayuda" id="' + prefijo + '-ayuda">Mínimo ' + MINIMO + ' caracteres. Mejor una frase que una palabra.</p>' +
+      '<label for="' + prefijo + '-2">Repítela</label>' +
+      '<input id="' + prefijo + '-2" type="password" autocomplete="new-password" required>';
+  }
+  function comprobarContrasenas(prefijo, idError) {
+    var a = $(prefijo + "-1").value, b = $(prefijo + "-2").value;
+    if (a.length < MINIMO) { error(idError, "La contraseña necesita al menos " + MINIMO + " caracteres."); return null; }
+    if (a !== b) { error(idError, "Las dos contraseñas no coinciden."); return null; }
+    return a;
+  }
+
+  // ── Bienvenida: no hay datos ─────────────────────────────────────────────
+  function bienvenida() {
+    pintar(
+      "<h1>webkit_asociaciones</h1>" +
+      '<p class="acceso-sub">Gestión de tu asociación en un solo archivo. Los datos se quedan en este navegador, cifrados con tu contraseña.</p>' +
+      '<div class="acceso-opciones">' +
+      '<button type="button" class="btn btn-primario" id="op-empezar">Empezar con datos nuevos</button>' +
+      '<button type="button" class="btn btn-secundario" id="op-recuperar">Recuperar una copia de seguridad</button>' +
+      '<button type="button" class="btn btn-enlace" id="op-demo">Probar con datos de demostración</button>' +
+      "</div>" +
+      '<p class="acceso-nota">La demostración usa datos inventados y no guarda nada.</p>'
+    );
+    $("op-empezar").addEventListener("click", crear);
+    $("op-recuperar").addEventListener("click", recuperar);
+    $("op-demo").addEventListener("click", function () { WA.Sesion.demostracion(); });
+  }
+
+  function crear() {
+    pintar(
+      "<h1>Elige una contraseña</h1>" +
+      '<p class="acceso-sub">Cifrará los datos en este navegador y en tus copias de seguridad.</p>' +
+      '<div class="caja-aviso"><strong>Si la olvidas, nadie puede recuperar los datos</strong>, tampoco quien hizo esta aplicación. Apúntala en un lugar seguro y compártela solo con quien lleve la gestión.</div>' +
+      '<form id="f-crear" class="acceso-form" novalidate>' + camposContrasena("c") +
+      '<p class="acceso-error" id="e-crear" role="alert" hidden></p>' +
+      '<button type="submit" class="btn btn-primario">Crear y entrar</button>' +
+      '<button type="button" class="btn btn-enlace" id="volver">Volver</button></form>'
+    );
+    $("volver").addEventListener("click", bienvenida);
+    $("f-crear").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      error("e-crear", "");
+      var pass = comprobarContrasenas("c", "e-crear");
+      if (!pass) return;
+      await ocupado(e.submitter || this.querySelector("[type=submit]"), "Cifrando…", function () { return WA.Sesion.crear(pass); });
+      location.hash = "#/asociacion";
+      WA.UI.aviso("Listo. Empieza por los datos de tu asociación.");
+    });
+  }
+
+  // ── Recuperar una copia ──────────────────────────────────────────────────
+  async function recuperar() {
+    var archivo = await WA.UI.elegirArchivo(".json,application/json");
+    if (!archivo) return;
+    var lectura;
+    try { lectura = WA.Copia.leer(archivo.texto); }
+    catch (e) { WA.UI.aviso(e.message, "error"); return; }
+    var de = lectura.asociacion ? " de <strong>" + esc(lectura.asociacion) + "</strong>" : "";
+    var fecha = lectura.creada ? " (" + esc(WA.Fechas.corta(lectura.creada.slice(0, 10))) + ")" : "";
+    pintar(
+      "<h1>Recuperar copia</h1>" +
+      '<p class="acceso-sub">Copia' + de + fecha + ".</p>" +
+      '<form id="f-rec" class="acceso-form" novalidate>' +
+      (lectura.cifrada
+        ? '<label for="r-pass">Contraseña de la copia</label><input id="r-pass" type="password" autocomplete="current-password" required>' +
+          '<p class="campo-ayuda">A partir de ahora, esta misma contraseña protegerá los datos en este navegador.</p>'
+        : '<div class="caja-aviso">Esta copia <strong>no está cifrada</strong>. Elige una contraseña para protegerla en este navegador.</div>' + camposContrasena("r")) +
+      '<p class="acceso-error" id="e-rec" role="alert" hidden></p>' +
+      '<button type="submit" class="btn btn-primario">Recuperar y entrar</button>' +
+      '<button type="button" class="btn btn-enlace" id="volver">Volver</button></form>'
+    );
+    $("volver").addEventListener("click", function () { WA.Acceso.mostrar(); });
+    $("f-rec").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      error("e-rec", "");
+      var pass = lectura.cifrada ? $("r-pass").value : comprobarContrasenas("r", "e-rec");
+      if (!pass) return;
+      try {
+        await ocupado(this.querySelector("[type=submit]"), "Descifrando…", function () { return WA.Sesion.restaurar(lectura, pass, pass); });
+        WA.UI.aviso("Copia recuperada.");
+      } catch (err) {
+        error("e-rec", err.message);
+      }
+    });
+  }
+
+  // ── Desbloquear ──────────────────────────────────────────────────────────
+  function desbloquear() {
+    pintar(
+      "<h1>Desbloquear</h1>" +
+      '<p class="acceso-sub">Escribe la contraseña de tu asociación.</p>' +
+      '<form id="f-entrar" class="acceso-form" novalidate>' +
+      '<label for="d-pass">Contraseña</label><input id="d-pass" type="password" autocomplete="current-password" required>' +
+      '<p class="acceso-error" id="e-entrar" role="alert" hidden></p>' +
+      '<button type="submit" class="btn btn-primario">Entrar</button></form>' +
+      '<details class="acceso-olvido"><summary>¿Has olvidado la contraseña?</summary>' +
+      "<p>Los datos están cifrados con ella y no hay forma de recuperarla. Puedes:</p>" +
+      '<div class="acceso-opciones"><button type="button" class="btn btn-secundario" id="op-recuperar">Recuperar una copia de seguridad</button>' +
+      '<button type="button" class="btn btn-peligro-suave" id="op-borrar">Borrar los datos de este navegador y empezar de cero</button></div></details>' +
+      '<p class="acceso-nota"><button type="button" class="btn btn-enlace" id="op-demo">Ver la demostración</button></p>'
+    );
+    $("f-entrar").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      error("e-entrar", "");
+      var pass = $("d-pass").value;
+      if (!pass) { error("e-entrar", "Escribe la contraseña."); return; }
+      try {
+        await ocupado(this.querySelector("[type=submit]"), "Comprobando…", function () { return WA.Sesion.desbloquear(pass); });
+      } catch (err) {
+        error("e-entrar", err.message);
+        $("d-pass").select();
+      }
+    });
+    $("op-recuperar").addEventListener("click", recuperar);
+    $("op-demo").addEventListener("click", function () { WA.Sesion.demostracion(); });
+    $("op-borrar").addEventListener("click", async function () {
+      var ok = await WA.UI.confirmar("Se borrarán los datos guardados en este navegador. Las copias de seguridad que hayas descargado no se tocan. No se puede deshacer.",
+        { titulo: "Borrar datos de este navegador", aceptar: "Borrar", peligro: true });
+      if (!ok) return;
+      await WA.Sesion.borrarDelNavegador();
+      bienvenida();
+    });
+  }
+
+  async function mostrar() {
+    if (await WA.Boveda.hayDatos()) desbloquear(); else bienvenida();
+  }
+
+  WA.Acceso = { mostrar: mostrar };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/inicio.js */
+/*
+ * webkit_asociaciones — Módulo «Inicio».
+ *
+ * En la Fase 1 es una portada sencilla: qué asociación es, cómo está la copia
+ * de seguridad y qué falta por rellenar. En la Fase 6 se convertirá en el panel
+ * de resumen (socios, cuotas, saldo, próximas fechas).
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, esc = WA.UI.esc;
+
+  async function pintar(cont, datos) {
+    var a = await datos.leer("asociacion");
+    var junta = (await datos.listar("junta")).filter(function (m) { return !m.hasta || m.hasta >= WA.Fechas.hoy(); });
+    var copia = await datos.estadoCopia();
+    var demo = WA.Sesion.modo === "demostración";
+
+    var pendientes = [];
+    if (!a.nombre) pendientes.push('<a href="#/asociacion">Escribe el nombre y los datos de la asociación</a>');
+    if (!a.nif) pendientes.push('<a href="#/asociacion">Añade el NIF de la asociación</a>');
+    if (!junta.length) pendientes.push('<a href="#/asociacion">Añade la junta directiva</a>');
+    if (!demo && !copia.ultimaCopia) pendientes.push('<a href="#/copias">Descarga tu primera copia de seguridad</a>');
+
+    var estadoCopia = demo ? "No aplica en la demostración."
+      : !copia.ultimaCopia ? '<span class="estado estado-aviso">Sin copias todavía</span>'
+      : copia.cambiosDesdeCopia ? '<span class="estado estado-aviso">Cambios sin copia</span> Última: ' + esc(WA.Fechas.corta(copia.ultimaCopia.slice(0, 10)))
+      : '<span class="estado estado-ok">Al día</span> Última: ' + esc(WA.Fechas.corta(copia.ultimaCopia.slice(0, 10)));
+
+    cont.innerHTML =
+      "<h1>" + esc(a.nombre || "Tu asociación") + "</h1>" +
+      '<p class="intro">' + (a.domicilio && a.domicilio.municipio ? esc(WA.Direccion.formatear(a.domicilio).completa) : "Desde aquí llevarás la gestión de la asociación.") + "</p>" +
+      (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
+        pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
+      '<div class="rejilla-tarjetas">' +
+      '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
+      '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
+      '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Socios y cuotas, tesorería e IVA, actividades, actas, obligaciones, subvenciones e informes.</p></section>' +
+      "</div>";
+  }
+
+  WA.App.registrar({
+    id: "inicio", titulo: "Inicio", orden: 0, pintar: pintar,
+    icono: '<path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v10h14V10"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/asociacion.js */
+/*
+ * webkit_asociaciones — Módulo «Asociación»: datos de la entidad y junta directiva.
+ *
+ * Los datos de la asociación (nombre, NIF, domicilio…) se usan después en
+ * convocatorias, actas, recibos y la memoria anual, así que conviene rellenarlos
+ * primero.
+ *
+ * La junta guarda también a quienes ya salieron (con fecha «hasta»): sirve de
+ * histórico de cargos, que a menudo se pide al tramitar cambios en el registro.
+ * Qué cargos debe haber y cómo se renuevan lo dicen los ESTATUTOS de cada
+ * asociación (verificar con asesoría); aquí solo se anotan.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, V = WA.Validar, Dir = WA.Direccion;
+
+  // ── Datos de la asociación ───────────────────────────────────────────────
+  function formularioAsociacion(a) {
+    var d = a.domicilio || {};
+    return '<form id="f-asociacion" class="formulario" novalidate>' +
+      '<fieldset><legend>Identificación</legend><div class="rejilla">' +
+      UI.campo({ nombre: "nombre", etiqueta: "Nombre completo", valor: a.nombre, requerido: true, ancho: "completo", ayuda: "Tal y como figura en los estatutos." }) +
+      UI.campo({ nombre: "siglas", etiqueta: "Siglas o nombre corto", valor: a.siglas }) +
+      UI.campo({ nombre: "nif", etiqueta: "NIF de la asociación", valor: a.nif, ayuda: "Antes llamado CIF. Suele empezar por G.", atributos: 'autocapitalize="characters"' }) +
+      UI.campo({ nombre: "registro", etiqueta: "Registro donde está inscrita", valor: a.registro, ayuda: "Nacional o de tu comunidad autónoma." }) +
+      UI.campo({ nombre: "numeroRegistro", etiqueta: "Número de inscripción", valor: a.numeroRegistro }) +
+      UI.campo({ nombre: "fechaConstitucion", etiqueta: "Fecha de constitución", tipo: "date", valor: a.fechaConstitucion }) +
+      "</div></fieldset>" +
+      camposDomicilio(d) +
+      '<fieldset><legend>Contacto y banco</legend><div class="rejilla">' +
+      UI.campo({ nombre: "email", etiqueta: "Correo", tipo: "email", valor: a.email, atributos: 'autocomplete="email"' }) +
+      UI.campo({ nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: a.telefono }) +
+      UI.campo({ nombre: "web", etiqueta: "Web", tipo: "url", valor: a.web, ayuda: "Con https://" }) +
+      UI.campo({ nombre: "iban", etiqueta: "IBAN de la cuenta", valor: a.iban, ayuda: "Se usará para las remesas de cuotas.", atributos: 'autocapitalize="characters"' }) +
+      "</div></fieldset>" +
+      '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar datos</button></div></form>';
+  }
+
+  /*
+   * Domicilio social, por partes (ver nucleo/direccion.js). Solo son necesarios
+   * vía, número, código postal y municipio; el resto se rellena si existe.
+   */
+  function camposDomicilio(d) {
+    var tipos = [["", "—"]].concat(Dir.TIPOS_VIA.map(function (t) { return [t, t]; }), [["Otro", "Otro (escríbelo en el nombre)"]]);
+    // Si la provincia guardada no está en la lista (dato antiguo), se ofrece igualmente para no perderla.
+    var provincias = [["", "—"]].concat((d.provincia && Dir.PROVINCIAS.indexOf(d.provincia) < 0 ? [d.provincia] : []).concat(Dir.PROVINCIAS)
+      .map(function (p) { return [p, p]; }));
+    return '<fieldset><legend>Domicilio social</legend><div class="rejilla-12">' +
+      UI.campo({ nombre: "tipoVia", etiqueta: "Tipo de vía", tipo: "select", valor: d.tipoVia, opciones: tipos, clase: "col-3" }) +
+      UI.campo({ nombre: "nombreVia", etiqueta: "Nombre de la vía", valor: d.nombreVia, clase: "col-7 col-movil-completo", atributos: 'autocomplete="address-line1"' }) +
+      UI.campo({ nombre: "numero", etiqueta: "Número", valor: d.numero, clase: "col-2", ayuda: "o s/n", atributos: 'inputmode="text"' }) +
+      UI.campo({ nombre: "km", etiqueta: "Km", valor: d.km, clase: "col-2", ayuda: "En carreteras" }) +
+      UI.campo({ nombre: "bloque", etiqueta: "Bloque", valor: d.bloque, clase: "col-2" }) +
+      UI.campo({ nombre: "portal", etiqueta: "Portal", valor: d.portal, clase: "col-2" }) +
+      UI.campo({ nombre: "escalera", etiqueta: "Escalera", valor: d.escalera, clase: "col-2" }) +
+      UI.campo({ nombre: "planta", etiqueta: "Planta o piso", valor: d.planta, clase: "col-2", lista: Dir.PLANTAS, ayuda: "1, 2… Bajo, Ático" }) +
+      UI.campo({ nombre: "puerta", etiqueta: "Puerta", valor: d.puerta, clase: "col-2", ayuda: "A, B, Izda…" }) +
+      UI.campo({ nombre: "complemento", etiqueta: "Otros datos de la dirección", valor: d.complemento, clase: "col-12",
+        ayuda: "Lo que no encaje arriba: local, centro cívico, urbanización, «a/a de…»." }) +
+      UI.campo({ nombre: "codigoPostal", etiqueta: "Código postal", valor: d.codigoPostal, clase: "col-3",
+        atributos: 'inputmode="numeric" autocomplete="postal-code" maxlength="5"' }) +
+      UI.campo({ nombre: "municipio", etiqueta: "Municipio", valor: d.municipio, clase: "col-5", atributos: 'autocomplete="address-level2"' }) +
+      UI.campo({ nombre: "provincia", etiqueta: "Provincia", tipo: "select", valor: d.provincia, opciones: provincias, clase: "col-4 col-movil-completo",
+        ayuda: "Se rellena sola con el código postal." }) +
+      '<p class="vista-previa" aria-live="polite"><strong>Así se escribirá en los documentos</strong><span id="dom-previa"></span></p>' +
+      "</div></fieldset>";
+  }
+
+  /** Lee los campos del domicilio de un formulario ya convertido en objeto. */
+  function domicilioDe(datos) {
+    var d = Dir.vacia();
+    Dir.CAMPOS.forEach(function (c) { d[c] = datos[c] || ""; });
+    if (/^s\/?n$/i.test(d.numero)) d.numero = "s/n";
+    d.puerta = d.puerta.length <= 2 ? d.puerta.toUpperCase() : d.puerta;
+    return d;
+  }
+
+  /** Devuelve los avisos de formato (no impiden guardar). */
+  function revisar(form, datos) {
+    var avisos = 0;
+    function comprobar(nombre, resultado) {
+      var m = datos[nombre] && !resultado.valido ? resultado.mensaje : "";
+      UI.marcarError(form, nombre, m);
+      if (m) avisos++;
+    }
+    UI.marcarError(form, "nombre", datos.nombre ? "" : "El nombre es obligatorio.");
+    if (datos.nif) comprobar("nif", V.nifEntidad(datos.nif)); else UI.marcarError(form, "nif", "");
+    if (datos.iban) comprobar("iban", V.iban(datos.iban)); else UI.marcarError(form, "iban", "");
+    if (datos.email) comprobar("email", V.email(datos.email)); else UI.marcarError(form, "email", "");
+    if (datos.codigoPostal) comprobar("codigoPostal", V.codigoPostal(datos.codigoPostal)); else UI.marcarError(form, "codigoPostal", "");
+    // El código postal empieza por el número de la provincia: si no casan, uno de los dos está mal.
+    var provCP = Dir.provinciaDeCP(datos.codigoPostal);
+    var noCasan = provCP && datos.provincia && provCP !== datos.provincia;
+    UI.marcarError(form, "provincia", noCasan ? "El código postal " + datos.codigoPostal + " es de " + provCP + "." : "");
+    if (noCasan) avisos++;
+    return avisos;
+  }
+
+  // ── Junta directiva ─────────────────────────────────────────────────────
+  var nombreCargo = function (m) { return m.cargo === "Otro" && m.cargoOtro ? m.cargoOtro : m.cargo; };
+  var vigente = function (m) { return !m.hasta || m.hasta >= F.hoy(); };
+
+  function tablaJunta(junta) {
+    var orden = WA.Esquema.CARGOS;
+    var actuales = junta.filter(vigente).sort(function (a, b) { return orden.indexOf(a.cargo) - orden.indexOf(b.cargo); });
+    var anteriores = junta.filter(function (m) { return !vigente(m); }).sort(function (a, b) { return (b.hasta || "").localeCompare(a.hasta || ""); });
+    function filas(lista) {
+      return lista.map(function (m) {
+        return "<tr><th scope=\"row\">" + esc(nombreCargo(m)) + "</th><td>" + esc(m.nombre) + "</td>" +
+          '<td class="solo-ancho">' + (m.email ? '<a href="mailto:' + esc(m.email) + '">' + esc(m.email) + "</a>" : "") +
+          (m.telefono ? "<br><span class=\"detalle\">" + esc(m.telefono) + "</span>" : "") + "</td>" +
+          "<td>" + esc(F.corta(m.desde)) + (m.hasta ? " – " + esc(F.corta(m.hasta)) : "") + "</td>" +
+          '<td class="celda-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-editar="' + esc(m.id) + '" aria-label="Editar a ' + esc(m.nombre) + '">Editar</button></td></tr>';
+      }).join("");
+    }
+    var cabecera = '<thead><tr><th scope="col">Cargo</th><th scope="col">Nombre</th><th scope="col" class="solo-ancho">Contacto</th><th scope="col">En el cargo</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead>';
+    return (actuales.length
+      ? '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Junta directiva actual</caption>' + cabecera + "<tbody>" + filas(actuales) + "</tbody></table></div>"
+      : '<p class="vacio">Todavía no has añadido a nadie de la junta.</p>') +
+      (anteriores.length
+        ? '<details class="historico"><summary>Cargos anteriores (' + anteriores.length + ')</summary><div class="tabla-envoltorio"><table class="tabla">' +
+          '<caption class="sr">Cargos anteriores</caption>' + cabecera + "<tbody>" + filas(anteriores) + "</tbody></table></div></details>"
+        : "");
+  }
+
+  async function editarMiembro(datos, miembro) {
+    var m = miembro || { cargo: "Presidencia", cargoOtro: "", nombre: "", email: "", telefono: "", desde: F.hoy(), hasta: "" };
+    var r = await UI.dialogo({
+      titulo: miembro ? "Editar cargo" : "Añadir a la junta",
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "cargo", etiqueta: "Cargo", tipo: "select", valor: m.cargo, opciones: WA.Esquema.CARGOS }) +
+        UI.campo({ nombre: "cargoOtro", etiqueta: "Nombre del cargo", valor: m.cargoOtro, ayuda: "Solo si has elegido «Otro»." }) +
+        UI.campo({ nombre: "nombre", etiqueta: "Nombre y apellidos", valor: m.nombre, requerido: true, ancho: "completo" }) +
+        UI.campo({ nombre: "email", etiqueta: "Correo", tipo: "email", valor: m.email }) +
+        UI.campo({ nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: m.telefono }) +
+        UI.campo({ nombre: "desde", etiqueta: "En el cargo desde", tipo: "date", valor: m.desde, requerido: true }) +
+        UI.campo({ nombre: "hasta", etiqueta: "Hasta", tipo: "date", valor: m.hasta, ayuda: "Déjalo vacío si sigue en el cargo." }) +
+        "</div></form>",
+      botones: (miembro ? [{ texto: "Eliminar", valor: "eliminar", estilo: "btn-peligro-suave" }] : [])
+        .concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+      validar: function (form) {
+        var d = UI.leerFormulario(form), bien = true;
+        UI.marcarError(form, "nombre", d.nombre ? "" : "Escribe el nombre."); if (!d.nombre) bien = false;
+        UI.marcarError(form, "desde", F.esValida(d.desde) ? "" : "Pon la fecha de inicio."); if (!F.esValida(d.desde)) bien = false;
+        var hastaMal = d.hasta && d.hasta < d.desde;
+        UI.marcarError(form, "hasta", hastaMal ? "No puede ser anterior a «desde»." : ""); if (hastaMal) bien = false;
+        var otroMal = d.cargo === "Otro" && !d.cargoOtro;
+        UI.marcarError(form, "cargoOtro", otroMal ? "Escribe el nombre del cargo." : ""); if (otroMal) bien = false;
+        if (d.email && !V.email(d.email).valido) { UI.marcarError(form, "email", V.email(d.email).mensaje); bien = false; }
+        return bien;
+      },
+    });
+    if (r.valor === "eliminar") {
+      var ok = await UI.confirmar("Se eliminará a " + m.nombre + " (" + nombreCargo(m) + ") de la junta. Si ha dejado el cargo, es mejor poner la fecha «hasta» y así queda en el histórico.",
+        { titulo: "Eliminar de la junta", aceptar: "Eliminar", peligro: true });
+      if (ok) { await datos.borrar("junta", m.id); UI.aviso("Eliminado de la junta."); }
+      return ok;
+    }
+    if (r.valor !== "enviar") return false;
+    var d = r.datos;
+    await datos.guardar("junta", Object.assign({}, miembro || {}, {
+      cargo: d.cargo, cargoOtro: d.cargo === "Otro" ? d.cargoOtro : "", nombre: d.nombre,
+      email: d.email, telefono: d.telefono, desde: d.desde, hasta: d.hasta,
+    }));
+    UI.aviso(miembro ? "Cambios guardados." : "Añadido a la junta.");
+    return true;
+  }
+
+  async function pintar(cont, datos) {
+    var a = await datos.leer("asociacion");
+    var junta = await datos.listar("junta");
+    cont.innerHTML =
+      "<h1>Asociación</h1>" +
+      '<p class="intro">Los datos básicos de la entidad. Se usarán en convocatorias, actas y recibos.</p>' +
+      '<section class="tarjeta" aria-labelledby="t-datos"><h2 id="t-datos">Datos de la asociación</h2>' + formularioAsociacion(a) + "</section>" +
+      '<section class="tarjeta" aria-labelledby="t-junta"><div class="tarjeta-cabecera"><h2 id="t-junta">Junta directiva</h2>' +
+      '<button type="button" class="btn btn-secundario" id="j-anadir">Añadir cargo</button></div>' +
+      '<p class="detalle">Los cargos y su duración los fijan vuestros estatutos.</p>' +
+      '<div id="j-tabla">' + tablaJunta(junta) + "</div></section>";
+
+    var form = cont.querySelector("#f-asociacion");
+
+    // Vista previa de la dirección y provincia automática a partir del código postal.
+    var provinciaAuto = Dir.provinciaDeCP(a.domicilio && a.domicilio.codigoPostal);
+    function actualizarDireccion(e) {
+      var datosForm = UI.leerFormulario(form);
+      if (e && e.target.name === "codigoPostal") {
+        var p = Dir.provinciaDeCP(datosForm.codigoPostal);
+        // Solo se cambia si estaba vacía o la había puesto el propio código postal.
+        if (p && (!datosForm.provincia || datosForm.provincia === provinciaAuto)) {
+          form.elements.provincia.value = p;
+          datosForm.provincia = p;
+        }
+        provinciaAuto = p;
+      }
+      cont.querySelector("#dom-previa").textContent = Dir.formatear(domicilioDe(datosForm)).completa || "—";
+    }
+    form.addEventListener("input", actualizarDireccion);
+    form.addEventListener("change", actualizarDireccion);
+    actualizarDireccion();
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var d = UI.leerFormulario(form);
+      var avisos = revisar(form, d);
+      if (!d.nombre) { form.elements.nombre.focus(); return; }
+      await datos.escribir("asociacion", Object.assign(a, {
+        nombre: d.nombre, siglas: d.siglas, nif: V.normalizar(d.nif), registro: d.registro,
+        numeroRegistro: d.numeroRegistro, fechaConstitucion: d.fechaConstitucion,
+        domicilio: domicilioDe(d),
+        email: d.email, telefono: d.telefono, web: d.web, iban: V.normalizar(d.iban),
+      }));
+      UI.aviso(avisos ? "Guardado. Revisa los campos marcados: puede haber algún error al copiarlos." : "Datos guardados.", avisos ? "info" : "ok");
+    });
+
+    async function trasEditar(cambio) {
+      if (!cambio) return;
+      cont.querySelector("#j-tabla").innerHTML = tablaJunta(await datos.listar("junta"));
+    }
+    cont.querySelector("#j-anadir").addEventListener("click", function () { editarMiembro(datos).then(trasEditar); });
+    cont.querySelector("#j-tabla").addEventListener("click", async function (e) {
+      var b = e.target.closest("[data-editar]");
+      if (!b) return;
+      var m = await datos.obtener("junta", b.getAttribute("data-editar"));
+      if (m) trasEditar(await editarMiembro(datos, m));
+    });
+  }
+
+  WA.App.registrar({
+    id: "asociacion", titulo: "Asociación", orden: 10, pintar: pintar,
+    icono: '<path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/copias.js */
+/*
+ * webkit_asociaciones — Módulo «Copia de seguridad».
+ *
+ * La copia de seguridad es lo más importante de la aplicación: los datos viven
+ * en un navegador, y un navegador se puede borrar, cambiar o estropear. Una
+ * copia descargada (y guardada en otro sitio) es lo único que lo protege.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, esc = WA.UI.esc;
+
+  /** Descarga una copia. cifrada = true (normal) o false (legible, con aviso). */
+  async function descargar(cifrada) {
+    var sesion = WA.Sesion;
+    if (sesion.modo === "demostración" && cifrada) cifrada = false;
+    var sobre = await sesion.contenidoCopia(cifrada);
+    var nombre = WA.Copia.nombreArchivo(sobre.asociacion, WA.Fechas.hoy(), cifrada);
+    WA.UI.descargar(nombre, JSON.stringify(sobre, null, cifrada ? 0 : 2), "application/json");
+    if (cifrada && sesion.modo === "abierta") await sesion.datos.marcarCopiaHecha();
+    WA.UI.aviso("Copia descargada: " + nombre + ". Guárdala fuera de este ordenador.");
+    WA.App.actualizarFranjas();
+  }
+
+  async function descargarSinCifrar() {
+    var ok = await WA.UI.confirmar(
+      "El archivo contendrá todos los datos en claro (nombres, correos, teléfonos…). Cualquiera que lo abra podrá leerlos. " +
+      "Úsalo solo para revisarlos o pasarlos a otro programa, y bórralo después.",
+      { titulo: "Copia SIN cifrar", aceptar: "Descargar sin cifrar", peligro: true });
+    if (ok) await descargar(false);
+  }
+
+  async function restaurar() {
+    var archivo = await WA.UI.elegirArchivo(".json,application/json");
+    if (!archivo) return;
+    var lectura;
+    try { lectura = WA.Copia.leer(archivo.texto); }
+    catch (e) { WA.UI.aviso(e.message, "error"); return; }
+    var demo = WA.Sesion.modo === "demostración";
+    var r = await WA.UI.dialogo({
+      titulo: "Recuperar copia",
+      contenido: "<p>Copia" + (lectura.asociacion ? " de <strong>" + esc(lectura.asociacion) + "</strong>" : "") +
+        (lectura.creada ? " del " + esc(WA.Fechas.corta(lectura.creada.slice(0, 10))) : "") + ".</p>" +
+        (demo ? "" : '<div class="caja-aviso"><strong>Sustituirá todos los datos actuales.</strong> Si no estás seguro, descarga antes una copia de lo que tienes ahora.</div>') +
+        "<form>" +
+        (lectura.cifrada ? WA.UI.campo({ nombre: "pass", etiqueta: "Contraseña de la copia", tipo: "password", requerido: true,
+          ayuda: demo ? "" : "A partir de ahora será también la contraseña de este navegador.", atributos: 'autocomplete="current-password"' }) : "") +
+        (demo || !lectura.cifrada ? WA.UI.campo({ nombre: "nueva", etiqueta: "Contraseña para proteger los datos en este navegador", tipo: "password", requerido: true,
+          ayuda: "Mínimo 8 caracteres.", atributos: 'autocomplete="new-password" minlength="8"' }) : "") +
+        "</form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Recuperar", valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) {
+        var n = form.elements.nueva;
+        if (n && n.value.length < 8) { WA.UI.marcarError(form, "nueva", "Mínimo 8 caracteres."); return false; }
+        return true;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    try {
+      var passCopia = r.datos.pass || "";
+      // Si la copia va cifrada y no se pidió otra, la contraseña de la copia pasa a ser la de la sesión.
+      await WA.Sesion.restaurar(lectura, passCopia, r.datos.nueva || passCopia);
+      WA.UI.aviso("Copia recuperada.");
+      location.hash = "#/inicio";
+      WA.App.repintar();
+    } catch (e) {
+      WA.UI.aviso(e.message, "error");
+    }
+  }
+
+  async function pintar(cont, datos) {
+    var demo = WA.Sesion.modo === "demostración";
+    var e = await datos.estadoCopia();
+    var tipo = await WA.Boveda.tipo();
+    var ultima = e.ultimaCopia
+      ? "La última copia es del <strong>" + esc(WA.Fechas.corta(e.ultimaCopia.slice(0, 10))) + "</strong>" +
+        (e.cambiosDesdeCopia ? " y desde entonces ha habido cambios." : " y no ha habido cambios después.")
+      : "Todavía no has descargado ninguna copia.";
+    cont.innerHTML =
+      "<h1>Copia de seguridad</h1>" +
+      '<p class="intro">Tus datos solo están en este navegador. Descarga una copia cada vez que hagas cambios importantes y guárdala en otro sitio (un pendrive, la nube de la asociación…).</p>' +
+      (demo ? '<div class="caja-aviso">Estás en la demostración: la copia sale sin cifrar y con datos inventados.</div>' : "") +
+      '<section class="tarjeta" aria-labelledby="t-descargar"><h2 id="t-descargar">Descargar copia</h2>' +
+      (demo ? "" : "<p>" + ultima + "</p>") +
+      "<p>La copia va <strong>cifrada con tu contraseña</strong>: sin ella no se puede abrir.</p>" +
+      '<div class="acciones"><button type="button" class="btn btn-primario" id="c-descargar">Descargar copia cifrada</button>' +
+      '<button type="button" class="btn btn-secundario" id="c-claro">Descargar sin cifrar…</button></div></section>' +
+      '<section class="tarjeta" aria-labelledby="t-recuperar"><h2 id="t-recuperar">Recuperar una copia</h2>' +
+      "<p>Abre un archivo de copia para seguir trabajando con él en este navegador.</p>" +
+      '<div class="acciones"><button type="button" class="btn btn-secundario" id="c-recuperar">Elegir archivo de copia…</button></div></section>' +
+      '<section class="tarjeta" aria-labelledby="t-buenas"><h2 id="t-buenas">Buenas prácticas</h2><ul class="lista">' +
+      "<li>Guarda al menos dos copias en sitios distintos, y alguna fuera de este ordenador.</li>" +
+      "<li>Guarda la contraseña aparte de las copias (por ejemplo, en un gestor de contraseñas). Sin ella, la copia no sirve.</li>" +
+      "<li>Las copias contienen datos personales de socios: compártelas solo con quien lleve la gestión.</li>" +
+      "<li>Las copias sin cifrar, bórralas en cuanto termines de usarlas.</li>" +
+      "</ul><p class=\"detalle\">Se guarda en este navegador con " + esc(tipo) + ".</p></section>";
+    cont.querySelector("#c-descargar").addEventListener("click", function () { descargar(true).then(function () { WA.App.repintar(); }); });
+    cont.querySelector("#c-claro").addEventListener("click", descargarSinCifrar);
+    cont.querySelector("#c-recuperar").addEventListener("click", restaurar);
+    if (demo) cont.querySelector("#c-descargar").hidden = true;
+  }
+
+  WA.Copias = { descargar: descargar };
+  WA.App.registrar({
+    id: "copias", titulo: "Copia de seguridad", orden: 90, pintar: pintar,
+    icono: '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/ajustes.js */
+/*
+ * webkit_asociaciones — Módulo «Ajustes»: apariencia, seguridad y privacidad.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc;
+
+  async function cambiarContrasena() {
+    var r = await UI.dialogo({
+      titulo: "Cambiar la contraseña",
+      contenido: "<p>Los datos se vuelven a cifrar con la nueva. Las copias que ya descargaste siguen abriéndose con la contraseña de entonces.</p>" +
+        '<form class="formulario" novalidate>' +
+        UI.campo({ nombre: "actual", etiqueta: "Contraseña actual", tipo: "password", requerido: true, atributos: 'autocomplete="current-password"' }) +
+        UI.campo({ nombre: "nueva", etiqueta: "Nueva contraseña", tipo: "password", requerido: true, ayuda: "Mínimo 8 caracteres.", atributos: 'autocomplete="new-password"' }) +
+        UI.campo({ nombre: "repetida", etiqueta: "Repite la nueva", tipo: "password", requerido: true, atributos: 'autocomplete="new-password"' }) +
+        "</form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Cambiar", valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) {
+        var d = UI.leerFormulario(form);
+        var cortaMal = d.nueva.length < 8, distintas = d.nueva !== d.repetida;
+        UI.marcarError(form, "nueva", cortaMal ? "Mínimo 8 caracteres." : "");
+        UI.marcarError(form, "repetida", !cortaMal && distintas ? "No coinciden." : "");
+        return !cortaMal && !distintas;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    try {
+      await WA.Sesion.cambiarContrasena(r.datos.actual, r.datos.nueva);
+      UI.aviso("Contraseña cambiada. Descarga una copia nueva para que también vaya con ella.");
+    } catch (e) {
+      UI.aviso(e.message, "error");
+    }
+  }
+
+  async function pintar(cont) {
+    var p = WA.Preferencias.leer();
+    var tema = WA.Tema.actual();
+    var demo = WA.Sesion.modo === "demostración";
+    var radio = function (valor, texto) {
+      return '<label class="opcion"><input type="radio" name="tema" value="' + valor + '"' + (tema === valor ? " checked" : "") + "><span>" + texto + "</span></label>";
+    };
+    cont.innerHTML =
+      "<h1>Ajustes</h1>" +
+      '<section class="tarjeta" aria-labelledby="t-apariencia"><h2 id="t-apariencia">Apariencia</h2>' +
+      '<fieldset class="grupo-opciones"><legend>Tema</legend>' + radio("auto", "Como el sistema") + radio("claro", "Claro") + radio("oscuro", "Oscuro") + "</fieldset></section>" +
+
+      '<section class="tarjeta" aria-labelledby="t-seguridad"><h2 id="t-seguridad">Seguridad en este ordenador</h2>' +
+      (demo ? '<p class="detalle">En la demostración no hay contraseña ni datos guardados.</p>' : "") +
+      '<form id="f-seguridad" class="formulario" novalidate><div class="rejilla">' +
+      UI.campo({ nombre: "bloqueoMinutos", etiqueta: "Bloquear tras un rato sin usarla", tipo: "select", valor: String(p.bloqueoMinutos),
+        opciones: [["5", "5 minutos"], ["15", "15 minutos"], ["30", "30 minutos"], ["60", "1 hora"], ["0", "Nunca"]] }) +
+      "</div>" +
+      '<label class="casilla"><input type="checkbox" name="borrarAlSalir"' + (p.borrarAlSalir ? " checked" : "") + ">" +
+      "<span><strong>Borrar los datos de este navegador al cerrar la sesión.</strong> Para ordenadores compartidos. " +
+      "Al pulsar «Cerrar sesión» te pedirá descargar la copia si hay cambios, y después borrará los datos de este navegador. " +
+      "Si cierras la pestaña sin más, los datos se quedan guardados (cifrados).</span></label>" +
+      "</form>" +
+      (demo ? "" : '<div class="acciones"><button type="button" class="btn btn-secundario" id="a-pass">Cambiar la contraseña…</button></div>') +
+      "</section>" +
+
+      '<section class="tarjeta" aria-labelledby="t-privacidad"><h2 id="t-privacidad">Privacidad y protección de datos</h2>' +
+      "<p>Esta aplicación <strong>no envía nada a ningún servidor</strong>: no hay cuentas, ni nube, ni analítica. Los datos solo están en este navegador (cifrados) y en las copias que descargues.</p>" +
+      "<p>Aun así, la asociación es responsable de los datos personales de sus socios. Algunas buenas prácticas:</p><ul class=\"lista\">" +
+      "<li>Que solo use la aplicación quien lo necesita para su cargo (secretaría, tesorería), y cada cual en su ordenador personal o con la opción de borrar al salir.</li>" +
+      "<li>Usa una contraseña larga y no la envíes por el mismo canal que la copia de seguridad.</li>" +
+      "<li>Guarda las copias cifradas. Las copias sin cifrar, bórralas en cuanto termines.</li>" +
+      "<li>Recoge solo los datos que necesitas e informa a los socios de para qué se usan.</li>" +
+      "<li>Cuando alguien se da de baja, revisa cuánto tiempo debes conservar sus datos.</li>" +
+      "</ul>" +
+      '<p class="detalle">Estas recomendaciones son orientativas y no son asesoramiento legal. Las obligaciones concretas del RGPD y de la LOPDGDD para tu asociación (registro de actividades de tratamiento, información a los socios, plazos de conservación) conviene verificarlas con asesoría o con la guía de la Agencia Española de Protección de Datos.</p>' +
+      "</section>" +
+
+      '<section class="tarjeta" aria-labelledby="t-acerca"><h2 id="t-acerca">Acerca de</h2>' +
+      '<p>webkit_asociaciones · versión <span id="a-version">' + esc(raiz.WA_VERSION || "desarrollo") + "</span>. © 2026 Alberto Casado Vadillo. Todos los derechos reservados.</p></section>";
+
+    cont.querySelectorAll('input[name="tema"]').forEach(function (r) {
+      r.addEventListener("change", function () { WA.Tema.poner(r.value); });
+    });
+    var f = cont.querySelector("#f-seguridad");
+    f.addEventListener("change", function () {
+      var d = UI.leerFormulario(f);
+      WA.Preferencias.poner({ bloqueoMinutos: parseInt(d.bloqueoMinutos, 10) || 0, borrarAlSalir: !!d.borrarAlSalir });
+      WA.App.reiniciarBloqueo();
+      UI.aviso("Ajuste guardado en este ordenador.");
+    });
+    var bp = cont.querySelector("#a-pass");
+    if (bp) bp.addEventListener("click", cambiarContrasena);
+  }
+
+  WA.App.registrar({
+    id: "ajustes", titulo: "Ajustes", orden: 100, pintar: pintar,
+    icono: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <!-- Siempre el último -->
+  <script>/* js/arranque.js */
+/*
+ * webkit_asociaciones — Arranque. Es el ÚLTIMO script: para cuando se ejecuta,
+ * todos los módulos ya se han registrado.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA;
+  WA.App.iniciar();
+  WA.Acceso.mostrar();
+})(typeof self !== "undefined" ? self : this);
+</script>
+</body>
+</html>

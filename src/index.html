@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="color-scheme" content="light dark">
+  <meta name="description" content="Gestión de asociaciones en un solo archivo: datos, socios, tesorería, actas. Sin servidores: todo se queda en tu navegador.">
+  <title>webkit_asociaciones</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232f6f4f'/%3E%3Cpath d='M14 33V19l10-6 10 6v14' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
+  <!-- build:version -->
+  <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
+  <script src="js/nucleo/tema.js"></script>
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/componentes.css">
+  <link rel="stylesheet" href="css/impresion.css">
+</head>
+<body>
+  <a class="saltar" href="#principal">Saltar al contenido</a>
+
+  <!-- Pantalla de acceso (crear / desbloquear / recuperar). La pinta modulos/acceso.js -->
+  <div id="acceso" class="acceso"></div>
+
+  <!-- La aplicación, visible solo con la sesión abierta -->
+  <div id="app" class="app" hidden>
+    <header class="cabecera">
+      <button type="button" id="btn-menu" class="btn-icono solo-movil" aria-expanded="false" aria-controls="menu-lateral" aria-label="Menú">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+      </button>
+      <a class="marca" href="#/inicio">webkit_asociaciones</a>
+      <div class="cabecera-acciones">
+        <button type="button" id="btn-bloquear" class="btn btn-secundario btn-pequeno" title="Bloquear: pide la contraseña para volver a entrar">Bloquear</button>
+        <button type="button" id="btn-cerrar-sesion" class="btn btn-secundario btn-pequeno">Cerrar sesión</button>
+      </div>
+    </header>
+
+    <div id="franja-demo" class="franja franja-info" hidden>
+      <span>Estás viendo una <strong>demostración</strong> con datos inventados. Nada de lo que hagas se guarda.</span>
+      <button type="button" id="btn-salir-demo" class="btn btn-pequeno btn-secundario">Salir de la demostración</button>
+    </div>
+    <div id="franja-copia" class="franja franja-aviso" role="status" hidden>
+      <span id="franja-copia-texto"></span>
+      <button type="button" id="btn-franja-copia" class="btn btn-pequeno btn-primario">Descargar copia</button>
+    </div>
+
+    <div class="cuerpo">
+      <nav id="menu-lateral" class="menu" aria-label="Secciones">
+        <ul id="menu-lista"></ul>
+      </nav>
+      <div id="velo-menu" class="velo" aria-hidden="true"></div>
+      <main id="principal" class="principal" tabindex="-1"></main>
+    </div>
+  </div>
+
+  <div id="avisos" class="avisos"></div>
+
+  <noscript><p style="padding:2rem">Esta aplicación necesita JavaScript activado.</p></noscript>
+
+  <!-- Núcleo (sin dependencias entre sí, salvo el orden) -->
+  <script src="js/nucleo/dinero.js"></script>
+  <script src="js/nucleo/fechas.js"></script>
+  <script src="js/nucleo/validar.js"></script>
+  <script src="js/nucleo/direccion.js"></script>
+  <script src="js/nucleo/cripto.js"></script>
+  <script src="js/nucleo/preferencias.js"></script>
+  <script src="js/nucleo/ui.js"></script>
+  <!-- Datos -->
+  <script src="js/datos/esquema.js"></script>
+  <script src="js/datos/repositorio.js"></script>
+  <script src="js/datos/copia.js"></script>
+  <script src="js/datos/demo.js"></script>
+  <script src="js/datos/boveda.js"></script>
+  <script src="js/datos/sesion.js"></script>
+  <!-- Aplicación y módulos (cada módulo se registra solo) -->
+  <script src="js/nucleo/app.js"></script>
+  <script src="js/modulos/acceso.js"></script>
+  <script src="js/modulos/inicio.js"></script>
+  <script src="js/modulos/asociacion.js"></script>
+  <script src="js/modulos/copias.js"></script>
+  <script src="js/modulos/ajustes.js"></script>
+  <!-- Siempre el último -->
+  <script src="js/arranque.js"></script>
+</body>
+</html>

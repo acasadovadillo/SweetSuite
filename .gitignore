@@ -1,0 +1,20 @@
+# ── Datos reales: NUNCA al repositorio ──────────────────────────────────
+# Copias de seguridad de la aplicación (cifradas o no) y exportaciones.
+copia-*.json
+*SIN-CIFRAR*
+*.csv
+*.xlsx
+*.ics
+/datos/
+/privado/
+
+# ── Sistema y editores ─────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+
+# ── Herramientas locales ───────────────────────────────────────────────
+.claude/
+node_modules/

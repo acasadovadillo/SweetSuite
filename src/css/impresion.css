@@ -1,0 +1,17 @@
+/*
+ * webkit_asociaciones — Impresión (y «Guardar como PDF» del navegador).
+ * Se quita todo lo que es de manejo (menú, botones, avisos) y queda el contenido.
+ * Los informes de la Fase 6 se apoyan en esto.
+ */
+@media print {
+  :root { --fondo: #fff; --superficie: #fff; --texto: #000; --texto-2: #222; --texto-3: #444; --borde: #bbb; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .cabecera, .menu, .velo, .franja, .avisos, .saltar, .acciones, .btn, .celda-acciones, .no-imprimir { display: none !important; }
+  .cuerpo { display: block; min-height: 0; }
+  .principal { padding: 0; max-width: none; }
+  .tarjeta { box-shadow: none; border: none; padding: 0; margin: 0 0 1.5rem; break-inside: avoid; }
+  a { color: #000; text-decoration: none; }
+  .tabla th, .tabla td { border-bottom: 1px solid #999; }
+  details { display: block; }
+  details > summary { list-style: none; }
+}
