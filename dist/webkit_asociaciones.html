@@ -1,5 +1,5 @@
 <!--
-  webkit_asociaciones 0.1.0
+  webkit_asociaciones 0.2.0
   Archivo generado por tools/build.mjs a partir de src/. No lo edites a mano.
 -->
 <!doctype html>
@@ -12,7 +12,7 @@
   <meta name="description" content="Gestión de asociaciones en un solo archivo: datos, socios, tesorería, actas. Sin servidores: todo se queda en tu navegador.">
   <title>webkit_asociaciones</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232f6f4f'/%3E%3Cpath d='M14 33V19l10-6 10 6v14' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <script>window.WA_VERSION = "0.1.0";</script>
+  <script>window.WA_VERSION = "0.2.0";</script>
   <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
   <script>/* js/nucleo/tema.js */
 /*
@@ -272,7 +272,7 @@ h1:focus { outline: none; }
 .lista-pasos li { margin-bottom: 0.4rem; }
 .vacio { color: var(--texto-3); font-style: italic; }
 
-.estado { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-right: 0.35rem; }
+.estado { display: inline-block; white-space: nowrap; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-right: 0.35rem; }
 .estado-ok { background: var(--ok-fondo); color: var(--ok); }
 .estado-aviso { background: var(--aviso-fondo); color: var(--aviso); }
 
@@ -308,7 +308,7 @@ h1:focus { outline: none; }
 .campo label, .acceso-form label { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
 .obligatorio { color: var(--peligro); }
 input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
-input[type="password"], input[type="number"], select, textarea {
+input[type="password"], input[type="number"], input[type="search"], select, textarea {
   width: 100%; min-height: 44px; padding: 0.55rem 0.7rem;
   font: inherit; color: var(--texto); background: var(--superficie);
   border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno);
@@ -335,7 +335,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .tabla th, .tabla td { text-align: left; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
 .tabla thead th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); font-weight: 700; }
 .tabla tbody th { font-weight: 600; }
-.celda-acciones { text-align: right; white-space: nowrap; }
+.celda-acciones { text-align: right; white-space: nowrap; width: 1%; }
 .historico { margin-top: 1rem; }
 .historico summary { cursor: pointer; font-weight: 600; color: var(--texto-2); padding: 0.4rem 0; }
 
@@ -372,6 +372,37 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .acceso-nota { color: var(--texto-3); font-size: 0.88rem; text-align: center; margin-top: 0.75rem; }
 .acceso-olvido { margin-top: 1.25rem; border-top: 1px solid var(--borde); padding-top: 0.75rem; }
 .acceso-olvido summary { cursor: pointer; color: var(--texto-2); font-weight: 600; }
+
+/* ── Páginas de listado (socios, cuotas) ───────────────────────────────── */
+.cabecera-pagina { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+.cabecera-pagina h1 { margin: 0; }
+.miga { font-size: 0.9rem; color: var(--texto-3); margin-bottom: 0.5rem; }
+.barra-filtros { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1rem 0; }
+.barra-filtros label { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.92rem; }
+.barra-filtros select, .barra-filtros input { width: auto; }
+.filtro-texto { flex: 1 1 260px; }
+.filtro-texto input { width: 100%; }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; width: 3.5rem; }
+.tabla .importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.celda-casilla { width: 2rem; }
+.celda-casilla input { width: 18px; height: 18px; accent-color: var(--acento); }
+.etiqueta { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.05rem 0.45rem; border-radius: 4px; background: var(--superficie-2); color: var(--texto-2); vertical-align: middle; }
+.estado-neutro { background: var(--superficie-2); color: var(--texto-2); }
+.estado-error { background: var(--peligro-suave); color: var(--peligro); }
+.pestanas { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--borde); margin: 0.75rem 0 1.25rem; overflow-x: auto; }
+.pestanas a { padding: 0.6rem 1rem; text-decoration: none; color: var(--texto-2); font-weight: 600; border-bottom: 3px solid transparent; white-space: nowrap; }
+.pestanas a:hover { color: var(--texto); }
+.pestanas a[aria-current="page"] { color: var(--texto); border-bottom-color: var(--acento); }
+.cifras .cifra { font-size: 1.5rem; margin: 0; }
+.lista-cifras { list-style: none; padding: 0; margin: 0; }
+.lista-cifras li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; border-bottom: 1px dashed var(--borde); }
+.lista-cifras li:last-child { border-bottom: none; }
+.zona-peligro { border-color: var(--peligro-suave); }
+.dato-edad { align-self: center; margin: 0.9rem 0 0; color: var(--texto-2); font-weight: 600; }
+.dato-numero { margin: 0; display: flex; flex-direction: column; justify-content: center; }
+.dato-numero strong { font-size: 1.3rem; }
+.barra-guardar { position: sticky; bottom: 0; background: var(--fondo); padding: 0.75rem 0; margin-top: 0; z-index: 5; }
+.formulario .tarjeta fieldset { margin-top: 0.75rem; }
 </style>
   <style>/* css/impresion.css */
 /*
@@ -390,6 +421,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   .tabla th, .tabla td { border-bottom: 1px solid #999; }
   details { display: block; }
   details > summary { list-style: none; }
+  .barra-guardar, .barra-filtros, .pestanas, .miga { display: none !important; }
+  .tabla-libro { font-size: 9.5pt; }
+  .tabla-libro th, .tabla-libro td { padding: 0.25rem 0.35rem; }
+  thead { display: table-header-group; } /* la cabecera se repite en cada hoja */
+  tr { break-inside: avoid; }
 }
 </style>
 </head>
@@ -1012,6 +1048,109 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   };
 });
 </script>
+  <script>/* js/nucleo/csv.js */
+/*
+ * webkit_asociaciones — CSV (leer y escribir hojas de cálculo en texto).
+ *
+ * Al ESCRIBIR se usa el formato que Excel en español abre con doble clic:
+ *   · separador punto y coma (;), porque la coma es el separador decimal;
+ *   · marca BOM al principio, para que Excel reconozca las tildes (UTF-8);
+ *   · comillas dobles alrededor de los campos que lo necesitan;
+ *   · fin de línea CRLF.
+ *
+ * Al LEER se acepta casi cualquier CSV: detecta el separador (; , o tabulador),
+ * entiende comillas, saltos de línea dentro de un campo y la marca BOM.
+ *
+ *   escribir(columnas, filas)  columnas: [{ clave, titulo }], filas: [objeto] → texto
+ *   leer(texto)                → { cabecera: [texto], filas: [[texto]], numeros: [n.º de fila en la hoja] }
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).CSV = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var BOM = "\ufeff";
+
+  function celda(valor, sep) {
+    var s = valor == null ? "" : String(valor);
+    // Excel ejecutaría como fórmula un texto que empiece por = + - @: se protege
+    // con un apóstrofo (riesgo conocido como «inyección CSV»). Los números
+    // negativos se dejan tal cual.
+    if (/^[=+@\t\r]/.test(s) || (/^-/.test(s) && !/^-\d+([.,]\d+)?$/.test(s))) s = "'" + s;
+    if (s.indexOf(sep) >= 0 || /["\r\n]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  }
+
+  function escribir(columnas, filas, separador) {
+    var sep = separador || ";";
+    var lineas = [columnas.map(function (c) { return celda(c.titulo, sep); }).join(sep)];
+    (filas || []).forEach(function (f) {
+      lineas.push(columnas.map(function (c) {
+        var v = typeof c.valor === "function" ? c.valor(f) : f[c.clave];
+        return celda(v, sep);
+      }).join(sep));
+    });
+    return BOM + lineas.join("\r\n") + "\r\n";
+  }
+
+  /** Adivina el separador mirando la primera línea (fuera de comillas). */
+  function detectarSeparador(texto) {
+    var cuenta = { ";": 0, ",": 0, "\t": 0 }, dentro = false;
+    for (var i = 0; i < texto.length; i++) {
+      var ch = texto[i];
+      if (ch === '"') dentro = !dentro;
+      else if (!dentro && (ch === "\n" || ch === "\r")) break;
+      else if (!dentro && ch in cuenta) cuenta[ch]++;
+    }
+    var mejor = ";";
+    Object.keys(cuenta).forEach(function (k) { if (cuenta[k] > cuenta[mejor]) mejor = k; });
+    return mejor;
+  }
+
+  function leer(texto) {
+    var s = String(texto || "");
+    if (s.charAt(0) === BOM) s = s.slice(1);
+    var sep = detectarSeparador(s);
+    var filas = [], fila = [], campo = "", dentro = false, i = 0;
+    while (i < s.length) {
+      var ch = s[i];
+      if (dentro) {
+        if (ch === '"') {
+          if (s[i + 1] === '"') { campo += '"'; i += 2; continue; }
+          dentro = false; i++; continue;
+        }
+        campo += ch; i++; continue;
+      }
+      if (ch === '"' && campo === "") { dentro = true; i++; continue; }
+      if (ch === sep) { fila.push(campo); campo = ""; i++; continue; }
+      if (ch === "\r" || ch === "\n") {
+        fila.push(campo); campo = "";
+        filas.push(fila); fila = [];
+        if (ch === "\r" && s[i + 1] === "\n") i++;
+        i++; continue;
+      }
+      campo += ch; i++;
+    }
+    if (campo !== "" || fila.length) { fila.push(campo); filas.push(fila); }
+    // Fuera las filas totalmente vacías (líneas en blanco, típicas de Excel), pero
+    // recordando el número de fila de cada una tal y como se ve en la hoja (la
+    // primera es la 1), para que los avisos señalen la fila correcta.
+    var numeros = [];
+    filas = filas.filter(function (f, i) {
+      var llena = f.some(function (c) { return String(c).trim() !== ""; });
+      if (llena) numeros.push(i + 1);
+      return llena;
+    });
+    var cabecera = (filas.shift() || []).map(function (c) { return String(c).trim(); });
+    numeros.shift();
+    return { cabecera: cabecera, filas: filas, numeros: numeros, separador: sep };
+  }
+
+  return { escribir: escribir, leer: leer, BOM: BOM };
+});
+</script>
   <script>/* js/nucleo/cripto.js */
 /*
  * webkit_asociaciones — Cifrado (Web Crypto API del navegador, sin librerías).
@@ -1342,6 +1481,663 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   };
 })(typeof self !== "undefined" ? self : this);
 </script>
+  <script>/* js/nucleo/form-direccion.js */
+/*
+ * webkit_asociaciones — Formulario de dirección postal por partes (componente de interfaz).
+ *
+ * Lo usan el domicilio social de la asociación y la ficha de cada socio, para que
+ * las direcciones se escriban siempre igual. La lógica está en nucleo/direccion.js.
+ *
+ *   campos(d, opciones)   HTML de los campos (dentro de un <form>)
+ *                         opciones.leyenda: texto del <legend>; opciones.previa: false para no
+ *                         enseñar «Así se escribirá»
+ *   leer(datos)           objeto del formulario (UI.leerFormulario) → dirección
+ *   conectar(form)        provincia automática al escribir el código postal y vista previa
+ *   revisar(form, datos)  marca los avisos (CP mal escrito, CP de otra provincia); devuelve cuántos hay
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, Dir = WA.Direccion, V = WA.Validar;
+
+  function campos(d, opciones) {
+    var o = opciones || {};
+    d = Object.assign(Dir.vacia(), d || {});
+    var tipos = [["", "—"]].concat(Dir.TIPOS_VIA.map(function (t) { return [t, t]; }), [["Otro", "Otro (escríbelo en el nombre)"]]);
+    // Si la provincia guardada no está en la lista (dato antiguo), se ofrece igualmente para no perderla.
+    var provincias = [["", "—"]].concat((d.provincia && Dir.PROVINCIAS.indexOf(d.provincia) < 0 ? [d.provincia] : []).concat(Dir.PROVINCIAS)
+      .map(function (p) { return [p, p]; }));
+    return '<fieldset class="form-direccion"><legend>' + UI.esc(o.leyenda || "Dirección") + '</legend><div class="rejilla-12">' +
+      UI.campo({ nombre: "tipoVia", etiqueta: "Tipo de vía", tipo: "select", valor: d.tipoVia, opciones: tipos, clase: "col-3" }) +
+      UI.campo({ nombre: "nombreVia", etiqueta: "Nombre de la vía", valor: d.nombreVia, clase: "col-7 col-movil-completo", atributos: 'autocomplete="address-line1"' }) +
+      UI.campo({ nombre: "numero", etiqueta: "Número", valor: d.numero, clase: "col-2", ayuda: "o s/n" }) +
+      UI.campo({ nombre: "km", etiqueta: "Km", valor: d.km, clase: "col-2", ayuda: "En carreteras" }) +
+      UI.campo({ nombre: "bloque", etiqueta: "Bloque", valor: d.bloque, clase: "col-2" }) +
+      UI.campo({ nombre: "portal", etiqueta: "Portal", valor: d.portal, clase: "col-2" }) +
+      UI.campo({ nombre: "escalera", etiqueta: "Escalera", valor: d.escalera, clase: "col-2" }) +
+      UI.campo({ nombre: "planta", etiqueta: "Planta o piso", valor: d.planta, clase: "col-2", lista: Dir.PLANTAS, ayuda: "1, 2… Bajo, Ático" }) +
+      UI.campo({ nombre: "puerta", etiqueta: "Puerta", valor: d.puerta, clase: "col-2", ayuda: "A, B, Izda…" }) +
+      UI.campo({ nombre: "complemento", etiqueta: "Otros datos de la dirección", valor: d.complemento, clase: "col-12",
+        ayuda: "Lo que no encaje arriba: local, urbanización, «a/a de…»." }) +
+      UI.campo({ nombre: "codigoPostal", etiqueta: "Código postal", valor: d.codigoPostal, clase: "col-3",
+        atributos: 'inputmode="numeric" autocomplete="postal-code" maxlength="5"' }) +
+      UI.campo({ nombre: "municipio", etiqueta: "Municipio", valor: d.municipio, clase: "col-5", atributos: 'autocomplete="address-level2"' }) +
+      UI.campo({ nombre: "provincia", etiqueta: "Provincia", tipo: "select", valor: d.provincia, opciones: provincias, clase: "col-4 col-movil-completo",
+        ayuda: "Se rellena sola con el código postal." }) +
+      (o.previa === false ? "" : '<p class="vista-previa" aria-live="polite"><strong>Así se escribirá en los documentos</strong><span data-previa-direccion></span></p>') +
+      "</div></fieldset>";
+  }
+
+  function leer(datos) {
+    var d = Dir.vacia();
+    Dir.CAMPOS.forEach(function (c) { d[c] = String(datos[c] || "").trim(); });
+    if (/^s\/?n$/i.test(d.numero)) d.numero = "s/n";
+    if (d.puerta.length <= 2) d.puerta = d.puerta.toUpperCase();
+    return d;
+  }
+
+  function conectar(form) {
+    var provinciaAuto = Dir.provinciaDeCP(form.elements.codigoPostal && form.elements.codigoPostal.value);
+    function actualizar(e) {
+      if (!form.elements.codigoPostal) return;
+      if (e && e.target && e.target.name === "codigoPostal") {
+        var p = Dir.provinciaDeCP(form.elements.codigoPostal.value);
+        // Solo se cambia si estaba vacía o la había puesto el propio código postal.
+        if (p && (!form.elements.provincia.value || form.elements.provincia.value === provinciaAuto)) form.elements.provincia.value = p;
+        provinciaAuto = p;
+      }
+      var previa = form.querySelector("[data-previa-direccion]");
+      if (previa) previa.textContent = Dir.formatear(leer(UI.leerFormulario(form))).completa || "—";
+    }
+    form.addEventListener("input", actualizar);
+    form.addEventListener("change", actualizar);
+    actualizar();
+  }
+
+  function revisar(form, datos) {
+    var avisos = 0;
+    var cpMal = datos.codigoPostal && !V.codigoPostal(datos.codigoPostal).valido ? V.codigoPostal(datos.codigoPostal).mensaje : "";
+    UI.marcarError(form, "codigoPostal", cpMal);
+    // El código postal empieza por el número de la provincia: si no casan, uno de los dos está mal.
+    var provCP = Dir.provinciaDeCP(datos.codigoPostal);
+    var noCasan = provCP && datos.provincia && provCP !== datos.provincia ? "El código postal " + datos.codigoPostal + " es de " + provCP + "." : "";
+    UI.marcarError(form, "provincia", noCasan);
+    if (cpMal) avisos++;
+    if (noCasan) avisos++;
+    return avisos;
+  }
+
+  WA.FormDireccion = { campos: campos, leer: leer, conectar: conectar, revisar: revisar };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <!-- Lógica de negocio (sin interfaz, con tests) -->
+  <script>/* js/logica/socios.js */
+/*
+ * webkit_asociaciones — Lógica de socios (sin interfaz: se prueba en tests/socios.test.js).
+ *
+ * Un socio:
+ *   { id, numero,                                 número de socio: nunca se reutiliza
+ *     nombre, apellidos, tipoDocumento, documento, fechaNacimiento, sexo, ocupacion,
+ *     email, telefono, telefono2, direccion (forma de nucleo/direccion.js),
+ *     tipoSocioId, exentoCuota, formaPago (la habitual),
+ *     iban, titularCuenta, mandatoReferencia, mandatoFecha,   (domiciliación SEPA)
+ *     tutor: { nombre, documento, telefono, email, relacion },  (si es menor)
+ *     consentimientos: { proteccionDatos (fecha), imagen (sí/no), comunicaciones (sí/no) },
+ *     fechaAlta, fechaBaja, motivoBaja, notas }
+ *
+ * La relación actualizada de asociados es una obligación de la Ley Orgánica 1/2002
+ * (art. 14) — verificar con asesoría qué datos debe contener en vuestro caso.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { Fechas: require("../nucleo/fechas.js"), Validar: require("../nucleo/validar.js"), Direccion: require("../nucleo/direccion.js") }
+    : { Fechas: raiz.WA.Fechas, Validar: raiz.WA.Validar, Direccion: raiz.WA.Direccion };
+  var modulo = fabrica(dep.Fechas, dep.Validar, dep.Direccion);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Socios = modulo;
+})(typeof self !== "undefined" ? self : this, function (F, V, Dir) {
+  "use strict";
+
+  var TIPOS_DOCUMENTO = ["DNI", "NIE", "Pasaporte", "Otro"];
+  var SEXOS = ["Mujer", "Hombre", "Otro", "Prefiere no decirlo"];
+  var FORMAS_PAGO = ["Transferencia", "Bizum", "Efectivo", "Domiciliación", "Tarjeta", "Otra"];
+  var MAYORIA_EDAD = 18;
+
+  function vacio() {
+    return {
+      numero: null, nombre: "", apellidos: "", tipoDocumento: "DNI", documento: "", fechaNacimiento: "", sexo: "", ocupacion: "",
+      email: "", telefono: "", telefono2: "", direccion: Dir.vacia(),
+      tipoSocioId: "", exentoCuota: false, formaPago: "Transferencia",
+      iban: "", titularCuenta: "", mandatoReferencia: "", mandatoFecha: "",
+      tutor: { nombre: "", documento: "", telefono: "", email: "", relacion: "" },
+      consentimientos: { proteccionDatos: "", imagen: false, comunicaciones: false },
+      fechaAlta: "", fechaBaja: "", motivoBaja: "", notas: "",
+    };
+  }
+
+  /** Rellena lo que falte con los valores por defecto (registros antiguos o importados). */
+  function completar(s) {
+    var v = vacio();
+    var r = Object.assign(v, s || {});
+    r.direccion = Object.assign(Dir.vacia(), (s && s.direccion) || {});
+    r.tutor = Object.assign(vacio().tutor, (s && s.tutor) || {});
+    r.consentimientos = Object.assign(vacio().consentimientos, (s && s.consentimientos) || {});
+    return r;
+  }
+
+  function nombreCompleto(s) {
+    return [s.nombre, s.apellidos].map(function (x) { return String(x || "").trim(); }).filter(Boolean).join(" ");
+  }
+  /** «Apellidos, Nombre» para listados ordenados. */
+  function nombreListado(s) {
+    var a = String(s.apellidos || "").trim(), n = String(s.nombre || "").trim();
+    return a && n ? a + ", " + n : a || n;
+  }
+
+  /** ¿Es socio en esa fecha? (dado de alta y no dado de baja). */
+  function activoEn(s, fecha) {
+    var f = fecha || F.hoy();
+    if (!s.fechaAlta || s.fechaAlta > f) return false;
+    return !s.fechaBaja || s.fechaBaja > f;
+  }
+  function estado(s, hoy) {
+    var f = hoy || F.hoy();
+    if (s.fechaBaja && s.fechaBaja <= f) return "baja";
+    if (s.fechaAlta && s.fechaAlta > f) return "futuro";
+    return "activo";
+  }
+
+  /** Edad cumplida en una fecha (null si no hay fecha de nacimiento). */
+  function edad(fechaNacimiento, hoy) {
+    var n = F.desdeISO(fechaNacimiento), h = F.desdeISO(hoy || F.hoy());
+    if (!n || !h) return null;
+    var e = h.getFullYear() - n.getFullYear();
+    if (h.getMonth() < n.getMonth() || (h.getMonth() === n.getMonth() && h.getDate() < n.getDate())) e--;
+    return e;
+  }
+  function esMenor(s, hoy) {
+    var e = edad(s.fechaNacimiento, hoy);
+    return e !== null && e < MAYORIA_EDAD;
+  }
+
+  /** Siguiente número de socio: uno más que el mayor usado (y que el contador guardado). */
+  function siguienteNumero(socios, contador) {
+    var max = 0;
+    (socios || []).forEach(function (s) { if (s.numero > max) max = s.numero; });
+    return Math.max(max + 1, contador || 1);
+  }
+
+  var plano = function (s) {
+    return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+  };
+
+  /**
+   * Filtra y ordena socios.
+   * opciones: { texto, estado ("activo" | "baja" | "todos"), tipoSocioId, hoy, orden ("numero" | "nombre") }
+   * El texto busca en nombre, apellidos, documento, correo, teléfono, número y municipio.
+   */
+  function filtrar(socios, opciones) {
+    var o = opciones || {};
+    var hoy = o.hoy || F.hoy();
+    var palabras = plano(o.texto).split(/\s+/).filter(Boolean);
+    var lista = (socios || []).filter(function (s) {
+      if (o.estado && o.estado !== "todos") {
+        var e = estado(s, hoy);
+        if (o.estado === "activo" ? e === "baja" : e !== o.estado) return false;
+      }
+      if (o.tipoSocioId && s.tipoSocioId !== o.tipoSocioId) return false;
+      if (!palabras.length) return true;
+      var dondeBuscar = plano([s.numero, s.nombre, s.apellidos, s.documento, s.email, s.telefono, s.telefono2,
+        s.direccion && s.direccion.municipio].join(" "));
+      return palabras.every(function (p) { return dondeBuscar.indexOf(p) >= 0; });
+    });
+    if (o.orden === "nombre") lista.sort(function (a, b) { return nombreListado(a).localeCompare(nombreListado(b), "es"); });
+    else lista.sort(function (a, b) { return (a.numero || 0) - (b.numero || 0); });
+    return lista;
+  }
+
+  /**
+   * Revisa un socio. Devuelve { errores: {campo: texto}, avisos: {campo: texto} }.
+   * Los errores impiden guardar; los avisos no (puede haber casos raros legítimos).
+   */
+  function revisar(s, otros, hoy) {
+    var errores = {}, avisos = {};
+    if (!String(s.nombre || "").trim()) errores.nombre = "Escribe el nombre.";
+    if (!F.esValida(s.fechaAlta)) errores.fechaAlta = "Pon la fecha de alta.";
+    if (s.fechaBaja && !F.esValida(s.fechaBaja)) errores.fechaBaja = "La fecha de baja no es válida.";
+    if (s.fechaBaja && s.fechaAlta && s.fechaBaja < s.fechaAlta) errores.fechaBaja = "La baja no puede ser anterior al alta.";
+    if (s.fechaNacimiento && !F.esValida(s.fechaNacimiento)) errores.fechaNacimiento = "La fecha no es válida.";
+    if (s.fechaNacimiento && s.fechaNacimiento > (hoy || F.hoy())) errores.fechaNacimiento = "La fecha de nacimiento es futura.";
+
+    if (s.documento && (s.tipoDocumento === "DNI" || s.tipoDocumento === "NIE")) {
+      var r = V.nifPersona(s.documento);
+      if (!r.valido) avisos.documento = r.mensaje;
+    }
+    if (s.email && !V.email(s.email).valido) avisos.email = V.email(s.email).mensaje;
+    if (s.iban && !V.iban(s.iban).valido) avisos.iban = V.iban(s.iban).mensaje;
+    var cp = s.direccion && s.direccion.codigoPostal;
+    if (cp && !V.codigoPostal(cp).valido) avisos.codigoPostal = V.codigoPostal(cp).mensaje;
+    if (s.formaPago === "Domiciliación" && !s.iban) avisos.iban = "Para domiciliar hace falta el IBAN.";
+    if (esMenor(s, hoy) && !String((s.tutor || {}).nombre || "").trim()) avisos.tutorNombre = "Es menor de edad: añade a su madre, padre o tutor.";
+
+    // Duplicados: mismo documento o mismo correo que otro socio.
+    var doc = V.normalizar(s.documento), mail = String(s.email || "").trim().toLowerCase();
+    (otros || []).forEach(function (o) {
+      if (o.id === s.id) return;
+      if (doc && V.normalizar(o.documento) === doc) avisos.documento = "Ya hay otro socio con este documento (n.º " + o.numero + ").";
+      if (mail && String(o.email || "").trim().toLowerCase() === mail) avisos.email = "Ya hay otro socio con este correo (n.º " + o.numero + ").";
+    });
+    return { errores: errores, avisos: avisos };
+  }
+
+  // ── Importar desde CSV ───────────────────────────────────────────────────
+  /*
+   * Cada campo se reconoce por el título de su columna, sin importar mayúsculas,
+   * tildes ni espacios. Así vale una hoja hecha a mano o exportada de otro programa.
+   */
+  var ALIAS = {
+    numero: ["numero", "n", "no", "nº", "n.º", "num", "numero de socio", "n socio", "n.º de socio", "nº socio"],
+    nombre: ["nombre", "nombre de pila"],
+    apellidos: ["apellidos", "apellido", "apellido 1", "primer apellido"],
+    apellido2: ["apellido 2", "segundo apellido"],
+    nombreCompleto: ["nombre completo", "nombre y apellidos", "apellidos y nombre", "apellidos, nombre"],
+    documento: ["dni", "nif", "nie", "documento", "dni/nie", "dni / nie", "nif/nie", "pasaporte", "numero de documento"],
+    tipoDocumento: ["tipo de documento", "tipo documento"],
+    fechaNacimiento: ["fecha de nacimiento", "nacimiento", "f. nacimiento", "fecha nacimiento"],
+    sexo: ["sexo", "genero", "género"],
+    ocupacion: ["ocupacion", "profesion", "estudios"],
+    email: ["email", "e-mail", "correo", "correo electronico", "mail"],
+    telefono: ["telefono", "movil", "tlf", "tel", "telefono 1", "telefono movil"],
+    telefono2: ["telefono 2", "otro telefono", "telefono fijo", "fijo"],
+    via: ["direccion", "domicilio", "calle"],
+    codigoPostal: ["codigo postal", "cp", "c.p."],
+    municipio: ["municipio", "localidad", "poblacion", "ciudad"],
+    provincia: ["provincia"],
+    tipoSocio: ["tipo", "tipo de socio", "categoria", "modalidad"],
+    fechaAlta: ["fecha de alta", "alta", "fecha alta", "fecha de ingreso", "socio desde"],
+    fechaBaja: ["fecha de baja", "baja", "fecha baja"],
+    motivoBaja: ["motivo de baja", "motivo baja"],
+    formaPago: ["forma de pago", "pago", "metodo de pago"],
+    iban: ["iban", "cuenta", "cuenta bancaria", "numero de cuenta"],
+    titularCuenta: ["titular", "titular de la cuenta", "titular cuenta"],
+    notas: ["notas", "observaciones", "comentarios"],
+  };
+  var clave = function (t) { return plano(t).replace(/[.:]/g, "").replace(/\s+/g, " ").trim(); };
+
+  /** Cabecera del CSV → { campo: índice de columna }. Las columnas no reconocidas se ignoran. */
+  function mapearCabecera(cabecera) {
+    var mapa = {};
+    (cabecera || []).forEach(function (titulo, i) {
+      var k = clave(titulo);
+      Object.keys(ALIAS).forEach(function (campo) {
+        if (mapa[campo] === undefined && ALIAS[campo].some(function (a) { return clave(a) === k; })) mapa[campo] = i;
+      });
+    });
+    return mapa;
+  }
+
+  /**
+   * Convierte las filas de un CSV en socios. No guarda nada: devuelve
+   *   { socios: [...], problemas: [{ fila, mensaje }], columnas: mapa }
+   * tiposSocio sirve para traducir el nombre del tipo a su id; si no se
+   * reconoce, se usa el primero.
+   */
+  function desdeCSV(lectura, tiposSocio, hoy) {
+    var mapa = mapearCabecera(lectura.cabecera);
+    var tipos = tiposSocio || [];
+    var problemas = [], socios = [];
+    (lectura.filas || []).forEach(function (fila, i) {
+      // El número de fila tal y como se ve en la hoja de cálculo.
+      var nFila = lectura.numeros ? lectura.numeros[i] : i + 2;
+      var v = function (campo) {
+        if (mapa[campo] === undefined) return "";
+        // El apóstrofo inicial lo añaden algunas exportaciones para que Excel no lo tome como fórmula.
+        return String(fila[mapa[campo]] == null ? "" : fila[mapa[campo]]).trim().replace(/^'/, "");
+      };
+      var s = vacio();
+      s.nombre = v("nombre");
+      s.apellidos = [v("apellidos"), v("apellido2")].filter(Boolean).join(" ");
+      if (!s.nombre && v("nombreCompleto")) {
+        var nc = v("nombreCompleto");
+        if (nc.indexOf(",") > 0) { s.apellidos = nc.split(",")[0].trim(); s.nombre = nc.split(",").slice(1).join(",").trim(); }
+        else s.nombre = nc;
+      }
+      if (!s.nombre && !s.apellidos) { problemas.push({ fila: nFila, mensaje: "Sin nombre: no se importa." }); return; }
+      var num = parseInt(v("numero"), 10);
+      s.numero = isFinite(num) && num > 0 ? num : null;
+      s.documento = V.normalizar(v("documento"));
+      var td = v("tipoDocumento");
+      s.tipoDocumento = TIPOS_DOCUMENTO.indexOf(td) >= 0 ? td : /^[XYZ]/i.test(s.documento) ? "NIE" : s.documento && !/^\d{8}[A-Z]$/.test(s.documento) ? "Otro" : "DNI";
+      s.email = v("email");
+      s.telefono = v("telefono");
+      s.telefono2 = v("telefono2");
+      s.sexo = SEXOS.filter(function (x) { return plano(x) === plano(v("sexo")); })[0] ||
+        ({ m: "Mujer", f: "Mujer", h: "Hombre", v: "Hombre" })[plano(v("sexo"))] || "";
+      s.ocupacion = v("ocupacion");
+      s.notas = v("notas");
+      s.iban = V.normalizar(v("iban"));
+      s.titularCuenta = v("titularCuenta");
+      s.motivoBaja = v("motivoBaja");
+      if (v("via")) s.direccion = Dir.desdeTexto(v("via"));
+      s.direccion.codigoPostal = v("codigoPostal");
+      s.direccion.municipio = v("municipio");
+      s.direccion.provincia = Dir.normalizarProvincia(v("provincia")) || v("provincia") || Dir.provinciaDeCP(s.direccion.codigoPostal);
+
+      var fp = plano(v("formaPago"));
+      s.formaPago = FORMAS_PAGO.filter(function (x) { return plano(x) === fp; })[0] || (fp.indexOf("domicil") >= 0 ? "Domiciliación" : "Transferencia");
+
+      function fecha(campo, etiqueta) {
+        var t = v(campo);
+        if (!t) return "";
+        var iso = F.desdeTexto(t);
+        if (!iso) problemas.push({ fila: nFila, mensaje: etiqueta + " «" + t + "» no se entiende; se deja vacía." });
+        return iso || "";
+      }
+      s.fechaNacimiento = fecha("fechaNacimiento", "La fecha de nacimiento");
+      s.fechaAlta = fecha("fechaAlta", "La fecha de alta");
+      s.fechaBaja = fecha("fechaBaja", "La fecha de baja");
+      if (!s.fechaAlta) {
+        s.fechaAlta = hoy || F.hoy();
+        problemas.push({ fila: nFila, mensaje: "Sin fecha de alta: se pone la de hoy." });
+      }
+      var tipoTexto = plano(v("tipoSocio"));
+      var tipo = tipos.filter(function (t) { return plano(t.nombre) === tipoTexto; })[0];
+      if (tipoTexto && !tipo) problemas.push({ fila: nFila, mensaje: "Tipo de socio «" + v("tipoSocio") + "» desconocido: se usa «" + ((tipos[0] || {}).nombre || "—") + "»." });
+      s.tipoSocioId = (tipo || tipos[0] || {}).id || "";
+      socios.push(s);
+    });
+    return { socios: socios, problemas: problemas, columnas: mapa };
+  }
+
+  /** Columnas para exportar a CSV (y para la plantilla de importación). */
+  var COLUMNAS_CSV = [
+    { titulo: "Número", valor: function (s) { return s.numero; } },
+    { titulo: "Nombre", clave: "nombre" },
+    { titulo: "Apellidos", clave: "apellidos" },
+    { titulo: "Tipo de documento", clave: "tipoDocumento" },
+    { titulo: "Documento", clave: "documento" },
+    { titulo: "Fecha de nacimiento", valor: function (s) { return F.corta(s.fechaNacimiento); } },
+    { titulo: "Sexo", clave: "sexo" },
+    { titulo: "Ocupación", clave: "ocupacion" },
+    { titulo: "Correo", clave: "email" },
+    { titulo: "Teléfono", clave: "telefono" },
+    { titulo: "Teléfono 2", clave: "telefono2" },
+    { titulo: "Dirección", valor: function (s) { return Dir.formatear(Object.assign({}, s.direccion, { codigoPostal: "", municipio: "", provincia: "" })).linea1; } },
+    { titulo: "Código postal", valor: function (s) { return (s.direccion || {}).codigoPostal; } },
+    { titulo: "Municipio", valor: function (s) { return (s.direccion || {}).municipio; } },
+    { titulo: "Provincia", valor: function (s) { return (s.direccion || {}).provincia; } },
+    { titulo: "Tipo de socio", clave: "_tipoNombre" },
+    { titulo: "Fecha de alta", valor: function (s) { return F.corta(s.fechaAlta); } },
+    { titulo: "Fecha de baja", valor: function (s) { return F.corta(s.fechaBaja); } },
+    { titulo: "Motivo de baja", clave: "motivoBaja" },
+    { titulo: "Forma de pago", clave: "formaPago" },
+    { titulo: "IBAN", clave: "iban" },
+    { titulo: "Titular de la cuenta", clave: "titularCuenta" },
+    { titulo: "Notas", clave: "notas" },
+  ];
+
+  return {
+    TIPOS_DOCUMENTO: TIPOS_DOCUMENTO, SEXOS: SEXOS, FORMAS_PAGO: FORMAS_PAGO, MAYORIA_EDAD: MAYORIA_EDAD,
+    COLUMNAS_CSV: COLUMNAS_CSV,
+    vacio: vacio, completar: completar, nombreCompleto: nombreCompleto, nombreListado: nombreListado,
+    activoEn: activoEn, estado: estado, edad: edad, esMenor: esMenor, siguienteNumero: siguienteNumero,
+    filtrar: filtrar, revisar: revisar, mapearCabecera: mapearCabecera, desdeCSV: desdeCSV,
+  };
+});
+</script>
+  <script>/* js/logica/cuotas.js */
+/*
+ * webkit_asociaciones — Lógica de cuotas (sin interfaz: se prueba en tests/cuotas.test.js).
+ *
+ * TIPOS DE SOCIO (en la configuración): { id, nombre, cuota (céntimos por periodo),
+ *   periodicidad: "anual" | "semestral" | "trimestral" | "mensual", activo }
+ *
+ * PERIODOS: cada cuota pertenece a un periodo con una clave de texto:
+ *   anual "2026" · semestral "2026-S1" · trimestral "2026-T3" · mensual "2026-03"
+ *
+ * CUOTA: { id, socioId, socioNumero, socioNombre, tipoSocioId, periodo, concepto,
+ *          importe (céntimos), fechaEmision, remesaId,
+ *          estado: "pendiente" | "pagada" | "devuelta" | "anulada",
+ *          pago: { fecha, forma, cuentaId, referencia } | null,
+ *          historial: [{ fecha, accion, detalle }] }
+ *   · El número y el nombre del socio se copian en la cuota: si el socio se
+ *     borra (derecho de supresión), el registro contable sigue teniendo sentido.
+ *   · «devuelta» = recibo domiciliado que el banco devolvió: cuenta como deuda.
+ *   · «anulada» = ya no se debe (p. ej. baja): no cuenta como deuda.
+ *
+ * CONTABILIDAD: una cuota PAGADA es un ingreso. aMovimientos() la traduce al
+ * formato de movimiento que usará la tesorería (Fase 3), de modo que las cuotas
+ * se reflejan en las cuentas sin apuntarlas dos veces.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { Fechas: require("../nucleo/fechas.js"), Dinero: require("../nucleo/dinero.js"), Socios: require("./socios.js") }
+    : { Fechas: raiz.WA.Fechas, Dinero: raiz.WA.Dinero, Socios: raiz.WA.Socios };
+  var modulo = fabrica(dep.Fechas, dep.Dinero, dep.Socios);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Cuotas = modulo;
+})(typeof self !== "undefined" ? self : this, function (F, D, S) {
+  "use strict";
+
+  var PERIODICIDADES = [
+    ["anual", "Anual"], ["semestral", "Semestral"], ["trimestral", "Trimestral"], ["mensual", "Mensual"],
+  ];
+  var ESTADOS = { pendiente: "Pendiente", pagada: "Pagada", devuelta: "Devuelta", anulada: "Anulada" };
+  var CATEGORIA_CONTABLE = "Cuotas de socios";
+
+  var dos = function (n) { return String(n).padStart(2, "0"); };
+  var ultimoDia = function (a, m) { return new Date(a, m, 0).getDate(); }; // m: 1–12
+
+  // ── Periodos ─────────────────────────────────────────────────────────────
+  /** Clave de periodo → { clave, periodicidad, anio, inicio, fin, etiqueta } o null. */
+  function periodo(clave) {
+    var c = String(clave || ""), m;
+    if ((m = /^(\d{4})$/.exec(c))) {
+      return { clave: c, periodicidad: "anual", anio: +m[1], inicio: m[1] + "-01-01", fin: m[1] + "-12-31", etiqueta: "año " + m[1] };
+    }
+    if ((m = /^(\d{4})-S([12])$/.exec(c))) {
+      var s = +m[2], mi = s === 1 ? 1 : 7, mf = s === 1 ? 6 : 12;
+      return { clave: c, periodicidad: "semestral", anio: +m[1], inicio: m[1] + "-" + dos(mi) + "-01",
+        fin: m[1] + "-" + dos(mf) + "-" + ultimoDia(+m[1], mf), etiqueta: (s === 1 ? "1.er" : "2.º") + " semestre " + m[1] };
+    }
+    if ((m = /^(\d{4})-T([1-4])$/.exec(c))) {
+      var t = +m[2], ti = (t - 1) * 3 + 1, tf = t * 3;
+      return { clave: c, periodicidad: "trimestral", anio: +m[1], inicio: m[1] + "-" + dos(ti) + "-01",
+        fin: m[1] + "-" + dos(tf) + "-" + dos(ultimoDia(+m[1], tf)), etiqueta: ["1.er", "2.º", "3.er", "4.º"][t - 1] + " trimestre " + m[1] };
+    }
+    if ((m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(c))) {
+      return { clave: c, periodicidad: "mensual", anio: +m[1], inicio: c + "-01", fin: c + "-" + dos(ultimoDia(+m[1], +m[2])),
+        etiqueta: F.MESES[+m[2] - 1] + " " + m[1] };
+    }
+    return null;
+  }
+
+  /** Todos los periodos de un año para una periodicidad. */
+  function periodosDelAnio(periodicidad, anio) {
+    var a = String(anio);
+    var claves = periodicidad === "semestral" ? [a + "-S1", a + "-S2"]
+      : periodicidad === "trimestral" ? [1, 2, 3, 4].map(function (t) { return a + "-T" + t; })
+      : periodicidad === "mensual" ? [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map(function (m) { return a + "-" + dos(m); })
+      : [a];
+    return claves.map(periodo);
+  }
+
+  /** El periodo (de esa periodicidad) que contiene una fecha. */
+  function periodoDeFecha(periodicidad, fechaISO) {
+    var a = fechaISO.slice(0, 4), m = +fechaISO.slice(5, 7);
+    if (periodicidad === "semestral") return periodo(a + "-S" + (m <= 6 ? 1 : 2));
+    if (periodicidad === "trimestral") return periodo(a + "-T" + Math.ceil(m / 3));
+    if (periodicidad === "mensual") return periodo(a + "-" + dos(m));
+    return periodo(a);
+  }
+
+  /** Tipo de socio por defecto de una asociación nueva. */
+  function tipoPorDefecto() {
+    return { id: "socio", nombre: "Socio", cuota: 0, periodicidad: "anual", activo: true };
+  }
+
+  // ── Generar las cuotas de un periodo (la «remesa») ───────────────────────
+  var MOTIVOS = {
+    sinTipo: "No tiene tipo de socio",
+    otraPeriodicidad: "Su tipo de socio paga con otra periodicidad",
+    exento: "Exento de cuota",
+    cuotaCero: "Su tipo de socio no tiene cuota",
+    noActivo: "No era socio en ese periodo",
+    yaTiene: "Ya tiene la cuota de ese periodo",
+  };
+
+  /**
+   * Prepara las cuotas de un periodo para todos los socios a los que les toca.
+   * No guarda nada: devuelve { periodo, nuevas: [cuotas], omitidos: [{ socio, motivo }], total }.
+   * Se incluye a quien fue socio en algún momento del periodo (sin prorratear:
+   * si alguien entra a mitad de año, el importe se puede ajustar a mano).
+   */
+  function generar(o) {
+    var p = periodo(o.periodo);
+    if (!p) throw new Error("Periodo no válido: " + o.periodo);
+    var tipos = {};
+    (o.tipos || []).forEach(function (t) { tipos[t.id] = t; });
+    var tienen = {};
+    (o.cuotas || []).forEach(function (c) { if (c.periodo === p.clave && c.estado !== "anulada") tienen[c.socioId] = true; });
+    var nuevas = [], omitidos = [];
+    (o.socios || []).forEach(function (s) {
+      var t = tipos[s.tipoSocioId], motivo = null;
+      if (!t) motivo = "sinTipo";
+      else if ((t.periodicidad || "anual") !== p.periodicidad) motivo = "otraPeriodicidad";
+      else if (!s.fechaAlta || s.fechaAlta > p.fin || (s.fechaBaja && s.fechaBaja <= p.inicio)) motivo = "noActivo";
+      else if (s.exentoCuota) motivo = "exento";
+      else if (!(t.cuota > 0)) motivo = "cuotaCero";
+      else if (tienen[s.id]) motivo = "yaTiene";
+      if (motivo) { omitidos.push({ socio: s, motivo: motivo, texto: MOTIVOS[motivo] }); return; }
+      nuevas.push({
+        socioId: s.id, socioNumero: s.numero, socioNombre: S.nombreCompleto(s), tipoSocioId: t.id,
+        periodo: p.clave, concepto: "Cuota " + t.nombre.toLowerCase() + " · " + p.etiqueta,
+        importe: t.cuota, fechaEmision: o.fechaEmision || F.hoy(), remesaId: o.remesaId || "",
+        estado: "pendiente", pago: null, historial: [],
+      });
+    });
+    nuevas.sort(function (a, b) { return (a.socioNumero || 0) - (b.socioNumero || 0); });
+    return { periodo: p, nuevas: nuevas, omitidos: omitidos, total: D.sumar(nuevas.map(function (c) { return c.importe; })) };
+  }
+
+  // ── Cambiar el estado de una cuota (devuelven una copia nueva) ──────────
+  var copia = function (c) { return JSON.parse(JSON.stringify(c)); };
+  function anotar(c, accion, detalle, fecha) {
+    c.historial = (c.historial || []).concat([{ fecha: fecha || F.hoy(), accion: accion, detalle: detalle || "" }]);
+    return c;
+  }
+
+  /** Marca una cuota como pagada. pago: { fecha, forma, cuentaId, referencia }. */
+  function registrarPago(cuota, pago) {
+    if (!pago || !F.esValida(pago.fecha)) throw new Error("Falta la fecha del pago.");
+    if (S.FORMAS_PAGO.indexOf(pago.forma) < 0) throw new Error("Elige la forma de pago.");
+    if (cuota.estado === "anulada") throw new Error("La cuota está anulada.");
+    var c = copia(cuota);
+    c.estado = "pagada";
+    c.pago = { fecha: pago.fecha, forma: pago.forma, cuentaId: pago.cuentaId || "", referencia: pago.referencia || "" };
+    return anotar(c, "pago", pago.forma, pago.fecha);
+  }
+
+  /** Deshace un pago apuntado por error: vuelve a pendiente. */
+  function deshacerPago(cuota) {
+    var c = copia(cuota);
+    var antes = c.pago;
+    c.estado = "pendiente";
+    c.pago = null;
+    return anotar(c, "pago deshecho", antes ? antes.forma + " del " + F.corta(antes.fecha) : "");
+  }
+
+  /** El banco devolvió el recibo domiciliado: vuelve a deberse. */
+  function devolver(cuota, fecha, motivo) {
+    var c = copia(cuota);
+    c.estado = "devuelta";
+    c.pago = null;
+    return anotar(c, "devuelta", motivo || "", fecha);
+  }
+
+  /** Ya no se debe (baja, error, condonación). */
+  function anular(cuota, motivo) {
+    var c = copia(cuota);
+    c.estado = "anulada";
+    c.pago = null;
+    return anotar(c, "anulada", motivo || "");
+  }
+
+  function reactivar(cuota) {
+    var c = copia(cuota);
+    c.estado = "pendiente";
+    return anotar(c, "reactivada", "");
+  }
+
+  var debe = function (c) { return c.estado === "pendiente" || c.estado === "devuelta"; };
+
+  // ── Resúmenes ───────────────────────────────────────────────────────────
+  /** Totales de una lista de cuotas, en céntimos. */
+  function resumen(cuotas) {
+    var r = { n: 0, emitido: 0, cobrado: 0, pendiente: 0, anulado: 0, nPagadas: 0, nPendientes: 0, porForma: {} };
+    (cuotas || []).forEach(function (c) {
+      r.n++;
+      if (c.estado === "anulada") { r.anulado += c.importe; return; }
+      r.emitido += c.importe;
+      if (c.estado === "pagada") {
+        r.cobrado += c.importe; r.nPagadas++;
+        var f = (c.pago && c.pago.forma) || "Otra";
+        r.porForma[f] = (r.porForma[f] || 0) + c.importe;
+      } else { r.pendiente += c.importe; r.nPendientes++; }
+    });
+    return r;
+  }
+
+  /** Deudores: socios con cuotas pendientes o devueltas, de mayor a menor deuda. */
+  function deudores(cuotas, hasta) {
+    var por = {};
+    (cuotas || []).forEach(function (c) {
+      if (!debe(c)) return;
+      if (hasta && c.fechaEmision > hasta) return;
+      var k = c.socioId || "?" + c.socioNombre;
+      if (!por[k]) por[k] = { socioId: c.socioId, socioNumero: c.socioNumero, socioNombre: c.socioNombre, cuotas: [], total: 0 };
+      por[k].cuotas.push(c);
+      por[k].total += c.importe;
+    });
+    return Object.keys(por).map(function (k) { return por[k]; })
+      .sort(function (a, b) { return b.total - a.total || (a.socioNumero || 0) - (b.socioNumero || 0); });
+  }
+
+  /** ¿Está al corriente un socio? (ninguna cuota pendiente o devuelta) */
+  function alCorriente(socioId, cuotas) {
+    return !(cuotas || []).some(function (c) { return c.socioId === socioId && debe(c); });
+  }
+
+  /** Cuenta donde suele entrar cada forma de pago: el efectivo a caja, lo demás al banco. */
+  function cuentaPorDefecto(forma, cuentas) {
+    var lista = cuentas || [];
+    var tipo = forma === "Efectivo" ? "caja" : "banco";
+    return (lista.filter(function (c) { return c.tipo === tipo; })[0] || lista[0] || {}).id || "";
+  }
+
+  /**
+   * Cuotas pagadas → movimientos de ingreso para la contabilidad (Fase 3).
+   * { fecha, tipo: "ingreso", importe, cuentaId, categoria, concepto, forma, origen: { tipo: "cuota", id } }
+   */
+  function aMovimientos(cuotas) {
+    return (cuotas || []).filter(function (c) { return c.estado === "pagada" && c.pago; }).map(function (c) {
+      return {
+        fecha: c.pago.fecha, tipo: "ingreso", importe: c.importe, cuentaId: c.pago.cuentaId,
+        categoria: CATEGORIA_CONTABLE, forma: c.pago.forma,
+        concepto: c.concepto + " · n.º " + c.socioNumero + " " + c.socioNombre,
+        origen: { tipo: "cuota", id: c.id },
+      };
+    }).sort(function (a, b) { return a.fecha.localeCompare(b.fecha); });
+  }
+
+  return {
+    PERIODICIDADES: PERIODICIDADES, ESTADOS: ESTADOS, MOTIVOS: MOTIVOS, CATEGORIA_CONTABLE: CATEGORIA_CONTABLE,
+    periodo: periodo, periodosDelAnio: periodosDelAnio, periodoDeFecha: periodoDeFecha, tipoPorDefecto: tipoPorDefecto,
+    generar: generar, registrarPago: registrarPago, deshacerPago: deshacerPago, devolver: devolver,
+    anular: anular, reactivar: reactivar, debe: debe,
+    resumen: resumen, deudores: deudores, alCorriente: alCorriente, cuentaPorDefecto: cuentaPorDefecto, aMovimientos: aMovimientos,
+  };
+});
+</script>
   <!-- Datos -->
   <script>/* js/datos/esquema.js */
 /*
@@ -1351,10 +2147,12 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 2,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 3,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
+ *     config: { tiposSocio, cuentas, siguienteNumeroSocio },  ← ajustes de la asociación
  *     junta: [ { id, cargo, nombre, ... } ],      ← colecciones: listas de registros
+ *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -1370,7 +2168,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  *   3. añade un test en tests/esquema.test.js.
  * Así, una copia de seguridad antigua siempre se puede abrir con la versión nueva.
  *
- * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines».
+ * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -1381,10 +2179,10 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 2;
+  var VERSION = 3;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -1402,6 +2200,21 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     };
   }
 
+  /*
+   * Configuración de la asociación (no de este ordenador):
+   *   tiposSocio  tipos de socio con su cuota y periodicidad (ver logica/cuotas.js)
+   *   cuentas     dónde entra el dinero: { id, nombre, tipo: "banco" | "caja" }.
+   *               La Fase 3 (tesorería) las ampliará.
+   *   siguienteNumeroSocio  contador: un número de socio nunca se reutiliza
+   */
+  function configVacia() {
+    return {
+      tiposSocio: [{ id: "socio", nombre: "Socio", cuota: 0, periodicidad: "anual", activo: true }],
+      cuentas: [{ id: "banco", nombre: "Cuenta bancaria", tipo: "banco" }, { id: "caja", nombre: "Caja (efectivo)", tipo: "caja" }],
+      siguienteNumeroSocio: 1,
+    };
+  }
+
   function documentoVacio(ahora) {
     var t = (ahora || new Date()).toISOString();
     return {
@@ -1409,7 +2222,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       esquema: VERSION,
       meta: { creado: t, modificado: t, ultimaCopia: null, cambiosDesdeCopia: 0 },
       asociacion: asociacionVacia(),
-      junta: [],
+      config: configVacia(),
+      junta: [], socios: [], cuotas: [], remesas: [],
     };
   }
 
@@ -1447,6 +2261,14 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       doc.esquema = 2;
       return doc;
     },
+
+    // 2 → 3: llegan los socios y las cuotas (Fase 2).
+    2: function (doc) {
+      doc.config = Object.assign(configVacia(), doc.config || {});
+      ["socios", "cuotas", "remesas"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+      doc.esquema = 3;
+      return doc;
+    },
   };
 
   /**
@@ -1466,7 +2288,25 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       copia = MIGRACIONES[v](copia);
       v = copia.esquema;
     }
-    return copia;
+    return asegurarForma(copia);
+  }
+
+  /*
+   * Red de seguridad: un documento que dice ser de una versión pero le falta
+   * algo (una copia editada a mano, un fallo antiguo) se completa con lo que
+   * falte, sin tocar lo que ya tiene. Así nunca falla al guardar por un campo ausente.
+   */
+  function asegurarForma(doc) {
+    var base = documentoVacio();
+    doc.app = APP;
+    doc.meta = Object.assign(base.meta, doc.meta || {});
+    doc.asociacion = Object.assign(asociacionVacia(), doc.asociacion || {});
+    doc.asociacion.domicilio = Object.assign(Direccion.vacia(), doc.asociacion.domicilio || {});
+    doc.config = Object.assign(configVacia(), doc.config || {});
+    if (!Array.isArray(doc.config.tiposSocio) || !doc.config.tiposSocio.length) doc.config.tiposSocio = configVacia().tiposSocio;
+    if (!Array.isArray(doc.config.cuentas) || !doc.config.cuentas.length) doc.config.cuentas = configVacia().cuentas;
+    COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+    return doc;
   }
 
   /** Identificador único para un registro nuevo. */
@@ -1477,7 +2317,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 
   return {
     APP: APP, VERSION: VERSION, COLECCIONES: COLECCIONES, CARGOS: CARGOS,
-    documentoVacio: documentoVacio, asociacionVacia: asociacionVacia, direccionVacia: Direccion.vacia,
+    documentoVacio: documentoVacio, asociacionVacia: asociacionVacia, configVacia: configVacia, direccionVacia: Direccion.vacia,
     migrar: migrar, nuevoId: nuevoId,
   };
 });
@@ -1498,6 +2338,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  *   listar(coleccion)            → copia de todos los registros
  *   obtener(coleccion, id)       → copia de un registro o null
  *   guardar(coleccion, registro) → lo crea (si no tiene id) o lo actualiza; devuelve la copia guardada
+ *   guardarVarios(coleccion, [registros]) → como guardar(), pero todos de una vez
+ *                                  (importaciones, remesas): un solo guardado
  *   borrar(coleccion, id)        → true si existía
  *   documento()                  → copia del documento completo (para copias de seguridad)
  *
@@ -1527,6 +2369,22 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       if (!Array.isArray(doc[nombre])) doc[nombre] = [];
       return doc[nombre];
     }
+    /** Crea (si no tiene id o no existe) o sustituye un registro en la lista. */
+    function colocar(lista, registro, t) {
+      var r = copiar(registro);
+      var i = r.id ? lista.findIndex(function (x) { return x.id === r.id; }) : -1;
+      if (i >= 0) {
+        r.creado = lista[i].creado;
+        r.modificado = t;
+        lista[i] = r;
+      } else {
+        r.id = r.id || Esquema.nuevoId();
+        r.creado = t;
+        r.modificado = t;
+        lista.push(r);
+      }
+      return r;
+    }
     function cambiado() {
       doc.meta.modificado = ahora();
       doc.meta.cambiosDesdeCopia = (doc.meta.cambiosDesdeCopia || 0) + 1;
@@ -1552,22 +2410,16 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       },
 
       guardar: async function (nombre, registro) {
-        var lista = coleccion(nombre);
-        var r = copiar(registro);
-        var t = ahora();
-        var i = r.id ? lista.findIndex(function (x) { return x.id === r.id; }) : -1;
-        if (i >= 0) {
-          r.creado = lista[i].creado;
-          r.modificado = t;
-          lista[i] = r;
-        } else {
-          r.id = r.id || Esquema.nuevoId();
-          r.creado = t;
-          r.modificado = t;
-          lista.push(r);
-        }
+        var r = colocar(coleccion(nombre), registro, ahora());
         await cambiado();
         return copiar(r);
+      },
+
+      guardarVarios: async function (nombre, registros) {
+        var lista = coleccion(nombre), t = ahora();
+        var guardados = (registros || []).map(function (r) { return colocar(lista, r, t); });
+        if (guardados.length) await cambiado();
+        return copiar(guardados);
       },
 
       borrar: async function (nombre, id) {
@@ -1691,6 +2543,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 (function (raiz, fabrica) {
   var Esquema = typeof require === "function" ? require("./esquema.js") : raiz.WA.Esquema;
   var modulo = fabrica(Esquema);
+  // Las cuotas de demostración se calculan con la misma lógica que las de verdad.
+  modulo.Cuotas = typeof require === "function" ? require("../logica/cuotas.js") : raiz.WA.Cuotas;
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Demo = modulo;
 })(typeof self !== "undefined" ? self : this, function (Esquema) {
@@ -1729,10 +2583,86 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     // Una persona que ya salió de la junta, para que se vea el histórico.
     doc.junta.push({ id: "demo-junta-6", cargo: "Tesorería", cargoOtro: "", nombre: "Pablo Antiguo Ejemplo",
       email: "antiguo@example.org", telefono: "600 000 006", desde: "2020-03-14", hasta: "2024-03-16", creado: t, modificado: t });
+    rellenarSocios(doc, t);
     return doc;
   }
 
-  return { documentoDemo: documentoDemo };
+  /*
+   * Socios y cuotas de demostración. Se generan siempre iguales (sin azar) a
+   * partir de listas de nombres y apellidos corrientes combinados: no
+   * corresponden a nadie. Sin documentos de identidad ni IBAN reales.
+   */
+  var NOMBRES = ["Lucía", "Hugo", "Martina", "Mateo", "Sofía", "Leo", "Julia", "Daniel", "Paula", "Pablo", "Valeria", "Álvaro",
+    "Emma", "Manuel", "Daniela", "Adrián", "Carla", "Enzo", "Alba", "Mario", "Noa", "Diego", "Sara", "Marcos", "Carmen",
+    "Javier", "Elena", "Iker", "Irene", "Bruno", "Lola", "Óscar", "Vega", "Rubén", "Nerea", "Gonzalo", "Aitana", "Íñigo", "Olivia", "Jorge"];
+  var APELLIDOS = ["Ficticio", "Ejemplo", "Inventado", "Muestra", "Prueba", "Supuesto", "Modelo", "Demo", "Ensayo", "Simulado"];
+  var VIAS = [["Calle", "del Olmo"], ["Avenida", "de los Pinos"], ["Plaza", "Mayor"], ["Calle", "de la Fuente"], ["Paseo", "del Río"]];
+  var FORMAS = ["Transferencia", "Transferencia", "Transferencia", "Bizum", "Efectivo", "Domiciliación"];
+
+  function rellenarSocios(doc, t) {
+    doc.config.tiposSocio = [
+      { id: "socio", nombre: "Socio", cuota: 3000, periodicidad: "anual", activo: true },
+      { id: "juvenil", nombre: "Juvenil", cuota: 1500, periodicidad: "anual", activo: true },
+      { id: "honorario", nombre: "Honorario", cuota: 0, periodicidad: "anual", activo: true },
+    ];
+    var dos = function (n) { return String(n).padStart(2, "0"); };
+    var socios = [];
+    for (var i = 0; i < 40; i++) {
+      var n = i + 1;
+      var joven = i % 9 === 4;                        // algunos socios juveniles
+      var menor = i % 9 === 4 && i % 2 === 0;         // y alguno de ellos menor de edad
+      var anioNac = menor ? 2012 + (i % 3) : joven ? 2003 + (i % 4) : 1955 + ((i * 7) % 45);
+      var via = VIAS[i % VIAS.length];
+      var forma = FORMAS[i % FORMAS.length];
+      var alta = (2016 + (i % 10)) + "-" + dos(1 + (i * 5) % 12) + "-" + dos(1 + (i * 3) % 27);
+      var s = {
+        id: "demo-socio-" + n, numero: n,
+        nombre: NOMBRES[i], apellidos: APELLIDOS[i % 10] + " " + APELLIDOS[(i * 3 + 1) % 10],
+        tipoDocumento: "DNI", documento: "", fechaNacimiento: anioNac + "-" + dos(1 + (i % 12)) + "-" + dos(1 + (i * 2) % 28),
+        sexo: i % 2 ? "Hombre" : "Mujer", ocupacion: "",
+        email: "socio" + n + "@example.org", telefono: "600 000 " + String(100 + n), telefono2: "",
+        direccion: { tipoVia: via[0], nombreVia: via[1], numero: String(1 + (i * 7) % 60), km: "", bloque: "", portal: "",
+          escalera: "", planta: String(1 + (i % 6)), puerta: "ABCD"[i % 4], complemento: "",
+          codigoPostal: "28000", municipio: "Villaejemplo", provincia: "Madrid" },
+        tipoSocioId: i === 0 ? "honorario" : joven ? "juvenil" : "socio", exentoCuota: false, formaPago: forma,
+        iban: forma === "Domiciliación" ? "ES9121000418450200051332" : "", titularCuenta: "",
+        mandatoReferencia: forma === "Domiciliación" ? "DEMO-" + n : "", mandatoFecha: forma === "Domiciliación" ? alta : "",
+        tutor: menor ? { nombre: "Madre o padre de " + NOMBRES[i], documento: "", telefono: "600 000 " + String(300 + n), email: "tutor" + n + "@example.org", relacion: "Madre" }
+          : { nombre: "", documento: "", telefono: "", email: "", relacion: "" },
+        consentimientos: { proteccionDatos: alta, imagen: i % 3 !== 0, comunicaciones: i % 4 !== 0 },
+        fechaAlta: alta, fechaBaja: "", motivoBaja: "", notas: "", creado: t, modificado: t,
+      };
+      if (i % 13 === 7) { s.fechaBaja = "2025-" + dos(3 + (i % 8)) + "-15"; s.motivoBaja = "Voluntaria"; }
+      socios.push(s);
+    }
+    doc.socios = socios;
+    doc.config.siguienteNumeroSocio = socios.length + 1;
+
+    // Cuotas 2025 (casi todas cobradas) y 2026 (la mitad pendiente).
+    var Cuotas = Demo.Cuotas;
+    var cuotas = [];
+    [["2025", "2025-01-15", 0.9], ["2026", "2026-01-15", 0.5]].forEach(function (p, k) {
+      var remesaId = "demo-remesa-" + p[0];
+      var r = Cuotas.generar({ periodo: p[0], socios: socios, tipos: doc.config.tiposSocio, cuotas: [], fechaEmision: p[1], remesaId: remesaId });
+      r.nuevas.forEach(function (c, j) {
+        c.id = "demo-cuota-" + p[0] + "-" + c.socioNumero;
+        c.creado = t; c.modificado = t;
+        var socio = socios[c.socioNumero - 1];
+        if ((j * 37 % 100) / 100 < p[2]) {
+          var forma = socio.formaPago;
+          c = Cuotas.registrarPago(c, { fecha: p[0] + "-" + dos(2 + (j % 4)) + "-" + dos(1 + (j * 3) % 27), forma: forma,
+            cuentaId: forma === "Efectivo" ? "caja" : "banco", referencia: "" });
+        }
+        cuotas.push(c);
+      });
+      doc.remesas.push({ id: remesaId, periodo: p[0], fechaEmision: p[1], concepto: "Cuotas " + p[0],
+        nCuotas: r.nuevas.length, total: r.total, creado: t, modificado: t });
+    });
+    doc.cuotas = cuotas;
+  }
+
+  var Demo = { documentoDemo: documentoDemo, Cuotas: null };
+  return Demo;
 });
 </script>
   <script>/* js/datos/boveda.js */
@@ -1989,7 +2919,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  *          titulo: "Socios",             // texto del menú y título de la página
  *          icono: "<path d=…/>",          // trazos SVG de 24×24 (opcional)
  *          orden: 20,                    // posición en el menú
- *          pintar: async function (contenedor, datos) { … }  // datos = WA.Sesion.datos
+ *          pintar: async function (contenedor, datos, ruta) { … }
+ *            // datos = WA.Sesion.datos · ruta = lo que va detrás: #/socios/ficha/7 → ["ficha", "7"]
  *        });
  *   3. Añade su <script> en src/index.html (antes de arranque.js).
  *
@@ -2010,8 +2941,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     modulos.sort(function (a, b) { return (a.orden || 0) - (b.orden || 0); });
   }
 
+  function partesRuta() {
+    return (location.hash || "").replace(/^#\/?/, "").split("/").map(function (p) {
+      try { return decodeURIComponent(p); } catch (e) { return p; }
+    });
+  }
   function rutaActual() {
-    var id = (location.hash || "").replace(/^#\/?/, "").split("/")[0];
+    var id = partesRuta()[0];
     return modulos.some(function (m) { return m.id === id; }) ? id : "inicio";
   }
 
@@ -2039,7 +2975,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     principal.innerHTML = '<p class="cargando">Cargando…</p>';
     try {
       principal.innerHTML = "";
-      await m.pintar(principal, WA.Sesion.datos);
+      await m.pintar(principal, WA.Sesion.datos, partesRuta().slice(1).filter(Boolean));
     } catch (e) {
       console.error(e);
       principal.innerHTML = '<div class="tarjeta tarjeta-error"><h1>Algo ha fallado</h1><p>' + WA.UI.esc(e.message) +
@@ -2354,12 +3290,20 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     var a = await datos.leer("asociacion");
     var junta = (await datos.listar("junta")).filter(function (m) { return !m.hasta || m.hasta >= WA.Fechas.hoy(); });
     var copia = await datos.estadoCopia();
+    var socios = await datos.listar("socios");
+    var cuotas = await datos.listar("cuotas");
+    var config = await datos.leer("config");
+    var activos = socios.filter(function (x) { return WA.Socios.estado(x) === "activo"; }).length;
+    var deud = WA.Cuotas.deudores(cuotas);
+    var deuda = WA.Dinero.sumar(deud.map(function (d) { return d.total; }));
     var demo = WA.Sesion.modo === "demostración";
 
     var pendientes = [];
     if (!a.nombre) pendientes.push('<a href="#/asociacion">Escribe el nombre y los datos de la asociación</a>');
     if (!a.nif) pendientes.push('<a href="#/asociacion">Añade el NIF de la asociación</a>');
     if (!junta.length) pendientes.push('<a href="#/asociacion">Añade la junta directiva</a>');
+    if (!(config.tiposSocio || []).some(function (t) { return t.cuota > 0; })) pendientes.push('<a href="#/cuotas/tipos">Pon el importe de la cuota de socio</a>');
+    if (!socios.length) pendientes.push('<a href="#/socios">Da de alta a los socios (o impórtalos desde una hoja de cálculo)</a>');
     if (!demo && !copia.ultimaCopia) pendientes.push('<a href="#/copias">Descarga tu primera copia de seguridad</a>');
 
     var estadoCopia = demo ? "No aplica en la demostración."
@@ -2374,9 +3318,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
         pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
       '<div class="rejilla-tarjetas">' +
       '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
+      '<section class="tarjeta" aria-labelledby="t-socios"><h2 id="t-socios">Socios</h2><p><span class="cifra">' + activos + "</span> " + (activos === 1 ? "activo" : "activos") +
+      '</p><a class="enlace-flecha" href="#/socios">Ver socios</a></section>' +
+      '<section class="tarjeta" aria-labelledby="t-cuotas"><h2 id="t-cuotas">Cuotas sin cobrar</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(deuda)) + "</span></p>" +
+      '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
       '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Socios y cuotas, tesorería e IVA, actividades, actas, obligaciones, subvenciones e informes.</p></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Tesorería e IVA, actividades, actas, obligaciones, subvenciones e informes.</p></section>' +
       "</div>";
   }
 
@@ -2401,7 +3349,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  */
 (function (raiz) {
   "use strict";
-  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, V = WA.Validar, Dir = WA.Direccion;
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, V = WA.Validar;
 
   // ── Datos de la asociación ───────────────────────────────────────────────
   function formularioAsociacion(a) {
@@ -2415,7 +3363,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       UI.campo({ nombre: "numeroRegistro", etiqueta: "Número de inscripción", valor: a.numeroRegistro }) +
       UI.campo({ nombre: "fechaConstitucion", etiqueta: "Fecha de constitución", tipo: "date", valor: a.fechaConstitucion }) +
       "</div></fieldset>" +
-      camposDomicilio(d) +
+      WA.FormDireccion.campos(d, { leyenda: "Domicilio social" }) +
       '<fieldset><legend>Contacto y banco</legend><div class="rejilla">' +
       UI.campo({ nombre: "email", etiqueta: "Correo", tipo: "email", valor: a.email, atributos: 'autocomplete="email"' }) +
       UI.campo({ nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: a.telefono }) +
@@ -2423,45 +3371,6 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       UI.campo({ nombre: "iban", etiqueta: "IBAN de la cuenta", valor: a.iban, ayuda: "Se usará para las remesas de cuotas.", atributos: 'autocapitalize="characters"' }) +
       "</div></fieldset>" +
       '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar datos</button></div></form>';
-  }
-
-  /*
-   * Domicilio social, por partes (ver nucleo/direccion.js). Solo son necesarios
-   * vía, número, código postal y municipio; el resto se rellena si existe.
-   */
-  function camposDomicilio(d) {
-    var tipos = [["", "—"]].concat(Dir.TIPOS_VIA.map(function (t) { return [t, t]; }), [["Otro", "Otro (escríbelo en el nombre)"]]);
-    // Si la provincia guardada no está en la lista (dato antiguo), se ofrece igualmente para no perderla.
-    var provincias = [["", "—"]].concat((d.provincia && Dir.PROVINCIAS.indexOf(d.provincia) < 0 ? [d.provincia] : []).concat(Dir.PROVINCIAS)
-      .map(function (p) { return [p, p]; }));
-    return '<fieldset><legend>Domicilio social</legend><div class="rejilla-12">' +
-      UI.campo({ nombre: "tipoVia", etiqueta: "Tipo de vía", tipo: "select", valor: d.tipoVia, opciones: tipos, clase: "col-3" }) +
-      UI.campo({ nombre: "nombreVia", etiqueta: "Nombre de la vía", valor: d.nombreVia, clase: "col-7 col-movil-completo", atributos: 'autocomplete="address-line1"' }) +
-      UI.campo({ nombre: "numero", etiqueta: "Número", valor: d.numero, clase: "col-2", ayuda: "o s/n", atributos: 'inputmode="text"' }) +
-      UI.campo({ nombre: "km", etiqueta: "Km", valor: d.km, clase: "col-2", ayuda: "En carreteras" }) +
-      UI.campo({ nombre: "bloque", etiqueta: "Bloque", valor: d.bloque, clase: "col-2" }) +
-      UI.campo({ nombre: "portal", etiqueta: "Portal", valor: d.portal, clase: "col-2" }) +
-      UI.campo({ nombre: "escalera", etiqueta: "Escalera", valor: d.escalera, clase: "col-2" }) +
-      UI.campo({ nombre: "planta", etiqueta: "Planta o piso", valor: d.planta, clase: "col-2", lista: Dir.PLANTAS, ayuda: "1, 2… Bajo, Ático" }) +
-      UI.campo({ nombre: "puerta", etiqueta: "Puerta", valor: d.puerta, clase: "col-2", ayuda: "A, B, Izda…" }) +
-      UI.campo({ nombre: "complemento", etiqueta: "Otros datos de la dirección", valor: d.complemento, clase: "col-12",
-        ayuda: "Lo que no encaje arriba: local, centro cívico, urbanización, «a/a de…»." }) +
-      UI.campo({ nombre: "codigoPostal", etiqueta: "Código postal", valor: d.codigoPostal, clase: "col-3",
-        atributos: 'inputmode="numeric" autocomplete="postal-code" maxlength="5"' }) +
-      UI.campo({ nombre: "municipio", etiqueta: "Municipio", valor: d.municipio, clase: "col-5", atributos: 'autocomplete="address-level2"' }) +
-      UI.campo({ nombre: "provincia", etiqueta: "Provincia", tipo: "select", valor: d.provincia, opciones: provincias, clase: "col-4 col-movil-completo",
-        ayuda: "Se rellena sola con el código postal." }) +
-      '<p class="vista-previa" aria-live="polite"><strong>Así se escribirá en los documentos</strong><span id="dom-previa"></span></p>' +
-      "</div></fieldset>";
-  }
-
-  /** Lee los campos del domicilio de un formulario ya convertido en objeto. */
-  function domicilioDe(datos) {
-    var d = Dir.vacia();
-    Dir.CAMPOS.forEach(function (c) { d[c] = datos[c] || ""; });
-    if (/^s\/?n$/i.test(d.numero)) d.numero = "s/n";
-    d.puerta = d.puerta.length <= 2 ? d.puerta.toUpperCase() : d.puerta;
-    return d;
   }
 
   /** Devuelve los avisos de formato (no impiden guardar). */
@@ -2476,12 +3385,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     if (datos.nif) comprobar("nif", V.nifEntidad(datos.nif)); else UI.marcarError(form, "nif", "");
     if (datos.iban) comprobar("iban", V.iban(datos.iban)); else UI.marcarError(form, "iban", "");
     if (datos.email) comprobar("email", V.email(datos.email)); else UI.marcarError(form, "email", "");
-    if (datos.codigoPostal) comprobar("codigoPostal", V.codigoPostal(datos.codigoPostal)); else UI.marcarError(form, "codigoPostal", "");
-    // El código postal empieza por el número de la provincia: si no casan, uno de los dos está mal.
-    var provCP = Dir.provinciaDeCP(datos.codigoPostal);
-    var noCasan = provCP && datos.provincia && provCP !== datos.provincia;
-    UI.marcarError(form, "provincia", noCasan ? "El código postal " + datos.codigoPostal + " es de " + provCP + "." : "");
-    if (noCasan) avisos++;
+    avisos += WA.FormDireccion.revisar(form, datos);
     return avisos;
   }
 
@@ -2569,24 +3473,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 
     var form = cont.querySelector("#f-asociacion");
 
-    // Vista previa de la dirección y provincia automática a partir del código postal.
-    var provinciaAuto = Dir.provinciaDeCP(a.domicilio && a.domicilio.codigoPostal);
-    function actualizarDireccion(e) {
-      var datosForm = UI.leerFormulario(form);
-      if (e && e.target.name === "codigoPostal") {
-        var p = Dir.provinciaDeCP(datosForm.codigoPostal);
-        // Solo se cambia si estaba vacía o la había puesto el propio código postal.
-        if (p && (!datosForm.provincia || datosForm.provincia === provinciaAuto)) {
-          form.elements.provincia.value = p;
-          datosForm.provincia = p;
-        }
-        provinciaAuto = p;
-      }
-      cont.querySelector("#dom-previa").textContent = Dir.formatear(domicilioDe(datosForm)).completa || "—";
-    }
-    form.addEventListener("input", actualizarDireccion);
-    form.addEventListener("change", actualizarDireccion);
-    actualizarDireccion();
+    WA.FormDireccion.conectar(form);
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
       var d = UI.leerFormulario(form);
@@ -2595,7 +3482,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       await datos.escribir("asociacion", Object.assign(a, {
         nombre: d.nombre, siglas: d.siglas, nif: V.normalizar(d.nif), registro: d.registro,
         numeroRegistro: d.numeroRegistro, fechaConstitucion: d.fechaConstitucion,
-        domicilio: domicilioDe(d),
+        domicilio: WA.FormDireccion.leer(d),
         email: d.email, telefono: d.telefono, web: d.web, iban: V.normalizar(d.iban),
       }));
       UI.aviso(avisos ? "Guardado. Revisa los campos marcados: puede haber algún error al copiarlos." : "Datos guardados.", avisos ? "info" : "ok");
@@ -2617,6 +3504,872 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   WA.App.registrar({
     id: "asociacion", titulo: "Asociación", orden: 10, pintar: pintar,
     icono: '<path d="M3 21h18"/><path d="M5 21V10l7-5 7 5v11"/><path d="M9 21v-6h6v6"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/socios.js */
+/*
+ * webkit_asociaciones — Módulo «Socios»: libro de registro de socios.
+ *
+ *   #/socios                listado con búsqueda y filtros
+ *   #/socios/nuevo          ficha vacía para dar de alta
+ *   #/socios/ficha/<id>     ficha de un socio (datos, baja, cuotas)
+ *   #/socios/libro          libro de registro para imprimir o guardar en PDF
+ *
+ * La lógica (estado, edad, filtros, validación, importación) está en
+ * logica/socios.js, con tests. Aquí solo hay pantalla.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, S = WA.Socios, C = WA.Cuotas, D = WA.Dinero;
+
+  // El filtro se recuerda mientras dura la sesión (al volver de una ficha sigue igual).
+  var filtro = { texto: "", estado: "activo", tipoSocioId: "", orden: "numero" };
+
+  var ESTADO_TEXTO = { activo: "Activo", baja: "Baja", futuro: "Alta futura" };
+
+  async function cargar(datos) {
+    var r = await Promise.all([datos.listar("socios"), datos.listar("cuotas"), datos.leer("config"), datos.leer("asociacion")]);
+    return { socios: r[0].map(S.completar), cuotas: r[1], config: r[2], asociacion: r[3] };
+  }
+  var nombreTipo = function (config, id) {
+    var t = (config.tiposSocio || []).filter(function (x) { return x.id === id; })[0];
+    return t ? t.nombre : "—";
+  };
+
+  // ── Listado ──────────────────────────────────────────────────────────────
+  function filasListado(c) {
+    var deuda = {};
+    C.deudores(c.cuotas).forEach(function (d) { deuda[d.socioId] = d.total; });
+    var lista = S.filtrar(c.socios, filtro);
+    if (!lista.length) return { html: '<tr><td colspan="6" class="vacio">Ningún socio coincide con la búsqueda.</td></tr>', n: 0 };
+    return {
+      n: lista.length,
+      html: lista.map(function (s) {
+        var e = S.estado(s);
+        var cuota = deuda[s.id] ? '<span class="estado estado-aviso">Debe ' + esc(D.formatear(deuda[s.id])) + "</span>"
+          : '<span class="estado estado-ok">Al corriente</span>';
+        return "<tr>" +
+          '<td class="num">' + esc(s.numero) + "</td>" +
+          '<th scope="row"><a href="#/socios/ficha/' + encodeURIComponent(s.id) + '">' + esc(S.nombreListado(s) || "(sin nombre)") + "</a>" +
+          (S.esMenor(s) ? ' <span class="etiqueta">Menor</span>' : "") + "</th>" +
+          "<td>" + esc(nombreTipo(c.config, s.tipoSocioId)) + "</td>" +
+          "<td>" + (e === "activo" ? esc(F.corta(s.fechaAlta)) : '<span class="estado estado-neutro">' + esc(ESTADO_TEXTO[e]) + "</span>") + "</td>" +
+          "<td>" + cuota + "</td>" +
+          '<td class="solo-ancho">' + (s.email ? '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + "</a>" : "") +
+          (s.telefono ? '<br><span class="detalle">' + esc(s.telefono) + "</span>" : "") + "</td></tr>";
+      }).join(""),
+    };
+  }
+
+  async function pintarListado(cont, datos) {
+    var c = await cargar(datos);
+    var activos = c.socios.filter(function (s) { return S.estado(s) === "activo"; }).length;
+    var tipos = [["", "Todos los tipos"]].concat((c.config.tiposSocio || []).map(function (t) { return [t.id, t.nombre]; }));
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Socios</h1><a class="btn btn-primario" href="#/socios/nuevo">Nuevo socio</a></div>' +
+      '<p class="intro">' + activos + (activos === 1 ? " socio activo" : " socios activos") + " · " + c.socios.length + " en el registro (con las bajas).</p>" +
+      '<div class="barra-filtros" role="search">' +
+      '<label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="s-buscar" placeholder="Buscar por nombre, documento, correo, teléfono…" value="' + esc(filtro.texto) + '"></label>' +
+      '<label><span class="sr">Estado</span><select id="s-estado">' +
+      [["activo", "Activos"], ["baja", "Bajas"], ["todos", "Todos"]].map(function (o) {
+        return '<option value="' + o[0] + '"' + (filtro.estado === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
+      }).join("") + "</select></label>" +
+      '<label><span class="sr">Tipo de socio</span><select id="s-tipo">' + tipos.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (filtro.tipoSocioId === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>";
+      }).join("") + "</select></label>" +
+      '<label><span class="sr">Orden</span><select id="s-orden"><option value="numero"' + (filtro.orden === "numero" ? " selected" : "") + '>Por número</option>' +
+      '<option value="nombre"' + (filtro.orden === "nombre" ? " selected" : "") + ">Por apellidos</option></select></label>" +
+      "</div>" +
+      '<p class="detalle" id="s-cuenta" aria-live="polite"></p>' +
+      '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Socios</caption><thead><tr>' +
+      '<th scope="col" class="num">Nº</th><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Alta</th><th scope="col">Cuotas</th><th scope="col" class="solo-ancho">Contacto</th>' +
+      '</tr></thead><tbody id="s-filas"></tbody></table></div>' +
+      '<div class="acciones">' +
+      '<button type="button" class="btn btn-secundario" id="s-importar">Importar desde CSV…</button>' +
+      '<button type="button" class="btn btn-secundario" id="s-exportar">Exportar lista (CSV)</button>' +
+      '<a class="btn btn-secundario" href="#/socios/libro">Libro de registro</a>' +
+      '<a class="btn btn-secundario" href="#/cuotas/tipos">Tipos de socio y cuotas</a>' +
+      "</div>";
+
+    function refrescar() {
+      var r = filasListado(c);
+      cont.querySelector("#s-filas").innerHTML = r.html;
+      cont.querySelector("#s-cuenta").textContent = r.n === 1 ? "1 socio en la lista." : r.n + " socios en la lista.";
+    }
+    cont.querySelector("#s-buscar").addEventListener("input", function (e) { filtro.texto = e.target.value; refrescar(); });
+    cont.querySelector("#s-estado").addEventListener("change", function (e) { filtro.estado = e.target.value; refrescar(); });
+    cont.querySelector("#s-tipo").addEventListener("change", function (e) { filtro.tipoSocioId = e.target.value; refrescar(); });
+    cont.querySelector("#s-orden").addEventListener("change", function (e) { filtro.orden = e.target.value; refrescar(); });
+    cont.querySelector("#s-importar").addEventListener("click", function () { importar(datos, c); });
+    cont.querySelector("#s-exportar").addEventListener("click", function () { exportar(c); });
+    refrescar();
+  }
+
+  // ── Exportar e importar ─────────────────────────────────────────────────
+  async function exportar(c) {
+    var lista = S.filtrar(c.socios, filtro);
+    var ok = await UI.confirmar("El archivo tendrá " + lista.length + " socios con sus datos personales SIN CIFRAR. " +
+      "Guárdalo en un lugar seguro y bórralo cuando ya no lo necesites.", { titulo: "Exportar socios", aceptar: "Exportar" });
+    if (!ok) return;
+    var filas = lista.map(function (s) { return Object.assign({}, s, { _tipoNombre: nombreTipo(c.config, s.tipoSocioId) }); });
+    UI.descargar("socios-" + F.hoy() + ".csv", WA.CSV.escribir(S.COLUMNAS_CSV, filas), "text/csv;charset=utf-8");
+  }
+
+  async function importar(datos, c) {
+    var archivo = await UI.elegirArchivo(".csv,text/csv,text/plain");
+    if (!archivo) return;
+    var lectura = WA.CSV.leer(archivo.texto);
+    var r = S.desdeCSV(lectura, c.config.tiposSocio);
+    var reconocidas = Object.keys(r.columnas);
+    if (!r.socios.length) {
+      UI.aviso("No se ha encontrado ningún socio en el archivo. Revisa que la primera fila tenga los títulos de las columnas (Nombre, Apellidos…).", "error");
+      return;
+    }
+    // ¿Ya existen? (mismo documento o correo)
+    var V = WA.Validar;
+    var docs = {}, mails = {};
+    c.socios.forEach(function (s) {
+      if (s.documento) docs[V.normalizar(s.documento)] = true;
+      if (s.email) mails[s.email.trim().toLowerCase()] = true;
+    });
+    var repetido = function (s) { return (s.documento && docs[V.normalizar(s.documento)]) || (s.email && mails[s.email.trim().toLowerCase()]); };
+    var nRepetidos = r.socios.filter(repetido).length;
+
+    var res = await UI.dialogo({
+      titulo: "Importar socios",
+      contenido: "<p>Se han encontrado <strong>" + r.socios.length + " socios</strong> en «" + esc(archivo.nombre) + "».</p>" +
+        '<p class="detalle">Columnas reconocidas: ' + esc(reconocidas.join(", ")) + ". Las demás se ignoran.</p>" +
+        (r.problemas.length ? '<details class="historico"><summary>' + r.problemas.length + " avisos</summary><ul class=\"lista\">" +
+          r.problemas.slice(0, 50).map(function (p) { return "<li>Fila " + p.fila + ": " + esc(p.mensaje) + "</li>"; }).join("") +
+          (r.problemas.length > 50 ? "<li>…</li>" : "") + "</ul></details>" : "") +
+        "<form>" +
+        (nRepetidos ? '<label class="casilla"><input type="checkbox" name="saltar" checked><span>Saltar los ' + nRepetidos +
+          " que ya están (mismo documento o correo)</span></label>" : "") +
+        '<label class="casilla"><input type="checkbox" name="numeros" checked><span>Respetar el número de socio del archivo cuando no choque con uno existente</span></label>' +
+        "</form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Importar", valor: "enviar", estilo: "btn-primario" }],
+    });
+    if (res.valor !== "enviar") return;
+    var lista = res.datos.saltar ? r.socios.filter(function (s) { return !repetido(s); }) : r.socios;
+    var usados = {};
+    c.socios.forEach(function (s) { usados[s.numero] = true; });
+    var contador = S.siguienteNumero(c.socios, c.config.siguienteNumeroSocio);
+    // Primero los que traen número propio (si está libre), luego el resto a continuación.
+    lista.forEach(function (s) {
+      if (res.datos.numeros && s.numero && !usados[s.numero]) usados[s.numero] = true;
+      else s.numero = null;
+    });
+    var maxPropio = Math.max.apply(null, [contador - 1].concat(lista.map(function (s) { return s.numero || 0; })));
+    contador = maxPropio + 1;
+    lista.forEach(function (s) { if (!s.numero) s.numero = contador++; });
+    await datos.guardarVarios("socios", lista);
+    c.config.siguienteNumeroSocio = contador;
+    await datos.escribir("config", c.config);
+    UI.aviso(lista.length + " socios importados.");
+    WA.App.repintar();
+  }
+
+  // ── Ficha ───────────────────────────────────────────────────────────────
+  function formularioFicha(s, c) {
+    var tipos = (c.config.tiposSocio || []).filter(function (t) { return t.activo !== false || t.id === s.tipoSocioId; })
+      .map(function (t) { return [t.id, t.nombre + (t.cuota > 0 ? " · " + D.formatear(t.cuota) + " " + periodicidadTexto(t.periodicidad) : " · sin cuota")]; });
+    var tutor = s.tutor || {}, cons = s.consentimientos || {};
+    var casilla = function (nombre, valor, texto) {
+      return '<label class="casilla"><input type="checkbox" name="' + nombre + '"' + (valor ? " checked" : "") + "><span>" + texto + "</span></label>";
+    };
+    return '<form id="f-socio" class="formulario" novalidate>' +
+      '<section class="tarjeta"><h2>Datos personales</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: s.nombre, requerido: true, clase: "col-4 col-movil-completo", atributos: 'autocomplete="off"' }) +
+      UI.campo({ nombre: "apellidos", etiqueta: "Apellidos", valor: s.apellidos, clase: "col-5 col-movil-completo", atributos: 'autocomplete="off"' }) +
+      UI.campo({ nombre: "sexo", etiqueta: "Sexo", tipo: "select", valor: s.sexo, opciones: [["", "—"]].concat(S.SEXOS.map(function (x) { return [x, x]; })), clase: "col-3",
+        ayuda: "Algunas subvenciones piden datos por sexo." }) +
+      UI.campo({ nombre: "tipoDocumento", etiqueta: "Documento", tipo: "select", valor: s.tipoDocumento, opciones: S.TIPOS_DOCUMENTO, clase: "col-3" }) +
+      UI.campo({ nombre: "documento", etiqueta: "Número de documento", valor: s.documento, clase: "col-4", atributos: 'autocapitalize="characters" autocomplete="off"' }) +
+      UI.campo({ nombre: "fechaNacimiento", etiqueta: "Fecha de nacimiento", tipo: "date", valor: s.fechaNacimiento, clase: "col-3" }) +
+      '<p class="col-2 dato-edad" id="f-edad" aria-live="polite"></p>' +
+      UI.campo({ nombre: "ocupacion", etiqueta: "Ocupación o estudios", valor: s.ocupacion, clase: "col-12" }) +
+      "</div></section>" +
+
+      '<section class="tarjeta"><h2>Contacto</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "email", etiqueta: "Correo", tipo: "email", valor: s.email, clase: "col-5 col-movil-completo", atributos: 'autocomplete="off"' }) +
+      UI.campo({ nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: s.telefono, clase: "col-4" }) +
+      UI.campo({ nombre: "telefono2", etiqueta: "Otro teléfono", tipo: "tel", valor: s.telefono2, clase: "col-3" }) +
+      "</div>" + WA.FormDireccion.campos(s.direccion, { leyenda: "Dirección postal", previa: false }) + "</section>" +
+
+      '<section class="tarjeta" id="f-tutor"><h2>Madre, padre o tutor</h2>' +
+      '<p class="detalle">Es menor de edad. Los datos de quien le representa, para autorizaciones y avisos.</p><div class="rejilla-12">' +
+      UI.campo({ nombre: "tutorNombre", etiqueta: "Nombre y apellidos", valor: tutor.nombre, clase: "col-5 col-movil-completo" }) +
+      UI.campo({ nombre: "tutorRelacion", etiqueta: "Relación", valor: tutor.relacion, lista: ["Madre", "Padre", "Tutor legal", "Tutora legal"], clase: "col-3" }) +
+      UI.campo({ nombre: "tutorDocumento", etiqueta: "DNI/NIE", valor: tutor.documento, clase: "col-4", atributos: 'autocapitalize="characters"' }) +
+      UI.campo({ nombre: "tutorTelefono", etiqueta: "Teléfono", tipo: "tel", valor: tutor.telefono, clase: "col-4" }) +
+      UI.campo({ nombre: "tutorEmail", etiqueta: "Correo", tipo: "email", valor: tutor.email, clase: "col-5 col-movil-completo" }) +
+      "</div></section>" +
+
+      '<section class="tarjeta"><h2>Condición de socio</h2><div class="rejilla-12">' +
+      '<p class="col-3 dato-numero"><span class="detalle">Número de socio</span><strong>' + (s.numero ? esc(s.numero) : "Se asigna al guardar") + "</strong></p>" +
+      UI.campo({ nombre: "tipoSocioId", etiqueta: "Tipo de socio", tipo: "select", valor: s.tipoSocioId || (tipos[0] || [""])[0], opciones: tipos, clase: "col-5 col-movil-completo" }) +
+      UI.campo({ nombre: "fechaAlta", etiqueta: "Fecha de alta", tipo: "date", valor: s.fechaAlta || F.hoy(), requerido: true, clase: "col-4" }) +
+      UI.campo({ nombre: "formaPago", etiqueta: "Forma de pago habitual", tipo: "select", valor: s.formaPago, opciones: S.FORMAS_PAGO, clase: "col-4",
+        ayuda: "Se propone al cobrar; cada cuota puede pagarse de otra forma." }) +
+      '<div class="col-8 col-movil-completo">' + casilla("exentoCuota", s.exentoCuota, "Exento de cuota (no se le emiten cuotas)") + "</div>" +
+      "</div>" +
+      '<fieldset id="f-sepa"><legend>Domiciliación bancaria</legend><div class="rejilla-12">' +
+      UI.campo({ nombre: "iban", etiqueta: "IBAN", valor: s.iban, clase: "col-5 col-movil-completo", atributos: 'autocapitalize="characters" autocomplete="off"' }) +
+      UI.campo({ nombre: "titularCuenta", etiqueta: "Titular de la cuenta", valor: s.titularCuenta, clase: "col-7 col-movil-completo", ayuda: "Si no es el propio socio." }) +
+      UI.campo({ nombre: "mandatoReferencia", etiqueta: "Referencia del mandato", valor: s.mandatoReferencia, clase: "col-5" }) +
+      UI.campo({ nombre: "mandatoFecha", etiqueta: "Fecha de firma del mandato", tipo: "date", valor: s.mandatoFecha, clase: "col-4" }) +
+      "</div></fieldset></section>" +
+
+      '<section class="tarjeta"><h2>Protección de datos e imagen</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "proteccionDatos", etiqueta: "Aceptó la política de privacidad el", tipo: "date", valor: cons.proteccionDatos, clase: "col-4",
+        ayuda: "Fecha en que firmó o aceptó la información de protección de datos." }) +
+      '<div class="col-8 col-movil-completo">' +
+      casilla("imagen", cons.imagen, "Autoriza el uso de su imagen (fotos y vídeos de actividades)") +
+      casilla("comunicaciones", cons.comunicaciones, "Acepta recibir comunicaciones informativas") + "</div>" +
+      "</div><p class=\"detalle\">Qué consentimientos hay que recoger y cómo depende de cada caso: verificar con asesoría.</p></section>" +
+
+      '<section class="tarjeta"><h2>Notas</h2>' +
+      UI.campo({ nombre: "notas", etiqueta: "Notas internas", tipo: "textarea", valor: s.notas, ancho: "completo" }) + "</section>" +
+
+      '<div class="acciones barra-guardar"><button type="submit" class="btn btn-primario">' + (s.id ? "Guardar cambios" : "Dar de alta") + "</button>" +
+      '<a class="btn btn-secundario" href="#/socios">Volver al listado</a></div>' +
+      "</form>";
+  }
+
+  function periodicidadTexto(p) {
+    return { anual: "al año", semestral: "al semestre", trimestral: "al trimestre", mensual: "al mes" }[p] || "";
+  }
+
+  /** Lee el formulario y lo vuelca sobre el socio. */
+  function leerFicha(form, s) {
+    var d = UI.leerFormulario(form);
+    var V = WA.Validar;
+    return Object.assign(S.completar(s), {
+      nombre: d.nombre, apellidos: d.apellidos, sexo: d.sexo, tipoDocumento: d.tipoDocumento,
+      documento: d.tipoDocumento === "Pasaporte" || d.tipoDocumento === "Otro" ? d.documento.toUpperCase() : V.normalizar(d.documento),
+      fechaNacimiento: d.fechaNacimiento, ocupacion: d.ocupacion,
+      email: d.email, telefono: d.telefono, telefono2: d.telefono2, direccion: WA.FormDireccion.leer(d),
+      tutor: { nombre: d.tutorNombre, relacion: d.tutorRelacion, documento: V.normalizar(d.tutorDocumento), telefono: d.tutorTelefono, email: d.tutorEmail },
+      tipoSocioId: d.tipoSocioId, fechaAlta: d.fechaAlta, formaPago: d.formaPago, exentoCuota: !!d.exentoCuota,
+      iban: V.normalizar(d.iban), titularCuenta: d.titularCuenta, mandatoReferencia: d.mandatoReferencia, mandatoFecha: d.mandatoFecha,
+      consentimientos: { proteccionDatos: d.proteccionDatos, imagen: !!d.imagen, comunicaciones: !!d.comunicaciones },
+      notas: d.notas,
+    });
+  }
+
+  var CAMPO_DE = { tutorNombre: "tutorNombre", codigoPostal: "codigoPostal" };
+
+  async function pintarFicha(cont, datos, id) {
+    var c = await cargar(datos);
+    var s = id ? c.socios.filter(function (x) { return x.id === id; })[0] : S.vacio();
+    if (!s) { cont.innerHTML = '<h1>Socio no encontrado</h1><p><a href="#/socios">Volver al listado</a></p>'; return; }
+    var nuevo = !s.id;
+    if (nuevo) s.formaPago = "Transferencia";
+    var e = nuevo ? "activo" : S.estado(s);
+    var misCuotas = c.cuotas.filter(function (q) { return q.socioId === s.id; })
+      .sort(function (a, b) { return String(b.periodo).localeCompare(String(a.periodo)); });
+
+    cont.innerHTML =
+      '<p class="miga"><a href="#/socios">Socios</a> › ' + (nuevo ? "Nuevo" : "N.º " + esc(s.numero)) + "</p>" +
+      '<div class="cabecera-pagina"><h1>' + (nuevo ? "Nuevo socio" : esc(S.nombreCompleto(s))) + "</h1>" +
+      (!nuevo ? '<span class="estado ' + (e === "baja" ? "estado-neutro" : "estado-ok") + '">' + esc(ESTADO_TEXTO[e]) + "</span>" : "") + "</div>" +
+      (e === "baja" ? '<div class="caja-aviso">Dado de baja el <strong>' + esc(F.corta(s.fechaBaja)) + "</strong>" +
+        (s.motivoBaja ? " · " + esc(s.motivoBaja) : "") + '. <button type="button" class="btn btn-enlace" id="f-reactivar">Reactivar</button></div>' : "") +
+      formularioFicha(s, c) +
+      (nuevo ? "" :
+        '<section class="tarjeta" aria-labelledby="t-cuotas"><div class="tarjeta-cabecera"><h2 id="t-cuotas">Cuotas</h2></div>' +
+        '<div id="f-cuotas">' + WA.CuotasUI.tabla(misCuotas, { conSocio: false }) + "</div></section>" +
+        '<section class="tarjeta zona-peligro" aria-labelledby="t-baja"><h2 id="t-baja">Baja y eliminación</h2>' +
+        "<p>La <strong>baja</strong> conserva su ficha y su historial en el libro de registro. <strong>Eliminar</strong> borra sus datos personales " +
+        "(por ejemplo, si ejerce su derecho de supresión); las cuotas ya pagadas se conservan en la contabilidad con su nombre y número.</p>" +
+        '<div class="acciones">' + (e !== "baja" ? '<button type="button" class="btn btn-secundario" id="f-baja">Dar de baja…</button>' : "") +
+        '<button type="button" class="btn btn-peligro-suave" id="f-eliminar">Eliminar socio…</button></div></section>');
+
+    var form = cont.querySelector("#f-socio");
+    WA.FormDireccion.conectar(form);
+
+    // Mostrar u ocultar lo que depende de otros campos.
+    function dependencias() {
+      var d = UI.leerFormulario(form);
+      var edad = S.edad(d.fechaNacimiento);
+      cont.querySelector("#f-edad").textContent = edad !== null ? edad + (edad === 1 ? " año" : " años") : "";
+      var menor = edad !== null && edad < S.MAYORIA_EDAD;
+      cont.querySelector("#f-tutor").hidden = !menor && !d.tutorNombre;
+      cont.querySelector("#f-sepa").hidden = d.formaPago !== "Domiciliación" && !d.iban;
+    }
+    form.addEventListener("input", dependencias);
+    form.addEventListener("change", dependencias);
+    dependencias();
+
+    form.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      var socio = leerFicha(form, s);
+      var r = S.revisar(socio, c.socios);
+      // Limpia y marca errores (impiden guardar) y avisos (no).
+      Array.prototype.forEach.call(form.querySelectorAll("[data-campo]"), function (el) { UI.marcarError(form, el.getAttribute("data-campo"), ""); });
+      Object.keys(r.avisos).forEach(function (k) { UI.marcarError(form, CAMPO_DE[k] || k, r.avisos[k]); });
+      var nAvisos = Object.keys(r.avisos).length + WA.FormDireccion.revisar(form, UI.leerFormulario(form));
+      Object.keys(r.errores).forEach(function (k) { UI.marcarError(form, k, r.errores[k]); });
+      var errores = Object.keys(r.errores);
+      if (errores.length) {
+        var primero = form.elements[errores[0]];
+        if (primero) primero.focus();
+        UI.aviso("Revisa los campos marcados en rojo.", "error");
+        return;
+      }
+      if (nuevo) {
+        socio.numero = S.siguienteNumero(c.socios, c.config.siguienteNumeroSocio);
+        c.config.siguienteNumeroSocio = socio.numero + 1;
+        await datos.escribir("config", c.config);
+      }
+      var guardado = await datos.guardar("socios", socio);
+      UI.aviso((nuevo ? "Alta hecha: socio n.º " + guardado.numero + "." : "Cambios guardados.") +
+        (nAvisos ? " Hay avisos en algunos campos; revísalos." : ""), nAvisos ? "info" : "ok");
+      if (nuevo) {
+        await ofrecerCuotaActual(datos, guardado, c);
+        location.hash = "#/socios/ficha/" + encodeURIComponent(guardado.id);
+      }
+    });
+
+    if (nuevo) return;
+    // Tras cobrar o anular una cuota se repinta solo su tabla: así no se pierde lo que se esté editando arriba.
+    var zonaCuotas = cont.querySelector("#f-cuotas");
+    WA.CuotasUI.conectar(zonaCuotas, datos, async function () {
+      var lista = (await datos.listar("cuotas")).filter(function (q) { return q.socioId === s.id; })
+        .sort(function (a, b) { return String(b.periodo).localeCompare(String(a.periodo)); });
+      zonaCuotas.innerHTML = WA.CuotasUI.tabla(lista, { conSocio: false });
+    });
+    cont.querySelector("#f-eliminar").addEventListener("click", function () { eliminar(datos, s); });
+    var bBaja = cont.querySelector("#f-baja");
+    if (bBaja) bBaja.addEventListener("click", function () { darDeBaja(datos, s, c.cuotas); });
+    var bReac = cont.querySelector("#f-reactivar");
+    if (bReac) bReac.addEventListener("click", async function () {
+      if (!(await UI.confirmar("Volverá a figurar como socio activo (se borra la fecha de baja).", { titulo: "Reactivar socio", aceptar: "Reactivar" }))) return;
+      await datos.guardar("socios", Object.assign(s, { fechaBaja: "", motivoBaja: "" }));
+      UI.aviso("Socio reactivado.");
+      WA.App.repintar();
+    });
+  }
+
+  /** Tras un alta: si ya se emitieron las cuotas del periodo actual, ofrece emitir la suya. */
+  async function ofrecerCuotaActual(datos, socio, c) {
+    var tipo = (c.config.tiposSocio || []).filter(function (t) { return t.id === socio.tipoSocioId; })[0];
+    if (!tipo || !(tipo.cuota > 0) || socio.exentoCuota) return;
+    var p = C.periodoDeFecha(tipo.periodicidad, socio.fechaAlta);
+    var yaEmitidas = c.cuotas.some(function (q) { return q.periodo === p.clave; });
+    if (!yaEmitidas) return;
+    var r = C.generar({ periodo: p.clave, socios: [socio], tipos: c.config.tiposSocio, cuotas: c.cuotas });
+    if (r.nuevas.length !== 1) return;
+    var ok = await UI.confirmar("Las cuotas del " + p.etiqueta + " ya se emitieron. ¿Emitir también la de este socio (" + D.formatear(r.total) + ")?",
+      { titulo: "Cuota del periodo actual", aceptar: "Emitir su cuota", cancelar: "Ahora no" });
+    if (ok) { await datos.guardar("cuotas", r.nuevas[0]); UI.aviso("Cuota emitida."); }
+  }
+
+  async function darDeBaja(datos, s, cuotas) {
+    var pendientes = cuotas.filter(function (q) { return q.socioId === s.id && C.debe(q); });
+    var r = await UI.dialogo({
+      titulo: "Dar de baja a " + S.nombreCompleto(s),
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "fechaBaja", etiqueta: "Fecha de baja", tipo: "date", valor: F.hoy(), requerido: true }) +
+        UI.campo({ nombre: "motivoBaja", etiqueta: "Motivo", valor: "", lista: ["Voluntaria", "Impago de cuotas", "Fallecimiento", "Expulsión", "Traslado"] }) +
+        "</div>" +
+        (pendientes.length ? '<label class="casilla"><input type="checkbox" name="anular" checked><span>Anular sus ' + pendientes.length +
+          " cuotas pendientes (" + esc(D.formatear(D.sumar(pendientes.map(function (q) { return q.importe; })))) + ")</span></label>" : "") +
+        '<p class="detalle">Las causas y el procedimiento de baja los fijan vuestros estatutos.</p></form>',
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Dar de baja", valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) {
+        var ok = F.esValida(form.elements.fechaBaja.value) && form.elements.fechaBaja.value >= s.fechaAlta;
+        UI.marcarError(form, "fechaBaja", ok ? "" : "Pon una fecha válida, posterior al alta.");
+        return ok;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    await datos.guardar("socios", Object.assign(s, { fechaBaja: r.datos.fechaBaja, motivoBaja: r.datos.motivoBaja }));
+    if (r.datos.anular) await datos.guardarVarios("cuotas", pendientes.map(function (q) { return C.anular(q, "Baja del socio"); }));
+    UI.aviso("Baja registrada.");
+    WA.App.repintar();
+  }
+
+  async function eliminar(datos, s) {
+    var ok = await UI.confirmar("Se borrarán todos los datos personales de " + S.nombreCompleto(s) + " (n.º " + s.numero + ") y sus cuotas sin pagar. " +
+      "Las cuotas pagadas se conservan en la contabilidad. No se puede deshacer (salvo con una copia de seguridad anterior). " +
+      "Cuánto tiempo hay que conservar los datos de un socio que se va: verificar con asesoría.",
+      { titulo: "Eliminar socio", aceptar: "Eliminar definitivamente", peligro: true });
+    if (!ok) return;
+    var cuotas = (await datos.listar("cuotas")).filter(function (q) { return q.socioId === s.id && q.estado !== "pagada"; });
+    for (var i = 0; i < cuotas.length; i++) await datos.borrar("cuotas", cuotas[i].id);
+    await datos.borrar("socios", s.id);
+    UI.aviso("Socio eliminado.");
+    location.hash = "#/socios";
+  }
+
+  // ── Libro de registro (para imprimir) ───────────────────────────────────
+  var conBajas = true;
+  async function pintarLibro(cont, datos) {
+    var c = await cargar(datos);
+    var a = c.asociacion;
+    function tabla() {
+      var lista = S.filtrar(c.socios, { estado: conBajas ? "todos" : "activo" });
+      return '<table class="tabla tabla-libro"><thead><tr><th scope="col" class="num">Nº</th><th scope="col">Nombre y apellidos</th><th scope="col">Documento</th>' +
+        '<th scope="col">Domicilio</th><th scope="col">Alta</th><th scope="col">Baja</th></tr></thead><tbody>' +
+        lista.map(function (s) {
+          return '<tr><td class="num">' + esc(s.numero) + "</td><td>" + esc(S.nombreListado(s)) + "</td><td>" + esc(s.documento) + "</td>" +
+            "<td>" + esc(WA.Direccion.formatear(s.direccion).completa) + "</td><td>" + esc(F.corta(s.fechaAlta)) + "</td><td>" + esc(F.corta(s.fechaBaja)) + "</td></tr>";
+        }).join("") + "</tbody></table>";
+    }
+    cont.innerHTML =
+      '<p class="miga no-imprimir"><a href="#/socios">Socios</a> › Libro de registro</p>' +
+      "<h1>Libro de registro de socios</h1>" +
+      '<p class="intro">' + esc(a.nombre || "") + (a.nif ? " · NIF " + esc(a.nif) : "") + " · A fecha " + esc(F.larga(F.hoy())) + "</p>" +
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="l-imprimir">Imprimir o guardar en PDF</button>' +
+      '<label class="casilla"><input type="checkbox" id="l-bajas"' + (conBajas ? " checked" : "") + "><span>Incluir las bajas</span></label></div>" +
+      '<p class="detalle no-imprimir">La relación actualizada de socios es obligatoria (Ley Orgánica 1/2002, art. 14). Qué datos debe incluir en vuestro caso: verificar con asesoría.</p>' +
+      '<div class="tabla-envoltorio" id="l-tabla">' + tabla() + "</div>";
+    cont.querySelector("#l-imprimir").addEventListener("click", function () { window.print(); });
+    cont.querySelector("#l-bajas").addEventListener("change", function (e) { conBajas = e.target.checked; cont.querySelector("#l-tabla").innerHTML = tabla(); });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "nuevo") return pintarFicha(cont, datos, null);
+    if (ruta[0] === "ficha") return pintarFicha(cont, datos, ruta[1]);
+    if (ruta[0] === "libro") return pintarLibro(cont, datos);
+    return pintarListado(cont, datos);
+  }
+
+  WA.App.registrar({
+    id: "socios", titulo: "Socios", orden: 20, pintar: pintar,
+    icono: '<circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7"/><path d="M18 14.3c2.1.7 3.5 2.7 3.5 5.7"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/cuotas.js */
+/*
+ * webkit_asociaciones — Módulo «Cuotas».
+ *
+ *   #/cuotas            cuotas de un periodo: emitirlas (remesa), cobrarlas, anularlas
+ *   #/cuotas/impagados  quién debe qué
+ *   #/cuotas/tipos      tipos de socio con su cuota y periodicidad
+ *
+ * También exporta WA.CuotasUI (tabla de cuotas con sus botones), que usa la
+ * ficha del socio. La lógica está en logica/cuotas.js, con tests.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, S = WA.Socios, C = WA.Cuotas, D = WA.Dinero;
+
+  var estadoVista = { periodo: null, estado: "todas", texto: "" };
+
+  var CLASE_ESTADO = { pendiente: "estado-aviso", pagada: "estado-ok", devuelta: "estado-error", anulada: "estado-neutro" };
+  var PERIODICIDAD_TEXTO = { anual: "al año", semestral: "al semestre", trimestral: "al trimestre", mensual: "al mes" };
+
+  // ── Tabla de cuotas reutilizable ─────────────────────────────────────────
+  /**
+   * opciones: { conSocio (columna con el socio), seleccionable (casillas para cobrar varias) }
+   * Los botones llevan data-accion y data-id; conectar() se encarga de ellos.
+   */
+  function tabla(cuotas, opciones) {
+    var o = opciones || {};
+    if (!cuotas.length) return '<p class="vacio">No hay cuotas.</p>';
+    return '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Cuotas</caption><thead><tr>' +
+      (o.seleccionable ? '<th scope="col" class="celda-casilla"><input type="checkbox" data-todas aria-label="Seleccionar todas las pendientes"></th>' : "") +
+      // Con socio (vista de un periodo) el concepto sobra: todas son del mismo periodo.
+      (o.conSocio ? '<th scope="col" class="num">Nº</th><th scope="col">Socio</th>' : '<th scope="col">Concepto</th>') +
+      '<th scope="col" class="importe">Importe</th><th scope="col">Estado</th><th scope="col">Pago</th>' +
+      '<th scope="col"><span class="sr">Acciones</span></th></tr></thead><tbody>' +
+      cuotas.map(function (q) {
+        var debe = C.debe(q);
+        var pago = q.pago ? esc(F.corta(q.pago.fecha)) + " · " + esc(q.pago.forma) : "";
+        return "<tr>" +
+          (o.seleccionable ? '<td class="celda-casilla">' + (debe ? '<input type="checkbox" data-sel="' + esc(q.id) + '" aria-label="Seleccionar la cuota de ' + esc(q.socioNombre) + '">' : "") + "</td>" : "") +
+          (o.conSocio ? '<td class="num">' + esc(q.socioNumero) + '</td><th scope="row">' +
+            (q.socioId ? '<a href="#/socios/ficha/' + encodeURIComponent(q.socioId) + '">' + esc(q.socioNombre) + "</a>" : esc(q.socioNombre)) + "</th>"
+            : "<td>" + esc(q.concepto) + "</td>") +
+          '<td class="importe">' + esc(D.formatear(q.importe)) + "</td>" +
+          '<td><span class="estado ' + CLASE_ESTADO[q.estado] + '">' + esc(C.ESTADOS[q.estado]) + "</span></td>" +
+          "<td>" + pago + "</td>" +
+          '<td class="celda-acciones">' +
+          (debe ? '<button type="button" class="btn btn-pequeno btn-primario" data-accion="cobrar" data-id="' + esc(q.id) + '">Cobrar</button> ' : "") +
+          '<button type="button" class="btn btn-pequeno btn-secundario" data-accion="mas" data-id="' + esc(q.id) + '" aria-label="Más opciones de la cuota de ' + esc(q.socioNombre) + '">Más…</button>' +
+          "</td></tr>";
+      }).join("") + "</tbody></table></div>";
+  }
+
+  /** Diálogo de cobro (una o varias cuotas). Devuelve el pago o null. */
+  async function pedirPago(cuotas, socio, config) {
+    var forma = (socio && socio.formaPago) || "Transferencia";
+    var cuentas = (config.cuentas || []).map(function (c) { return [c.id, c.nombre]; });
+    var total = D.sumar(cuotas.map(function (q) { return q.importe; }));
+    var r = await UI.dialogo({
+      titulo: cuotas.length === 1 ? "Cobrar cuota" : "Cobrar " + cuotas.length + " cuotas",
+      contenido: "<p>" + (cuotas.length === 1 ? esc(cuotas[0].socioNombre) + " · " + esc(cuotas[0].concepto) : cuotas.length + " cuotas") +
+        " · <strong>" + esc(D.formatear(total)) + "</strong></p>" +
+        '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha del pago", tipo: "date", valor: F.hoy(), requerido: true }) +
+        UI.campo({ nombre: "forma", etiqueta: "Forma de pago", tipo: "select", valor: forma, opciones: S.FORMAS_PAGO }) +
+        UI.campo({ nombre: "cuentaId", etiqueta: "Dónde entra el dinero", tipo: "select", valor: C.cuentaPorDefecto(forma, config.cuentas), opciones: cuentas }) +
+        UI.campo({ nombre: "referencia", etiqueta: "Referencia (opcional)", valor: "", ayuda: "N.º de operación, concepto de la transferencia…" }) +
+        "</div></form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Marcar como pagada" + (cuotas.length > 1 ? "s" : ""), valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) {
+        var ok = F.esValida(form.elements.fecha.value);
+        UI.marcarError(form, "fecha", ok ? "" : "Pon la fecha del pago.");
+        return ok;
+      },
+      alAbrir: function (d) {
+        // Al cambiar la forma de pago se propone la cuenta que le corresponde (efectivo → caja).
+        var f = d.querySelector("form");
+        f.elements.forma.addEventListener("change", function () { f.elements.cuentaId.value = C.cuentaPorDefecto(f.elements.forma.value, config.cuentas); });
+      },
+    });
+    return r.valor === "enviar" ? r.datos : null;
+  }
+
+  /** Menú «Más…» de una cuota: deshacer pago, devuelta, anular, reactivar, cambiar importe, borrar. */
+  async function masOpciones(datos, q) {
+    var botones = [{ texto: "Cerrar", valor: "cancelar" }];
+    if (q.estado === "pagada") botones.unshift({ texto: "Deshacer el pago", valor: "deshacer" }, { texto: "El banco la devolvió", valor: "devolver" });
+    if (q.estado === "pendiente" || q.estado === "devuelta") botones.unshift({ texto: "Cambiar importe…", valor: "importe" }, { texto: "Anular", valor: "anular" });
+    if (q.estado === "anulada") botones.unshift({ texto: "Volver a pendiente", valor: "reactivar" }, { texto: "Borrar", valor: "borrar" });
+    var historial = (q.historial || []).map(function (h) { return "<li>" + esc(F.corta(h.fecha)) + " · " + esc(h.accion) + (h.detalle ? " · " + esc(h.detalle) : "") + "</li>"; }).join("");
+    var r = await UI.dialogo({
+      titulo: q.concepto,
+      contenido: "<p>" + esc(q.socioNombre) + " · " + esc(D.formatear(q.importe)) + " · " + esc(C.ESTADOS[q.estado]) + "</p>" +
+        (q.pago ? '<p class="detalle">Pagada el ' + esc(F.corta(q.pago.fecha)) + " por " + esc(q.pago.forma) + (q.pago.referencia ? " · " + esc(q.pago.referencia) : "") + "</p>" : "") +
+        (historial ? '<details class="historico"><summary>Historial</summary><ul class="lista">' + historial + "</ul></details>" : ""),
+      botones: botones,
+    });
+    var v = r.valor;
+    if (v === "deshacer") await datos.guardar("cuotas", C.deshacerPago(q));
+    else if (v === "devolver") await datos.guardar("cuotas", C.devolver(q, F.hoy(), "Devolución bancaria"));
+    else if (v === "anular") {
+      if (!(await UI.confirmar("La cuota dejará de contar como deuda. Se puede volver a poner como pendiente.", { titulo: "Anular cuota", aceptar: "Anular" }))) return false;
+      await datos.guardar("cuotas", C.anular(q, ""));
+    } else if (v === "reactivar") await datos.guardar("cuotas", C.reactivar(q));
+    else if (v === "borrar") {
+      if (!(await UI.confirmar("Se borrará la cuota anulada. Si solo quieres que no cuente, basta con dejarla anulada.", { titulo: "Borrar cuota", aceptar: "Borrar", peligro: true }))) return false;
+      await datos.borrar("cuotas", q.id);
+    } else if (v === "importe") {
+      var ri = await UI.dialogo({
+        titulo: "Cambiar importe",
+        contenido: '<form class="formulario" novalidate>' +
+          UI.campo({ nombre: "importe", etiqueta: "Importe (€)", valor: D.formatear(q.importe, { simbolo: false }), atributos: 'inputmode="decimal"',
+            ayuda: "Por ejemplo, para prorratear a quien entra a mitad de periodo." }) +
+          UI.campo({ nombre: "motivo", etiqueta: "Motivo", valor: "" }) + "</form>",
+        botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }],
+        validar: function (form) {
+          var c = D.desdeTexto(form.elements.importe.value);
+          var ok = c !== null && c > 0;
+          UI.marcarError(form, "importe", ok ? "" : "Escribe un importe mayor que cero (p. ej. 15,00).");
+          return ok;
+        },
+      });
+      if (ri.valor !== "enviar") return false;
+      var nueva = JSON.parse(JSON.stringify(q));
+      var antes = q.importe;
+      nueva.importe = D.desdeTexto(ri.datos.importe);
+      nueva.historial = (nueva.historial || []).concat([{ fecha: F.hoy(), accion: "importe cambiado",
+        detalle: D.formatear(antes) + " → " + D.formatear(nueva.importe) + (ri.datos.motivo ? " · " + ri.datos.motivo : "") }]);
+      await datos.guardar("cuotas", nueva);
+    } else return false;
+    UI.aviso("Cuota actualizada.");
+    return true;
+  }
+
+  /** Conecta los botones de una tabla de cuotas. alTerminar() se llama tras cualquier cambio. */
+  function conectar(contenedor, datos, alTerminar) {
+    contenedor.addEventListener("click", async function (e) {
+      var b = e.target.closest("[data-accion]");
+      if (!b) return;
+      var q = await datos.obtener("cuotas", b.getAttribute("data-id"));
+      if (!q) return;
+      var cambio = false;
+      if (b.getAttribute("data-accion") === "cobrar") {
+        var config = await datos.leer("config");
+        var socio = q.socioId ? await datos.obtener("socios", q.socioId) : null;
+        var pago = await pedirPago([q], socio, config);
+        if (pago) {
+          try { await datos.guardar("cuotas", C.registrarPago(q, pago)); cambio = true; UI.aviso("Cuota cobrada."); }
+          catch (err) { UI.aviso(err.message, "error"); }
+        }
+      } else cambio = await masOpciones(datos, q);
+      if (cambio && alTerminar) alTerminar();
+    });
+  }
+
+  WA.CuotasUI = { tabla: tabla, conectar: conectar };
+
+  // ── Pestañas del módulo ─────────────────────────────────────────────────
+  function pestanas(actual) {
+    var p = [["", "Cuotas"], ["impagados", "Impagados"], ["tipos", "Tipos de socio"]];
+    return '<nav class="pestanas" aria-label="Apartados de cuotas">' + p.map(function (x) {
+      return '<a href="#/cuotas' + (x[0] ? "/" + x[0] : "") + '"' + (actual === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>";
+    }).join("") + "</nav>";
+  }
+
+  async function cargar(datos) {
+    var r = await Promise.all([datos.listar("socios"), datos.listar("cuotas"), datos.leer("config"), datos.listar("remesas")]);
+    return { socios: r[0].map(S.completar), cuotas: r[1], config: r[2], remesas: r[3] };
+  }
+
+  /** Periodos que tiene sentido ofrecer: los de los tipos de socio activos (año anterior, actual y siguiente) y los que ya tienen cuotas. */
+  function periodosDisponibles(c) {
+    var anio = +F.hoy().slice(0, 4), claves = {};
+    var periodicidades = {};
+    (c.config.tiposSocio || []).forEach(function (t) { if (t.activo !== false && t.cuota > 0) periodicidades[t.periodicidad || "anual"] = true; });
+    if (!Object.keys(periodicidades).length) periodicidades.anual = true;
+    Object.keys(periodicidades).forEach(function (p) {
+      [anio - 1, anio, anio + 1].forEach(function (a) { C.periodosDelAnio(p, a).forEach(function (x) { claves[x.clave] = x; }); });
+    });
+    c.cuotas.forEach(function (q) { var p = C.periodo(q.periodo); if (p) claves[p.clave] = p; });
+    // Del año más reciente al más antiguo; dentro de cada año, el año entero primero y luego sus partes en orden.
+    var orden = { anual: 0, semestral: 1, trimestral: 2, mensual: 3 };
+    return Object.keys(claves).map(function (k) { return claves[k]; }).sort(function (a, b) {
+      return b.anio - a.anio || orden[a.periodicidad] - orden[b.periodicidad] || a.inicio.localeCompare(b.inicio);
+    });
+  }
+  function periodoPorDefecto(c) {
+    var t = (c.config.tiposSocio || []).filter(function (x) { return x.activo !== false && x.cuota > 0; })[0];
+    return C.periodoDeFecha((t && t.periodicidad) || "anual", F.hoy()).clave;
+  }
+
+  // ── Cuotas de un periodo ────────────────────────────────────────────────
+  async function pintarPeriodo(cont, datos) {
+    var c = await cargar(datos);
+    var periodos = periodosDisponibles(c);
+    if (!estadoVista.periodo) estadoVista.periodo = periodoPorDefecto(c);
+    var p = C.periodo(estadoVista.periodo);
+    var delPeriodo = c.cuotas.filter(function (q) { return q.periodo === p.clave; })
+      .sort(function (a, b) { return (a.socioNumero || 0) - (b.socioNumero || 0); });
+    var res = C.resumen(delPeriodo);
+    var sinCuota = (c.config.tiposSocio || []).every(function (t) { return !(t.cuota > 0); });
+
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Cuotas</h1></div>' + pestanas("") +
+      (sinCuota ? '<div class="caja-aviso">Ningún tipo de socio tiene cuota todavía. <a href="#/cuotas/tipos">Ponle importe a la cuota</a> para poder emitirlas.</div>' : "") +
+      '<div class="barra-filtros"><label>Periodo <select id="q-periodo">' + periodos.map(function (x) {
+        return '<option value="' + esc(x.clave) + '"' + (x.clave === p.clave ? " selected" : "") + ">" + esc(x.etiqueta.charAt(0).toUpperCase() + x.etiqueta.slice(1)) + "</option>";
+      }).join("") + "</select></label>" +
+      '<button type="button" class="btn btn-primario" id="q-emitir"' + (sinCuota ? " disabled" : "") + ">Emitir cuotas de este periodo…</button></div>" +
+      '<div class="rejilla-tarjetas cifras">' +
+      cifra("Emitido", res.emitido, res.nPagadas + res.nPendientes + " cuotas") +
+      cifra("Cobrado", res.cobrado, res.nPagadas + " pagadas") +
+      cifra("Pendiente", res.pendiente, res.nPendientes + " sin cobrar") +
+      '<section class="tarjeta"><h2>Por forma de pago</h2>' + (Object.keys(res.porForma).length ? '<ul class="lista-cifras">' +
+        Object.keys(res.porForma).map(function (f) { return "<li><span>" + esc(f) + "</span><strong>" + esc(D.formatear(res.porForma[f])) + "</strong></li>"; }).join("") + "</ul>"
+        : '<p class="detalle">Nada cobrado todavía.</p>') + "</section></div>" +
+      '<div class="barra-filtros"><label class="filtro-texto"><span class="sr">Buscar socio</span><input type="search" id="q-buscar" placeholder="Buscar socio…" value="' + esc(estadoVista.texto) + '"></label>' +
+      '<label><span class="sr">Estado</span><select id="q-estado">' + [["todas", "Todas"], ["debe", "Sin cobrar"], ["pagada", "Pagadas"], ["anulada", "Anuladas"]].map(function (o) {
+        return '<option value="' + o[0] + '"' + (estadoVista.estado === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
+      }).join("") + "</select></label>" +
+      '<button type="button" class="btn btn-secundario" id="q-cobrar-sel" disabled>Cobrar seleccionadas</button>' +
+      '<button type="button" class="btn btn-secundario" id="q-exportar">Exportar (CSV)</button></div>' +
+      '<div id="q-tabla"></div>';
+
+    function visibles() {
+      var t = estadoVista.texto.trim().toLowerCase();
+      return delPeriodo.filter(function (q) {
+        if (estadoVista.estado === "debe" && !C.debe(q)) return false;
+        if (estadoVista.estado !== "todas" && estadoVista.estado !== "debe" && q.estado !== estadoVista.estado) return false;
+        return !t || (q.socioNombre + " " + q.socioNumero).toLowerCase().indexOf(t) >= 0;
+      });
+    }
+    var zona = cont.querySelector("#q-tabla");
+    var bSel = cont.querySelector("#q-cobrar-sel");
+    function refrescar() {
+      zona.innerHTML = delPeriodo.length ? tabla(visibles(), { conSocio: true, seleccionable: true })
+        : '<p class="vacio">Todavía no se han emitido las cuotas de este periodo. Pulsa «Emitir cuotas de este periodo».</p>';
+      bSel.disabled = true;
+    }
+    refrescar();
+    conectar(zona, datos, function () { WA.App.repintar(); });
+    zona.addEventListener("change", function (e) {
+      if (e.target.hasAttribute("data-todas")) {
+        zona.querySelectorAll("[data-sel]").forEach(function (x) { x.checked = e.target.checked; });
+      }
+      bSel.disabled = !zona.querySelector("[data-sel]:checked");
+      var n = zona.querySelectorAll("[data-sel]:checked").length;
+      bSel.textContent = n ? "Cobrar seleccionadas (" + n + ")" : "Cobrar seleccionadas";
+    });
+    bSel.addEventListener("click", async function () {
+      var ids = Array.prototype.map.call(zona.querySelectorAll("[data-sel]:checked"), function (x) { return x.getAttribute("data-sel"); });
+      var elegidas = delPeriodo.filter(function (q) { return ids.indexOf(q.id) >= 0; });
+      var pago = await pedirPago(elegidas, null, c.config);
+      if (!pago) return;
+      await datos.guardarVarios("cuotas", elegidas.map(function (q) { return C.registrarPago(q, pago); }));
+      UI.aviso(elegidas.length + " cuotas cobradas.");
+      WA.App.repintar();
+    });
+    cont.querySelector("#q-periodo").addEventListener("change", function (e) { estadoVista.periodo = e.target.value; WA.App.repintar(); });
+    cont.querySelector("#q-buscar").addEventListener("input", function (e) { estadoVista.texto = e.target.value; refrescar(); });
+    cont.querySelector("#q-estado").addEventListener("change", function (e) { estadoVista.estado = e.target.value; refrescar(); });
+    cont.querySelector("#q-emitir").addEventListener("click", function () { emitir(datos, c, p); });
+    cont.querySelector("#q-exportar").addEventListener("click", function () { exportarCuotas(visibles(), c.config, "cuotas-" + p.clave); });
+  }
+
+  function cifra(titulo, centimos, detalle) {
+    return '<section class="tarjeta"><h2>' + esc(titulo) + '</h2><p class="cifra">' + esc(D.formatear(centimos)) + '</p><p class="detalle">' + esc(detalle) + "</p></section>";
+  }
+
+  async function emitir(datos, c, p) {
+    var remesaId = WA.Esquema.nuevoId();
+    var r = C.generar({ periodo: p.clave, socios: c.socios, tipos: c.config.tiposSocio, cuotas: c.cuotas, fechaEmision: F.hoy(), remesaId: remesaId });
+    // Los omitidos se agrupan por motivo; «otra periodicidad» no se enseña, no aporta.
+    var porMotivo = {};
+    r.omitidos.forEach(function (o) {
+      if (o.motivo === "otraPeriodicidad") return;
+      (porMotivo[o.texto] = porMotivo[o.texto] || []).push(o.socio);
+    });
+    var omitidosHtml = Object.keys(porMotivo).map(function (m) {
+      return "<li><strong>" + esc(m) + "</strong>: " + porMotivo[m].length + " (" +
+        esc(porMotivo[m].slice(0, 8).map(function (s) { return S.nombreCompleto(s); }).join(", ")) + (porMotivo[m].length > 8 ? "…" : "") + ")</li>";
+    }).join("");
+    if (!r.nuevas.length) {
+      await UI.dialogo({ titulo: "Nada que emitir", contenido: "<p>No hay cuotas nuevas para el " + esc(p.etiqueta) + ".</p>" +
+        (omitidosHtml ? '<ul class="lista">' + omitidosHtml + "</ul>" : ""), botones: [{ texto: "Entendido", valor: "cancelar", estilo: "btn-primario" }] });
+      return;
+    }
+    var res = await UI.dialogo({
+      titulo: "Emitir cuotas del " + p.etiqueta,
+      contenido: "<p>Se emitirán <strong>" + r.nuevas.length + " cuotas</strong> por un total de <strong>" + esc(D.formatear(r.total)) + "</strong>, todas pendientes de cobro.</p>" +
+        (omitidosHtml ? '<details class="historico"><summary>Socios a los que no se emite</summary><ul class="lista">' + omitidosHtml + "</ul></details>" : "") +
+        '<p class="detalle">A quien entra a mitad de periodo se le emite la cuota entera; si queréis prorratear, cambiad su importe después («Más…» → «Cambiar importe»).</p>',
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Emitir " + r.nuevas.length + " cuotas", valor: "emitir", estilo: "btn-primario" }],
+    });
+    if (res.valor !== "emitir") return;
+    await datos.guardarVarios("cuotas", r.nuevas);
+    await datos.guardar("remesas", { id: remesaId, periodo: p.clave, fechaEmision: F.hoy(), concepto: "Cuotas " + p.etiqueta, nCuotas: r.nuevas.length, total: r.total });
+    UI.aviso(r.nuevas.length + " cuotas emitidas.");
+    WA.App.repintar();
+  }
+
+  async function exportarCuotas(lista, config, nombre) {
+    var cuentas = {};
+    (config.cuentas || []).forEach(function (c) { cuentas[c.id] = c.nombre; });
+    var columnas = [
+      { titulo: "Nº socio", clave: "socioNumero" }, { titulo: "Socio", clave: "socioNombre" },
+      { titulo: "Periodo", clave: "periodo" }, { titulo: "Concepto", clave: "concepto" },
+      { titulo: "Importe (€)", valor: function (q) { return D.formatear(q.importe, { simbolo: false }); } },
+      { titulo: "Estado", valor: function (q) { return C.ESTADOS[q.estado]; } },
+      { titulo: "Emitida", valor: function (q) { return F.corta(q.fechaEmision); } },
+      { titulo: "Fecha de pago", valor: function (q) { return q.pago ? F.corta(q.pago.fecha) : ""; } },
+      { titulo: "Forma de pago", valor: function (q) { return q.pago ? q.pago.forma : ""; } },
+      { titulo: "Cuenta", valor: function (q) { return q.pago ? cuentas[q.pago.cuentaId] || "" : ""; } },
+      { titulo: "Referencia", valor: function (q) { return q.pago ? q.pago.referencia : ""; } },
+    ];
+    UI.descargar(nombre + "-" + F.hoy() + ".csv", WA.CSV.escribir(columnas, lista), "text/csv;charset=utf-8");
+  }
+
+  // ── Impagados ───────────────────────────────────────────────────────────
+  async function pintarImpagados(cont, datos) {
+    var c = await cargar(datos);
+    var deud = C.deudores(c.cuotas);
+    var porId = {};
+    c.socios.forEach(function (s) { porId[s.id] = s; });
+    var total = D.sumar(deud.map(function (d) { return d.total; }));
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Cuotas</h1></div>' + pestanas("impagados") +
+      '<p class="intro">' + (deud.length ? deud.length + (deud.length === 1 ? " socio debe " : " socios deben ") + "<strong>" + esc(D.formatear(total)) + "</strong> en total." : "Nadie debe nada. 🎉") + "</p>" +
+      (deud.length ? '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Socios con cuotas sin cobrar</caption><thead><tr>' +
+        '<th scope="col" class="num">Nº</th><th scope="col">Socio</th><th scope="col">Cuotas</th><th scope="col" class="importe">Debe</th><th scope="col" class="solo-ancho">Contacto</th></tr></thead><tbody>' +
+        deud.map(function (d) {
+          var s = porId[d.socioId] || {};
+          return '<tr><td class="num">' + esc(d.socioNumero) + '</td><th scope="row">' +
+            (s.id ? '<a href="#/socios/ficha/' + encodeURIComponent(s.id) + '">' + esc(d.socioNombre) + "</a>" : esc(d.socioNombre)) +
+            (s.fechaBaja ? ' <span class="etiqueta">Baja</span>' : "") + "</th>" +
+            "<td>" + esc(d.cuotas.map(function (q) { return (C.periodo(q.periodo) || {}).etiqueta || q.periodo; }).join(", ")) + "</td>" +
+            '<td class="importe">' + esc(D.formatear(d.total)) + "</td>" +
+            '<td class="solo-ancho">' + (s.email ? '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + "</a>" : "") +
+            (s.telefono ? '<br><span class="detalle">' + esc(s.telefono) + "</span>" : "") + "</td></tr>";
+        }).join("") + "</tbody></table></div>" +
+        '<div class="acciones"><button type="button" class="btn btn-secundario" id="i-correos">Copiar sus correos</button>' +
+        '<button type="button" class="btn btn-secundario" id="i-exportar">Exportar (CSV)</button></div>' +
+        '<p class="detalle">Para avisar a varios a la vez, pega los correos en «CCO» (copia oculta): así nadie ve las direcciones de los demás.</p>' : "");
+    if (!deud.length) return;
+    cont.querySelector("#i-correos").addEventListener("click", async function () {
+      var correos = deud.map(function (d) { return (porId[d.socioId] || {}).email; }).filter(Boolean);
+      try { await navigator.clipboard.writeText(correos.join(", ")); UI.aviso(correos.length + " correos copiados."); }
+      catch (e) { UI.aviso("No se han podido copiar. Correos: " + correos.join(", "), "info"); }
+    });
+    cont.querySelector("#i-exportar").addEventListener("click", function () {
+      var lista = [];
+      deud.forEach(function (d) { lista = lista.concat(d.cuotas); });
+      exportarCuotas(lista, c.config, "impagados");
+    });
+  }
+
+  // ── Tipos de socio ──────────────────────────────────────────────────────
+  async function editarTipo(datos, config, socios, tipo) {
+    var t = tipo || { id: "", nombre: "", cuota: 0, periodicidad: "anual", activo: true };
+    var enUso = tipo ? socios.filter(function (s) { return s.tipoSocioId === tipo.id; }).length : 0;
+    var r = await UI.dialogo({
+      titulo: tipo ? "Editar tipo de socio" : "Nuevo tipo de socio",
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: t.nombre, requerido: true, ancho: "completo", ayuda: "Por ejemplo: Socio, Juvenil, Familiar, Honorario, Protector…" }) +
+        UI.campo({ nombre: "cuota", etiqueta: "Cuota ordinaria (€)", valor: D.formatear(t.cuota, { simbolo: false }), atributos: 'inputmode="decimal"', ayuda: "0 si no paga cuota." }) +
+        UI.campo({ nombre: "periodicidad", etiqueta: "Se paga", tipo: "select", valor: t.periodicidad, opciones: C.PERIODICIDADES }) +
+        "</div>" +
+        '<label class="casilla"><input type="checkbox" name="activo"' + (t.activo !== false ? " checked" : "") + "><span>Se pueden dar de alta socios de este tipo</span></label>" +
+        (enUso ? '<p class="detalle">' + enUso + " socios son de este tipo. El cambio de cuota vale para las cuotas que se emitan a partir de ahora; las ya emitidas no cambian.</p>" : "") +
+        '<p class="detalle">Las cuotas las fija la asamblea según vuestros estatutos.</p></form>',
+      botones: (tipo && !enUso && config.tiposSocio.length > 1 ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : [])
+        .concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+      validar: function (form) {
+        var nombre = form.elements.nombre.value.trim();
+        var cuota = D.desdeTexto(form.elements.cuota.value || "0");
+        var repetido = config.tiposSocio.some(function (x) { return x.id !== t.id && x.nombre.toLowerCase() === nombre.toLowerCase(); });
+        UI.marcarError(form, "nombre", !nombre ? "Escribe el nombre." : repetido ? "Ya hay un tipo con ese nombre." : "");
+        UI.marcarError(form, "cuota", cuota === null || cuota < 0 ? "Escribe un importe (p. ej. 30 o 12,50)." : "");
+        return !!nombre && !repetido && cuota !== null && cuota >= 0;
+      },
+    });
+    if (r.valor === "borrar") {
+      config.tiposSocio = config.tiposSocio.filter(function (x) { return x.id !== tipo.id; });
+    } else if (r.valor === "enviar") {
+      var nuevo = { id: t.id || WA.Esquema.nuevoId(), nombre: r.datos.nombre, cuota: D.desdeTexto(r.datos.cuota || "0"),
+        periodicidad: r.datos.periodicidad, activo: !!r.datos.activo };
+      var i = config.tiposSocio.findIndex(function (x) { return x.id === nuevo.id; });
+      if (i >= 0) config.tiposSocio[i] = nuevo; else config.tiposSocio.push(nuevo);
+    } else return;
+    await datos.escribir("config", config);
+    UI.aviso("Tipos de socio guardados.");
+    WA.App.repintar();
+  }
+
+  async function pintarTipos(cont, datos) {
+    var c = await cargar(datos);
+    var cuenta = function (id) { return c.socios.filter(function (s) { return s.tipoSocioId === id && S.estado(s) !== "baja"; }).length; };
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Cuotas</h1></div>' + pestanas("tipos") +
+      '<div class="tarjeta-cabecera"><p class="intro">Cada tipo de socio tiene su cuota ordinaria y cada cuánto se paga.</p>' +
+      '<button type="button" class="btn btn-primario" id="t-nuevo">Añadir tipo de socio</button></div>' +
+      '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Tipos de socio</caption><thead><tr>' +
+      '<th scope="col">Tipo</th><th scope="col" class="importe">Cuota</th><th scope="col">Se paga</th><th scope="col" class="num">Socios activos</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead><tbody>' +
+      c.config.tiposSocio.map(function (t) {
+        return '<tr><th scope="row">' + esc(t.nombre) + (t.activo === false ? ' <span class="etiqueta">No admite altas</span>' : "") + "</th>" +
+          '<td class="importe">' + (t.cuota > 0 ? esc(D.formatear(t.cuota)) : "Sin cuota") + "</td>" +
+          "<td>" + (t.cuota > 0 ? esc(PERIODICIDAD_TEXTO[t.periodicidad] || "") : "—") + "</td>" +
+          '<td class="num">' + cuenta(t.id) + "</td>" +
+          '<td class="celda-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-tipo="' + esc(t.id) + '">Editar</button></td></tr>';
+      }).join("") + "</tbody></table></div>";
+    cont.querySelector("#t-nuevo").addEventListener("click", function () { editarTipo(datos, c.config, c.socios, null); });
+    cont.querySelector("tbody").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-tipo]");
+      if (!b) return;
+      var t = c.config.tiposSocio.filter(function (x) { return x.id === b.getAttribute("data-tipo"); })[0];
+      if (t) editarTipo(datos, c.config, c.socios, t);
+    });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "impagados") return pintarImpagados(cont, datos);
+    if (ruta[0] === "tipos") return pintarTipos(cont, datos);
+    return pintarPeriodo(cont, datos);
+  }
+
+  WA.App.registrar({
+    id: "cuotas", titulo: "Cuotas", orden: 25, pintar: pintar,
+    icono: '<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M6.5 14.5h4"/>',
   });
 })(typeof self !== "undefined" ? self : this);
 </script>

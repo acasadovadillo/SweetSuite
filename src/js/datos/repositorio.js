@@ -13,6 +13,8 @@
  *   listar(coleccion)            → copia de todos los registros
  *   obtener(coleccion, id)       → copia de un registro o null
  *   guardar(coleccion, registro) → lo crea (si no tiene id) o lo actualiza; devuelve la copia guardada
+ *   guardarVarios(coleccion, [registros]) → como guardar(), pero todos de una vez
+ *                                  (importaciones, remesas): un solo guardado
  *   borrar(coleccion, id)        → true si existía
  *   documento()                  → copia del documento completo (para copias de seguridad)
  *
@@ -42,6 +44,22 @@
       if (!Array.isArray(doc[nombre])) doc[nombre] = [];
       return doc[nombre];
     }
+    /** Crea (si no tiene id o no existe) o sustituye un registro en la lista. */
+    function colocar(lista, registro, t) {
+      var r = copiar(registro);
+      var i = r.id ? lista.findIndex(function (x) { return x.id === r.id; }) : -1;
+      if (i >= 0) {
+        r.creado = lista[i].creado;
+        r.modificado = t;
+        lista[i] = r;
+      } else {
+        r.id = r.id || Esquema.nuevoId();
+        r.creado = t;
+        r.modificado = t;
+        lista.push(r);
+      }
+      return r;
+    }
     function cambiado() {
       doc.meta.modificado = ahora();
       doc.meta.cambiosDesdeCopia = (doc.meta.cambiosDesdeCopia || 0) + 1;
@@ -67,22 +85,16 @@
       },
 
       guardar: async function (nombre, registro) {
-        var lista = coleccion(nombre);
-        var r = copiar(registro);
-        var t = ahora();
-        var i = r.id ? lista.findIndex(function (x) { return x.id === r.id; }) : -1;
-        if (i >= 0) {
-          r.creado = lista[i].creado;
-          r.modificado = t;
-          lista[i] = r;
-        } else {
-          r.id = r.id || Esquema.nuevoId();
-          r.creado = t;
-          r.modificado = t;
-          lista.push(r);
-        }
+        var r = colocar(coleccion(nombre), registro, ahora());
         await cambiado();
         return copiar(r);
+      },
+
+      guardarVarios: async function (nombre, registros) {
+        var lista = coleccion(nombre), t = ahora();
+        var guardados = (registros || []).map(function (r) { return colocar(lista, r, t); });
+        if (guardados.length) await cambiado();
+        return copiar(guardados);
       },
 
       borrar: async function (nombre, id) {

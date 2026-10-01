@@ -1,24 +1,29 @@
 # NEXT_STEPS.md — Siguiente paso concreto
 
-## Antes de la Fase 2 (esperando al usuario)
+## Ahora (esperando al usuario)
 
-1. Que el usuario revise la Fase 1 y dé el OK.
-2. Decidir si se hace el primer commit (y, más adelante, si se sube a GitHub: en ese caso, repositorio **privado**).
-3. Probar el archivo en **Safari y Firefox** con doble clic: crear, recargar, desbloquear. Si alguno no guarda en IndexedDB con `file://`, comprobar que entra el respaldo de localStorage y documentarlo en el README.
+1. Que el usuario revise la Fase 2 y dé el OK. Hacer el commit «Fase 2: socios y cuotas».
+2. Probar el archivo en **Safari y Firefox** con doble clic (crear, recargar, desbloquear). Si alguno no guarda en IndexedDB con `file://`, comprobar que entra el respaldo de localStorage y documentarlo.
 
-## Fase 2 — Socios (siguiente)
+## Fase 3 — Tesorería (siguiente)
 
-Primer paso concreto: **diseñar la colección `socios`** en `esquema.js` (subir `VERSION` a 3 con su migración y su test; la v2 fue el domicilio por partes):
-`{ id, numero, nombre, apellidos, nif, email, telefono, direccion (misma forma que nucleo/direccion.js), tipo, fechaAlta, fechaBaja, motivoBaja, iban, mandatoSepa, consentimientos, notas }`.
-Antes de implementarlo, **preguntar al usuario**: qué tipos de socio hay (ordinario, juvenil, honorario…), si las cuotas son anuales o periódicas y si quiere remesas SEPA en fichero (es formato XML pain.008 y conviene acotarlo).
+**Preguntas para el usuario antes de empezar:**
+- ¿La asociación está dada de alta en IVA (presenta el modelo 303) o está exenta en todo? ¿Tiene actividades sujetas y exentas a la vez? Si las tiene, se aplica la **prorrata**, que no se calculará: solo se avisará.
+- ¿Qué cuentas tiene (bancos, caja)? ¿Un saldo inicial por cuenta?
+- ¿Emite facturas (a entidades, por servicios) o solo recibe facturas de gasto?
+- ¿Cómo funcionan los anticipos y los reembolsos? (Alguien de la junta paga de su bolsillo y luego se le devuelve.)
+- Categorías de ingreso y gasto: proponer unas por defecto y que se puedan editar. En Solvento, la asociación usa un árbol cuyo primer nivel es la partida presupuestaria.
 
-Después:
-- `src/js/logica/socios.js` (puro, con tests): numeración, filtros, estado de la cuota.
-- `src/js/nucleo/csv.js` (con tests): leer y escribir CSV con `;` y comillas, como lo abre Excel en español.
-- Módulo «Socios»: tabla con búsqueda y filtros, ficha, alta y baja (la baja conserva el registro), importar y exportar CSV.
-- Cuotas: generar una remesa (año o periodo), marcar pagadas y listado de impagados. Repartir importes con `Dinero.repartir`.
+**Primer paso concreto:** diseñar en `esquema.js` (v4) las colecciones `movimientos`, `facturas` (emitidas y recibidas, con líneas y tipos de IVA), `anticipos`, `proyectos` y `presupuestos`, más `config.cuentas` (con saldo inicial) y `config.categorias`.
+
+- **Las cuotas pagadas entran en la contabilidad mediante `Cuotas.aMovimientos()`** (origen `{tipo: "cuota", id}`): mostrarlas en el libro de movimientos como ingresos de solo lectura, sin duplicarlas.
+- Reutilizar de Solvento: el escritor de .xlsx (`Solvento/src/js/exportar.js`) y la lógica de presupuesto anual y centros de coste (`model.js`, `presupuestoAnual`).
+- IVA: cálculo en céntimos por línea y totales por trimestre, con tests. Aviso «a compensar» frente a «a devolver» cuando el resultado es negativo: verificar con asesoría en qué periodos se puede pedir la devolución.
 
 ## Mejoras anotadas (no urgentes)
 
-- Guardar en `tools/` una prueba automática con `file://` (Chromium sin interfaz por CDP). Existe un prototipo que funcionó, pero depende de la ruta del navegador.
-- Avisar si `navigator.storage.persist()` devuelve `false` (el navegador podría borrar los datos si falta espacio).
+- Remesa SEPA en fichero XML (pain.008) para quien domicilie cuotas.
+- Prorrateo automático de la cuota para quien entra a mitad de periodo (hoy se cambia el importe a mano).
+- Enlazar la junta directiva con fichas de socio.
+- Avisar si `navigator.storage.persist()` devuelve `false`.
+- En desarrollo (`src/index.html` servido por http), el navegador puede servir JS en caché. Valorar añadir `?v=` en los `<script>` de `src/index.html`; el build ya los empaqueta, así que no afecta a `dist/`.

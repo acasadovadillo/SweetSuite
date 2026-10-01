@@ -11,12 +11,14 @@ Nace de **Solvento** (`../../Solvento`, app de finanzas personales del mismo aut
 ```
 src/index.html            se abre directamente para desarrollar (scripts clásicos, funciona con file://)
 src/css/                  tokens (colores) · base (estructura) · componentes · impresión
-src/js/nucleo/            dinero · fechas · validar · direccion · cripto · tema · preferencias · ui · app
+src/js/nucleo/            dinero · fechas · validar · direccion · csv · cripto · tema · preferencias · ui · form-direccion · app
+src/js/logica/            socios · cuotas   (lógica de negocio pura, sin DOM, con tests)
 src/js/datos/             esquema · repositorio · copia · demo · boveda · sesion
-src/js/modulos/           acceso · inicio · asociacion · copias · ajustes   (cada fase añade los suyos)
+src/js/modulos/           acceso · inicio · asociacion · socios · cuotas · copias · ajustes   (cada fase añade los suyos)
 src/js/arranque.js        siempre el último
 tools/build.mjs           empaqueta todo en dist/webkit_asociaciones.html (sin dependencias)
 tests/*.test.js           node --test (incluido en Node, sin instalar nada)
+tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium sin interfaz
 ```
 
 ### Decisiones y por qué
@@ -35,6 +37,12 @@ tests/*.test.js           node --test (incluido en Node, sin instalar nada)
 | **Importes en céntimos enteros**, redondeo «la mitad se aleja del cero» | Evita los errores de coma flotante. El formato es manual (no `Intl`) para que sea idéntico en todos los navegadores |
 | Fechas ISO `aaaa-mm-dd`, siempre locales | Se ordenan como texto y evitan el desfase de UTC |
 | Direcciones por partes (tipo de vía, nombre, número, km, bloque, portal, escalera, planta, puerta, complemento, CP, municipio, provincia) | Para escribirlas bien en documentos y comprobar CP ↔ provincia. `Direccion.formatear()` las compone; se reutilizará para socios |
+| Socios: todos los campos opcionales salvo nombre y alta; número de socio que nunca se reutiliza (contador en `config`) | Webkit genérico: cada asociación rellena lo que necesite. El usuario pidió «todo lo posible» |
+| Tipos de socio configurables (cuota + periodicidad anual/semestral/trimestral/mensual) en `config.tiposSocio` | Webkit genérico; por defecto un tipo «Socio» anual sin importe |
+| Cuotas como registros propios con estado (pendiente, pagada, devuelta, anulada) y pago `{fecha, forma, cuentaId, referencia}` | Cada socio paga a su manera. **Contrato con la Fase 3:** `Cuotas.aMovimientos()` convierte las pagadas en ingresos (categoría «Cuotas de socios», con su cuenta) para que la tesorería las refleje sin apuntarlas dos veces |
+| La cuota copia número y nombre del socio | Si se elimina un socio (derecho de supresión), las cuotas pagadas siguen teniendo sentido en la contabilidad |
+| Sin prorrateo automático ni remesas SEPA en XML | El usuario cobra sobre todo por transferencia. El importe de una cuota se puede cambiar a mano; el fichero SEPA (pain.008) queda para más adelante |
+| Ruta con subrutas (`#/socios/ficha/<id>`) | Las páginas de detalle tienen dirección propia (se pueden recargar) |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
 | Navegación por `#/modulo` | Funciona con `file://` sin servidor |
 | Capa de datos (`Repositorio`) asíncrona y como única puerta a los datos | **Preparada para la versión con servidor**: bastará con otro repositorio con las mismas funciones que use `fetch` contra una API |

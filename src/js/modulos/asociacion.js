@@ -12,7 +12,7 @@
  */
 (function (raiz) {
   "use strict";
-  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, V = WA.Validar, Dir = WA.Direccion;
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, V = WA.Validar;
 
   // ── Datos de la asociación ───────────────────────────────────────────────
   function formularioAsociacion(a) {
@@ -26,7 +26,7 @@
       UI.campo({ nombre: "numeroRegistro", etiqueta: "Número de inscripción", valor: a.numeroRegistro }) +
       UI.campo({ nombre: "fechaConstitucion", etiqueta: "Fecha de constitución", tipo: "date", valor: a.fechaConstitucion }) +
       "</div></fieldset>" +
-      camposDomicilio(d) +
+      WA.FormDireccion.campos(d, { leyenda: "Domicilio social" }) +
       '<fieldset><legend>Contacto y banco</legend><div class="rejilla">' +
       UI.campo({ nombre: "email", etiqueta: "Correo", tipo: "email", valor: a.email, atributos: 'autocomplete="email"' }) +
       UI.campo({ nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: a.telefono }) +
@@ -34,45 +34,6 @@
       UI.campo({ nombre: "iban", etiqueta: "IBAN de la cuenta", valor: a.iban, ayuda: "Se usará para las remesas de cuotas.", atributos: 'autocapitalize="characters"' }) +
       "</div></fieldset>" +
       '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar datos</button></div></form>';
-  }
-
-  /*
-   * Domicilio social, por partes (ver nucleo/direccion.js). Solo son necesarios
-   * vía, número, código postal y municipio; el resto se rellena si existe.
-   */
-  function camposDomicilio(d) {
-    var tipos = [["", "—"]].concat(Dir.TIPOS_VIA.map(function (t) { return [t, t]; }), [["Otro", "Otro (escríbelo en el nombre)"]]);
-    // Si la provincia guardada no está en la lista (dato antiguo), se ofrece igualmente para no perderla.
-    var provincias = [["", "—"]].concat((d.provincia && Dir.PROVINCIAS.indexOf(d.provincia) < 0 ? [d.provincia] : []).concat(Dir.PROVINCIAS)
-      .map(function (p) { return [p, p]; }));
-    return '<fieldset><legend>Domicilio social</legend><div class="rejilla-12">' +
-      UI.campo({ nombre: "tipoVia", etiqueta: "Tipo de vía", tipo: "select", valor: d.tipoVia, opciones: tipos, clase: "col-3" }) +
-      UI.campo({ nombre: "nombreVia", etiqueta: "Nombre de la vía", valor: d.nombreVia, clase: "col-7 col-movil-completo", atributos: 'autocomplete="address-line1"' }) +
-      UI.campo({ nombre: "numero", etiqueta: "Número", valor: d.numero, clase: "col-2", ayuda: "o s/n", atributos: 'inputmode="text"' }) +
-      UI.campo({ nombre: "km", etiqueta: "Km", valor: d.km, clase: "col-2", ayuda: "En carreteras" }) +
-      UI.campo({ nombre: "bloque", etiqueta: "Bloque", valor: d.bloque, clase: "col-2" }) +
-      UI.campo({ nombre: "portal", etiqueta: "Portal", valor: d.portal, clase: "col-2" }) +
-      UI.campo({ nombre: "escalera", etiqueta: "Escalera", valor: d.escalera, clase: "col-2" }) +
-      UI.campo({ nombre: "planta", etiqueta: "Planta o piso", valor: d.planta, clase: "col-2", lista: Dir.PLANTAS, ayuda: "1, 2… Bajo, Ático" }) +
-      UI.campo({ nombre: "puerta", etiqueta: "Puerta", valor: d.puerta, clase: "col-2", ayuda: "A, B, Izda…" }) +
-      UI.campo({ nombre: "complemento", etiqueta: "Otros datos de la dirección", valor: d.complemento, clase: "col-12",
-        ayuda: "Lo que no encaje arriba: local, centro cívico, urbanización, «a/a de…»." }) +
-      UI.campo({ nombre: "codigoPostal", etiqueta: "Código postal", valor: d.codigoPostal, clase: "col-3",
-        atributos: 'inputmode="numeric" autocomplete="postal-code" maxlength="5"' }) +
-      UI.campo({ nombre: "municipio", etiqueta: "Municipio", valor: d.municipio, clase: "col-5", atributos: 'autocomplete="address-level2"' }) +
-      UI.campo({ nombre: "provincia", etiqueta: "Provincia", tipo: "select", valor: d.provincia, opciones: provincias, clase: "col-4 col-movil-completo",
-        ayuda: "Se rellena sola con el código postal." }) +
-      '<p class="vista-previa" aria-live="polite"><strong>Así se escribirá en los documentos</strong><span id="dom-previa"></span></p>' +
-      "</div></fieldset>";
-  }
-
-  /** Lee los campos del domicilio de un formulario ya convertido en objeto. */
-  function domicilioDe(datos) {
-    var d = Dir.vacia();
-    Dir.CAMPOS.forEach(function (c) { d[c] = datos[c] || ""; });
-    if (/^s\/?n$/i.test(d.numero)) d.numero = "s/n";
-    d.puerta = d.puerta.length <= 2 ? d.puerta.toUpperCase() : d.puerta;
-    return d;
   }
 
   /** Devuelve los avisos de formato (no impiden guardar). */
@@ -87,12 +48,7 @@
     if (datos.nif) comprobar("nif", V.nifEntidad(datos.nif)); else UI.marcarError(form, "nif", "");
     if (datos.iban) comprobar("iban", V.iban(datos.iban)); else UI.marcarError(form, "iban", "");
     if (datos.email) comprobar("email", V.email(datos.email)); else UI.marcarError(form, "email", "");
-    if (datos.codigoPostal) comprobar("codigoPostal", V.codigoPostal(datos.codigoPostal)); else UI.marcarError(form, "codigoPostal", "");
-    // El código postal empieza por el número de la provincia: si no casan, uno de los dos está mal.
-    var provCP = Dir.provinciaDeCP(datos.codigoPostal);
-    var noCasan = provCP && datos.provincia && provCP !== datos.provincia;
-    UI.marcarError(form, "provincia", noCasan ? "El código postal " + datos.codigoPostal + " es de " + provCP + "." : "");
-    if (noCasan) avisos++;
+    avisos += WA.FormDireccion.revisar(form, datos);
     return avisos;
   }
 
@@ -180,24 +136,7 @@
 
     var form = cont.querySelector("#f-asociacion");
 
-    // Vista previa de la dirección y provincia automática a partir del código postal.
-    var provinciaAuto = Dir.provinciaDeCP(a.domicilio && a.domicilio.codigoPostal);
-    function actualizarDireccion(e) {
-      var datosForm = UI.leerFormulario(form);
-      if (e && e.target.name === "codigoPostal") {
-        var p = Dir.provinciaDeCP(datosForm.codigoPostal);
-        // Solo se cambia si estaba vacía o la había puesto el propio código postal.
-        if (p && (!datosForm.provincia || datosForm.provincia === provinciaAuto)) {
-          form.elements.provincia.value = p;
-          datosForm.provincia = p;
-        }
-        provinciaAuto = p;
-      }
-      cont.querySelector("#dom-previa").textContent = Dir.formatear(domicilioDe(datosForm)).completa || "—";
-    }
-    form.addEventListener("input", actualizarDireccion);
-    form.addEventListener("change", actualizarDireccion);
-    actualizarDireccion();
+    WA.FormDireccion.conectar(form);
     form.addEventListener("submit", async function (e) {
       e.preventDefault();
       var d = UI.leerFormulario(form);
@@ -206,7 +145,7 @@
       await datos.escribir("asociacion", Object.assign(a, {
         nombre: d.nombre, siglas: d.siglas, nif: V.normalizar(d.nif), registro: d.registro,
         numeroRegistro: d.numeroRegistro, fechaConstitucion: d.fechaConstitucion,
-        domicilio: domicilioDe(d),
+        domicilio: WA.FormDireccion.leer(d),
         email: d.email, telefono: d.telefono, web: d.web, iban: V.normalizar(d.iban),
       }));
       UI.aviso(avisos ? "Guardado. Revisa los campos marcados: puede haber algún error al copiarlos." : "Datos guardados.", avisos ? "info" : "ok");

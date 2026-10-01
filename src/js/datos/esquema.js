@@ -5,10 +5,12 @@
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 2,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 3,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
+ *     config: { tiposSocio, cuentas, siguienteNumeroSocio },  ← ajustes de la asociación
  *     junta: [ { id, cargo, nombre, ... } ],      ← colecciones: listas de registros
+ *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -24,7 +26,7 @@
  *   3. añade un test en tests/esquema.test.js.
  * Así, una copia de seguridad antigua siempre se puede abrir con la versión nueva.
  *
- * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines».
+ * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -35,10 +37,10 @@
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 2;
+  var VERSION = 3;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -56,6 +58,21 @@
     };
   }
 
+  /*
+   * Configuración de la asociación (no de este ordenador):
+   *   tiposSocio  tipos de socio con su cuota y periodicidad (ver logica/cuotas.js)
+   *   cuentas     dónde entra el dinero: { id, nombre, tipo: "banco" | "caja" }.
+   *               La Fase 3 (tesorería) las ampliará.
+   *   siguienteNumeroSocio  contador: un número de socio nunca se reutiliza
+   */
+  function configVacia() {
+    return {
+      tiposSocio: [{ id: "socio", nombre: "Socio", cuota: 0, periodicidad: "anual", activo: true }],
+      cuentas: [{ id: "banco", nombre: "Cuenta bancaria", tipo: "banco" }, { id: "caja", nombre: "Caja (efectivo)", tipo: "caja" }],
+      siguienteNumeroSocio: 1,
+    };
+  }
+
   function documentoVacio(ahora) {
     var t = (ahora || new Date()).toISOString();
     return {
@@ -63,7 +80,8 @@
       esquema: VERSION,
       meta: { creado: t, modificado: t, ultimaCopia: null, cambiosDesdeCopia: 0 },
       asociacion: asociacionVacia(),
-      junta: [],
+      config: configVacia(),
+      junta: [], socios: [], cuotas: [], remesas: [],
     };
   }
 
@@ -101,6 +119,14 @@
       doc.esquema = 2;
       return doc;
     },
+
+    // 2 → 3: llegan los socios y las cuotas (Fase 2).
+    2: function (doc) {
+      doc.config = Object.assign(configVacia(), doc.config || {});
+      ["socios", "cuotas", "remesas"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+      doc.esquema = 3;
+      return doc;
+    },
   };
 
   /**
@@ -120,7 +146,25 @@
       copia = MIGRACIONES[v](copia);
       v = copia.esquema;
     }
-    return copia;
+    return asegurarForma(copia);
+  }
+
+  /*
+   * Red de seguridad: un documento que dice ser de una versión pero le falta
+   * algo (una copia editada a mano, un fallo antiguo) se completa con lo que
+   * falte, sin tocar lo que ya tiene. Así nunca falla al guardar por un campo ausente.
+   */
+  function asegurarForma(doc) {
+    var base = documentoVacio();
+    doc.app = APP;
+    doc.meta = Object.assign(base.meta, doc.meta || {});
+    doc.asociacion = Object.assign(asociacionVacia(), doc.asociacion || {});
+    doc.asociacion.domicilio = Object.assign(Direccion.vacia(), doc.asociacion.domicilio || {});
+    doc.config = Object.assign(configVacia(), doc.config || {});
+    if (!Array.isArray(doc.config.tiposSocio) || !doc.config.tiposSocio.length) doc.config.tiposSocio = configVacia().tiposSocio;
+    if (!Array.isArray(doc.config.cuentas) || !doc.config.cuentas.length) doc.config.cuentas = configVacia().cuentas;
+    COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+    return doc;
   }
 
   /** Identificador único para un registro nuevo. */
@@ -131,7 +175,7 @@
 
   return {
     APP: APP, VERSION: VERSION, COLECCIONES: COLECCIONES, CARGOS: CARGOS,
-    documentoVacio: documentoVacio, asociacionVacia: asociacionVacia, direccionVacia: Direccion.vacia,
+    documentoVacio: documentoVacio, asociacionVacia: asociacionVacia, configVacia: configVacia, direccionVacia: Direccion.vacia,
     migrar: migrar, nuevoId: nuevoId,
   };
 });

@@ -50,7 +50,7 @@
 .lista-pasos li { margin-bottom: 0.4rem; }
 .vacio { color: var(--texto-3); font-style: italic; }
 
-.estado { display: inline-block; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-right: 0.35rem; }
+.estado { display: inline-block; white-space: nowrap; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-right: 0.35rem; }
 .estado-ok { background: var(--ok-fondo); color: var(--ok); }
 .estado-aviso { background: var(--aviso-fondo); color: var(--aviso); }
 
@@ -86,7 +86,7 @@
 .campo label, .acceso-form label { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
 .obligatorio { color: var(--peligro); }
 input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
-input[type="password"], input[type="number"], select, textarea {
+input[type="password"], input[type="number"], input[type="search"], select, textarea {
   width: 100%; min-height: 44px; padding: 0.55rem 0.7rem;
   font: inherit; color: var(--texto); background: var(--superficie);
   border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno);
@@ -113,7 +113,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .tabla th, .tabla td { text-align: left; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
 .tabla thead th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); font-weight: 700; }
 .tabla tbody th { font-weight: 600; }
-.celda-acciones { text-align: right; white-space: nowrap; }
+.celda-acciones { text-align: right; white-space: nowrap; width: 1%; }
 .historico { margin-top: 1rem; }
 .historico summary { cursor: pointer; font-weight: 600; color: var(--texto-2); padding: 0.4rem 0; }
 
@@ -150,3 +150,34 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .acceso-nota { color: var(--texto-3); font-size: 0.88rem; text-align: center; margin-top: 0.75rem; }
 .acceso-olvido { margin-top: 1.25rem; border-top: 1px solid var(--borde); padding-top: 0.75rem; }
 .acceso-olvido summary { cursor: pointer; color: var(--texto-2); font-weight: 600; }
+
+/* ── Páginas de listado (socios, cuotas) ───────────────────────────────── */
+.cabecera-pagina { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+.cabecera-pagina h1 { margin: 0; }
+.miga { font-size: 0.9rem; color: var(--texto-3); margin-bottom: 0.5rem; }
+.barra-filtros { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1rem 0; }
+.barra-filtros label { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.92rem; }
+.barra-filtros select, .barra-filtros input { width: auto; }
+.filtro-texto { flex: 1 1 260px; }
+.filtro-texto input { width: 100%; }
+.tabla .num { text-align: right; font-variant-numeric: tabular-nums; width: 3.5rem; }
+.tabla .importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.celda-casilla { width: 2rem; }
+.celda-casilla input { width: 18px; height: 18px; accent-color: var(--acento); }
+.etiqueta { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.05rem 0.45rem; border-radius: 4px; background: var(--superficie-2); color: var(--texto-2); vertical-align: middle; }
+.estado-neutro { background: var(--superficie-2); color: var(--texto-2); }
+.estado-error { background: var(--peligro-suave); color: var(--peligro); }
+.pestanas { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--borde); margin: 0.75rem 0 1.25rem; overflow-x: auto; }
+.pestanas a { padding: 0.6rem 1rem; text-decoration: none; color: var(--texto-2); font-weight: 600; border-bottom: 3px solid transparent; white-space: nowrap; }
+.pestanas a:hover { color: var(--texto); }
+.pestanas a[aria-current="page"] { color: var(--texto); border-bottom-color: var(--acento); }
+.cifras .cifra { font-size: 1.5rem; margin: 0; }
+.lista-cifras { list-style: none; padding: 0; margin: 0; }
+.lista-cifras li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; border-bottom: 1px dashed var(--borde); }
+.lista-cifras li:last-child { border-bottom: none; }
+.zona-peligro { border-color: var(--peligro-suave); }
+.dato-edad { align-self: center; margin: 0.9rem 0 0; color: var(--texto-2); font-weight: 600; }
+.dato-numero { margin: 0; display: flex; flex-direction: column; justify-content: center; }
+.dato-numero strong { font-size: 1.3rem; }
+.barra-guardar { position: sticky; bottom: 0; background: var(--fondo); padding: 0.75rem 0; margin-top: 0; z-index: 5; }
+.formulario .tarjeta fieldset { margin-top: 0.75rem; }

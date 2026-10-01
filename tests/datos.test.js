@@ -28,6 +28,15 @@ test("migrar completa un documento antiguo o incompleto sin perder lo que tenía
   assert.equal(viejo.esquema, undefined, "no modifica el original");
 });
 
+test("migrar completa lo que falte aunque el documento diga ser de una versión reciente", () => {
+  const doc = Esquema.migrar({ app: "webkit_asociaciones", esquema: 2, asociacion: { nombre: "Peña" } });
+  assert.equal(doc.asociacion.nombre, "Peña", "no pierde lo que había");
+  assert.ok(doc.meta && doc.meta.creado);
+  assert.equal(doc.asociacion.domicilio.codigoPostal, "");
+  assert.equal(doc.config.tiposSocio.length, 1);
+  for (const c of Esquema.COLECCIONES) assert.ok(Array.isArray(doc[c]), c);
+});
+
 test("migrar rechaza datos de una versión más nueva o de otra aplicación", () => {
   assert.throws(() => Esquema.migrar({ app: "webkit_asociaciones", esquema: Esquema.VERSION + 1 }), /versión más nueva/);
   assert.throws(() => Esquema.migrar({ app: "otra" }), /otra aplicación/);
@@ -157,6 +166,12 @@ test("los datos de demostración son ficticios y válidos", () => {
   assert.ok(V.nifEntidad(doc.asociacion.nif).valido);
   assert.ok(V.iban(doc.asociacion.iban).valido);
   for (const m of doc.junta) assert.match(m.telefono, /^600 000 0\d\d$/);
+  for (const s of doc.socios) {
+    assert.match(s.telefono, /^600 000 \d{3}$/);
+    assert.equal(s.documento, "", "sin documentos de identidad en la demostración");
+  }
+  assert.equal(doc.socios.length, 40);
+  assert.ok(doc.cuotas.length > 40 && doc.cuotas.some((c) => c.estado === "pagada") && doc.cuotas.some((c) => c.estado === "pendiente"));
 });
 
 // ── Migración 1 → 2: domicilio por partes y sin «fines» ───────────────────
@@ -168,7 +183,7 @@ test("migrar de la versión 1 reparte el domicilio y quita los fines", () => {
     junta: [],
   };
   const doc = Esquema.migrar(v1);
-  assert.equal(doc.esquema, 2);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.equal(doc.asociacion.fines, undefined);
   const d = doc.asociacion.domicilio;
   assert.deepEqual([d.tipoVia, d.nombreVia, d.numero, d.planta, d.puerta], ["Calle", "Mayor", "15", "5", "G"]);
@@ -179,4 +194,28 @@ test("migrar de la versión 1 reparte el domicilio y quita los fines", () => {
 test("migrar de la versión 1 sin provincia la deduce del código postal", () => {
   const doc = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: { domicilio: { via: "", codigoPostal: "29001", municipio: "", provincia: "" } }, junta: [] });
   assert.equal(doc.asociacion.domicilio.provincia, "Málaga");
+});
+
+// ── Migración 2 → 3 y guardado en bloque ─────────────────────────────────
+test("migrar de la versión 2 añade socios, cuotas, remesas y la configuración", () => {
+  const v2 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  delete v2.socios; delete v2.cuotas; delete v2.remesas; delete v2.config; v2.esquema = 2;
+  const doc = Esquema.migrar(v2);
+  assert.equal(doc.esquema, 3);
+  assert.deepEqual([doc.socios, doc.cuotas, doc.remesas], [[], [], []]);
+  assert.equal(doc.config.tiposSocio[0].nombre, "Socio");
+  assert.equal(doc.config.siguienteNumeroSocio, 1);
+});
+
+test("guardarVarios guarda todo con un solo aviso de cambio", async () => {
+  const { repo, llamadas } = repoDePrueba();
+  const r = await repo.guardarVarios("socios", [{ nombre: "A" }, { nombre: "B" }]);
+  assert.equal(r.length, 2);
+  assert.ok(r[0].id && r[1].id && r[0].id !== r[1].id);
+  assert.equal(llamadas(), 1);
+  await repo.guardarVarios("socios", [Object.assign({}, r[0], { nombre: "A2" })]);
+  assert.deepEqual((await repo.listar("socios")).map((s) => s.nombre), ["A2", "B"]);
+  assert.equal(llamadas(), 2);
+  await repo.guardarVarios("socios", []);
+  assert.equal(llamadas(), 2, "una lista vacía no cuenta como cambio");
 });

@@ -9,7 +9,8 @@
  *          titulo: "Socios",             // texto del menú y título de la página
  *          icono: "<path d=…/>",          // trazos SVG de 24×24 (opcional)
  *          orden: 20,                    // posición en el menú
- *          pintar: async function (contenedor, datos) { … }  // datos = WA.Sesion.datos
+ *          pintar: async function (contenedor, datos, ruta) { … }
+ *            // datos = WA.Sesion.datos · ruta = lo que va detrás: #/socios/ficha/7 → ["ficha", "7"]
  *        });
  *   3. Añade su <script> en src/index.html (antes de arranque.js).
  *
@@ -30,8 +31,13 @@
     modulos.sort(function (a, b) { return (a.orden || 0) - (b.orden || 0); });
   }
 
+  function partesRuta() {
+    return (location.hash || "").replace(/^#\/?/, "").split("/").map(function (p) {
+      try { return decodeURIComponent(p); } catch (e) { return p; }
+    });
+  }
   function rutaActual() {
-    var id = (location.hash || "").replace(/^#\/?/, "").split("/")[0];
+    var id = partesRuta()[0];
     return modulos.some(function (m) { return m.id === id; }) ? id : "inicio";
   }
 
@@ -59,7 +65,7 @@
     principal.innerHTML = '<p class="cargando">Cargando…</p>';
     try {
       principal.innerHTML = "";
-      await m.pintar(principal, WA.Sesion.datos);
+      await m.pintar(principal, WA.Sesion.datos, partesRuta().slice(1).filter(Boolean));
     } catch (e) {
       console.error(e);
       principal.innerHTML = '<div class="tarjeta tarjeta-error"><h1>Algo ha fallado</h1><p>' + WA.UI.esc(e.message) +

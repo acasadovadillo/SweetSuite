@@ -13,12 +13,20 @@
     var a = await datos.leer("asociacion");
     var junta = (await datos.listar("junta")).filter(function (m) { return !m.hasta || m.hasta >= WA.Fechas.hoy(); });
     var copia = await datos.estadoCopia();
+    var socios = await datos.listar("socios");
+    var cuotas = await datos.listar("cuotas");
+    var config = await datos.leer("config");
+    var activos = socios.filter(function (x) { return WA.Socios.estado(x) === "activo"; }).length;
+    var deud = WA.Cuotas.deudores(cuotas);
+    var deuda = WA.Dinero.sumar(deud.map(function (d) { return d.total; }));
     var demo = WA.Sesion.modo === "demostración";
 
     var pendientes = [];
     if (!a.nombre) pendientes.push('<a href="#/asociacion">Escribe el nombre y los datos de la asociación</a>');
     if (!a.nif) pendientes.push('<a href="#/asociacion">Añade el NIF de la asociación</a>');
     if (!junta.length) pendientes.push('<a href="#/asociacion">Añade la junta directiva</a>');
+    if (!(config.tiposSocio || []).some(function (t) { return t.cuota > 0; })) pendientes.push('<a href="#/cuotas/tipos">Pon el importe de la cuota de socio</a>');
+    if (!socios.length) pendientes.push('<a href="#/socios">Da de alta a los socios (o impórtalos desde una hoja de cálculo)</a>');
     if (!demo && !copia.ultimaCopia) pendientes.push('<a href="#/copias">Descarga tu primera copia de seguridad</a>');
 
     var estadoCopia = demo ? "No aplica en la demostración."
@@ -33,9 +41,13 @@
         pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
       '<div class="rejilla-tarjetas">' +
       '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
+      '<section class="tarjeta" aria-labelledby="t-socios"><h2 id="t-socios">Socios</h2><p><span class="cifra">' + activos + "</span> " + (activos === 1 ? "activo" : "activos") +
+      '</p><a class="enlace-flecha" href="#/socios">Ver socios</a></section>' +
+      '<section class="tarjeta" aria-labelledby="t-cuotas"><h2 id="t-cuotas">Cuotas sin cobrar</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(deuda)) + "</span></p>" +
+      '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
       '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Socios y cuotas, tesorería e IVA, actividades, actas, obligaciones, subvenciones e informes.</p></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Tesorería e IVA, actividades, actas, obligaciones, subvenciones e informes.</p></section>' +
       "</div>";
   }
 

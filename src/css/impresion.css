@@ -14,4 +14,9 @@
   .tabla th, .tabla td { border-bottom: 1px solid #999; }
   details { display: block; }
   details > summary { list-style: none; }
+  .barra-guardar, .barra-filtros, .pestanas, .miga { display: none !important; }
+  .tabla-libro { font-size: 9.5pt; }
+  .tabla-libro th, .tabla-libro td { padding: 0.25rem 0.35rem; }
+  thead { display: table-header-group; } /* la cabecera se repite en cada hoja */
+  tr { break-inside: avoid; }
 }

@@ -4,11 +4,11 @@
 
 Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a 150 socios y unos pocos miles de euros al año) que hoy se apañan con hojas de cálculo.
 
-> ⚠️ **Estado: en desarrollo (versión 0.1, fase 1 de 6).** De momento incluye la base: datos de la asociación, junta directiva, copias de seguridad cifradas y ajustes. Todavía no hay socios, cuotas ni tesorería. Ver la [hoja de ruta](#hoja-de-ruta).
+> ⚠️ **Estado: en desarrollo (versión 0.2, fase 2 de 6).** Incluye datos de la asociación, junta directiva, **socios y cuotas**, copias de seguridad cifradas y ajustes. Todavía no hay tesorería (facturas, IVA, presupuestos). Ver la [hoja de ruta](#hoja-de-ruta).
 
-| Inicio | Junta directiva | Móvil (tema oscuro) |
-|---|---|---|
-| ![Inicio](docs/capturas/inicio.jpg) | ![Junta](docs/capturas/junta.jpg) | ![Móvil](docs/capturas/movil-oscuro.jpg) |
+| Inicio | Socios | Junta directiva | Móvil (tema oscuro) |
+|---|---|---|---|
+| ![Inicio](docs/capturas/inicio.jpg) | ![Socios](docs/capturas/socios.jpg) | ![Junta](docs/capturas/junta.jpg) | ![Móvil](docs/capturas/movil-oscuro.jpg) |
 
 *(Capturas con los datos de demostración: todo es inventado.)*
 
@@ -36,7 +36,7 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 | Fase | Contenido | Estado |
 |---|---|---|
 | 1. Base y datos | Datos de la asociación y junta directiva, almacenamiento cifrado, copias de seguridad, demostración, tema claro/oscuro, diseño adaptado al móvil | ✅ Hecha |
-| 2. Socios | Libro de registro de socios, altas y bajas, importar/exportar CSV, cuotas y remesas, impagados | Pendiente |
+| 2. Socios | Libro de registro de socios (ficha completa, altas, bajas, menores con tutor, consentimientos), búsqueda y filtros, importar/exportar CSV, tipos de socio con su cuota y periodicidad, emisión de cuotas por periodo, cobro por forma de pago (una o varias a la vez), devoluciones, impagados | ✅ Hecha |
 | 3. Tesorería | Facturas emitidas y de gasto, anticipos, ayuda para el modelo 303 de IVA, presupuestos por proyecto o subvención, exportar a Excel | Pendiente |
 | 4. Actividades | Calendario, inscripciones, exportar a .ics, enlace con gastos e ingresos | Pendiente |
 | 5. Gobierno | Libro de actas, convocatorias de asamblea, calendario de obligaciones, seguimiento de subvenciones | Pendiente |
@@ -66,6 +66,7 @@ No hace falta instalar dependencias. Solo [Node.js](https://nodejs.org) 20 o pos
 npm test          # tests de la lógica (dinero, fechas, NIF/IBAN, cifrado, copias…)
 npm run build     # genera dist/webkit_asociaciones.html (un único archivo)
 npm run comprobar # tests + comprobar que dist/ está al día (lo que hace la integración continua)
+npm run probar-file # abre dist/ con file:// en Chrome/Brave/Edge sin interfaz (perfil temporal) y comprueba que guarda
 ```
 
 Cómo está organizado el código: ver [CONTEXT.md](CONTEXT.md). Cómo contribuir: ver [CONTRIBUTING.md](CONTRIBUTING.md).
