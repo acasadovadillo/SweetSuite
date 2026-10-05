@@ -1,5 +1,5 @@
 <!--
-  webkit_asociaciones 0.4.0
+  webkit_asociaciones 0.5.0
   Archivo generado por tools/build.mjs a partir de src/. No lo edites a mano.
 -->
 <!doctype html>
@@ -12,7 +12,7 @@
   <meta name="description" content="Gestión de asociaciones en un solo archivo: datos, socios, tesorería, actas. Sin servidores: todo se queda en tu navegador.">
   <title>webkit_asociaciones</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232f6f4f'/%3E%3Cpath d='M14 33V19l10-6 10 6v14' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <script>window.WA_VERSION = "0.4.0";</script>
+  <script>window.WA_VERSION = "0.5.0";</script>
   <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
   <script>/* js/nucleo/tema.js */
 /*
@@ -307,8 +307,8 @@ h1:focus { outline: none; }
 .vista-previa span { display: block; }
 .campo label, .acceso-form label { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
 .obligatorio { color: var(--peligro); }
-input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
-input[type="password"], input[type="number"], input[type="search"], select, textarea {
+input:not([type]), input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
+input[type="password"], input[type="number"], input[type="search"], input[type="time"], input[type="datetime-local"], select, textarea {
   width: 100%; min-height: 44px; padding: 0.55rem 0.7rem;
   font: inherit; color: var(--texto); background: var(--superficie);
   border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno);
@@ -487,6 +487,52 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 @media (max-width: 760px) {
   .calendario { display: none; }
 }
+
+/* ── Actas, obligaciones y documentos ──────────────────────────────────── */
+.tarjeta-alerta { border-color: var(--peligro); }
+.chips { list-style: none; padding: 0; margin: 0 0 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
+.chip { display: inline-flex; align-items: center; gap: 0.25rem; background: var(--superficie-2); border-radius: 999px; padding: 0.15rem 0.2rem 0.15rem 0.75rem; font-size: 0.9rem; }
+.chip .btn-icono { width: 28px; height: 28px; font-size: 0.8rem; }
+.puntos { list-style: none; padding: 0; margin: 0 0 1rem; counter-reset: none; }
+.punto { border: 1px solid var(--borde); border-radius: var(--radio-pequeno); padding: 0.75rem; margin-bottom: 0.75rem; }
+.punto-cabecera { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
+.punto-cabecera input { flex: 1; font-weight: 600; }
+.punto-num { font-weight: 700; color: var(--texto-2); }
+.punto-botones { display: flex; }
+.acuerdos { list-style: none; padding: 0; margin: 0.75rem 0; }
+.acuerdo { background: var(--acento-suave); border-radius: var(--radio-pequeno); padding: 0.6rem; margin-bottom: 0.5rem; }
+.acuerdo > label { font-weight: 700; font-size: 0.88rem; }
+.acuerdo-votacion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.4rem; font-size: 0.88rem; }
+.acuerdo-votacion label { display: inline-flex; align-items: center; gap: 0.35rem; }
+.acuerdo-votacion .votos { display: inline-flex; flex-wrap: wrap; gap: 0.5rem; }
+.input-corto { width: 4.5rem !important; min-height: 34px !important; padding: 0.25rem 0.4rem !important; }
+.lista-marcable { max-height: 16rem; overflow-y: auto; border: 1px solid var(--borde); border-radius: var(--radio-pequeno); padding: 0.25rem 0.75rem; margin: 0.5rem 0 1rem; }
+.lista-marcable .casilla { margin: 0.35rem 0; }
+.fila-anadir { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
+.fila-anadir input { flex: 1; }
+.lista-documentos, .lista-vencimientos { list-style: none; padding: 0; margin: 0; }
+.lista-documentos li, .lista-vencimientos li { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--borde); }
+.lista-documentos li:last-child, .lista-vencimientos li:last-child { border-bottom: none; }
+.doc-icono { flex-shrink: 0; width: 2.6rem; text-align: center; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em; padding: 0.45rem 0; border-radius: 4px; background: var(--superficie-2); color: var(--texto-2); }
+.doc-texto, .venc-texto { flex: 1 1 14rem; min-width: 0; }
+.doc-texto .detalle, .venc-texto .detalle { display: block; }
+.doc-nombre { padding: 0; text-align: left; font-weight: 600; }
+.doc-acciones, .venc-acciones { display: flex; gap: 0.35rem; }
+.venc-fecha { font-variant-numeric: tabular-nums; font-weight: 700; width: 6rem; }
+.cal-oblig { background: var(--aviso-fondo); border-left-color: var(--aviso); }
+.cal-oblig.vencida { background: var(--peligro-suave); border-left-color: var(--peligro); }
+.cal-oblig.hecha { opacity: 0.6; text-decoration: line-through; }
+/* Documentos impresos (actas): blanco y negro, como la factura. */
+.documento-impreso { background: #fff; color: #111; max-width: 800px; padding: 2.5rem; border: 1px solid var(--borde); border-radius: var(--radio); margin: 1rem 0; line-height: 1.6; }
+.documento-impreso h1 { font-size: 1.4rem; margin-bottom: 0.2rem; }
+.documento-impreso h2 { font-size: 1.05rem; font-weight: 600; color: #333; margin-bottom: 1rem; }
+.documento-impreso h3 { font-size: 1rem; margin: 1.25rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; }
+.documento-impreso h4 { font-size: 0.98rem; margin: 1rem 0 0.25rem; }
+.di-entidad { font-size: 0.85rem; color: #555; border-bottom: 2px solid #111; padding-bottom: 0.5rem; }
+.di-acuerdo { margin-left: 1rem; }
+.di-firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2.5rem; text-align: center; }
+.di-firma { height: 4rem; border-bottom: 1px solid #111; margin: 0.5rem 1rem; }
+@media (max-width: 760px) { .documento-impreso { padding: 1.25rem; } }
 </style>
   <style>/* css/impresion.css */
 /*
@@ -512,6 +558,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   tr { break-inside: avoid; }
   .tabla-envoltorio { overflow: visible; }
   .tabla-asistencia th, .tabla-asistencia td { border: 1px solid #999; }
+  .documento-impreso { border: none; padding: 0; margin: 0; max-width: none; }
   .factura-impresa { border: none; padding: 0; margin: 0; max-width: none; }
   .importe-positivo, .importe-negativo { color: #000; }
 }
@@ -1551,9 +1598,10 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   var decodificar = function (b) { return new TextDecoder().decode(b); };
 
   function aBase64(bytes) {
-    var bin = "", arr = new Uint8Array(bytes);
-    for (var i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
-    return btoa(bin);
+    // Por trozos: con archivos de varios MB, carácter a carácter sería muy lento.
+    var arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), partes = [];
+    for (var i = 0; i < arr.length; i += 0x8000) partes.push(String.fromCharCode.apply(null, arr.subarray(i, i + 0x8000)));
+    return btoa(partes.join(""));
   }
   function desdeBase64(b64) {
     var bin = atob(b64), out = new Uint8Array(bin.length);
@@ -1610,13 +1658,37 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     return { objeto: JSON.parse(decodificar(plano)), llave: { clave: clave, sal: sal, iter: bloque.iter } };
   }
 
+  /**
+   * Archivos adjuntos: se cifran como bytes (sin pasar por JSON) con la llave de
+   * la sesión y un iv nuevo. Devuelve { iv, ct } (Uint8Array); en las copias de
+   * seguridad viajan en base64 (archivoABase64 / archivoDesdeBase64).
+   */
+  async function cifrarBytes(bytes, llave) {
+    var iv = crypto.getRandomValues(new Uint8Array(BYTES_IV));
+    var ct = await sutil().encrypt({ name: "AES-GCM", iv: iv }, llave.clave, bytes);
+    return { iv: iv, ct: new Uint8Array(ct) };
+  }
+  async function descifrarBytes(registro, llave) {
+    try {
+      var plano = await sutil().decrypt({ name: "AES-GCM", iv: registro.iv }, llave.clave, registro.ct);
+      return new Uint8Array(plano);
+    } catch (e) {
+      var err = new Error("No se ha podido descifrar el archivo.");
+      err.codigo = "CONTRASENA";
+      throw err;
+    }
+  }
+  var archivoABase64 = function (r) { return { iv: aBase64(r.iv), ct: aBase64(r.ct) }; };
+  var archivoDesdeBase64 = function (r) { return { iv: desdeBase64(r.iv), ct: desdeBase64(r.ct) }; };
+
   function esBloque(b) {
     return !!(b && b.v === 1 && typeof b.sal === "string" && typeof b.iv === "string" && typeof b.ct === "string" && b.iter > 0);
   }
 
   return {
     ITERACIONES: ITERACIONES, crearLlave: crearLlave, cifrar: cifrar,
-    descifrar: descifrar, esBloque: esBloque,
+    descifrar: descifrar, esBloque: esBloque, cifrarBytes: cifrarBytes, descifrarBytes: descifrarBytes,
+    archivoABase64: archivoABase64, archivoDesdeBase64: archivoDesdeBase64, aBase64: aBase64, desdeBase64: desdeBase64,
   };
 });
 </script>
@@ -1828,7 +1900,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
         if (!f) return resolver(null);
         var lector = new FileReader();
         lector.onload = function () {
-          resolver(binario ? { nombre: f.name, bytes: new Uint8Array(lector.result) } : { nombre: f.name, texto: String(lector.result) });
+          resolver(binario ? { nombre: f.name, tipo: f.type || "", bytes: new Uint8Array(lector.result) } : { nombre: f.name, texto: String(lector.result) });
         };
         lector.onerror = function () { resolver(null); };
         if (binario) lector.readAsArrayBuffer(f); else lector.readAsText(f, "utf-8");
@@ -2814,6 +2886,354 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   };
 });
 </script>
+  <script>/* js/logica/actas.js */
+/*
+ * webkit_asociaciones — Libro de actas (sin interfaz: tests/gobierno.test.js).
+ *
+ * ÓRGANOS (configurables en config.organos): { id, nombre, prefijo, tipo }
+ *   tipo: "junta" | "coordinacion" | "asamblea" | "departamento" | "otro"
+ *   Cada departamento que se reúna se añade como un órgano más.
+ *
+ * ACTA:
+ *   { id, organoId, numero, tipoSesion: "ordinaria" | "extraordinaria", fecha,
+ *     horaInicio, horaFin, lugar, modalidad: "presencial" | "en línea" | "mixta",
+ *     convocatoria: "primera" | "segunda" | "", presidencia, secretaria,
+ *     asistentes: [{ nombre, socioId, cargo }], excusan (texto), invitados (texto),
+ *     ordenDelDia: [{ id, titulo, desarrollo,
+ *                     acuerdos: [{ id, texto, resultado: "aprobado" | "rechazado" | "",
+ *                                  votacion: "unanimidad" | "asentimiento" | "votacion" | "",
+ *                                  favor, contra, abstencion }] }],
+ *     ruegos, estado: "borrador" | "aprobada", aprobacion (texto: cuándo y dónde se aprobó),
+ *     notas }
+ *
+ * Qué debe contener un acta, quién la firma, cómo se aprueba y qué mayorías
+ * hacen falta lo dicen los ESTATUTOS y la Ley Orgánica 1/2002: verificar con
+ * asesoría. La aplicación no decide si un acuerdo sale aprobado: se anota.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function" ? { Fechas: require("../nucleo/fechas.js") } : { Fechas: raiz.WA.Fechas };
+  var modulo = fabrica(dep.Fechas);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Actas = modulo;
+})(typeof self !== "undefined" ? self : this, function (F) {
+  "use strict";
+
+  var TIPOS_ORGANO = [["junta", "Junta directiva"], ["coordinacion", "Coordinación"], ["asamblea", "Asamblea"], ["departamento", "Departamento"], ["otro", "Otro"]];
+
+  function organosPorDefecto() {
+    return [
+      { id: "junta", nombre: "Junta Directiva", prefijo: "JD", tipo: "junta" },
+      { id: "coordinacion", nombre: "Coordinación", prefijo: "CO", tipo: "coordinacion" },
+      { id: "asamblea", nombre: "Asamblea General", prefijo: "AG", tipo: "asamblea" },
+    ];
+  }
+
+  var nuevoId = function () {
+    return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "x-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  };
+  var punto = function (titulo) { return { id: nuevoId(), titulo: titulo, desarrollo: "", acuerdos: [] }; };
+
+  /**
+   * Orden del día de partida según el órgano y el tipo de sesión. Es solo un
+   * punto de partida: se edita libremente (y debe ajustarse a los estatutos).
+   */
+  function plantilla(organo, tipoSesion) {
+    var t = (organo && organo.tipo) || "otro";
+    var lista;
+    if (t === "asamblea" && tipoSesion !== "extraordinaria") {
+      lista = ["Lectura y aprobación, si procede, del acta de la sesión anterior", "Memoria de actividades del ejercicio",
+        "Examen y aprobación, si procede, de las cuentas del ejercicio", "Aprobación, si procede, del presupuesto del ejercicio",
+        "Ruegos y preguntas"];
+    } else if (t === "asamblea") {
+      lista = ["Lectura y aprobación, si procede, del acta de la sesión anterior", "(Asunto que motiva la convocatoria extraordinaria)", "Ruegos y preguntas"];
+    } else if (t === "junta") {
+      lista = ["Lectura y aprobación, si procede, del acta de la reunión anterior", "Estado de tesorería", "Altas y bajas de socios", "Actividades", "Ruegos y preguntas"];
+    } else if (t === "coordinacion") {
+      lista = ["Revisión de acuerdos y tareas pendientes", "Coordinación entre departamentos", "Calendario de actividades", "Varios"];
+    } else if (t === "departamento") {
+      lista = ["Seguimiento de tareas", "Propuestas del departamento", "Varios"];
+    } else {
+      lista = ["Asuntos a tratar", "Ruegos y preguntas"];
+    }
+    return lista.map(punto);
+  }
+
+  function vacia(organo, ahora) {
+    return { organoId: organo ? organo.id : "", numero: "", tipoSesion: "ordinaria", fecha: F.hoy(ahora), horaInicio: "18:00", horaFin: "",
+      lugar: "", modalidad: "presencial", convocatoria: "", presidencia: "", secretaria: "", asistentes: [], excusan: "", invitados: "",
+      ordenDelDia: plantilla(organo, "ordinaria"), ruegos: "", estado: "borrador", aprobacion: "", notas: "" };
+  }
+
+  /**
+   * Número de la siguiente acta de un órgano:
+   *   anual       «JD-2026-01» (vuelve a 01 cada año)
+   *   correlativa «JD-15» (sin reiniciar)
+   * Se calcula con las actas que ya tienen número, así nunca se repite.
+   */
+  function siguienteNumero(actas, organo, anio, numeracion) {
+    var pre = (organo.prefijo || "ACTA").toUpperCase();
+    var anual = numeracion !== "correlativa";
+    var base = anual ? pre + "-" + anio + "-" : pre + "-";
+    var max = 0;
+    (actas || []).forEach(function (a) {
+      if (a.organoId !== organo.id || !a.numero || a.numero.indexOf(base) !== 0) return;
+      var resto = a.numero.slice(base.length);
+      if (!/^\d+$/.test(resto)) return;
+      max = Math.max(max, parseInt(resto, 10));
+    });
+    return base + String(max + 1).padStart(2, "0");
+  }
+
+  /** Problemas que impiden dar el acta por terminada (vacía si está bien). */
+  function revisar(a) {
+    var p = [];
+    if (!a.organoId) p.push("Elige el órgano.");
+    if (!F.esValida(a.fecha)) p.push("Falta la fecha.");
+    if (!String(a.presidencia || "").trim()) p.push("Indica quién preside.");
+    if (!String(a.secretaria || "").trim()) p.push("Indica quién hace de secretario/a.");
+    if (!(a.ordenDelDia || []).some(function (x) { return String(x.titulo || "").trim(); })) p.push("El orden del día está vacío.");
+    return p;
+  }
+
+  /** «Aprobado por unanimidad», «Aprobado: 10 a favor, 2 en contra y 1 abstención»… */
+  function textoVotacion(ac) {
+    var res = ac.resultado === "rechazado" ? "Rechazado" : ac.resultado === "aprobado" ? "Aprobado" : "";
+    if (ac.votacion === "unanimidad") return (res || "Aprobado") + " por unanimidad";
+    if (ac.votacion === "asentimiento") return (res || "Aprobado") + " por asentimiento";
+    if (ac.votacion === "votacion") {
+      var n = function (x, s, p) { x = +x || 0; return x + " " + (x === 1 ? s : p); };
+      var v = n(ac.favor, "a favor", "a favor") + ", " + n(ac.contra, "en contra", "en contra") + " y " + n(ac.abstencion, "abstención", "abstenciones");
+      return (res ? res + ": " : "") + v;
+    }
+    return res;
+  }
+
+  /** Todos los acuerdos de todas las actas, del más reciente al más antiguo (libro de acuerdos). */
+  function acuerdos(actas, organos) {
+    var porId = {};
+    (organos || []).forEach(function (o) { porId[o.id] = o; });
+    var out = [];
+    (actas || []).forEach(function (a) {
+      (a.ordenDelDia || []).forEach(function (p, i) {
+        (p.acuerdos || []).forEach(function (ac) {
+          if (!String(ac.texto || "").trim()) return;
+          out.push({ actaId: a.id, numero: a.numero, fecha: a.fecha, organo: (porId[a.organoId] || {}).nombre || "", punto: i + 1,
+            tituloPunto: p.titulo, texto: ac.texto, votacion: textoVotacion(ac), resultado: ac.resultado || "" });
+        });
+      });
+    });
+    return out.sort(function (x, y) { return String(y.fecha).localeCompare(String(x.fecha)) || String(y.numero).localeCompare(String(x.numero)); });
+  }
+
+  /** El acta como texto, para copiar en un correo o en un documento. */
+  function textoPlano(a, organo, asociacion) {
+    var l = [];
+    var nombreOrg = (organo && organo.nombre) || "";
+    l.push((asociacion && asociacion.nombre ? asociacion.nombre.toUpperCase() + "\n" : "") +
+      "ACTA " + (a.numero ? "N.º " + a.numero + " " : "") + "DE LA REUNIÓN " + (a.tipoSesion === "extraordinaria" ? "EXTRAORDINARIA " : "ORDINARIA ") + "DE " + nombreOrg.toUpperCase());
+    l.push("");
+    var cuando = F.larga(a.fecha) + (a.horaInicio ? ", a las " + a.horaInicio + " horas" : "") + (a.convocatoria ? ", en " + a.convocatoria + " convocatoria" : "");
+    l.push("En " + (a.lugar || "(lugar)") + (a.modalidad && a.modalidad !== "presencial" ? " (modalidad " + a.modalidad + ")" : "") + ", el " + cuando + ", se reúne " +
+      (nombreOrg ? "la " + nombreOrg : "el órgano") + ", presidida por " + (a.presidencia || "(presidencia)") + " y actuando como secretario/a " + (a.secretaria || "(secretaría)") + ".");
+    l.push("");
+    var asist = (a.asistentes || []).map(function (x) { return x.nombre + (x.cargo ? " (" + x.cargo + ")" : ""); });
+    l.push("Asistentes (" + asist.length + "): " + (asist.join(", ") || "—") + ".");
+    if (a.excusan) l.push("Excusan su asistencia: " + a.excusan + ".");
+    if (a.invitados) l.push("Invitados: " + a.invitados + ".");
+    l.push("");
+    l.push("ORDEN DEL DÍA");
+    (a.ordenDelDia || []).forEach(function (p, i) { l.push((i + 1) + ". " + p.titulo); });
+    l.push("");
+    l.push("DESARROLLO DE LA SESIÓN Y ACUERDOS");
+    (a.ordenDelDia || []).forEach(function (p, i) {
+      l.push("");
+      l.push((i + 1) + ". " + p.titulo);
+      if (p.desarrollo) l.push(p.desarrollo);
+      (p.acuerdos || []).forEach(function (ac, k) {
+        if (!String(ac.texto || "").trim()) return;
+        var v = textoVotacion(ac);
+        l.push("Acuerdo " + (i + 1) + "." + (k + 1) + ": " + ac.texto + (v ? " (" + v + ")" : ""));
+      });
+    });
+    if (a.ruegos) { l.push(""); l.push("Ruegos y preguntas: " + a.ruegos); }
+    l.push("");
+    l.push("Y no habiendo más asuntos que tratar, se levanta la sesión" + (a.horaFin ? " a las " + a.horaFin + " horas" : "") + ", de lo que como secretario/a doy fe, con el visto bueno de la presidencia.");
+    l.push("");
+    l.push("Vº Bº La Presidencia                    La Secretaría");
+    l.push(String(a.presidencia || "") + "                    " + String(a.secretaria || ""));
+    return l.join("\n");
+  }
+
+  return {
+    TIPOS_ORGANO: TIPOS_ORGANO, organosPorDefecto: organosPorDefecto, plantilla: plantilla, vacia: vacia, punto: punto, nuevoId: nuevoId,
+    siguienteNumero: siguienteNumero, revisar: revisar, textoVotacion: textoVotacion, acuerdos: acuerdos, textoPlano: textoPlano,
+  };
+});
+</script>
+  <script>/* js/logica/obligaciones.js */
+/*
+ * webkit_asociaciones — Calendario de obligaciones y seguimiento de subvenciones
+ * (sin interfaz: tests/gobierno.test.js).
+ *
+ * ⚠️ FECHAS ORIENTATIVAS. Los plazos de la lista de habituales son los más
+ * comunes, pero dependen de cada caso (si la asociación está obligada o no, si
+ * cae en festivo, cambios normativos…): todos llevan «verificar con asesoría» y
+ * se pueden editar.
+ *
+ * OBLIGACIÓN:
+ *   { id, titulo, categoria: "Fiscal" | "Asociativa" | "Renovación" | "Subvención" | "Otra",
+ *     descripcion, recurrencia: "anual" | "unica",
+ *     vencimientos: [{ mes, dia, etiqueta }]   (anual: se repite cada año en esas fechas)
+ *     fecha                                     (única)
+ *     diasAviso (cuántos días antes avisar), activa, plantilla (de cuál de las habituales salió),
+ *     desde (no cuenta nada anterior: así, al añadirla hoy, no salen como «vencidos» los plazos de años pasados),
+ *     hechas: { "aaaa-mm-dd": { fecha, nota } } } (cada vencimiento cumplido)
+ *
+ * SUBVENCIÓN: un proyecto con tipo «subvencion» (ver modulos/proyectos.js) con
+ *   { estadoSubvencion, importeSolicitado, plazoSolicitud, fechaSolicitud, fechaResolucion,
+ *     plazoJustificacion, fechaJustificacion, urlBases, requisitos: [{ id, texto, hecho }] }
+ *   Sus plazos aparecen en el calendario de obligaciones.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function" ? { Fechas: require("../nucleo/fechas.js") } : { Fechas: raiz.WA.Fechas };
+  var modulo = fabrica(dep.Fechas);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Obligaciones = modulo;
+})(typeof self !== "undefined" ? self : this, function (F) {
+  "use strict";
+
+  var CATEGORIAS = ["Fiscal", "Asociativa", "Renovación", "Subvención", "Otra"];
+  var VERIFICAR = " Fechas orientativas: verificar con asesoría (si el último día es festivo, el plazo puede moverse).";
+  var v = function (mes, dia, etiqueta) { return { mes: mes, dia: dia, etiqueta: etiqueta || "" }; };
+
+  /** Obligaciones habituales para elegir. Ninguna se añade sola: cada asociación elige las suyas. */
+  var PLANTILLAS = [
+    { plantilla: "303", categoria: "Fiscal", titulo: "IVA trimestral (modelo 303)", recurrencia: "anual",
+      vencimientos: [v(4, 20, "1.er trimestre"), v(7, 20, "2.º trimestre"), v(10, 20, "3.er trimestre"), v(1, 30, "4.º trimestre del año anterior")],
+      descripcion: "Solo si la asociación presenta IVA. La app ayuda con las cifras en «IVA»." + VERIFICAR },
+    { plantilla: "390", categoria: "Fiscal", titulo: "Resumen anual de IVA (modelo 390)", recurrencia: "anual",
+      vencimientos: [v(1, 30, "del año anterior")], descripcion: "Solo si se presenta IVA y no se está exonerado." + VERIFICAR },
+    { plantilla: "111", categoria: "Fiscal", titulo: "Retenciones de IRPF (modelo 111)", recurrencia: "anual",
+      vencimientos: [v(4, 20, "1.er trimestre"), v(7, 20, "2.º trimestre"), v(10, 20, "3.er trimestre"), v(1, 20, "4.º trimestre del año anterior")],
+      descripcion: "Si se han practicado retenciones (por ejemplo, a ponentes o profesionales)." + VERIFICAR },
+    { plantilla: "190", categoria: "Fiscal", titulo: "Resumen anual de retenciones (modelo 190)", recurrencia: "anual",
+      vencimientos: [v(1, 31, "del año anterior")], descripcion: "Si se han presentado modelos 111." + VERIFICAR },
+    { plantilla: "182", categoria: "Fiscal", titulo: "Declaración informativa de donativos (modelo 182)", recurrencia: "anual",
+      vencimientos: [v(1, 31, "del año anterior")], descripcion: "Si la asociación emite certificados de donaciones con derecho a deducción (por ejemplo, si es de utilidad pública)." + VERIFICAR },
+    { plantilla: "200", categoria: "Fiscal", titulo: "Impuesto sobre Sociedades (modelo 200)", recurrencia: "anual",
+      vencimientos: [v(7, 25, "ejercicio anterior")], descripcion: "Las asociaciones pueden estar obligadas a presentarlo aunque estén parcialmente exentas; hay supuestos en que no. Consultadlo." + VERIFICAR },
+    { plantilla: "347", categoria: "Fiscal", titulo: "Operaciones con terceros (modelo 347)", recurrencia: "anual",
+      vencimientos: [v(2, 28, "del año anterior")], descripcion: "Solo si hay operaciones con una misma persona o entidad por encima del umbral legal." + VERIFICAR },
+    { plantilla: "asamblea", categoria: "Asociativa", titulo: "Asamblea general ordinaria (cuentas y presupuesto)", recurrencia: "anual",
+      vencimientos: [v(6, 30, "fecha límite según estatutos")], descripcion: "Pon la fecha que marquen vuestros estatutos." + VERIFICAR },
+    { plantilla: "cuentas", categoria: "Asociativa", titulo: "Cierre del ejercicio y preparación de las cuentas", recurrencia: "anual",
+      vencimientos: [v(3, 31, "ejercicio anterior")], descripcion: "Para poder presentarlas a la asamblea." + VERIFICAR },
+    { plantilla: "cargos", categoria: "Asociativa", titulo: "Renovación de cargos de la junta directiva", recurrencia: "unica", fecha: "",
+      descripcion: "La duración de los cargos la fijan los estatutos. Pon la fecha en que vencen." + VERIFICAR },
+    { plantilla: "registro", categoria: "Asociativa", titulo: "Comunicar cambios al registro de asociaciones", recurrencia: "unica", fecha: "",
+      descripcion: "Cambios de junta, domicilio o estatutos deben comunicarse al registro en el plazo que marque la norma aplicable." + VERIFICAR },
+    { plantilla: "rgpd", categoria: "Asociativa", titulo: "Revisión anual de protección de datos", recurrencia: "anual",
+      vencimientos: [v(1, 31, "")], descripcion: "Revisar quién accede a los datos, borrar los que ya no hacen falta y hacer copia de seguridad." },
+    { plantilla: "seguro-rc", categoria: "Renovación", titulo: "Seguro de responsabilidad civil", recurrencia: "anual",
+      vencimientos: [v(1, 1, "vencimiento de la póliza")], descripcion: "Pon la fecha de vencimiento de vuestra póliza." },
+    { plantilla: "seguro-acc", categoria: "Renovación", titulo: "Seguro de accidentes para actividades", recurrencia: "anual",
+      vencimientos: [v(1, 1, "vencimiento de la póliza")], descripcion: "Pon la fecha de vencimiento de vuestra póliza." },
+    { plantilla: "web", categoria: "Renovación", titulo: "Dominio y alojamiento web", recurrencia: "anual", vencimientos: [v(1, 1, "")], descripcion: "Pon la fecha de renovación." },
+    { plantilla: "certificado", categoria: "Renovación", titulo: "Certificado digital de la asociación", recurrencia: "unica", fecha: "",
+      descripcion: "Pon la fecha de caducidad que figura en el certificado." },
+  ];
+
+  function vacia(ahora) {
+    return { titulo: "", categoria: "Otra", descripcion: "", recurrencia: "anual", vencimientos: [v(1, 1, "")], fecha: "", diasAviso: 15, activa: true, plantilla: "",
+      desde: F.hoy(ahora), hechas: {} };
+  }
+  function desdePlantilla(p, ahora) {
+    var o = Object.assign(vacia(ahora), JSON.parse(JSON.stringify(p)));
+    o.hechas = {};
+    return o;
+  }
+
+  var dos = function (n) { return String(n).padStart(2, "0"); };
+  /** Fecha real de un vencimiento en un año (el 29/2 en años no bisiestos pasa al 28). */
+  function fechaEn(anio, mes, dia) {
+    var ultimo = new Date(anio, mes, 0).getDate();
+    return anio + "-" + dos(mes) + "-" + dos(Math.min(dia, ultimo));
+  }
+
+  /**
+   * Vencimientos entre dos fechas (incluidas), con su situación respecto a «hoy»:
+   *   hecha · vencida (pasó y no está hecha) · proxima (faltan diasAviso o menos) · pendiente
+   */
+  function ocurrencias(obligaciones, desde, hasta, hoy) {
+    var h = hoy || F.hoy(), out = [];
+    (obligaciones || []).forEach(function (o) {
+      if (o.activa === false) return;
+      var fechas = [];
+      if (o.recurrencia === "unica") {
+        if (F.esValida(o.fecha)) fechas.push({ fecha: o.fecha, etiqueta: "" });
+      } else {
+        for (var a = +desde.slice(0, 4); a <= +hasta.slice(0, 4); a++) {
+          (o.vencimientos || []).forEach(function (x) { fechas.push({ fecha: fechaEn(a, x.mes, x.dia), etiqueta: x.etiqueta || "" }); });
+        }
+      }
+      var inicio = o.desde || String(o.creado || "").slice(0, 10) || desde;
+      fechas.forEach(function (x) {
+        if (x.fecha < desde || x.fecha > hasta) return;
+        if (o.recurrencia !== "unica" && x.fecha < inicio) return;
+        var hecha = (o.hechas || {})[x.fecha];
+        var faltan = F.diasEntre(h, x.fecha);
+        var estado = hecha ? "hecha" : faltan < 0 ? "vencida" : faltan <= (o.diasAviso == null ? 15 : o.diasAviso) ? "proxima" : "pendiente";
+        out.push({ obligacionId: o.id, titulo: o.titulo, categoria: o.categoria, fecha: x.fecha, etiqueta: x.etiqueta, estado: estado, faltan: faltan, hecha: hecha || null, origen: "obligacion" });
+      });
+    });
+    return out.sort(function (a, b) { return a.fecha.localeCompare(b.fecha) || a.titulo.localeCompare(b.titulo, "es"); });
+  }
+
+  /** Marca (o desmarca) un vencimiento como hecho. Devuelve una copia nueva. */
+  function marcarHecha(o, fecha, hecha, nota, ahora) {
+    var c = JSON.parse(JSON.stringify(o));
+    c.hechas = c.hechas || {};
+    if (hecha) c.hechas[fecha] = { fecha: F.hoy(ahora), nota: nota || "" };
+    else delete c.hechas[fecha];
+    return c;
+  }
+
+  // ── Subvenciones ────────────────────────────────────────────────────────
+  var ESTADOS_SUBVENCION = [["idea", "Idea / estudiando"], ["preparando", "Preparando la solicitud"], ["solicitada", "Solicitada"],
+    ["concedida", "Concedida"], ["denegada", "Denegada"], ["justificando", "Justificando"], ["justificada", "Justificada"], ["cerrada", "Cerrada"]];
+
+  /** Plazos de las subvenciones como vencimientos del calendario (los que ya no tocan, no salen). */
+  function ocurrenciasSubvenciones(proyectos, desde, hasta, hoy) {
+    var h = hoy || F.hoy(), out = [];
+    (proyectos || []).forEach(function (p) {
+      if (p.tipo !== "subvencion") return;
+      var e = p.estadoSubvencion || "idea";
+      var plazos = [];
+      if (["idea", "preparando"].indexOf(e) >= 0 && F.esValida(p.plazoSolicitud)) plazos.push([p.plazoSolicitud, "Fin del plazo de solicitud"]);
+      if (["concedida", "justificando"].indexOf(e) >= 0 && F.esValida(p.plazoJustificacion)) plazos.push([p.plazoJustificacion, "Fin del plazo de justificación"]);
+      plazos.forEach(function (x) {
+        if (x[0] < desde || x[0] > hasta) return;
+        var faltan = F.diasEntre(h, x[0]);
+        out.push({ proyectoId: p.id, titulo: p.nombre, categoria: "Subvención", fecha: x[0], etiqueta: x[1],
+          estado: faltan < 0 ? "vencida" : faltan <= 30 ? "proxima" : "pendiente", faltan: faltan, hecha: null, origen: "subvencion" });
+      });
+    });
+    return out;
+  }
+
+  /** Requisitos o documentos de una subvención: { hechos, total }. */
+  function progresoRequisitos(p) {
+    var r = p.requisitos || [];
+    return { hechos: r.filter(function (x) { return x.hecho; }).length, total: r.length };
+  }
+
+  return {
+    CATEGORIAS: CATEGORIAS, PLANTILLAS: PLANTILLAS, ESTADOS_SUBVENCION: ESTADOS_SUBVENCION,
+    vacia: vacia, desdePlantilla: desdePlantilla, fechaEn: fechaEn, ocurrencias: ocurrencias, marcarHecha: marcarHecha,
+    ocurrenciasSubvenciones: ocurrenciasSubvenciones, progresoRequisitos: progresoRequisitos,
+  };
+});
+</script>
   <script>/* js/logica/facturas.js */
 /*
  * webkit_asociaciones — Lógica de facturas (sin interfaz: tests/facturas.test.js).
@@ -3609,7 +4029,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 5,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 6,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
  *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
@@ -3617,6 +4037,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
  *     movimientos, facturas, anticipos, proyectos   (ver logica/tesoreria.js y logica/facturas.js)
  *     actividades (con sus inscripciones)           (ver logica/actividades.js)
+ *     actas, obligaciones                           (ver logica/actas.js y logica/obligaciones.js)
+ *     documentos   fichas de los archivos adjuntos; los bytes van cifrados aparte (ver datos/boveda.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -3634,22 +4056,24 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  *
  * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
  *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3)
- *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4).
+ *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4)
+ *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
   var Tesoreria = typeof require === "function" ? require("../logica/tesoreria.js") : raiz.WA.Tesoreria;
-  var modulo = fabrica(Direccion, Tesoreria);
+  var Actas = typeof require === "function" ? require("../logica/actas.js") : raiz.WA.Actas;
+  var modulo = fabrica(Direccion, Tesoreria, Actas);
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Esquema = modulo;
-})(typeof self !== "undefined" ? self : this, function (Direccion, Tesoreria) {
+})(typeof self !== "undefined" ? self : this, function (Direccion, Tesoreria, Actas) {
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 5;
+  var VERSION = 6;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -3679,6 +4103,9 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
    *   reglas      para clasificar el extracto del banco: [{ texto, categoriaId }]
    *   presupuestos  presupuesto anual aprobado: { "2026": { categoriaId: céntimos } }
    *   zonaHoraria   para exportar el calendario (.ics): "Europe/Madrid" o "Atlantic/Canary"
+   *   organos       órganos que levantan actas: [{ id, nombre, prefijo, tipo }]
+   *   actas         { numeracion: "anual" | "correlativa" }
+   *   limiteArchivoMB  tamaño máximo de un adjunto
    */
   function configVacia() {
     return {
@@ -3692,6 +4119,9 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       reglas: [],
       presupuestos: {},
       zonaHoraria: "Europe/Madrid",
+      organos: Actas.organosPorDefecto(),
+      actas: { numeracion: "anual" },
+      limiteArchivoMB: 10,
     };
   }
 
@@ -3763,6 +4193,17 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       return doc;
     },
 
+    // 5 → 6: actas, obligaciones y documentos (Fase 5).
+    5: function (doc) {
+      ["actas", "obligaciones", "documentos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+      doc.config = doc.config || {};
+      if (!Array.isArray(doc.config.organos) || !doc.config.organos.length) doc.config.organos = Actas.organosPorDefecto();
+      doc.config.actas = Object.assign({ numeracion: "anual" }, doc.config.actas || {});
+      if (!(doc.config.limiteArchivoMB > 0)) doc.config.limiteArchivoMB = 10;
+      doc.esquema = 6;
+      return doc;
+    },
+
     // 4 → 5: actividades (Fase 4).
     4: function (doc) {
       if (!Array.isArray(doc.actividades)) doc.actividades = [];
@@ -3812,6 +4253,9 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     if (!Array.isArray(doc.config.reglas)) doc.config.reglas = [];
     if (!doc.config.presupuestos || typeof doc.config.presupuestos !== "object") doc.config.presupuestos = {};
     if (!doc.config.zonaHoraria) doc.config.zonaHoraria = "Europe/Madrid";
+    if (!Array.isArray(doc.config.organos) || !doc.config.organos.length) doc.config.organos = Actas.organosPorDefecto();
+    doc.config.actas = Object.assign({ numeracion: "anual" }, doc.config.actas || {});
+    if (!(doc.config.limiteArchivoMB > 0)) doc.config.limiteArchivoMB = 10;
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }
@@ -3849,13 +4293,19 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  *                                  (importaciones, remesas): un solo guardado
  *   borrar(coleccion, id)        → true si existía
  *   documento()                  → copia del documento completo (para copias de seguridad)
+ *   guardarArchivo(ficha, bytes) → adjunta un archivo: su ficha va a la colección
+ *                                  «documentos» y sus bytes a un almacén aparte
+ *   leerArchivo(id)              → los bytes (Uint8Array) de un adjunto
+ *   borrarArchivo(id)            → quita la ficha y los bytes
  *
  * Siempre se devuelven COPIAS: si un formulario modifica lo que recibió, no
  * cambia nada guardado hasta que llame a guardar().
  *
- * crearRepositorio(doc, alCambiar): «alCambiar(doc)» se llama tras cada cambio;
- * la sesión la usa para cifrar y guardar en el navegador. En los tests y en el
- * modo demostración no hace nada.
+ * crearRepositorio(doc, alCambiar, reloj, archivos): «alCambiar(doc)» se llama tras
+ * cada cambio; la sesión la usa para cifrar y guardar en el navegador. En los
+ * tests y en el modo demostración no hace nada. «archivos» es dónde van los bytes
+ * de los adjuntos: { guardar(id, bytes), leer(id), borrar(id) } (la sesión los
+ * cifra; si no se da, quedan en memoria).
  */
 (function (raiz, fabrica) {
   var Esquema = typeof require === "function" ? require("./esquema.js") : raiz.WA.Esquema;
@@ -3867,9 +4317,20 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
   var copiar = function (x) { return x == null ? x : JSON.parse(JSON.stringify(x)); };
 
-  function crearRepositorio(doc, alCambiar, reloj) {
+  /** Almacén de bytes en memoria (demostración y tests). inicial: { id: Uint8Array }. */
+  function archivosEnMemoria(inicial) {
+    var m = Object.assign({}, inicial || {});
+    return {
+      guardar: async function (id, bytes) { m[id] = new Uint8Array(bytes); },
+      leer: async function (id) { return m[id] ? new Uint8Array(m[id]) : null; },
+      borrar: async function (id) { delete m[id]; },
+    };
+  }
+
+  function crearRepositorio(doc, alCambiar, reloj, archivos) {
     var ahora = reloj || function () { return new Date().toISOString(); };
     var avisar = alCambiar || function () {};
+    var bytes = archivos || archivosEnMemoria();
 
     function coleccion(nombre) {
       if (Esquema.COLECCIONES.indexOf(nombre) < 0) throw new Error("Colección desconocida: " + nombre);
@@ -3940,6 +4401,28 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
       documento: async function () { return copiar(doc); },
 
+      guardarArchivo: async function (ficha, contenido) {
+        var r = copiar(ficha);
+        r.id = r.id || Esquema.nuevoId();
+        r.tamano = contenido.length;
+        // Primero los bytes: si fallan (sin espacio…), no queda una ficha sin archivo.
+        await bytes.guardar(r.id, contenido);
+        var t = ahora();
+        var lista = coleccion("documentos");
+        var i = lista.findIndex(function (x) { return x.id === r.id; });
+        if (i >= 0) { r.creado = lista[i].creado; r.modificado = t; lista[i] = r; } else { r.creado = t; r.modificado = t; lista.push(r); }
+        await cambiado();
+        return copiar(r);
+      },
+      leerArchivo: async function (id) { return bytes.leer(id); },
+      borrarArchivo: async function (id) {
+        await bytes.borrar(id);
+        var lista = coleccion("documentos");
+        var i = lista.findIndex(function (x) { return x.id === id; });
+        if (i >= 0) { lista.splice(i, 1); await cambiado(); }
+        return i >= 0;
+      },
+
       /** Estado de la copia de seguridad, para el aviso de la cabecera. */
       estadoCopia: async function () {
         return { ultimaCopia: doc.meta.ultimaCopia, cambiosDesdeCopia: doc.meta.cambiosDesdeCopia || 0 };
@@ -3954,7 +4437,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     };
   }
 
-  return { crearRepositorio: crearRepositorio };
+  return { crearRepositorio: crearRepositorio, archivosEnMemoria: archivosEnMemoria };
 });
 </script>
   <script>/* js/datos/copia.js */
@@ -3974,6 +4457,10 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  * El nombre de la asociación va fuera del cifrado para que sepas de quién es una
  * copia sin abrirla. Es lo único que va en claro.
  *
+ * Los ARCHIVOS ADJUNTOS van en «archivos»: { id: { iv, ct } } cifrados con la misma
+ * llave que los datos (copia cifrada) o { id: { datos } } en claro (copia sin
+ * cifrar), siempre en base64.
+ *
  * Este archivo solo arma y lee sobres (sin DOM): se puede probar en Node.
  */
 (function (raiz, fabrica) {
@@ -3986,14 +4473,18 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   var FORMATO = "webkit_asociaciones-copia";
   var VERSION = 1;
 
-  function sobreCifrado(bloque, nombreAsociacion, ahora) {
-    return { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
+  function sobreCifrado(bloque, nombreAsociacion, ahora, archivos) {
+    var s = { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
       cifrada: true, asociacion: nombreAsociacion || "", datos: bloque };
+    if (archivos && Object.keys(archivos).length) s.archivos = archivos;
+    return s;
   }
 
-  function sobreAbierto(documento, ahora) {
-    return { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
+  function sobreAbierto(documento, ahora, archivos) {
+    var s = { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
       cifrada: false, asociacion: (documento.asociacion && documento.asociacion.nombre) || "", documento: documento };
+    if (archivos && Object.keys(archivos).length) s.archivos = archivos;
+    return s;
   }
 
   /**
@@ -4010,13 +4501,13 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       if (j.version > VERSION) throw new Error("Esta copia es de una versión más nueva de la aplicación. Descarga la última versión.");
       if (j.cifrada) {
         if (!j.datos || typeof j.datos.ct !== "string") throw new Error("La copia está incompleta o dañada.");
-        return { cifrada: true, bloque: j.datos, asociacion: j.asociacion || "", creada: j.creada || null };
+        return { cifrada: true, bloque: j.datos, asociacion: j.asociacion || "", creada: j.creada || null, archivos: j.archivos || {} };
       }
       if (!j.documento || typeof j.documento !== "object") throw new Error("La copia está incompleta o dañada.");
-      return { cifrada: false, documento: j.documento, asociacion: j.asociacion || "", creada: j.creada || null };
+      return { cifrada: false, documento: j.documento, asociacion: j.asociacion || "", creada: j.creada || null, archivos: j.archivos || {} };
     }
     if (j && j.app === "webkit_asociaciones") {
-      return { cifrada: false, documento: j, asociacion: (j.asociacion && j.asociacion.nombre) || "", creada: null };
+      return { cifrada: false, documento: j, asociacion: (j.asociacion && j.asociacion.nombre) || "", creada: null, archivos: {} };
     }
     throw new Error("El archivo no es una copia de seguridad de webkit_asociaciones.");
   }
@@ -4053,6 +4544,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   // Las cuotas de demostración se calculan con la misma lógica que las de verdad.
   modulo.Cuotas = typeof require === "function" ? require("../logica/cuotas.js") : raiz.WA.Cuotas;
   modulo.Actividades = typeof require === "function" ? require("../logica/actividades.js") : raiz.WA.Actividades;
+  modulo.Obligaciones = typeof require === "function" ? require("../logica/obligaciones.js") : raiz.WA.Obligaciones;
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Demo = modulo;
 })(typeof self !== "undefined" ? self : this, function (Esquema) {
@@ -4094,7 +4586,90 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     rellenarSocios(doc, t);
     rellenarTesoreria(doc, t);
     rellenarActividades(doc, t);
+    rellenarGobierno(doc, t);
     return doc;
+  }
+
+  /*
+   * Actas, obligaciones, seguimiento de subvenciones y documentos de ejemplo.
+   * Los documentos son textos inventados (los bytes los da archivosDemo()).
+   */
+  var TEXTOS_DEMO = {
+    "demo-doc-estatutos": "ESTATUTOS DE LA ASOCIACIÓN CULTURAL LOS ALMENDROS (FICTICIA)\n\nTexto de ejemplo para la demostración. No son unos estatutos reales ni sirven como modelo.\n\nArtículo 1. Denominación.\nArtículo 2. Fines: promover la cultura y el conocimiento del entorno natural del municipio.\nArtículo 3. Domicilio.\n…\n",
+    "demo-doc-acta": "Acta JD-2026-02 firmada (escaneo de ejemplo para la demostración).\n",
+    "demo-doc-bases": "Bases de la convocatoria de subvenciones de ejemplo 2026 (texto inventado).\n",
+  };
+  function archivosDemo() {
+    var out = {};
+    Object.keys(TEXTOS_DEMO).forEach(function (id) { out[id] = new TextEncoder().encode(TEXTOS_DEMO[id]); });
+    return out;
+  }
+
+  function rellenarGobierno(doc, t) {
+    var reg = function (o) { return Object.assign({ creado: t, modificado: t }, o); };
+    var asistentes = doc.junta.filter(function (j) { return !j.hasta; }).map(function (j) { return { nombre: j.nombre, socioId: "", cargo: j.cargo }; });
+    var ac = function (texto, votacion, extra) { return Object.assign({ id: "ac-" + Math.random().toString(36).slice(2, 8), texto: texto, votacion: votacion || "", resultado: "aprobado", favor: 0, contra: 0, abstencion: 0 }, extra || {}); };
+    var punto = function (titulo, desarrollo, acuerdos) { return { id: "p-" + Math.random().toString(36).slice(2, 8), titulo: titulo, desarrollo: desarrollo || "", acuerdos: acuerdos || [] }; };
+    doc.config.organos = doc.config.organos.concat([{ id: "dep-actividades", nombre: "Departamento de Actividades", prefijo: "DACT", tipo: "departamento" }]);
+    doc.actas = [
+      reg({ id: "demo-acta-1", organoId: "junta", numero: "JD-2026-02", tipoSesion: "ordinaria", fecha: "2026-03-12", horaInicio: "19:00", horaFin: "20:45",
+        lugar: "Local de la asociación", modalidad: "presencial", convocatoria: "", presidencia: "Lucía Ficticia Ejemplo", secretaria: "Carmen Demo Muestra",
+        asistentes: asistentes, excusan: "", invitados: "", estado: "aprobada", aprobacion: "En la reunión de junta del 9 de abril de 2026 (JD-2026-03).", notas: "",
+        ordenDelDia: [
+          punto("Lectura y aprobación, si procede, del acta de la reunión anterior", "Se lee el acta JD-2026-01.", [ac("Aprobar el acta JD-2026-01.", "unanimidad")]),
+          punto("Estado de tesorería", "La tesorera informa del saldo y de las cuotas pendientes de 2026.", []),
+          punto("Actividades de primavera", "Se presentan las propuestas de anillamiento y la charla sobre aves de ribera.", [
+            ac("Organizar la jornada de anillamiento el 18 de abril, gratuita para socios y 5 € para no socios.", "votacion", { favor: 4, contra: 0, abstencion: 1 }),
+            ac("Solicitar la subvención municipal para el taller de ciencia.", "unanimidad")]),
+          punto("Ruegos y preguntas", "", []),
+        ], ruegos: "Se pide revisar el material de préstamo." }),
+      reg({ id: "demo-acta-2", organoId: "asamblea", numero: "AG-2026-01", tipoSesion: "ordinaria", fecha: "2026-06-20", horaInicio: "11:00", horaFin: "12:30",
+        lugar: "Centro cívico de Villaejemplo, sala 2", modalidad: "presencial", convocatoria: "segunda", presidencia: "Lucía Ficticia Ejemplo", secretaria: "Carmen Demo Muestra",
+        asistentes: doc.socios.slice(0, 14).map(function (s) { return { nombre: s.nombre + " " + s.apellidos, socioId: s.id, cargo: "" }; }), excusan: "Dos socios por correo.", invitados: "",
+        estado: "borrador", aprobacion: "", notas: "",
+        ordenDelDia: [
+          punto("Lectura y aprobación, si procede, del acta de la sesión anterior", "", [ac("Aprobar el acta de la asamblea de 2025.", "asentimiento")]),
+          punto("Memoria de actividades del ejercicio", "La secretaria resume las actividades de 2025.", []),
+          punto("Examen y aprobación, si procede, de las cuentas del ejercicio", "La tesorera presenta ingresos, gastos y saldo a 31 de diciembre.", [ac("Aprobar las cuentas del ejercicio 2025.", "votacion", { favor: 13, contra: 0, abstencion: 1 })]),
+          punto("Aprobación, si procede, del presupuesto del ejercicio", "", [ac("Aprobar el presupuesto de 2026.", "unanimidad")]),
+          punto("Ruegos y preguntas", "", []),
+        ], ruegos: "" }),
+    ];
+    // Obligaciones: unas cuantas de las habituales, con alguna ya hecha.
+    var Ob = Demo.Obligaciones;
+    var elegir = ["303", "390", "111", "190", "asamblea", "cuentas", "seguro-rc", "web", "cargos"];
+    doc.obligaciones = Ob.PLANTILLAS.filter(function (p) { return elegir.indexOf(p.plantilla) >= 0; }).map(function (p, i) {
+      var o = Ob.desdePlantilla(p);
+      o.id = "demo-oblig-" + (i + 1); o.creado = t; o.modificado = t; o.desde = "2026-01-01";
+      if (p.plantilla === "seguro-rc") o.vencimientos = [{ mes: 3, dia: 5, etiqueta: "vencimiento de la póliza" }];
+      if (p.plantilla === "web") o.vencimientos = [{ mes: 6, dia: 10, etiqueta: "dominio" }];
+      if (p.plantilla === "cargos") o.fecha = "2028-03-16";
+      ["2026-01-20", "2026-01-30", "2026-01-31", "2026-04-20", "2026-07-20", "2026-03-05", "2026-03-31", "2026-06-30"].forEach(function (f) {
+        var toca = o.recurrencia === "anual" && o.vencimientos.some(function (x) { return Ob.fechaEn(2026, x.mes, x.dia) === f; });
+        if (toca) o.hechas[f] = { fecha: f, nota: "Hecho (demostración)" };
+      });
+      return o;
+    });
+    // La subvención del taller, en plena justificación; y otra que se está preparando.
+    doc.proyectos.forEach(function (p) {
+      if (p.id !== "demo-proyecto-1") return;
+      Object.assign(p, { estadoSubvencion: "concedida", importeSolicitado: 180000, plazoSolicitud: "2026-02-15", fechaSolicitud: "2026-02-10",
+        fechaResolucion: "2026-04-15", plazoJustificacion: "2027-01-31", fechaJustificacion: "", urlBases: "https://example.org/bases-subvencion",
+        requisitos: [{ id: "r1", texto: "Memoria técnica de las actividades", hecho: false }, { id: "r2", texto: "Relación de facturas y justificantes de pago", hecho: false },
+          { id: "r3", texto: "Fotografías y materiales de difusión con el logo del financiador", hecho: true }, { id: "r4", texto: "Certificado de estar al corriente con Hacienda", hecho: true }] });
+    });
+    doc.proyectos.push(reg({ id: "demo-proyecto-2", nombre: "Huerto escolar de ejemplo", tipo: "subvencion", financiador: "Fundación Ejemplo", referencia: "Convocatoria Naturaleza 2027",
+      importeConcedido: 0, fechaInicio: "2027-01-01", fechaFin: "2027-12-31", estado: "en curso", presupuesto: { material: 60000, actividades: 90000 }, notas: "",
+      estadoSubvencion: "preparando", importeSolicitado: 150000, plazoSolicitud: "2026-10-30", fechaSolicitud: "", fechaResolucion: "", plazoJustificacion: "", fechaJustificacion: "",
+      urlBases: "https://example.org/convocatoria-naturaleza", requisitos: [{ id: "q1", texto: "Proyecto y presupuesto", hecho: true }, { id: "q2", texto: "Estatutos y NIF", hecho: false }] }));
+    var bytes = archivosDemo();
+    doc.documentos = [
+      reg({ id: "demo-doc-estatutos", nombre: "Estatutos (ejemplo).txt", tipoMime: "text/plain", tamano: bytes["demo-doc-estatutos"].length, categoria: "Estatutos", fecha: "2015-03-21", descripcion: "Texto de demostración", vinculos: [] }),
+      reg({ id: "demo-doc-acta", nombre: "Acta JD-2026-02 firmada.txt", tipoMime: "text/plain", tamano: bytes["demo-doc-acta"].length, categoria: "Actas firmadas", fecha: "2026-04-09", descripcion: "",
+        vinculos: [{ tipo: "acta", id: "demo-acta-1" }] }),
+      reg({ id: "demo-doc-bases", nombre: "Bases subvención municipal 2026.txt", tipoMime: "text/plain", tamano: bytes["demo-doc-bases"].length, categoria: "Subvenciones", fecha: "2026-01-20", descripcion: "",
+        vinculos: [{ tipo: "proyecto", id: "demo-proyecto-1" }] }),
+    ];
   }
 
   /*
@@ -4306,7 +4881,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     doc.cuotas = cuotas;
   }
 
-  var Demo = { documentoDemo: documentoDemo, Cuotas: null, Actividades: null };
+  var Demo = { documentoDemo: documentoDemo, archivosDemo: archivosDemo, Cuotas: null, Actividades: null, Obligaciones: null };
   return Demo;
 });
 </script>
@@ -4333,6 +4908,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
   var BD = "webkit_asociaciones";
   var ALMACEN = "boveda";
+  var ARCHIVOS = "archivos";   // adjuntos cifrados: { id → { iv, ct } } (versión 2 de la base de datos)
   var CLAVE = "datos";
   var CLAVE_LS = "webkit_asociaciones_boveda";
 
@@ -4343,11 +4919,25 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     abierta = new Promise(function (resolver) {
       try {
         if (!raiz.indexedDB) return resolver(null);
-        var pet = raiz.indexedDB.open(BD, 1);
-        pet.onupgradeneeded = function () { pet.result.createObjectStore(ALMACEN); };
-        pet.onsuccess = function () { resolver(pet.result); };
+        var pet = raiz.indexedDB.open(BD, 2);
+        pet.onupgradeneeded = function () {
+          var bd = pet.result;
+          if (!bd.objectStoreNames.contains(ALMACEN)) bd.createObjectStore(ALMACEN);
+          if (!bd.objectStoreNames.contains(ARCHIVOS)) bd.createObjectStore(ARCHIVOS);
+        };
+        pet.onsuccess = function () {
+          var bd = pet.result;
+          // Si otra pestaña con una versión más nueva necesita actualizar la base, se le cede.
+          bd.onversionchange = function () { bd.close(); };
+          resolver(bd);
+        };
         pet.onerror = function () { resolver(null); };
-        pet.onblocked = function () { resolver(null); };
+        // Otra pestaña con la versión anterior tiene la base abierta: NO se da por
+        // perdida (los datos parecerían haber desaparecido); se espera a que la cierren.
+        pet.onblocked = function () {
+          var msg = "Hay otra pestaña con la aplicación abierta. Ciérrala para continuar (hay que actualizar el almacén de datos).";
+          if (raiz.WA && raiz.WA.UI) raiz.WA.UI.aviso(msg, "error"); else if (raiz.alert) raiz.alert(msg);
+        };
       } catch (e) {
         resolver(null);
       }
@@ -4355,12 +4945,12 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     return abierta;
   }
 
-  function operacion(modo, hacer) {
+  function operacion(modo, hacer, almacen) {
     return abrir().then(function (bd) {
       if (!bd) return { sinIndexedDB: true };
       return new Promise(function (resolver, rechazar) {
-        var tx = bd.transaction(ALMACEN, modo);
-        var pet = hacer(tx.objectStore(ALMACEN));
+        var tx = bd.transaction(almacen || ALMACEN, modo);
+        var pet = hacer(tx.objectStore(almacen || ALMACEN));
         var resultado;
         if (pet) pet.onsuccess = function () { resultado = pet.result; };
         tx.oncomplete = function () { resolver({ valor: resultado }); };
@@ -4414,7 +5004,37 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     return false;
   }
 
-  (raiz.WA = raiz.WA || {}).Boveda = { leer: leer, escribir: escribir, borrar: borrar, hayDatos: hayDatos, tipo: tipo, pedirPersistencia: pedirPersistencia };
+  // ── Archivos adjuntos (solo con IndexedDB: en localStorage no caben) ──────
+  async function exigirIndexedDB() {
+    if (!(await abrir())) throw new Error("Este navegador no permite guardar archivos abriendo la aplicación así. Prueba con otro navegador (Chrome, Edge, Firefox).");
+  }
+  async function leerArchivo(id) {
+    await exigirIndexedDB();
+    return (await operacion("readonly", function (s) { return s.get(id); }, ARCHIVOS)).valor || null;
+  }
+  async function escribirArchivo(id, registro) {
+    await exigirIndexedDB();
+    await operacion("readwrite", function (s) { return s.put(registro, id); }, ARCHIVOS);
+  }
+  async function borrarArchivo(id) {
+    if (!(await abrir())) return;
+    await operacion("readwrite", function (s) { return s.delete(id); }, ARCHIVOS);
+  }
+  async function borrarArchivos() {
+    if (!(await abrir())) return;
+    await operacion("readwrite", function (s) { return s.clear(); }, ARCHIVOS);
+  }
+
+  /** Espacio usado y disponible según el navegador (orientativo), en bytes. */
+  async function espacio() {
+    try {
+      if (navigator.storage && navigator.storage.estimate) return await navigator.storage.estimate();
+    } catch (e) { /* no soportado */ }
+    return null;
+  }
+
+  (raiz.WA = raiz.WA || {}).Boveda = { leer: leer, escribir: escribir, borrar: borrar, hayDatos: hayDatos, tipo: tipo, pedirPersistencia: pedirPersistencia,
+    leerArchivo: leerArchivo, escribirArchivo: escribirArchivo, borrarArchivo: borrarArchivo, borrarArchivos: borrarArchivos, espacio: espacio };
 })(typeof self !== "undefined" ? self : this);
 </script>
   <script>/* js/datos/sesion.js */
@@ -4457,13 +5077,31 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     return cola;
   }
 
+  /**
+   * Dónde van los bytes de los adjuntos: cifrados con la llave de la sesión en la
+   * bóveda del navegador. En la demostración, en memoria.
+   */
+  function archivosCifrados() {
+    return {
+      guardar: async function (id, bytes) { await WA.Boveda.escribirArchivo(id, await WA.Cripto.cifrarBytes(bytes, estado.llave)); },
+      leer: async function (id) {
+        var r = await WA.Boveda.leerArchivo(id);
+        return r ? WA.Cripto.descifrarBytes(r, estado.llave) : null;
+      },
+      borrar: function (id) { return WA.Boveda.borrarArchivo(id); },
+    };
+  }
+
   function abrirCon(doc, llave, modo) {
     estado.doc = doc;
     estado.llave = llave;
     estado.modo = modo;
-    estado.repo = WA.Repositorio.crearRepositorio(doc, modo === "abierta" ? persistir : null);
+    estado.repo = WA.Repositorio.crearRepositorio(doc, modo === "abierta" ? persistir : null, null,
+      modo === "abierta" ? archivosCifrados() : WA.Repositorio.archivosEnMemoria());
     avisar();
   }
+
+  var idsDocumentos = function (doc) { return (doc.documentos || []).map(function (d) { return d.id; }); };
 
   var Sesion = {
     get modo() { return estado.modo; },
@@ -4495,21 +5133,38 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
      * puede ser la misma). Sustituye lo que hubiera en el navegador.
      */
     restaurar: async function (lectura, contrasenaCopia, contrasenaNueva) {
-      var objeto;
-      if (lectura.cifrada) objeto = (await WA.Cripto.descifrar(lectura.bloque, contrasenaCopia)).objeto;
-      else objeto = lectura.documento;
+      var objeto, llaveCopia = null;
+      if (lectura.cifrada) {
+        var r = await WA.Cripto.descifrar(lectura.bloque, contrasenaCopia);
+        objeto = r.objeto; llaveCopia = r.llave;
+      } else objeto = lectura.documento;
       var doc = WA.Esquema.migrar(objeto);
       // Recién restaurada, la copia ES una copia de seguridad: no hay cambios pendientes.
       doc.meta.cambiosDesdeCopia = 0;
       var llave = await WA.Cripto.crearLlave(contrasenaNueva || contrasenaCopia);
+      // Los adjuntos: se descifran con la llave de la copia (o vienen en claro) y se
+      // vuelven a cifrar con la nueva. Primero todos en memoria: si alguno falla, no se toca nada.
+      var archivos = lectura.archivos || {}, listos = [];
+      for (var i = 0, ids = idsDocumentos(doc); i < ids.length; i++) {
+        var a = archivos[ids[i]];
+        if (!a) continue;
+        var bytes = lectura.cifrada ? await WA.Cripto.descifrarBytes(WA.Cripto.archivoDesdeBase64(a), llaveCopia) : WA.Cripto.desdeBase64(a.datos);
+        listos.push([ids[i], await WA.Cripto.cifrarBytes(bytes, llave)]);
+      }
+      var faltan = idsDocumentos(doc).length - listos.length;
+      await WA.Boveda.borrarArchivos();
+      for (var k = 0; k < listos.length; k++) await WA.Boveda.escribirArchivo(listos[k][0], listos[k][1]);
       abrirCon(doc, llave, "abierta");
       await persistir();
       WA.Boveda.pedirPersistencia();
+      return { archivos: listos.length, faltan: faltan };
     },
 
     /** Modo demostración: datos inventados que no se guardan en ningún sitio. */
     demostracion: function () {
       abrirCon(WA.Demo.documentoDemo(), null, "demostración");
+      // Los adjuntos de ejemplo, en memoria.
+      estado.repo = WA.Repositorio.crearRepositorio(estado.doc, null, null, WA.Repositorio.archivosEnMemoria(WA.Demo.archivosDemo()));
     },
 
     /** Bloquea: suelta datos y clave de la memoria. Lo guardado sigue cifrado. */
@@ -4523,6 +5178,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     borrarDelNavegador: async function () {
       await cola;
       await WA.Boveda.borrar();
+      await WA.Boveda.borrarArchivos();
     },
 
     /** Cambia la contraseña: vuelve a cifrar con una sal nueva. */
@@ -4530,7 +5186,16 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       if (estado.modo !== "abierta") throw new Error("No hay una sesión abierta.");
       var bloque = await WA.Boveda.leer();
       await WA.Cripto.descifrar(bloque, actual); // lanza si «actual» no es la buena
-      estado.llave = await WA.Cripto.crearLlave(nueva);
+      var vieja = estado.llave, nuevaLlave = await WA.Cripto.crearLlave(nueva);
+      // Los adjuntos se vuelven a cifrar con la llave nueva (todos en memoria antes de escribir).
+      var listos = [];
+      for (var i = 0, ids = idsDocumentos(estado.doc); i < ids.length; i++) {
+        var r = await WA.Boveda.leerArchivo(ids[i]);
+        if (r) listos.push([ids[i], await WA.Cripto.cifrarBytes(await WA.Cripto.descifrarBytes(r, vieja), nuevaLlave)]);
+      }
+      await cola;
+      for (var k = 0; k < listos.length; k++) await WA.Boveda.escribirArchivo(listos[k][0], listos[k][1]);
+      estado.llave = nuevaLlave;
       await persistir();
     },
 
@@ -4540,11 +5205,21 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
      */
     contenidoCopia: async function (cifrada) {
       var doc = await estado.repo.documento();
+      var archivos = {}, ids = idsDocumentos(doc), i;
       if (cifrada) {
         if (!estado.llave) throw new Error("En la demostración la copia no se puede cifrar.");
-        return WA.Copia.sobreCifrado(await WA.Cripto.cifrar(doc, estado.llave), doc.asociacion.nombre);
+        // Ya están cifrados con la misma llave que los datos: van tal cual, en base64.
+        for (i = 0; i < ids.length; i++) {
+          var r = await WA.Boveda.leerArchivo(ids[i]);
+          if (r) archivos[ids[i]] = WA.Cripto.archivoABase64(r);
+        }
+        return WA.Copia.sobreCifrado(await WA.Cripto.cifrar(doc, estado.llave), doc.asociacion.nombre, null, archivos);
       }
-      return WA.Copia.sobreAbierto(doc);
+      for (i = 0; i < ids.length; i++) {
+        var b = await estado.repo.leerArchivo(ids[i]);
+        if (b) archivos[ids[i]] = { datos: WA.Cripto.aBase64(b) };
+      }
+      return WA.Copia.sobreAbierto(doc, null, archivos);
     },
   };
 
@@ -4944,6 +5619,17 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var demo = WA.Sesion.modo === "demostración";
     var movimientos = await datos.listar("movimientos");
     var actividades = await datos.listar("actividades");
+    var documentos = await datos.listar("documentos");
+    var obligaciones = await datos.listar("obligaciones");
+    var hoyIso = WA.Fechas.hoy();
+    var venc = (await WA.ObligacionesUI.vencimientos(datos, (+hoyIso.slice(0, 4) - 1) + "-01-01", WA.Fechas.sumarDias(hoyIso, 60)))
+      .filter(function (v) { return v.estado === "vencida" || v.estado === "proxima"; }).slice(0, 6);
+    var vencHtml = venc.length ? '<section class="tarjeta' + (venc.some(function (v) { return v.estado === "vencida"; }) ? " tarjeta-alerta" : "") + '" aria-labelledby="t-venc"><h2 id="t-venc">Plazos que vencen</h2><ul class="lista-actividades">' +
+      venc.map(function (v) {
+        return '<li><a href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '"><strong>' + esc(v.titulo) + "</strong></a>" +
+          '<span class="detalle">' + esc(WA.Fechas.corta(v.fecha)) + (v.etiqueta ? " · " + esc(v.etiqueta) : "") + " · " +
+          (v.faltan < 0 ? '<span class="importe-negativo">venció hace ' + (-v.faltan) + " días</span>" : v.faltan === 0 ? "hoy" : "en " + v.faltan + " días") + "</span></li>";
+      }).join("") + '</ul><a class="enlace-flecha" href="#/obligaciones">Ver obligaciones</a></section>' : "";
     var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas, undefined, actividades).total;
     var proximas = WA.Actividades.ordenar(actividades).filter(function (x) { return WA.Actividades.fechaDe(x) >= WA.Fechas.hoy() && x.estado !== "cancelada"; }).slice(0, 3);
     var proximasHtml = '<section class="tarjeta" aria-labelledby="t-act"><h2 id="t-act">Próximas actividades</h2>' + (proximas.length ? '<ul class="lista-actividades">' + proximas.map(function (x) {
@@ -4959,6 +5645,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     if (!junta.length) pendientes.push('<a href="#/asociacion">Añade la junta directiva</a>');
     if (!(config.tiposSocio || []).some(function (t) { return t.cuota > 0; })) pendientes.push('<a href="#/cuotas/tipos">Pon el importe de la cuota de socio</a>');
     if (!socios.length) pendientes.push('<a href="#/socios">Da de alta a los socios (o impórtalos desde una hoja de cálculo)</a>');
+    if (!documentos.some(function (d) { return d.categoria === "Estatutos"; })) pendientes.push('<a href="#/documentos">Adjunta los estatutos</a>');
+    if (!obligaciones.length) pendientes.push('<a href="#/obligaciones">Elige las obligaciones (fiscales, asociativas, renovaciones) que queréis tener con aviso</a>');
     if (!demo && !copia.ultimaCopia) pendientes.push('<a href="#/copias">Descarga tu primera copia de seguridad</a>');
 
     var estadoCopia = demo ? "No aplica en la demostración."
@@ -4972,7 +5660,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
         pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
       '<div class="rejilla-tarjetas">' +
-      proximasHtml +
+      vencHtml + proximasHtml +
       '<section class="tarjeta" aria-labelledby="t-saldo"><h2 id="t-saldo">Saldo</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(saldo)) + "</span></p>" +
       (sinClasificar ? '<p class="detalle">' + sinClasificar + " movimientos sin clasificar</p>" : "") + '<a class="enlace-flecha" href="#/tesoreria">Ver tesorería</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
@@ -4982,7 +5670,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
       '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Actas, convocatorias, obligaciones, subvenciones e informes.</p></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Convocatorias de asamblea, memoria anual e informes.</p></section>' +
       "</div>";
   }
 
@@ -6048,10 +6736,10 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, T = WA.Tesoreria, Fac = WA.Facturas;
 
   async function cargar(datos) {
-    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion", "actividades"].map(function (k) {
+    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion", "actividades", "documentos"].map(function (k) {
       return k === "config" || k === "asociacion" ? datos.leer(k) : datos.listar(k);
     }));
-    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8], actividades: r[9] };
+    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8], actividades: r[9], documentos: r[10] };
   }
 
   var buscar = function (lista, id) { return (lista || []).filter(function (x) { return x.id === id; })[0]; };
@@ -6342,6 +7030,12 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var hoy = F.hoy();
     var anio = vista.anio || +hoy.slice(0, 4), mes = vista.mes || +hoy.slice(5, 7);
     var semanas = A.mes(c.actividades, anio, mes);
+    // Los vencimientos de obligaciones y subvenciones también aparecen en el calendario.
+    var primerDia = semanas[0][0].fecha, ultimoDia = semanas[semanas.length - 1][6].fecha;
+    var venc = WA.ObligacionesUI ? await WA.ObligacionesUI.vencimientos(datos, primerDia, ultimoDia) : [];
+    var vencPorDia = {};
+    venc.forEach(function (v) { (vencPorDia[v.fecha] = vencPorDia[v.fecha] || []).push(v); });
+    var vencMes = venc.filter(function (v) { return v.fecha.slice(0, 7) === anio + "-" + String(mes).padStart(2, "0"); });
     var delMes = A.ordenar(c.actividades).filter(function (a) { return A.fechaDe(a).slice(0, 7) === anio + "-" + String(mes).padStart(2, "0"); });
     var proximas = A.ordenar(c.actividades).filter(function (a) { return A.fechaDe(a) >= hoy && a.estado !== "cancelada"; }).slice(0, 5);
     cont.innerHTML =
@@ -6358,10 +7052,16 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
           return '<div role="gridcell" class="cal-dia' + (d.delMes ? "" : " fuera") + (d.fecha === hoy ? " hoy" : "") + '"><span class="cal-num">' + +d.fecha.slice(8) + "</span>" +
             d.actividades.map(function (a) {
               return '<a class="cal-act ' + a.estado + '" href="#/actividades/ficha/' + encodeURIComponent(a.id) + '">' + (a.todoElDia ? "" : "<b>" + esc(hora(a.inicio)) + "</b> ") + esc(a.titulo) + "</a>";
+            }).join("") + (vencPorDia[d.fecha] || []).map(function (v) {
+              return '<a class="cal-act cal-oblig ' + v.estado + '" href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '" title="' + esc(v.titulo + (v.etiqueta ? " · " + v.etiqueta : "")) + '">⚑ ' + esc(v.titulo) + "</a>";
             }).join("") + "</div>";
         }).join("") + "</div>";
       }).join("") + "</div>" +
-      '<section class="tarjeta" aria-labelledby="t-mes"><h2 id="t-mes">Este mes</h2>' + listaCompacta(delMes, "No hay actividades este mes.") + "</section>" +
+      '<section class="tarjeta" aria-labelledby="t-mes"><h2 id="t-mes">Este mes</h2>' + listaCompacta(delMes, "No hay actividades este mes.") +
+      (vencMes.length ? '<h3>Plazos y obligaciones</h3><ul class="lista-actividades">' + vencMes.map(function (v) {
+        return '<li><a href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '"><strong>⚑ ' + esc(v.titulo) + "</strong></a>" +
+          '<span class="detalle">' + esc(F.corta(v.fecha)) + (v.etiqueta ? " · " + esc(v.etiqueta) : "") + (v.estado === "hecha" ? " · hecha" : "") + "</span></li>";
+      }).join("") + "</ul>" : "") + "</section>" +
       '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximas</h2>' + listaCompacta(proximas, "No hay actividades previstas.") + "</section>";
     cont.querySelectorAll("[data-mes]").forEach(function (b) {
       b.addEventListener("click", function () {
@@ -7886,6 +8586,39 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     return { res: res, ej: T.ejecucion(p.presupuesto || {}, res, c.config.categorias) };
   }
 
+  var estadoSub = function (e) { return (WA.Obligaciones.ESTADOS_SUBVENCION.filter(function (x) { return x[0] === (e || "idea"); })[0] || ["", ""])[1]; };
+  /** El plazo que le toca ahora a una subvención (según su estado), o null. */
+  function proximoPlazo(p) {
+    return WA.Obligaciones.ocurrenciasSubvenciones([p], "1900-01-01", "2999-12-31")[0] || null;
+  }
+
+  /** Seguimiento de una subvención: estado, plazos, importes y requisitos. */
+  function seccionSubvencion(p, cobrado) {
+    var req = p.requisitos || [];
+    var prog = WA.Obligaciones.progresoRequisitos(p);
+    return '<form id="pr-sub" class="formulario tarjeta" novalidate><h2>Seguimiento de la subvención</h2><div class="rejilla">' +
+      UI.campo({ nombre: "estadoSubvencion", etiqueta: "Estado", tipo: "select", valor: p.estadoSubvencion || "idea", opciones: WA.Obligaciones.ESTADOS_SUBVENCION }) +
+      UI.campo({ nombre: "importeSolicitado", etiqueta: "Importe solicitado (€)", valor: p.importeSolicitado ? D.formatear(p.importeSolicitado, { simbolo: false }) : "", atributos: 'inputmode="decimal"' }) +
+      UI.campo({ nombre: "plazoSolicitud", etiqueta: "Fin del plazo de solicitud", tipo: "date", valor: p.plazoSolicitud }) +
+      UI.campo({ nombre: "fechaSolicitud", etiqueta: "Fecha en que se solicitó", tipo: "date", valor: p.fechaSolicitud }) +
+      UI.campo({ nombre: "fechaResolucion", etiqueta: "Fecha de la resolución", tipo: "date", valor: p.fechaResolucion }) +
+      UI.campo({ nombre: "plazoJustificacion", etiqueta: "Fin del plazo de justificación", tipo: "date", valor: p.plazoJustificacion }) +
+      UI.campo({ nombre: "fechaJustificacion", etiqueta: "Fecha en que se justificó", tipo: "date", valor: p.fechaJustificacion }) +
+      UI.campo({ nombre: "urlBases", etiqueta: "Enlace a las bases o la convocatoria", tipo: "url", valor: p.urlBases, ancho: "completo" }) +
+      "</div>" +
+      '<p class="detalle">Concedido ' + esc(D.formatear(p.importeConcedido || 0)) + " · cobrado " + esc(D.formatear(cobrado)) +
+      (p.importeConcedido ? " · pendiente de cobrar " + esc(D.formatear(Math.max((p.importeConcedido || 0) - cobrado, 0))) : "") + "</p>" +
+      "<h3>Documentación y requisitos " + (prog.total ? '<span class="detalle">(' + prog.hechos + " de " + prog.total + ")</span>" : "") + "</h3>" +
+      '<ul class="lista-editable" id="pr-req">' + req.map(function (r, i) {
+        return '<li><label class="casilla en-linea"><input type="checkbox" name="req-' + i + '"' + (r.hecho ? " checked" : "") + "><span>" + esc(r.texto) + "</span></label>" +
+          '<button type="button" class="btn btn-pequeno btn-peligro-suave" data-quitar-req="' + i + '">Quitar</button></li>';
+      }).join("") + "</ul>" +
+      '<div class="fila-anadir"><label class="sr" for="pr-req-nuevo">Nuevo requisito</label><input id="pr-req-nuevo" placeholder="Por ejemplo: memoria técnica, certificado de estar al corriente…">' +
+      '<button type="button" class="btn btn-secundario btn-pequeno" id="pr-req-anadir">Añadir</button></div>' +
+      '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar seguimiento</button></div>' +
+      U.ayuda("Los plazos de solicitud y de justificación aparecen en Obligaciones con aviso. Qué hay que presentar y cuándo lo dicen las bases de la convocatoria.") + "</form>";
+  }
+
   async function pintarLista(cont, datos) {
     var c = await U.cargar(datos);
     cont.innerHTML =
@@ -7897,7 +8630,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
           var x = ejecucionProyecto(c, p);
           var pct = x.ej.gastos.previsto > 0 ? Math.round(x.ej.gastos.realizado / x.ej.gastos.previsto * 1000) / 10 : null;
           return '<tr><th scope="row"><a href="#/proyectos/ficha/' + encodeURIComponent(p.id) + '">' + esc(p.nombre) + "</a><br><span class=\"detalle\">" +
-            (p.tipo === "subvencion" ? "Subvención" : "Proyecto") + (p.financiador ? " · " + esc(p.financiador) : "") + (p.estado === "cerrado" ? " · Cerrado" : "") + "</span></th>" +
+            (p.tipo === "subvencion" ? "Subvención · " + esc(estadoSub(p.estadoSubvencion)) : "Proyecto") + (p.financiador ? " · " + esc(p.financiador) : "") + (p.estado === "cerrado" ? " · Cerrado" : "") + "</span>" +
+            (proximoPlazo(p) ? '<br><span class="estado ' + (proximoPlazo(p).estado === "vencida" ? "estado-error" : "estado-aviso") + '">' + esc(proximoPlazo(p).etiqueta) + ": " + esc(F.corta(proximoPlazo(p).fecha)) + "</span>" : "") + "</th>" +
             "<td>" + esc(F.corta(p.fechaInicio)) + (p.fechaFin ? " – " + esc(F.corta(p.fechaFin)) : "") + "</td>" +
             '<td class="importe">' + (p.importeConcedido ? esc(D.formatear(p.importeConcedido)) : "—") + '</td><td class="importe">' + esc(D.formatear(x.ej.gastos.previsto)) + "</td>" +
             '<td class="importe">' + esc(D.formatear(x.ej.gastos.realizado)) + "</td><td>" + (pct === null ? "—" : pct + " %" + barra(pct)) + "</td></tr>";
@@ -7932,6 +8666,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       UI.campo({ nombre: "estado", etiqueta: "Estado", tipo: "select", valor: p.estado, opciones: [["en curso", "En curso"], ["cerrado", "Cerrado"]] }) +
       UI.campo({ nombre: "notas", etiqueta: "Notas", tipo: "textarea", valor: p.notas, ancho: "completo" }) +
       '</div><div class="acciones"><button type="submit" class="btn btn-primario">Guardar datos</button><button type="button" class="btn btn-peligro-suave" id="pr-borrar">Borrar proyecto</button></div></form>' +
+      (p.tipo === "subvencion" ? seccionSubvencion(p, x.res.ingresos.subvenciones || 0) : "") +
       '<section class="tarjeta"><h2>Presupuesto y ejecución</h2><form id="pr-presu" novalidate>' + tablaEjecucion(ej, true) +
       '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar presupuesto</button></div></form>' +
       (p.importeConcedido ? '<p class="detalle">Concedido ' + esc(D.formatear(p.importeConcedido)) + " · cobrado de la subvención: " + esc(D.formatear(x.res.ingresos.subvenciones || 0)) + "</p>" : "") +
@@ -7942,7 +8677,42 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
         }).join("") + gastosAnt.map(function (x2) {
           return "<tr><td>" + esc(F.corta(x2.g.fecha)) + "</td><td>" + esc(x2.g.concepto) + ' <a class="etiqueta" href="#/tesoreria/anticipo/' + encodeURIComponent(x2.a.id) + '">' + (x2.a.tipo === "anticipo" ? "Anticipo" : "Reembolso") +
             "</a></td><td>" + esc(U.nombreCategoria(c, x2.g.categoriaId)) + '</td><td class="importe">' + U.importeHtml(-x2.g.importe) + "</td></tr>";
-        }).join("") + "</tbody></table></div>" : '<p class="vacio">Todavía no hay movimientos con este proyecto.</p>') + "</section>";
+        }).join("") + "</tbody></table></div>" : '<p class="vacio">Todavía no hay movimientos con este proyecto.</p>') + "</section>" +
+      WA.DocsUI.seccion(c.documentos || [], { tipo: "proyecto", id: p.id }, "Documentos (bases, solicitud, resolución, justificación…)");
+    WA.DocsUI.conectarSeccion(cont, datos, { tipo: "proyecto", id: p.id }, "Subvenciones");
+
+    var fSub = cont.querySelector("#pr-sub");
+    if (fSub) {
+      var leerSub = function () {
+        var d = UI.leerFormulario(fSub);
+        (p.requisitos || []).forEach(function (r, i) { r.hecho = !!d["req-" + i]; });
+        Object.assign(p, { estadoSubvencion: d.estadoSubvencion, importeSolicitado: D.desdeTexto(d.importeSolicitado || "0") || 0, plazoSolicitud: d.plazoSolicitud,
+          fechaSolicitud: d.fechaSolicitud, fechaResolucion: d.fechaResolucion, plazoJustificacion: d.plazoJustificacion, fechaJustificacion: d.fechaJustificacion, urlBases: d.urlBases });
+      };
+      fSub.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        leerSub();
+        await datos.guardar("proyectos", p);
+        UI.aviso("Seguimiento guardado.");
+        WA.App.repintar();
+      });
+      cont.querySelector("#pr-req-anadir").addEventListener("click", async function () {
+        var t = cont.querySelector("#pr-req-nuevo").value.trim();
+        if (!t) return;
+        leerSub();
+        p.requisitos = (p.requisitos || []).concat([{ id: WA.Esquema.nuevoId(), texto: t, hecho: false }]);
+        await datos.guardar("proyectos", p);
+        WA.App.repintar();
+      });
+      cont.querySelector("#pr-req").addEventListener("click", async function (e) {
+        var b = e.target.closest("[data-quitar-req]");
+        if (!b) return;
+        leerSub();
+        p.requisitos.splice(+b.getAttribute("data-quitar-req"), 1);
+        await datos.guardar("proyectos", p);
+        WA.App.repintar();
+      });
+    }
 
     cont.querySelector("#pr-datos").addEventListener("submit", async function (e) {
       e.preventDefault();
@@ -7977,6 +8747,816 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   WA.App.registrar({
     id: "proyectos", titulo: "Presupuestos", orden: 36, pintar: pintar,
     icono: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M2.5 20h19"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/actas.js */
+/*
+ * webkit_asociaciones — Módulo «Actas»: libro de actas de cada órgano.
+ *
+ *   #/actas                     actas, por órgano y año
+ *   #/actas/nueva/<organoId>    nueva acta con la plantilla del órgano
+ *   #/actas/ficha/<id>          editar: datos, asistentes, orden del día, acuerdos
+ *   #/actas/imprimir/<id>       versión para firmar (imprimir o PDF)
+ *   #/actas/acuerdos            libro de acuerdos (todos, con buscador)
+ *   #/actas/organos             órganos que levantan actas y numeración
+ *
+ * La lógica está en logica/actas.js (con tests). Contenido, firma y aprobación
+ * de las actas según vuestros estatutos: verificar con asesoría.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, Ac = WA.Actas, S = WA.Socios;
+
+  var filtro = { organo: "", anio: "", texto: "" };
+
+  function pestanas(actual) {
+    var p = [["", "Actas"], ["acuerdos", "Libro de acuerdos"], ["organos", "Órganos"]];
+    return '<nav class="pestanas" aria-label="Apartados de actas">' + p.map(function (x) {
+      return '<a href="#/actas' + (x[0] ? "/" + x[0] : "") + '"' + (actual === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>";
+    }).join("") + "</nav>";
+  }
+  async function cargar(datos) {
+    var r = await Promise.all([datos.leer("config"), datos.listar("actas"), datos.listar("junta"), datos.listar("socios"), datos.leer("asociacion"), datos.listar("documentos")]);
+    return { config: r[0], actas: r[1], junta: r[2], socios: r[3].map(S.completar), asociacion: r[4], documentos: r[5] };
+  }
+  var organoDe = function (c, id) { return (c.config.organos || []).filter(function (o) { return o.id === id; })[0] || { id: id, nombre: "(órgano borrado)", prefijo: "ACTA", tipo: "otro" }; };
+
+  // ── Lista ───────────────────────────────────────────────────────────────
+  async function pintarLista(cont, datos) {
+    var c = await cargar(datos);
+    var anios = {};
+    c.actas.forEach(function (a) { if (a.fecha) anios[a.fecha.slice(0, 4)] = true; });
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Actas</h1><div class="acciones-cabecera"><label class="sr" for="n-organo">Órgano de la nueva acta</label>' +
+      '<select id="n-organo" class="select-pequeno">' + c.config.organos.map(function (o) { return '<option value="' + esc(o.id) + '">' + esc(o.nombre) + "</option>"; }).join("") + "</select>" +
+      '<button type="button" class="btn btn-primario" id="n-crear">Nueva acta</button></div></div>' + pestanas("") +
+      '<div class="barra-filtros"><label><span class="sr">Órgano</span><select id="f-organo"><option value="">Todos los órganos</option>' +
+      c.config.organos.map(function (o) { return '<option value="' + esc(o.id) + '"' + (filtro.organo === o.id ? " selected" : "") + ">" + esc(o.nombre) + "</option>"; }).join("") + "</select></label>" +
+      '<label><span class="sr">Año</span><select id="f-anio"><option value="">Todos los años</option>' + Object.keys(anios).sort().reverse().map(function (a) {
+        return '<option value="' + a + '"' + (filtro.anio === a ? " selected" : "") + ">" + a + "</option>";
+      }).join("") + "</select></label>" +
+      '<label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="f-texto" placeholder="Buscar en el orden del día y los acuerdos…" value="' + esc(filtro.texto) + '"></label></div>' +
+      '<div id="f-tabla"></div>';
+    function refrescar() {
+      var t = filtro.texto.trim().toLowerCase();
+      var lista = c.actas.filter(function (a) {
+        if (filtro.organo && a.organoId !== filtro.organo) return false;
+        if (filtro.anio && String(a.fecha).slice(0, 4) !== filtro.anio) return false;
+        if (!t) return true;
+        return JSON.stringify([a.numero, a.lugar, a.ordenDelDia, a.ruegos]).toLowerCase().indexOf(t) >= 0;
+      }).sort(function (x, y) { return String(y.fecha).localeCompare(String(x.fecha)); });
+      cont.querySelector("#f-tabla").innerHTML = !lista.length ? '<p class="vacio">No hay actas.</p>' :
+        '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Actas</caption><thead><tr><th scope="col">Número</th><th scope="col">Fecha</th><th scope="col">Órgano</th>' +
+        '<th scope="col" class="solo-ancho">Acuerdos</th><th scope="col">Estado</th></tr></thead><tbody>' + lista.map(function (a) {
+          var n = (a.ordenDelDia || []).reduce(function (s, p) { return s + (p.acuerdos || []).filter(function (x) { return String(x.texto || "").trim(); }).length; }, 0);
+          return '<tr><th scope="row"><a href="#/actas/ficha/' + encodeURIComponent(a.id) + '">' + esc(a.numero || "(sin número)") + "</a></th><td>" + esc(F.corta(a.fecha)) + "</td>" +
+            "<td>" + esc(organoDe(c, a.organoId).nombre) + (a.tipoSesion === "extraordinaria" ? ' <span class="etiqueta">Extraordinaria</span>' : "") + "</td>" +
+            '<td class="solo-ancho">' + n + "</td><td>" + (a.estado === "aprobada" ? '<span class="estado estado-ok">Aprobada</span>' : '<span class="estado estado-aviso">Borrador</span>') + "</td></tr>";
+        }).join("") + "</tbody></table></div>";
+    }
+    refrescar();
+    cont.querySelector("#f-organo").addEventListener("change", function (e) { filtro.organo = e.target.value; refrescar(); });
+    cont.querySelector("#f-anio").addEventListener("change", function (e) { filtro.anio = e.target.value; refrescar(); });
+    cont.querySelector("#f-texto").addEventListener("input", function (e) { filtro.texto = e.target.value; refrescar(); });
+    cont.querySelector("#n-crear").addEventListener("click", function () { location.hash = "#/actas/nueva/" + encodeURIComponent(cont.querySelector("#n-organo").value); });
+  }
+
+  // ── Editor ──────────────────────────────────────────────────────────────
+  var opcion = function (v, t, actual) { return '<option value="' + esc(v) + '"' + (String(actual) === String(v) ? " selected" : "") + ">" + esc(t) + "</option>"; };
+
+  function htmlPuntos(a) {
+    return a.ordenDelDia.map(function (p, i) {
+      var pre = "p-" + i + "-";
+      return '<li class="punto" data-punto="' + i + '"><div class="punto-cabecera"><span class="punto-num">' + (i + 1) + ".</span>" +
+        '<label class="sr" for="' + pre + 'titulo">Título del punto ' + (i + 1) + '</label><input id="' + pre + 'titulo" name="' + pre + 'titulo" value="' + esc(p.titulo) + '" placeholder="Asunto">' +
+        '<span class="punto-botones"><button type="button" class="btn-icono" data-subir="' + i + '" aria-label="Subir el punto ' + (i + 1) + '"' + (i === 0 ? " disabled" : "") + ">↑</button>" +
+        '<button type="button" class="btn-icono" data-bajar="' + i + '" aria-label="Bajar el punto ' + (i + 1) + '"' + (i === a.ordenDelDia.length - 1 ? " disabled" : "") + ">↓</button>" +
+        '<button type="button" class="btn-icono" data-quitar-punto="' + i + '" aria-label="Quitar el punto ' + (i + 1) + '">✕</button></span></div>' +
+        '<label class="sr" for="' + pre + 'desarrollo">Desarrollo del punto ' + (i + 1) + '</label><textarea id="' + pre + 'desarrollo" name="' + pre + 'desarrollo" rows="3" placeholder="Qué se habló (resumen de las intervenciones)">' + esc(p.desarrollo) + "</textarea>" +
+        '<ol class="acuerdos">' + (p.acuerdos || []).map(function (ac, k) {
+          var q = pre + "a-" + k + "-";
+          return '<li class="acuerdo"><label for="' + q + 'texto">Acuerdo ' + (i + 1) + "." + (k + 1) + '</label><textarea id="' + q + 'texto" name="' + q + 'texto" rows="2">' + esc(ac.texto) + "</textarea>" +
+            '<div class="acuerdo-votacion"><label>Votación <select name="' + q + 'votacion" class="select-pequeno">' + opcion("", "—", ac.votacion) + opcion("unanimidad", "Unanimidad", ac.votacion) +
+            opcion("asentimiento", "Asentimiento", ac.votacion) + opcion("votacion", "Votación con recuento", ac.votacion) + "</select></label>" +
+            '<span class="votos"' + (ac.votacion === "votacion" ? "" : " hidden") + '><label>A favor <input name="' + q + 'favor" type="number" min="0" value="' + esc(ac.favor || "") + '" class="input-corto"></label>' +
+            '<label>En contra <input name="' + q + 'contra" type="number" min="0" value="' + esc(ac.contra || "") + '" class="input-corto"></label>' +
+            '<label>Abstenciones <input name="' + q + 'abstencion" type="number" min="0" value="' + esc(ac.abstencion || "") + '" class="input-corto"></label></span>' +
+            '<label>Resultado <select name="' + q + 'resultado" class="select-pequeno">' + opcion("", "—", ac.resultado) + opcion("aprobado", "Aprobado", ac.resultado) + opcion("rechazado", "Rechazado", ac.resultado) + "</select></label>" +
+            '<button type="button" class="btn btn-pequeno btn-peligro-suave" data-quitar-acuerdo="' + i + "-" + k + '">Quitar acuerdo</button></div></li>';
+        }).join("") + "</ol>" +
+        '<button type="button" class="btn btn-pequeno btn-secundario" data-acuerdo="' + i + '">Añadir acuerdo</button></li>';
+    }).join("");
+  }
+
+  /** Vuelca el formulario en el acta (también los puntos y acuerdos). */
+  function leer(form, a) {
+    var d = UI.leerFormulario(form);
+    ["organoId", "tipoSesion", "fecha", "horaInicio", "horaFin", "lugar", "modalidad", "convocatoria", "presidencia", "secretaria", "excusan", "invitados", "ruegos", "estado", "aprobacion", "notas"]
+      .forEach(function (k) { if (k in d) a[k] = d[k]; });
+    a.ordenDelDia = a.ordenDelDia.map(function (p, i) {
+      var pre = "p-" + i + "-";
+      return { id: p.id, titulo: d[pre + "titulo"] || "", desarrollo: d[pre + "desarrollo"] || "", acuerdos: (p.acuerdos || []).map(function (ac, k) {
+        var q = pre + "a-" + k + "-", num = function (x) { var n = parseInt(d[q + x], 10); return isFinite(n) && n >= 0 ? n : 0; };
+        return { id: ac.id, texto: d[q + "texto"] || "", votacion: d[q + "votacion"] || "", resultado: d[q + "resultado"] || "",
+          favor: num("favor"), contra: num("contra"), abstencion: num("abstencion") };
+      }) };
+    });
+    return a;
+  }
+
+  function htmlAsistentes(a) {
+    if (!a.asistentes.length) return '<p class="vacio">Sin asistentes anotados.</p>';
+    return '<ul class="chips">' + a.asistentes.map(function (x, i) {
+      return '<li class="chip">' + esc(x.nombre) + (x.cargo ? ' <span class="detalle">(' + esc(x.cargo) + ")</span>" : "") +
+        '<button type="button" class="btn-icono" data-quitar-asistente="' + i + '" aria-label="Quitar a ' + esc(x.nombre) + '">✕</button></li>';
+    }).join("") + "</ul>";
+  }
+
+  async function elegirAsistentes(c, a) {
+    var hoy = F.hoy();
+    var junta = c.junta.filter(function (j) { return !j.hasta || j.hasta >= hoy; });
+    var socios = c.socios.filter(function (s) { return S.estado(s) === "activo"; }).sort(function (x, y) { return S.nombreListado(x).localeCompare(S.nombreListado(y), "es"); });
+    var ya = {};
+    a.asistentes.forEach(function (x) { ya[x.socioId || x.nombre] = true; });
+    var cargoDe = function (j) { return j.cargo === "Otro" && j.cargoOtro ? j.cargoOtro : j.cargo; };
+    var r = await UI.dialogo({
+      titulo: "Añadir asistentes",
+      contenido: '<form class="formulario" novalidate>' +
+        (junta.length ? "<h3>Junta directiva</h3>" + junta.map(function (j, i) {
+          return '<label class="casilla"><input type="checkbox" name="j-' + i + '"' + (ya[j.nombre] ? " checked disabled" : "") + "><span>" + esc(j.nombre) + ' <span class="detalle">(' + esc(cargoDe(j)) + ")</span></span></label>";
+        }).join("") : "") +
+        '<h3>Socios</h3><label class="sr" for="as-buscar">Buscar socio</label><input type="search" id="as-buscar" placeholder="Buscar socio…">' +
+        '<div class="lista-marcable">' + socios.map(function (s) {
+          return '<label class="casilla" data-nombre="' + esc(S.nombreCompleto(s).toLowerCase()) + '"><input type="checkbox" name="s-' + esc(s.id) + '"' + (ya[s.id] ? " checked disabled" : "") + "><span>" +
+            esc(S.nombreListado(s)) + ' <span class="detalle">n.º ' + esc(s.numero) + "</span></span></label>";
+        }).join("") + "</div>" +
+        UI.campo({ nombre: "otros", etiqueta: "Otras personas (una por línea)", tipo: "textarea", valor: "", ancho: "completo" }) + "</form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Añadir", valor: "enviar", estilo: "btn-primario" }],
+      alAbrir: function (d) {
+        d.querySelector("#as-buscar").addEventListener("input", function (e) {
+          var t = e.target.value.trim().toLowerCase();
+          d.querySelectorAll(".lista-marcable .casilla").forEach(function (x) { x.hidden = t && x.getAttribute("data-nombre").indexOf(t) < 0; });
+        });
+      },
+    });
+    if (r.valor !== "enviar") return false;
+    junta.forEach(function (j, i) { if (r.datos["j-" + i] && !ya[j.nombre]) a.asistentes.push({ nombre: j.nombre, socioId: "", cargo: cargoDe(j) }); });
+    socios.forEach(function (s) {
+      if (r.datos["s-" + s.id] && !ya[s.id] && !a.asistentes.some(function (x) { return x.nombre === S.nombreCompleto(s); })) a.asistentes.push({ nombre: S.nombreCompleto(s), socioId: s.id, cargo: "" });
+    });
+    String(r.datos.otros || "").split("\n").map(function (x) { return x.trim(); }).filter(Boolean).forEach(function (n) { a.asistentes.push({ nombre: n, socioId: "", cargo: "" }); });
+    return true;
+  }
+
+  async function pintarFicha(cont, datos, id, organoNuevo) {
+    var c = await cargar(datos);
+    var a;
+    if (id) a = c.actas.filter(function (x) { return x.id === id; })[0];
+    else {
+      var org = organoDe(c, organoNuevo || (c.config.organos[0] || {}).id);
+      a = Ac.vacia(org);
+      // Presidencia y secretaría vigentes, para empezar.
+      var hoy = F.hoy();
+      c.junta.forEach(function (j) {
+        if (j.hasta && j.hasta < hoy) return;
+        if (j.cargo === "Presidencia" && !a.presidencia) a.presidencia = j.nombre;
+        if (j.cargo === "Secretaría" && !a.secretaria) a.secretaria = j.nombre;
+      });
+    }
+    if (!a) { cont.innerHTML = '<h1>Acta no encontrada</h1><p><a href="#/actas">Volver</a></p>'; return; }
+    a.asistentes = a.asistentes || []; a.ordenDelDia = a.ordenDelDia || [];
+    var nueva = !a.id;
+    var personas = c.junta.filter(function (j) { return !j.hasta || j.hasta >= F.hoy(); }).map(function (j) { return j.nombre; });
+
+    cont.innerHTML =
+      '<p class="miga"><a href="#/actas">Actas</a> › ' + esc(a.numero || "Nueva") + "</p>" +
+      '<div class="cabecera-pagina"><h1>' + (a.numero ? "Acta " + esc(a.numero) : "Nueva acta") + "</h1>" +
+      (nueva ? "" : a.estado === "aprobada" ? '<span class="estado estado-ok">Aprobada</span>' : '<span class="estado estado-aviso">Borrador</span>') + "</div>" +
+      '<form id="acta" class="formulario" novalidate>' +
+      '<section class="tarjeta"><h2>Sesión</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "organoId", etiqueta: "Órgano", tipo: "select", valor: a.organoId, opciones: c.config.organos.map(function (o) { return [o.id, o.nombre]; }), clase: "col-4 col-movil-completo",
+        atributos: nueva ? "" : "disabled" }) +
+      UI.campo({ nombre: "tipoSesion", etiqueta: "Sesión", tipo: "select", valor: a.tipoSesion, opciones: [["ordinaria", "Ordinaria"], ["extraordinaria", "Extraordinaria"]], clase: "col-4" }) +
+      UI.campo({ nombre: "convocatoria", etiqueta: "Convocatoria", tipo: "select", valor: a.convocatoria, opciones: [["", "—"], ["primera", "Primera"], ["segunda", "Segunda"]], clase: "col-4" }) +
+      UI.campo({ nombre: "fecha", etiqueta: "Fecha", tipo: "date", valor: a.fecha, requerido: true, clase: "col-4" }) +
+      UI.campo({ nombre: "horaInicio", etiqueta: "Empieza", tipo: "time", valor: a.horaInicio, clase: "col-4" }) +
+      UI.campo({ nombre: "horaFin", etiqueta: "Termina", tipo: "time", valor: a.horaFin, clase: "col-4" }) +
+      UI.campo({ nombre: "lugar", etiqueta: "Lugar", valor: a.lugar, clase: "col-8 col-movil-completo" }) +
+      UI.campo({ nombre: "modalidad", etiqueta: "Modalidad", tipo: "select", valor: a.modalidad, opciones: [["presencial", "Presencial"], ["en línea", "En línea"], ["mixta", "Mixta"]], clase: "col-4" }) +
+      UI.campo({ nombre: "presidencia", etiqueta: "Preside", valor: a.presidencia, lista: personas, clase: "col-6 col-movil-completo" }) +
+      UI.campo({ nombre: "secretaria", etiqueta: "Secretario/a", valor: a.secretaria, lista: personas, clase: "col-6 col-movil-completo" }) +
+      "</div></section>" +
+      '<section class="tarjeta"><div class="tarjeta-cabecera"><h2>Asistentes <span class="detalle" id="n-asist">(' + a.asistentes.length + ')</span></h2>' +
+      '<button type="button" class="btn btn-secundario" id="b-asist">Añadir asistentes</button></div><div id="asistentes">' + htmlAsistentes(a) + "</div>" +
+      '<div class="rejilla">' + UI.campo({ nombre: "excusan", etiqueta: "Excusan su asistencia", valor: a.excusan }) + UI.campo({ nombre: "invitados", etiqueta: "Invitados (sin voto)", valor: a.invitados }) + "</div></section>" +
+      '<section class="tarjeta"><h2>Orden del día, desarrollo y acuerdos</h2><ol class="puntos" id="puntos">' + htmlPuntos(a) + "</ol>" +
+      '<button type="button" class="btn btn-secundario" id="b-punto">Añadir punto</button>' +
+      UI.campo({ nombre: "ruegos", etiqueta: "Ruegos y preguntas", tipo: "textarea", valor: a.ruegos, ancho: "completo" }) +
+      '<p class="letra-pequena">El contenido de las actas, quién las firma y qué mayorías hacen falta para cada acuerdo los marcan vuestros estatutos (verificar con asesoría). La aplicación solo anota el resultado.</p></section>' +
+      '<section class="tarjeta"><h2>Aprobación</h2><div class="rejilla">' +
+      UI.campo({ nombre: "estado", etiqueta: "Estado", tipo: "select", valor: a.estado, opciones: [["borrador", "Borrador"], ["aprobada", "Aprobada"]] }) +
+      UI.campo({ nombre: "aprobacion", etiqueta: "Aprobada en", valor: a.aprobacion, ayuda: "Por ejemplo: «en la reunión siguiente, acta JD-2026-05»." }) +
+      UI.campo({ nombre: "notas", etiqueta: "Notas internas", valor: a.notas, ancho: "completo" }) + "</div></section>" +
+      '<div class="acciones barra-guardar"><button type="submit" class="btn btn-primario">Guardar acta</button>' +
+      (nueva ? "" : '<a class="btn btn-secundario" href="#/actas/imprimir/' + encodeURIComponent(a.id) + '">Imprimir para firmar</a><button type="button" class="btn btn-secundario" id="b-copiar">Copiar texto</button>') +
+      "</div></form>" +
+      (nueva ? "" : WA.DocsUI.seccion(c.documentos, { tipo: "acta", id: a.id }, "Acta firmada y anexos")) +
+      (nueva || a.estado === "aprobada" ? "" : '<div class="acciones"><button type="button" class="btn btn-peligro-suave" id="b-borrar">Borrar borrador</button></div>');
+
+    var form = cont.querySelector("#acta");
+    var lista = cont.querySelector("#puntos");
+    var repintarPuntos = function () { lista.innerHTML = htmlPuntos(a); };
+    // Cambiar de órgano en un acta nueva: se carga su plantilla (si no se ha escrito nada aún).
+    form.elements.organoId.addEventListener("change", function () {
+      leer(form, a);
+      var vacio = a.ordenDelDia.every(function (p) { return !p.desarrollo && !(p.acuerdos || []).length; });
+      if (vacio) { a.ordenDelDia = Ac.plantilla(organoDe(c, form.elements.organoId.value), a.tipoSesion); repintarPuntos(); }
+    });
+    form.elements.tipoSesion.addEventListener("change", function () {
+      leer(form, a);
+      var vacio = a.ordenDelDia.every(function (p) { return !p.desarrollo && !(p.acuerdos || []).length; });
+      if (nueva && vacio) { a.ordenDelDia = Ac.plantilla(organoDe(c, a.organoId), a.tipoSesion); repintarPuntos(); }
+    });
+    lista.addEventListener("change", function (e) {
+      if (/votacion$/.test(e.target.name)) e.target.closest(".acuerdo-votacion").querySelector(".votos").hidden = e.target.value !== "votacion";
+    });
+    lista.addEventListener("click", function (e) {
+      var b = e.target.closest("button");
+      if (!b) return;
+      leer(form, a);
+      var i;
+      if (b.hasAttribute("data-acuerdo")) { i = +b.getAttribute("data-acuerdo"); a.ordenDelDia[i].acuerdos.push({ id: Ac.nuevoId(), texto: "", votacion: "", resultado: "" }); }
+      else if (b.hasAttribute("data-quitar-acuerdo")) { var p = b.getAttribute("data-quitar-acuerdo").split("-"); a.ordenDelDia[+p[0]].acuerdos.splice(+p[1], 1); }
+      else if (b.hasAttribute("data-quitar-punto")) a.ordenDelDia.splice(+b.getAttribute("data-quitar-punto"), 1);
+      else if (b.hasAttribute("data-subir")) { i = +b.getAttribute("data-subir"); a.ordenDelDia.splice(i - 1, 0, a.ordenDelDia.splice(i, 1)[0]); }
+      else if (b.hasAttribute("data-bajar")) { i = +b.getAttribute("data-bajar"); a.ordenDelDia.splice(i + 1, 0, a.ordenDelDia.splice(i, 1)[0]); }
+      else return;
+      repintarPuntos();
+    });
+    cont.querySelector("#b-punto").addEventListener("click", function () {
+      leer(form, a);
+      a.ordenDelDia.push(Ac.punto(""));
+      repintarPuntos();
+      form.elements["p-" + (a.ordenDelDia.length - 1) + "-titulo"].focus();
+    });
+    cont.querySelector("#b-asist").addEventListener("click", async function () {
+      leer(form, a);
+      if (await elegirAsistentes(c, a)) { cont.querySelector("#asistentes").innerHTML = htmlAsistentes(a); cont.querySelector("#n-asist").textContent = "(" + a.asistentes.length + ")"; }
+    });
+    cont.querySelector("#asistentes").addEventListener("click", function (e) {
+      var b = e.target.closest("[data-quitar-asistente]");
+      if (!b) return;
+      a.asistentes.splice(+b.getAttribute("data-quitar-asistente"), 1);
+      cont.querySelector("#asistentes").innerHTML = htmlAsistentes(a);
+      cont.querySelector("#n-asist").textContent = "(" + a.asistentes.length + ")";
+    });
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      leer(form, a);
+      if (!F.esValida(a.fecha)) { UI.marcarError(form, "fecha", "Pon la fecha."); return; }
+      UI.marcarError(form, "fecha", "");
+      if (!a.numero) a.numero = Ac.siguienteNumero(c.actas, organoDe(c, a.organoId), a.fecha.slice(0, 4), c.config.actas.numeracion);
+      var problemas = Ac.revisar(a);
+      if (a.estado === "aprobada" && problemas.length) {
+        await UI.dialogo({ titulo: "Antes de darla por aprobada", contenido: '<ul class="lista">' + problemas.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>",
+          botones: [{ texto: "Entendido", valor: "cancelar", estilo: "btn-primario" }] });
+        return;
+      }
+      var g = await datos.guardar("actas", a);
+      UI.aviso("Acta " + g.numero + " guardada." + (problemas.length ? " Falta: " + problemas.join(" ") : ""), problemas.length ? "info" : "ok");
+      if (nueva) location.hash = "#/actas/ficha/" + encodeURIComponent(g.id); else WA.App.repintar();
+    });
+    if (nueva) return;
+    WA.DocsUI.conectarSeccion(cont, datos, { tipo: "acta", id: a.id }, "Actas firmadas");
+    cont.querySelector("#b-copiar").addEventListener("click", async function () {
+      leer(form, a);
+      var t = Ac.textoPlano(a, organoDe(c, a.organoId), c.asociacion);
+      try { await navigator.clipboard.writeText(t); UI.aviso("Texto del acta copiado."); } catch (err) { UI.aviso("No se ha podido copiar.", "error"); }
+    });
+    var bBorrar = cont.querySelector("#b-borrar");
+    if (bBorrar) bBorrar.addEventListener("click", async function () {
+      if (!(await UI.confirmar("Se borrará el borrador del acta " + a.numero + ".", { titulo: "Borrar acta", aceptar: "Borrar", peligro: true }))) return;
+      await datos.borrar("actas", a.id);
+      location.hash = "#/actas";
+    });
+  }
+
+  // ── Para firmar ─────────────────────────────────────────────────────────
+  async function pintarImprimir(cont, datos, id) {
+    var c = await cargar(datos);
+    var a = c.actas.filter(function (x) { return x.id === id; })[0];
+    if (!a) { cont.innerHTML = "<h1>No encontrada</h1>"; return; }
+    var org = organoDe(c, a.organoId), as = c.asociacion;
+    var asist = (a.asistentes || []).map(function (x) { return esc(x.nombre) + (x.cargo ? " (" + esc(x.cargo) + ")" : ""); });
+    cont.innerHTML =
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="i-imprimir">Imprimir o guardar en PDF</button>' +
+      '<a class="btn btn-secundario" href="#/actas/ficha/' + encodeURIComponent(a.id) + '">Volver</a></div>' +
+      '<article class="documento-impreso">' +
+      '<p class="di-entidad">' + esc(as.nombre || "") + (as.nif ? " · NIF " + esc(as.nif) : "") + "</p>" +
+      "<h1>Acta " + esc(a.numero) + "</h1><h2>Reunión " + (a.tipoSesion === "extraordinaria" ? "extraordinaria" : "ordinaria") + " de " + esc(org.nombre) + "</h2>" +
+      "<p>En " + esc(a.lugar || "…") + (a.modalidad !== "presencial" ? " (modalidad " + esc(a.modalidad) + ")" : "") + ", el " + esc(F.larga(a.fecha)) +
+      (a.horaInicio ? ", a las " + esc(a.horaInicio) + " horas" : "") + (a.convocatoria ? ", en " + esc(a.convocatoria) + " convocatoria" : "") +
+      ", se reúne " + esc(org.nombre) + ", presidida por <strong>" + esc(a.presidencia || "…") + "</strong> y actuando como secretario/a <strong>" + esc(a.secretaria || "…") + "</strong>.</p>" +
+      "<p><strong>Asistentes (" + asist.length + "):</strong> " + (asist.join(", ") || "—") + ".</p>" +
+      (a.excusan ? "<p><strong>Excusan su asistencia:</strong> " + esc(a.excusan) + ".</p>" : "") +
+      (a.invitados ? "<p><strong>Invitados:</strong> " + esc(a.invitados) + ".</p>" : "") +
+      "<h3>Orden del día</h3><ol>" + a.ordenDelDia.map(function (p) { return "<li>" + esc(p.titulo) + "</li>"; }).join("") + "</ol>" +
+      "<h3>Desarrollo de la sesión y acuerdos</h3>" + a.ordenDelDia.map(function (p, i) {
+        return "<h4>" + (i + 1) + ". " + esc(p.titulo) + "</h4>" + (p.desarrollo ? "<p>" + esc(p.desarrollo).replace(/\n/g, "<br>") + "</p>" : "") +
+          (p.acuerdos || []).filter(function (x) { return String(x.texto || "").trim(); }).map(function (ac, k) {
+            var v = Ac.textoVotacion(ac);
+            return '<p class="di-acuerdo"><strong>Acuerdo ' + (i + 1) + "." + (k + 1) + ":</strong> " + esc(ac.texto) + (v ? " <em>(" + esc(v) + ")</em>" : "") + "</p>";
+          }).join("");
+      }).join("") +
+      (a.ruegos ? "<h4>Ruegos y preguntas</h4><p>" + esc(a.ruegos).replace(/\n/g, "<br>") + "</p>" : "") +
+      "<p>Y no habiendo más asuntos que tratar, se levanta la sesión" + (a.horaFin ? " a las " + esc(a.horaFin) + " horas" : "") + ", de lo que como secretario/a doy fe, con el visto bueno de la presidencia.</p>" +
+      '<div class="di-firmas"><div><p>Vº Bº La Presidencia</p><div class="di-firma"></div><p>' + esc(a.presidencia) + "</p></div>" +
+      "<div><p>La Secretaría</p><div class=\"di-firma\"></div><p>" + esc(a.secretaria) + "</p></div></div>" +
+      "</article>" + '<p class="detalle no-imprimir">Revisad que el acta incluye lo que piden vuestros estatutos (verificar con asesoría).</p>';
+    cont.querySelector("#i-imprimir").addEventListener("click", function () { window.print(); });
+  }
+
+  // ── Libro de acuerdos ───────────────────────────────────────────────────
+  var textoAcuerdos = "";
+  async function pintarAcuerdos(cont, datos) {
+    var c = await cargar(datos);
+    var todos = Ac.acuerdos(c.actas, c.config.organos);
+    cont.innerHTML = '<div class="cabecera-pagina"><h1>Actas</h1></div>' + pestanas("acuerdos") +
+      '<div class="barra-filtros"><label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="b-acuerdo" placeholder="Buscar acuerdo…" value="' + esc(textoAcuerdos) + '"></label></div>' +
+      '<div id="t-acuerdos"></div>';
+    function refrescar() {
+      var t = textoAcuerdos.trim().toLowerCase();
+      var lista = todos.filter(function (x) { return !t || (x.texto + " " + x.tituloPunto + " " + x.numero).toLowerCase().indexOf(t) >= 0; });
+      cont.querySelector("#t-acuerdos").innerHTML = !lista.length ? '<p class="vacio">No hay acuerdos.</p>' :
+        '<div class="tabla-envoltorio"><table class="tabla"><thead><tr><th scope="col">Fecha</th><th scope="col">Acta</th><th scope="col">Acuerdo</th><th scope="col" class="solo-ancho">Votación</th></tr></thead><tbody>' +
+        lista.map(function (x) {
+          return "<tr><td>" + esc(F.corta(x.fecha)) + '</td><td><a href="#/actas/ficha/' + encodeURIComponent(x.actaId) + '">' + esc(x.numero) + '</a><br><span class="detalle">' + esc(x.organo) + "</span></td>" +
+            "<td>" + esc(x.texto) + '<br><span class="detalle">Punto ' + x.punto + ": " + esc(x.tituloPunto) + '</span></td><td class="solo-ancho">' + esc(x.votacion) + "</td></tr>";
+        }).join("") + "</tbody></table></div>";
+    }
+    refrescar();
+    cont.querySelector("#b-acuerdo").addEventListener("input", function (e) { textoAcuerdos = e.target.value; refrescar(); });
+  }
+
+  // ── Órganos ─────────────────────────────────────────────────────────────
+  async function pintarOrganos(cont, datos) {
+    var c = await cargar(datos);
+    var usados = {};
+    c.actas.forEach(function (a) { usados[a.organoId] = (usados[a.organoId] || 0) + 1; });
+    var tipoTxt = {};
+    Ac.TIPOS_ORGANO.forEach(function (t) { tipoTxt[t[0]] = t[1]; });
+    cont.innerHTML = '<div class="cabecera-pagina"><h1>Actas</h1><button type="button" class="btn btn-primario" id="o-nuevo">Añadir órgano</button></div>' + pestanas("organos") +
+      '<p class="intro">Los órganos que levantan actas. Añade un órgano por cada departamento que se reúna.</p>' +
+      '<div class="tabla-envoltorio"><table class="tabla"><tbody>' + c.config.organos.map(function (o) {
+        return '<tr><th scope="row">' + esc(o.nombre) + '<br><span class="detalle">' + esc(tipoTxt[o.tipo] || "") + "</span></th><td>Prefijo " + esc(o.prefijo) + "</td><td>" + (usados[o.id] || 0) + " actas</td>" +
+          '<td class="celda-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-organo="' + esc(o.id) + '">Editar</button></td></tr>';
+      }).join("") + "</tbody></table></div>" +
+      '<section class="tarjeta"><h2>Numeración</h2><form id="o-num" class="formulario" novalidate>' +
+      UI.campo({ nombre: "numeracion", etiqueta: "Las actas se numeran", tipo: "select", valor: c.config.actas.numeracion,
+        opciones: [["anual", "Por año: JD-2026-01, JD-2026-02…"], ["correlativa", "Correlativa: JD-1, JD-2… (sin reiniciar)"]] }) +
+      '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar</button></div></form></section>';
+    async function editar(o) {
+      var x = o || { id: Ac.nuevoId(), nombre: "", prefijo: "", tipo: "departamento" };
+      var r = await UI.dialogo({
+        titulo: o ? "Editar órgano" : "Nuevo órgano",
+        contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+          UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: x.nombre, requerido: true, ancho: "completo", ayuda: "Por ejemplo: Departamento de Actividades." }) +
+          UI.campo({ nombre: "prefijo", etiqueta: "Prefijo del número", valor: x.prefijo, requerido: true, ayuda: "2–5 letras: DACT, DCOM…", atributos: 'maxlength="6" autocapitalize="characters"' }) +
+          UI.campo({ nombre: "tipo", etiqueta: "Tipo", tipo: "select", valor: x.tipo, opciones: Ac.TIPOS_ORGANO, ayuda: "Decide la plantilla del orden del día." }) + "</div></form>",
+        botones: (o && !usados[o.id] && c.config.organos.length > 1 ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : [])
+          .concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+        validar: function (form) {
+          var d = UI.leerFormulario(form), pre = d.prefijo.toUpperCase().replace(/[^A-Z0-9]/g, "");
+          var repetido = c.config.organos.some(function (y) { return y.id !== x.id && y.prefijo.toUpperCase() === pre; });
+          UI.marcarError(form, "nombre", d.nombre ? "" : "Pon un nombre.");
+          UI.marcarError(form, "prefijo", !pre ? "Pon un prefijo." : repetido ? "Ese prefijo ya lo usa otro órgano." : "");
+          return !!d.nombre && !!pre && !repetido;
+        },
+      });
+      if (r.valor === "borrar") c.config.organos = c.config.organos.filter(function (y) { return y.id !== x.id; });
+      else if (r.valor === "enviar") {
+        Object.assign(x, { nombre: r.datos.nombre, prefijo: r.datos.prefijo.toUpperCase().replace(/[^A-Z0-9]/g, ""), tipo: r.datos.tipo });
+        if (!o) c.config.organos.push(x);
+      } else return;
+      await datos.escribir("config", c.config);
+      UI.aviso("Órganos guardados.");
+      WA.App.repintar();
+    }
+    cont.querySelector("#o-nuevo").addEventListener("click", function () { editar(null); });
+    cont.querySelectorAll("[data-organo]").forEach(function (b) { b.addEventListener("click", function () { editar(organoDe(c, b.getAttribute("data-organo"))); }); });
+    cont.querySelector("#o-num").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      c.config.actas.numeracion = e.target.elements.numeracion.value;
+      await datos.escribir("config", c.config);
+      UI.aviso("Numeración guardada. Se aplica a las actas nuevas.");
+    });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "nueva") return pintarFicha(cont, datos, null, ruta[1]);
+    if (ruta[0] === "ficha") return pintarFicha(cont, datos, ruta[1]);
+    if (ruta[0] === "imprimir") return pintarImprimir(cont, datos, ruta[1]);
+    if (ruta[0] === "acuerdos") return pintarAcuerdos(cont, datos);
+    if (ruta[0] === "organos") return pintarOrganos(cont, datos);
+    return pintarLista(cont, datos);
+  }
+
+  WA.App.registrar({
+    id: "actas", titulo: "Actas", orden: 40, pintar: pintar,
+    icono: '<path d="M6 2.5h12v19H6z"/><path d="M9 7h6M9 10.5h6M9 14h4"/><path d="M14 18.5l1.5 1.5 3-3"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/obligaciones.js */
+/*
+ * webkit_asociaciones — Módulo «Obligaciones»: calendario de plazos con aviso.
+ *
+ *   #/obligaciones          vencimientos (vencidos sin hacer y próximos 12 meses)
+ *   #/obligaciones/lista    las obligaciones configuradas, para editarlas
+ *
+ * Incluye los plazos de las subvenciones (de Presupuestos → proyectos de tipo
+ * subvención). La lógica está en logica/obligaciones.js (con tests).
+ * ⚠️ Fechas orientativas: verificar con asesoría.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, O = WA.Obligaciones;
+
+  var ESTADO = { vencida: ["estado-error", "Vencida"], proxima: ["estado-aviso", "Próxima"], pendiente: ["estado-neutro", "Pendiente"], hecha: ["estado-ok", "Hecha"] };
+
+  function pestanas(actual) {
+    return '<nav class="pestanas" aria-label="Apartados de obligaciones"><a href="#/obligaciones"' + (actual === "" ? ' aria-current="page"' : "") + ">Calendario</a>" +
+      '<a href="#/obligaciones/lista"' + (actual === "lista" ? ' aria-current="page"' : "") + ">Mis obligaciones</a></nav>";
+  }
+
+  /** Vencimientos de obligaciones y subvenciones entre dos fechas (lo usan también Inicio y Actividades). */
+  async function vencimientos(datos, desde, hasta) {
+    var r = await Promise.all([datos.listar("obligaciones"), datos.listar("proyectos")]);
+    return O.ocurrencias(r[0], desde, hasta).concat(O.ocurrenciasSubvenciones(r[1], desde, hasta))
+      .sort(function (a, b) { return a.fecha.localeCompare(b.fecha); });
+  }
+
+  // ── Calendario de vencimientos ──────────────────────────────────────────
+  var verHechas = false;
+  async function pintarCalendario(cont, datos) {
+    var obligaciones = await datos.listar("obligaciones");
+    var hoy = F.hoy();
+    var desde = (+hoy.slice(0, 4) - 1) + "-01-01", hasta = F.sumarDias(hoy, 365);
+    var todas = await vencimientos(datos, desde, hasta);
+    // Lo pasado solo si quedó sin hacer; lo de los próximos 12 meses, todo.
+    var lista = todas.filter(function (x) { return x.fecha >= hoy ? (verHechas || x.estado !== "hecha") : x.estado === "vencida"; });
+    var porMes = {};
+    lista.forEach(function (x) { (porMes[x.fecha.slice(0, 7)] = porMes[x.fecha.slice(0, 7)] || []).push(x); });
+    var vencidas = lista.filter(function (x) { return x.estado === "vencida"; }).length;
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Obligaciones</h1><div class="acciones-cabecera"><button type="button" class="btn btn-secundario" id="o-habituales">Elegir de las habituales…</button>' +
+      '<button type="button" class="btn btn-primario" id="o-nueva">Nueva obligación</button></div></div>' + pestanas("") +
+      '<div class="caja-aviso">Fechas orientativas: dependen de vuestro caso y pueden cambiar (festivos, cambios normativos). <strong>Verificad con la asesoría</strong> qué obligaciones os afectan.</div>' +
+      (!obligaciones.length ? '<p class="intro">Todavía no habéis elegido ninguna obligación. Pulsa «Elegir de las habituales…» para empezar.</p>' : "") +
+      (vencidas ? '<p class="intro"><span class="estado estado-error">' + vencidas + (vencidas === 1 ? " vencida" : " vencidas") + "</span> sin marcar como hechas.</p>" : "") +
+      '<label class="casilla"><input type="checkbox" id="o-hechas"' + (verHechas ? " checked" : "") + "><span>Ver también las ya hechas</span></label>" +
+      (Object.keys(porMes).length ? Object.keys(porMes).sort().map(function (m) {
+        return '<section class="tarjeta"><h2>' + esc(F.MESES[+m.slice(5) - 1].charAt(0).toUpperCase() + F.MESES[+m.slice(5) - 1].slice(1)) + " " + m.slice(0, 4) + "</h2>" +
+          '<ul class="lista-vencimientos">' + porMes[m].map(filaVencimiento).join("") + "</ul></section>";
+      }).join("") : '<p class="vacio">Nada pendiente en los próximos 12 meses.</p>');
+    cont.querySelector("#o-hechas").addEventListener("change", function (e) { verHechas = e.target.checked; WA.App.repintar(); });
+    cont.querySelector("#o-habituales").addEventListener("click", function () { elegirHabituales(datos, obligaciones); });
+    cont.querySelector("#o-nueva").addEventListener("click", function () { editar(datos, null); });
+    cont.querySelectorAll("[data-hecha]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        var p = b.getAttribute("data-hecha").split("|");
+        var o = obligaciones.filter(function (x) { return x.id === p[0]; })[0];
+        if (!o) return;
+        var ya = (o.hechas || {})[p[1]];
+        if (ya) {
+          if (!(await UI.confirmar("Volverá a figurar como pendiente.", { titulo: "Desmarcar", aceptar: "Desmarcar" }))) return;
+          await datos.guardar("obligaciones", O.marcarHecha(o, p[1], false));
+        } else {
+          var r = await UI.dialogo({ titulo: o.titulo, contenido: "<p>Vencimiento del " + esc(F.corta(p[1])) + '</p><form class="formulario" novalidate>' +
+            UI.campo({ nombre: "nota", etiqueta: "Nota (opcional)", valor: "", ayuda: "Por ejemplo: presentado por la gestoría, n.º de justificante…", ancho: "completo" }) + "</form>",
+            botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Marcar como hecha", valor: "enviar", estilo: "btn-primario" }] });
+          if (r.valor !== "enviar") return;
+          await datos.guardar("obligaciones", O.marcarHecha(o, p[1], true, r.datos.nota));
+          UI.aviso("Marcada como hecha.");
+        }
+        WA.App.repintar();
+      });
+    });
+    cont.querySelectorAll("[data-editar-ob]").forEach(function (b) {
+      b.addEventListener("click", function () { editar(datos, obligaciones.filter(function (x) { return x.id === b.getAttribute("data-editar-ob"); })[0]); });
+    });
+  }
+
+  function filaVencimiento(x) {
+    var e = ESTADO[x.estado];
+    var cuando = x.estado === "hecha" ? "Hecha el " + F.corta(x.hecha.fecha) + (x.hecha.nota ? " · " + x.hecha.nota : "")
+      : x.faltan < 0 ? "Venció hace " + (-x.faltan) + (x.faltan === -1 ? " día" : " días") : x.faltan === 0 ? "Vence hoy" : "Faltan " + x.faltan + (x.faltan === 1 ? " día" : " días");
+    var acciones = x.origen === "subvencion"
+      ? '<a class="btn btn-pequeno btn-secundario" href="#/proyectos/ficha/' + encodeURIComponent(x.proyectoId) + '">Ver subvención</a>'
+      : '<button type="button" class="btn btn-pequeno ' + (x.hecha ? "btn-secundario" : "btn-primario") + '" data-hecha="' + esc(x.obligacionId + "|" + x.fecha) + '">' + (x.hecha ? "Desmarcar" : "Hecha") + "</button>" +
+        '<button type="button" class="btn btn-pequeno btn-secundario" data-editar-ob="' + esc(x.obligacionId) + '">Editar</button>';
+    return '<li><span class="venc-fecha">' + esc(F.corta(x.fecha)) + "</span>" +
+      '<span class="venc-texto"><strong>' + esc(x.titulo) + "</strong>" + (x.etiqueta ? " · " + esc(x.etiqueta) : "") +
+      '<span class="detalle">' + esc(x.categoria) + " · " + esc(cuando) + '</span></span><span class="estado ' + e[0] + '">' + e[1] + '</span><span class="venc-acciones">' + acciones + "</span></li>";
+  }
+
+  // ── Elegir de las habituales ───────────────────────────────────────────
+  async function elegirHabituales(datos, obligaciones) {
+    var ya = {};
+    obligaciones.forEach(function (o) { if (o.plantilla) ya[o.plantilla] = true; });
+    var grupos = {};
+    O.PLANTILLAS.forEach(function (p) { (grupos[p.categoria] = grupos[p.categoria] || []).push(p); });
+    var r = await UI.dialogo({
+      titulo: "Obligaciones habituales",
+      contenido: '<p class="letra-pequena">Marca las que os afectan. Las fechas son orientativas y se pueden cambiar después (verificar con asesoría).</p><form class="formulario" novalidate>' +
+        Object.keys(grupos).map(function (g) {
+          return "<h3>" + esc(g) + "</h3>" + grupos[g].map(function (p) {
+            var cuando = p.recurrencia === "unica" ? "Fecha a indicar" : p.vencimientos.map(function (x) { return x.dia + "/" + x.mes; }).join(", ");
+            return '<label class="casilla"><input type="checkbox" name="p-' + esc(p.plantilla) + '"' + (ya[p.plantilla] ? " checked disabled" : "") + "><span><strong>" + esc(p.titulo) + "</strong>" +
+              '<span class="detalle"> · ' + esc(cuando) + "<br>" + esc(p.descripcion) + "</span></span></label>";
+          }).join("");
+        }).join("") + "</form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Añadir las marcadas", valor: "enviar", estilo: "btn-primario" }],
+    });
+    if (r.valor !== "enviar") return;
+    var nuevas = O.PLANTILLAS.filter(function (p) { return r.datos["p-" + p.plantilla] && !ya[p.plantilla]; }).map(function (p) { return O.desdePlantilla(p); });
+    if (!nuevas.length) return;
+    await datos.guardarVarios("obligaciones", nuevas);
+    var sinFecha = nuevas.filter(function (o) { return o.recurrencia === "unica" && !o.fecha; }).length;
+    UI.aviso(nuevas.length + " obligaciones añadidas." + (sinFecha ? " " + (sinFecha === 1 ? "Una necesita su fecha: búscala" : sinFecha + " necesitan su fecha: búscalas") + " en «Mis obligaciones»." : ""), sinFecha ? "info" : "ok");
+    WA.App.repintar();
+  }
+
+  // ── Editar ──────────────────────────────────────────────────────────────
+  async function editar(datos, obligacion) {
+    var o = obligacion ? JSON.parse(JSON.stringify(obligacion)) : O.vacia();
+    var venc = (o.vencimientos || []).map(function (x) { return x.dia + "/" + x.mes + (x.etiqueta ? " " + x.etiqueta : ""); }).join("\n");
+    var r = await UI.dialogo({
+      titulo: obligacion ? "Editar obligación" : "Nueva obligación",
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "titulo", etiqueta: "Qué hay que hacer", valor: o.titulo, requerido: true, ancho: "completo" }) +
+        UI.campo({ nombre: "categoria", etiqueta: "Tipo", tipo: "select", valor: o.categoria, opciones: O.CATEGORIAS }) +
+        UI.campo({ nombre: "recurrencia", etiqueta: "Se repite", tipo: "select", valor: o.recurrencia, opciones: [["anual", "Cada año, en estas fechas"], ["unica", "Una sola vez"]] }) +
+        '<div class="campo-completo" data-rec="anual">' + UI.campo({ nombre: "vencimientos", etiqueta: "Fechas de cada año (una por línea: día/mes y, si quieres, una nota)", tipo: "textarea", valor: venc,
+          ayuda: "Por ejemplo: «20/4 1.er trimestre».", ancho: "completo" }) + "</div>" +
+        '<div data-rec="unica">' + UI.campo({ nombre: "fecha", etiqueta: "Fecha", tipo: "date", valor: o.fecha }) + "</div>" +
+        UI.campo({ nombre: "diasAviso", etiqueta: "Avisar con (días de antelación)", tipo: "number", valor: String(o.diasAviso == null ? 15 : o.diasAviso), atributos: 'min="0" max="365"' }) +
+        UI.campo({ nombre: "descripcion", etiqueta: "Notas", tipo: "textarea", valor: o.descripcion, ancho: "completo" }) + "</div>" +
+        '<label class="casilla"><input type="checkbox" name="activa"' + (o.activa !== false ? " checked" : "") + "><span>Activa (desmárcala para dejar de verla sin borrarla)</span></label></form>",
+      botones: (obligacion ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : []).concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+      alAbrir: function (d) {
+        var f = d.querySelector("form");
+        var ver = function () { d.querySelectorAll("[data-rec]").forEach(function (x) { x.hidden = x.getAttribute("data-rec") !== f.elements.recurrencia.value; }); };
+        f.elements.recurrencia.addEventListener("change", ver);
+        ver();
+      },
+      validar: function (form) {
+        var d = UI.leerFormulario(form), ok = true;
+        UI.marcarError(form, "titulo", d.titulo ? "" : "Escribe qué hay que hacer."); if (!d.titulo) ok = false;
+        if (d.recurrencia === "anual") {
+          var malas = leerVencimientos(d.vencimientos).malas;
+          UI.marcarError(form, "vencimientos", malas.length ? "No entiendo: " + malas.join(", ") + ". Escríbelas como 20/4." : leerVencimientos(d.vencimientos).lista.length ? "" : "Pon al menos una fecha.");
+          if (malas.length || !leerVencimientos(d.vencimientos).lista.length) ok = false;
+        }
+        return ok;
+      },
+    });
+    if (r.valor === "borrar") {
+      if (!(await UI.confirmar("Se borrará «" + o.titulo + "» y lo que tenga marcado como hecho.", { titulo: "Borrar obligación", aceptar: "Borrar", peligro: true }))) return;
+      await datos.borrar("obligaciones", o.id);
+      WA.App.repintar();
+      return;
+    }
+    if (r.valor !== "enviar") return;
+    var d = r.datos;
+    Object.assign(o, { titulo: d.titulo, categoria: d.categoria, recurrencia: d.recurrencia, fecha: d.recurrencia === "unica" ? d.fecha : "",
+      vencimientos: d.recurrencia === "anual" ? leerVencimientos(d.vencimientos).lista : [], diasAviso: Math.max(0, parseInt(d.diasAviso, 10) || 0),
+      descripcion: d.descripcion, activa: !!d.activa });
+    await datos.guardar("obligaciones", o);
+    UI.aviso("Obligación guardada.");
+    WA.App.repintar();
+  }
+
+  /** «20/4 1.er trimestre» por línea → [{ dia, mes, etiqueta }]. */
+  function leerVencimientos(texto) {
+    var lista = [], malas = [];
+    String(texto || "").split("\n").map(function (l) { return l.trim(); }).filter(Boolean).forEach(function (l) {
+      var m = /^(\d{1,2})\s*[\/\-.]\s*(\d{1,2})\s*(.*)$/.exec(l);
+      if (!m || +m[2] < 1 || +m[2] > 12 || +m[1] < 1 || +m[1] > 31) { malas.push("«" + l + "»"); return; }
+      lista.push({ dia: +m[1], mes: +m[2], etiqueta: m[3].trim() });
+    });
+    return { lista: lista, malas: malas };
+  }
+
+  async function pintarLista(cont, datos) {
+    var lista = (await datos.listar("obligaciones")).sort(function (a, b) { return a.categoria.localeCompare(b.categoria) || a.titulo.localeCompare(b.titulo, "es"); });
+    cont.innerHTML = '<div class="cabecera-pagina"><h1>Obligaciones</h1><button type="button" class="btn btn-primario" id="o-nueva">Nueva obligación</button></div>' + pestanas("lista") +
+      (lista.length ? '<div class="tabla-envoltorio"><table class="tabla"><tbody>' + lista.map(function (o) {
+        var cuando = o.recurrencia === "unica" ? (o.fecha ? F.corta(o.fecha) : '<span class="estado estado-aviso">Falta la fecha</span>')
+          : esc(o.vencimientos.map(function (x) { return x.dia + "/" + x.mes; }).join(", ")) + " cada año";
+        return '<tr><th scope="row">' + esc(o.titulo) + (o.activa === false ? ' <span class="etiqueta">Inactiva</span>' : "") + '<br><span class="detalle">' + esc(o.categoria) + "</span></th>" +
+          "<td>" + cuando + '</td><td class="celda-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-editar-ob="' + esc(o.id) + '">Editar</button></td></tr>';
+      }).join("") + "</tbody></table></div>" : '<p class="vacio">Sin obligaciones. Ve a «Calendario» → «Elegir de las habituales…».</p>');
+    cont.querySelector("#o-nueva").addEventListener("click", function () { editar(datos, null); });
+    cont.querySelectorAll("[data-editar-ob]").forEach(function (b) {
+      b.addEventListener("click", function () { editar(datos, lista.filter(function (x) { return x.id === b.getAttribute("data-editar-ob"); })[0]); });
+    });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "lista") return pintarLista(cont, datos);
+    return pintarCalendario(cont, datos);
+  }
+
+  WA.ObligacionesUI = { vencimientos: vencimientos };
+  WA.App.registrar({
+    id: "obligaciones", titulo: "Obligaciones", orden: 42, pintar: pintar,
+    icono: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2.5"/><path d="M9 2.5h6"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/documentos.js */
+/*
+ * webkit_asociaciones — Módulo «Documentos»: archivos adjuntos (estatutos, actas
+ * firmadas, bases de subvenciones, pólizas…).
+ *
+ *   #/documentos   todos los documentos, por categoría
+ *
+ * Los archivos se guardan CIFRADOS con la contraseña de la asociación, en el
+ * navegador, y van dentro de la copia de seguridad (que por eso crece).
+ *
+ * También exporta WA.DocsUI.seccion(…), que pinta los documentos de un acta, un
+ * proyecto o una actividad con su botón «Adjuntar».
+ *
+ * FICHA: { id, nombre, tipoMime, tamano, categoria, descripcion, fecha,
+ *          vinculos: [{ tipo: "acta" | "proyecto" | "actividad", id }] }
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas;
+
+  var CATEGORIAS = ["Estatutos", "Actas firmadas", "Subvenciones", "Facturas y justificantes", "Seguros", "Registro y trámites", "Otros"];
+  var filtro = { categoria: "", texto: "" };
+
+  function tamanoTexto(b) {
+    if (!(b >= 0)) return "";
+    if (b < 1024) return b + " B";
+    if (b < 1048576) return Math.round(b / 1024) + " KB";
+    return (b / 1048576).toFixed(1).replace(".", ",") + " MB";
+  }
+
+  /** Elige un archivo y lo adjunta. vinculo: { tipo, id } o null. Devuelve la ficha o null. */
+  async function adjuntar(datos, vinculo, categoriaPorDefecto) {
+    var config = await datos.leer("config");
+    var limite = (config.limiteArchivoMB || 10) * 1048576;
+    var archivo = await UI.elegirArchivo("", true);
+    if (!archivo) return null;
+    if (archivo.bytes.length > limite) {
+      UI.aviso("El archivo ocupa " + tamanoTexto(archivo.bytes.length) + " y el máximo es " + (config.limiteArchivoMB || 10) + " MB. Reduce su tamaño (por ejemplo, escaneando a menos resolución).", "error");
+      return null;
+    }
+    var r = await UI.dialogo({
+      titulo: "Adjuntar documento",
+      contenido: "<p>«" + esc(archivo.nombre) + "» · " + esc(tamanoTexto(archivo.bytes.length)) + "</p>" +
+        '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: archivo.nombre, requerido: true, ancho: "completo" }) +
+        UI.campo({ nombre: "categoria", etiqueta: "Categoría", tipo: "select", valor: categoriaPorDefecto || "Otros", opciones: CATEGORIAS }) +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha del documento", tipo: "date", valor: F.hoy() }) +
+        UI.campo({ nombre: "descripcion", etiqueta: "Descripción", valor: "", ancho: "completo" }) +
+        "</div></form>" + '<p class="letra-pequena">Se guarda cifrado con la contraseña de la asociación y se incluye en la copia de seguridad.</p>',
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Adjuntar", valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) { var ok = !!form.elements.nombre.value.trim(); UI.marcarError(form, "nombre", ok ? "" : "Pon un nombre."); return ok; },
+    });
+    if (r.valor !== "enviar") return null;
+    var tipoMime = archivo.tipo || adivinarTipo(archivo.nombre);
+    try {
+      var ficha = await datos.guardarArchivo({ nombre: r.datos.nombre, tipoMime: tipoMime, categoria: r.datos.categoria, fecha: r.datos.fecha,
+        descripcion: r.datos.descripcion, vinculos: vinculo ? [vinculo] : [] }, archivo.bytes);
+      UI.aviso("Documento adjuntado. Recuerda descargar una copia de seguridad.");
+      return ficha;
+    } catch (e) {
+      UI.aviso("No se ha podido guardar: " + e.message, "error");
+      return null;
+    }
+  }
+
+  function adivinarTipo(nombre) {
+    var ext = String(nombre).split(".").pop().toLowerCase();
+    return { pdf: "application/pdf", jpg: "image/jpeg", jpeg: "image/jpeg", png: "image/png", txt: "text/plain", doc: "application/msword",
+      docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document", odt: "application/vnd.oasis.opendocument.text",
+      xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" }[ext] || "application/octet-stream";
+  }
+
+  /** Descifra el archivo y lo abre en otra pestaña (PDF, imágenes) o lo descarga. */
+  async function abrir(datos, ficha, descargar) {
+    var bytes = await datos.leerArchivo(ficha.id);
+    if (!bytes) { UI.aviso("No se encuentra el archivo en este navegador. ¿Se restauró una copia sin él?", "error"); return; }
+    var blob = new Blob([bytes], { type: ficha.tipoMime || "application/octet-stream" });
+    var visible = /^(application\/pdf|image\/|text\/plain)/.test(ficha.tipoMime || "");
+    if (descargar || !visible) { UI.descargar(ficha.nombre, blob); return; }
+    var url = URL.createObjectURL(blob);
+    var ventana = window.open(url, "_blank");
+    if (!ventana) UI.descargar(ficha.nombre, blob);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 60000);
+  }
+
+  async function editar(datos, ficha) {
+    var r = await UI.dialogo({
+      titulo: "Documento",
+      contenido: "<p>" + esc(ficha.nombre) + " · " + esc(tamanoTexto(ficha.tamano)) + "</p>" +
+        '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: ficha.nombre, requerido: true, ancho: "completo" }) +
+        UI.campo({ nombre: "categoria", etiqueta: "Categoría", tipo: "select", valor: ficha.categoria, opciones: CATEGORIAS }) +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha", tipo: "date", valor: ficha.fecha }) +
+        UI.campo({ nombre: "descripcion", etiqueta: "Descripción", valor: ficha.descripcion, ancho: "completo" }) + "</div></form>",
+      botones: [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }, { texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }],
+    });
+    if (r.valor === "borrar") {
+      if (!(await UI.confirmar("Se borrará «" + ficha.nombre + "» de este navegador. Las copias de seguridad ya descargadas lo conservan.", { titulo: "Borrar documento", aceptar: "Borrar", peligro: true }))) return false;
+      await datos.borrarArchivo(ficha.id);
+      UI.aviso("Documento borrado.");
+      return true;
+    }
+    if (r.valor !== "enviar") return false;
+    await datos.guardar("documentos", Object.assign(ficha, { nombre: r.datos.nombre, categoria: r.datos.categoria, fecha: r.datos.fecha, descripcion: r.datos.descripcion }));
+    return true;
+  }
+
+  function filas(lista) {
+    if (!lista.length) return '<p class="vacio">No hay documentos.</p>';
+    return '<ul class="lista-documentos">' + lista.map(function (d) {
+      return '<li><span class="doc-icono" aria-hidden="true">' + (/pdf/.test(d.tipoMime) ? "PDF" : /image/.test(d.tipoMime) ? "IMG" : "DOC") + "</span>" +
+        '<span class="doc-texto"><button type="button" class="btn-enlace doc-nombre" data-abrir="' + esc(d.id) + '">' + esc(d.nombre) + "</button>" +
+        '<span class="detalle">' + esc(d.categoria) + (d.fecha ? " · " + esc(F.corta(d.fecha)) : "") + " · " + esc(tamanoTexto(d.tamano)) + (d.descripcion ? " · " + esc(d.descripcion) : "") + "</span></span>" +
+        '<span class="doc-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-bajar="' + esc(d.id) + '">Descargar</button>' +
+        '<button type="button" class="btn btn-pequeno btn-secundario" data-editar-doc="' + esc(d.id) + '">Editar</button></span></li>';
+    }).join("") + "</ul>";
+  }
+
+  function conectar(zona, datos, lista, alCambiar) {
+    zona.addEventListener("click", async function (e) {
+      var b = e.target.closest("[data-abrir],[data-bajar],[data-editar-doc]");
+      if (!b) return;
+      var id = b.getAttribute("data-abrir") || b.getAttribute("data-bajar") || b.getAttribute("data-editar-doc");
+      var ficha = lista().filter(function (x) { return x.id === id; })[0];
+      if (!ficha) return;
+      if (b.hasAttribute("data-editar-doc")) { if (await editar(datos, ficha)) alCambiar(); }
+      else await abrir(datos, ficha, b.hasAttribute("data-bajar"));
+    });
+  }
+
+  /**
+   * Sección «Documentos» dentro de otra ficha. vinculo: { tipo, id }.
+   * Devuelve el HTML; después hay que llamar a conectarSeccion(cont, datos, vinculo).
+   */
+  function seccion(documentos, vinculo, titulo) {
+    var lista = documentos.filter(function (d) { return (d.vinculos || []).some(function (v) { return v.tipo === vinculo.tipo && v.id === vinculo.id; }); });
+    return '<section class="tarjeta" aria-labelledby="t-docs-' + esc(vinculo.id) + '"><div class="tarjeta-cabecera"><h2 id="t-docs-' + esc(vinculo.id) + '">' + esc(titulo || "Documentos") + "</h2>" +
+      '<button type="button" class="btn btn-secundario" data-adjuntar>Adjuntar documento</button></div><div data-docs>' + filas(lista) + "</div></section>";
+  }
+  function conectarSeccion(cont, datos, vinculo, categoriaPorDefecto) {
+    var docs = [];
+    datos.listar("documentos").then(function (l) { docs = l; });
+    var boton = cont.querySelector("[data-adjuntar]");
+    if (boton) boton.addEventListener("click", async function () { if (await adjuntar(datos, vinculo, categoriaPorDefecto)) WA.App.repintar(); });
+    var zona = cont.querySelector("[data-docs]");
+    if (zona) conectar(zona, datos, function () { return docs; }, function () { WA.App.repintar(); });
+  }
+
+  async function pintar(cont, datos) {
+    var docs = await datos.listar("documentos");
+    var total = docs.reduce(function (s, d) { return s + (d.tamano || 0); }, 0);
+    var esp = await WA.Boveda.espacio();
+    var hayEstatutos = docs.some(function (d) { return d.categoria === "Estatutos"; });
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Documentos</h1><button type="button" class="btn btn-primario" id="d-nuevo">Adjuntar documento</button></div>' +
+      '<p class="intro">Estatutos, actas firmadas, bases de subvenciones, pólizas… Se guardan cifrados y viajan en la copia de seguridad.</p>' +
+      (!hayEstatutos ? '<div class="caja-aviso">Todavía no habéis adjuntado los <strong>estatutos</strong>. Son la referencia para los fines, los cargos, las asambleas y las cuotas.</div>' : "") +
+      '<div class="barra-filtros"><label><span class="sr">Categoría</span><select id="d-cat"><option value="">Todas las categorías</option>' +
+      CATEGORIAS.map(function (c2) { return '<option value="' + esc(c2) + '"' + (filtro.categoria === c2 ? " selected" : "") + ">" + esc(c2) + "</option>"; }).join("") + "</select></label>" +
+      '<label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="d-buscar" placeholder="Buscar documento…" value="' + esc(filtro.texto) + '"></label></div>' +
+      '<div id="d-lista"></div>' +
+      '<p class="detalle">' + docs.length + " documentos · " + esc(tamanoTexto(total)) +
+      (esp && esp.quota ? " · espacio del navegador usado: " + esc(tamanoTexto(esp.usage)) + " de " + esc(tamanoTexto(esp.quota)) : "") + "</p>";
+    function visibles() {
+      var t = filtro.texto.trim().toLowerCase();
+      return docs.filter(function (d) { return (!filtro.categoria || d.categoria === filtro.categoria) && (!t || (d.nombre + " " + d.descripcion).toLowerCase().indexOf(t) >= 0); })
+        .sort(function (a, b) { return String(b.fecha || "").localeCompare(String(a.fecha || "")); });
+    }
+    var zona = cont.querySelector("#d-lista");
+    var refrescar = function () { zona.innerHTML = filas(visibles()); };
+    refrescar();
+    conectar(zona, datos, function () { return docs; }, function () { WA.App.repintar(); });
+    cont.querySelector("#d-cat").addEventListener("change", function (e) { filtro.categoria = e.target.value; refrescar(); });
+    cont.querySelector("#d-buscar").addEventListener("input", function (e) { filtro.texto = e.target.value; refrescar(); });
+    cont.querySelector("#d-nuevo").addEventListener("click", async function () { if (await adjuntar(datos, null, filtro.categoria)) WA.App.repintar(); });
+  }
+
+  WA.DocsUI = { CATEGORIAS: CATEGORIAS, adjuntar: adjuntar, abrir: abrir, seccion: seccion, conectarSeccion: conectarSeccion, tamanoTexto: tamanoTexto };
+  WA.App.registrar({
+    id: "documentos", titulo: "Documentos", orden: 48, pintar: pintar,
+    icono: '<path d="M3.5 6.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>',
   });
 })(typeof self !== "undefined" ? self : this);
 </script>
@@ -8054,6 +9634,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var demo = WA.Sesion.modo === "demostración";
     var e = await datos.estadoCopia();
     var tipo = await WA.Boveda.tipo();
+    var docs = await datos.listar("documentos");
+    var pesoDocs = docs.reduce(function (s, d) { return s + (d.tamano || 0); }, 0);
     var ultima = e.ultimaCopia
       ? "La última copia es del <strong>" + esc(WA.Fechas.corta(e.ultimaCopia.slice(0, 10))) + "</strong>" +
         (e.cambiosDesdeCopia ? " y desde entonces ha habido cambios." : " y no ha habido cambios después.")
@@ -8065,6 +9647,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       '<section class="tarjeta" aria-labelledby="t-descargar"><h2 id="t-descargar">Descargar copia</h2>' +
       (demo ? "" : "<p>" + ultima + "</p>") +
       "<p>La copia va <strong>cifrada con tu contraseña</strong>: sin ella no se puede abrir.</p>" +
+      (docs.length ? '<p class="detalle">Incluye ' + docs.length + (docs.length === 1 ? " documento adjunto" : " documentos adjuntos") + " (" + esc(WA.DocsUI.tamanoTexto(pesoDocs)) + "): el archivo de copia ocupará algo más.</p>" : "") +
       '<div class="acciones"><button type="button" class="btn btn-primario" id="c-descargar">Descargar copia cifrada</button>' +
       '<button type="button" class="btn btn-secundario" id="c-claro">Descargar sin cifrar…</button></div></section>' +
       '<section class="tarjeta" aria-labelledby="t-recuperar"><h2 id="t-recuperar">Recuperar una copia</h2>' +

@@ -5,7 +5,7 @@
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 5,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 6,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
  *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
@@ -13,6 +13,8 @@
  *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
  *     movimientos, facturas, anticipos, proyectos   (ver logica/tesoreria.js y logica/facturas.js)
  *     actividades (con sus inscripciones)           (ver logica/actividades.js)
+ *     actas, obligaciones                           (ver logica/actas.js y logica/obligaciones.js)
+ *     documentos   fichas de los archivos adjuntos; los bytes van cifrados aparte (ver datos/boveda.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -30,22 +32,24 @@
  *
  * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
  *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3)
- *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4).
+ *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4)
+ *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
   var Tesoreria = typeof require === "function" ? require("../logica/tesoreria.js") : raiz.WA.Tesoreria;
-  var modulo = fabrica(Direccion, Tesoreria);
+  var Actas = typeof require === "function" ? require("../logica/actas.js") : raiz.WA.Actas;
+  var modulo = fabrica(Direccion, Tesoreria, Actas);
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Esquema = modulo;
-})(typeof self !== "undefined" ? self : this, function (Direccion, Tesoreria) {
+})(typeof self !== "undefined" ? self : this, function (Direccion, Tesoreria, Actas) {
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 5;
+  var VERSION = 6;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -75,6 +79,9 @@
    *   reglas      para clasificar el extracto del banco: [{ texto, categoriaId }]
    *   presupuestos  presupuesto anual aprobado: { "2026": { categoriaId: céntimos } }
    *   zonaHoraria   para exportar el calendario (.ics): "Europe/Madrid" o "Atlantic/Canary"
+   *   organos       órganos que levantan actas: [{ id, nombre, prefijo, tipo }]
+   *   actas         { numeracion: "anual" | "correlativa" }
+   *   limiteArchivoMB  tamaño máximo de un adjunto
    */
   function configVacia() {
     return {
@@ -88,6 +95,9 @@
       reglas: [],
       presupuestos: {},
       zonaHoraria: "Europe/Madrid",
+      organos: Actas.organosPorDefecto(),
+      actas: { numeracion: "anual" },
+      limiteArchivoMB: 10,
     };
   }
 
@@ -159,6 +169,17 @@
       return doc;
     },
 
+    // 5 → 6: actas, obligaciones y documentos (Fase 5).
+    5: function (doc) {
+      ["actas", "obligaciones", "documentos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+      doc.config = doc.config || {};
+      if (!Array.isArray(doc.config.organos) || !doc.config.organos.length) doc.config.organos = Actas.organosPorDefecto();
+      doc.config.actas = Object.assign({ numeracion: "anual" }, doc.config.actas || {});
+      if (!(doc.config.limiteArchivoMB > 0)) doc.config.limiteArchivoMB = 10;
+      doc.esquema = 6;
+      return doc;
+    },
+
     // 4 → 5: actividades (Fase 4).
     4: function (doc) {
       if (!Array.isArray(doc.actividades)) doc.actividades = [];
@@ -208,6 +229,9 @@
     if (!Array.isArray(doc.config.reglas)) doc.config.reglas = [];
     if (!doc.config.presupuestos || typeof doc.config.presupuestos !== "object") doc.config.presupuestos = {};
     if (!doc.config.zonaHoraria) doc.config.zonaHoraria = "Europe/Madrid";
+    if (!Array.isArray(doc.config.organos) || !doc.config.organos.length) doc.config.organos = Actas.organosPorDefecto();
+    doc.config.actas = Object.assign({ numeracion: "anual" }, doc.config.actas || {});
+    if (!(doc.config.limiteArchivoMB > 0)) doc.config.limiteArchivoMB = 10;
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }

@@ -18,6 +18,7 @@
   // Las cuotas de demostración se calculan con la misma lógica que las de verdad.
   modulo.Cuotas = typeof require === "function" ? require("../logica/cuotas.js") : raiz.WA.Cuotas;
   modulo.Actividades = typeof require === "function" ? require("../logica/actividades.js") : raiz.WA.Actividades;
+  modulo.Obligaciones = typeof require === "function" ? require("../logica/obligaciones.js") : raiz.WA.Obligaciones;
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Demo = modulo;
 })(typeof self !== "undefined" ? self : this, function (Esquema) {
@@ -59,7 +60,90 @@
     rellenarSocios(doc, t);
     rellenarTesoreria(doc, t);
     rellenarActividades(doc, t);
+    rellenarGobierno(doc, t);
     return doc;
+  }
+
+  /*
+   * Actas, obligaciones, seguimiento de subvenciones y documentos de ejemplo.
+   * Los documentos son textos inventados (los bytes los da archivosDemo()).
+   */
+  var TEXTOS_DEMO = {
+    "demo-doc-estatutos": "ESTATUTOS DE LA ASOCIACIÓN CULTURAL LOS ALMENDROS (FICTICIA)\n\nTexto de ejemplo para la demostración. No son unos estatutos reales ni sirven como modelo.\n\nArtículo 1. Denominación.\nArtículo 2. Fines: promover la cultura y el conocimiento del entorno natural del municipio.\nArtículo 3. Domicilio.\n…\n",
+    "demo-doc-acta": "Acta JD-2026-02 firmada (escaneo de ejemplo para la demostración).\n",
+    "demo-doc-bases": "Bases de la convocatoria de subvenciones de ejemplo 2026 (texto inventado).\n",
+  };
+  function archivosDemo() {
+    var out = {};
+    Object.keys(TEXTOS_DEMO).forEach(function (id) { out[id] = new TextEncoder().encode(TEXTOS_DEMO[id]); });
+    return out;
+  }
+
+  function rellenarGobierno(doc, t) {
+    var reg = function (o) { return Object.assign({ creado: t, modificado: t }, o); };
+    var asistentes = doc.junta.filter(function (j) { return !j.hasta; }).map(function (j) { return { nombre: j.nombre, socioId: "", cargo: j.cargo }; });
+    var ac = function (texto, votacion, extra) { return Object.assign({ id: "ac-" + Math.random().toString(36).slice(2, 8), texto: texto, votacion: votacion || "", resultado: "aprobado", favor: 0, contra: 0, abstencion: 0 }, extra || {}); };
+    var punto = function (titulo, desarrollo, acuerdos) { return { id: "p-" + Math.random().toString(36).slice(2, 8), titulo: titulo, desarrollo: desarrollo || "", acuerdos: acuerdos || [] }; };
+    doc.config.organos = doc.config.organos.concat([{ id: "dep-actividades", nombre: "Departamento de Actividades", prefijo: "DACT", tipo: "departamento" }]);
+    doc.actas = [
+      reg({ id: "demo-acta-1", organoId: "junta", numero: "JD-2026-02", tipoSesion: "ordinaria", fecha: "2026-03-12", horaInicio: "19:00", horaFin: "20:45",
+        lugar: "Local de la asociación", modalidad: "presencial", convocatoria: "", presidencia: "Lucía Ficticia Ejemplo", secretaria: "Carmen Demo Muestra",
+        asistentes: asistentes, excusan: "", invitados: "", estado: "aprobada", aprobacion: "En la reunión de junta del 9 de abril de 2026 (JD-2026-03).", notas: "",
+        ordenDelDia: [
+          punto("Lectura y aprobación, si procede, del acta de la reunión anterior", "Se lee el acta JD-2026-01.", [ac("Aprobar el acta JD-2026-01.", "unanimidad")]),
+          punto("Estado de tesorería", "La tesorera informa del saldo y de las cuotas pendientes de 2026.", []),
+          punto("Actividades de primavera", "Se presentan las propuestas de anillamiento y la charla sobre aves de ribera.", [
+            ac("Organizar la jornada de anillamiento el 18 de abril, gratuita para socios y 5 € para no socios.", "votacion", { favor: 4, contra: 0, abstencion: 1 }),
+            ac("Solicitar la subvención municipal para el taller de ciencia.", "unanimidad")]),
+          punto("Ruegos y preguntas", "", []),
+        ], ruegos: "Se pide revisar el material de préstamo." }),
+      reg({ id: "demo-acta-2", organoId: "asamblea", numero: "AG-2026-01", tipoSesion: "ordinaria", fecha: "2026-06-20", horaInicio: "11:00", horaFin: "12:30",
+        lugar: "Centro cívico de Villaejemplo, sala 2", modalidad: "presencial", convocatoria: "segunda", presidencia: "Lucía Ficticia Ejemplo", secretaria: "Carmen Demo Muestra",
+        asistentes: doc.socios.slice(0, 14).map(function (s) { return { nombre: s.nombre + " " + s.apellidos, socioId: s.id, cargo: "" }; }), excusan: "Dos socios por correo.", invitados: "",
+        estado: "borrador", aprobacion: "", notas: "",
+        ordenDelDia: [
+          punto("Lectura y aprobación, si procede, del acta de la sesión anterior", "", [ac("Aprobar el acta de la asamblea de 2025.", "asentimiento")]),
+          punto("Memoria de actividades del ejercicio", "La secretaria resume las actividades de 2025.", []),
+          punto("Examen y aprobación, si procede, de las cuentas del ejercicio", "La tesorera presenta ingresos, gastos y saldo a 31 de diciembre.", [ac("Aprobar las cuentas del ejercicio 2025.", "votacion", { favor: 13, contra: 0, abstencion: 1 })]),
+          punto("Aprobación, si procede, del presupuesto del ejercicio", "", [ac("Aprobar el presupuesto de 2026.", "unanimidad")]),
+          punto("Ruegos y preguntas", "", []),
+        ], ruegos: "" }),
+    ];
+    // Obligaciones: unas cuantas de las habituales, con alguna ya hecha.
+    var Ob = Demo.Obligaciones;
+    var elegir = ["303", "390", "111", "190", "asamblea", "cuentas", "seguro-rc", "web", "cargos"];
+    doc.obligaciones = Ob.PLANTILLAS.filter(function (p) { return elegir.indexOf(p.plantilla) >= 0; }).map(function (p, i) {
+      var o = Ob.desdePlantilla(p);
+      o.id = "demo-oblig-" + (i + 1); o.creado = t; o.modificado = t; o.desde = "2026-01-01";
+      if (p.plantilla === "seguro-rc") o.vencimientos = [{ mes: 3, dia: 5, etiqueta: "vencimiento de la póliza" }];
+      if (p.plantilla === "web") o.vencimientos = [{ mes: 6, dia: 10, etiqueta: "dominio" }];
+      if (p.plantilla === "cargos") o.fecha = "2028-03-16";
+      ["2026-01-20", "2026-01-30", "2026-01-31", "2026-04-20", "2026-07-20", "2026-03-05", "2026-03-31", "2026-06-30"].forEach(function (f) {
+        var toca = o.recurrencia === "anual" && o.vencimientos.some(function (x) { return Ob.fechaEn(2026, x.mes, x.dia) === f; });
+        if (toca) o.hechas[f] = { fecha: f, nota: "Hecho (demostración)" };
+      });
+      return o;
+    });
+    // La subvención del taller, en plena justificación; y otra que se está preparando.
+    doc.proyectos.forEach(function (p) {
+      if (p.id !== "demo-proyecto-1") return;
+      Object.assign(p, { estadoSubvencion: "concedida", importeSolicitado: 180000, plazoSolicitud: "2026-02-15", fechaSolicitud: "2026-02-10",
+        fechaResolucion: "2026-04-15", plazoJustificacion: "2027-01-31", fechaJustificacion: "", urlBases: "https://example.org/bases-subvencion",
+        requisitos: [{ id: "r1", texto: "Memoria técnica de las actividades", hecho: false }, { id: "r2", texto: "Relación de facturas y justificantes de pago", hecho: false },
+          { id: "r3", texto: "Fotografías y materiales de difusión con el logo del financiador", hecho: true }, { id: "r4", texto: "Certificado de estar al corriente con Hacienda", hecho: true }] });
+    });
+    doc.proyectos.push(reg({ id: "demo-proyecto-2", nombre: "Huerto escolar de ejemplo", tipo: "subvencion", financiador: "Fundación Ejemplo", referencia: "Convocatoria Naturaleza 2027",
+      importeConcedido: 0, fechaInicio: "2027-01-01", fechaFin: "2027-12-31", estado: "en curso", presupuesto: { material: 60000, actividades: 90000 }, notas: "",
+      estadoSubvencion: "preparando", importeSolicitado: 150000, plazoSolicitud: "2026-10-30", fechaSolicitud: "", fechaResolucion: "", plazoJustificacion: "", fechaJustificacion: "",
+      urlBases: "https://example.org/convocatoria-naturaleza", requisitos: [{ id: "q1", texto: "Proyecto y presupuesto", hecho: true }, { id: "q2", texto: "Estatutos y NIF", hecho: false }] }));
+    var bytes = archivosDemo();
+    doc.documentos = [
+      reg({ id: "demo-doc-estatutos", nombre: "Estatutos (ejemplo).txt", tipoMime: "text/plain", tamano: bytes["demo-doc-estatutos"].length, categoria: "Estatutos", fecha: "2015-03-21", descripcion: "Texto de demostración", vinculos: [] }),
+      reg({ id: "demo-doc-acta", nombre: "Acta JD-2026-02 firmada.txt", tipoMime: "text/plain", tamano: bytes["demo-doc-acta"].length, categoria: "Actas firmadas", fecha: "2026-04-09", descripcion: "",
+        vinculos: [{ tipo: "acta", id: "demo-acta-1" }] }),
+      reg({ id: "demo-doc-bases", nombre: "Bases subvención municipal 2026.txt", tipoMime: "text/plain", tamano: bytes["demo-doc-bases"].length, categoria: "Subvenciones", fecha: "2026-01-20", descripcion: "",
+        vinculos: [{ tipo: "proyecto", id: "demo-proyecto-1" }] }),
+    ];
   }
 
   /*
@@ -271,6 +355,6 @@
     doc.cuotas = cuotas;
   }
 
-  var Demo = { documentoDemo: documentoDemo, Cuotas: null, Actividades: null };
+  var Demo = { documentoDemo: documentoDemo, archivosDemo: archivosDemo, Cuotas: null, Actividades: null, Obligaciones: null };
   return Demo;
 });

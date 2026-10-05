@@ -42,9 +42,10 @@
   var decodificar = function (b) { return new TextDecoder().decode(b); };
 
   function aBase64(bytes) {
-    var bin = "", arr = new Uint8Array(bytes);
-    for (var i = 0; i < arr.length; i++) bin += String.fromCharCode(arr[i]);
-    return btoa(bin);
+    // Por trozos: con archivos de varios MB, carácter a carácter sería muy lento.
+    var arr = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), partes = [];
+    for (var i = 0; i < arr.length; i += 0x8000) partes.push(String.fromCharCode.apply(null, arr.subarray(i, i + 0x8000)));
+    return btoa(partes.join(""));
   }
   function desdeBase64(b64) {
     var bin = atob(b64), out = new Uint8Array(bin.length);
@@ -101,12 +102,36 @@
     return { objeto: JSON.parse(decodificar(plano)), llave: { clave: clave, sal: sal, iter: bloque.iter } };
   }
 
+  /**
+   * Archivos adjuntos: se cifran como bytes (sin pasar por JSON) con la llave de
+   * la sesión y un iv nuevo. Devuelve { iv, ct } (Uint8Array); en las copias de
+   * seguridad viajan en base64 (archivoABase64 / archivoDesdeBase64).
+   */
+  async function cifrarBytes(bytes, llave) {
+    var iv = crypto.getRandomValues(new Uint8Array(BYTES_IV));
+    var ct = await sutil().encrypt({ name: "AES-GCM", iv: iv }, llave.clave, bytes);
+    return { iv: iv, ct: new Uint8Array(ct) };
+  }
+  async function descifrarBytes(registro, llave) {
+    try {
+      var plano = await sutil().decrypt({ name: "AES-GCM", iv: registro.iv }, llave.clave, registro.ct);
+      return new Uint8Array(plano);
+    } catch (e) {
+      var err = new Error("No se ha podido descifrar el archivo.");
+      err.codigo = "CONTRASENA";
+      throw err;
+    }
+  }
+  var archivoABase64 = function (r) { return { iv: aBase64(r.iv), ct: aBase64(r.ct) }; };
+  var archivoDesdeBase64 = function (r) { return { iv: desdeBase64(r.iv), ct: desdeBase64(r.ct) }; };
+
   function esBloque(b) {
     return !!(b && b.v === 1 && typeof b.sal === "string" && typeof b.iv === "string" && typeof b.ct === "string" && b.iter > 0);
   }
 
   return {
     ITERACIONES: ITERACIONES, crearLlave: crearLlave, cifrar: cifrar,
-    descifrar: descifrar, esBloque: esBloque,
+    descifrar: descifrar, esBloque: esBloque, cifrarBytes: cifrarBytes, descifrarBytes: descifrarBytes,
+    archivoABase64: archivoABase64, archivoDesdeBase64: archivoDesdeBase64, aBase64: aBase64, desdeBase64: desdeBase64,
   };
 });

@@ -175,7 +175,7 @@
         if (!f) return resolver(null);
         var lector = new FileReader();
         lector.onload = function () {
-          resolver(binario ? { nombre: f.name, bytes: new Uint8Array(lector.result) } : { nombre: f.name, texto: String(lector.result) });
+          resolver(binario ? { nombre: f.name, tipo: f.type || "", bytes: new Uint8Array(lector.result) } : { nombre: f.name, texto: String(lector.result) });
         };
         lector.onerror = function () { resolver(null); };
         if (binario) lector.readAsArrayBuffer(f); else lector.readAsText(f, "utf-8");

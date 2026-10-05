@@ -101,6 +101,57 @@ try {
     return { socios: (await WA.Sesion.datos.listar('socios')).length, titulo: document.querySelector('#principal h1').textContent,
       error: !!document.querySelector('.tarjeta-error') }`);
   comprobar("lo guardado sobrevive a recargar y la página de socios se pinta", tras.socios === 1 && tras.titulo === "Socios" && !tras.error, tras);
+
+  // Base de datos de la versión 1 (antes de los adjuntos) con datos dentro: al abrir, se actualiza sin perderlos.
+  await evaluar(`
+    const llave = await WA.Cripto.crearLlave('frase v1');
+    const bloque = await WA.Cripto.cifrar(WA.Esquema.documentoVacio(), llave);
+    await new Promise((ok, mal) => { const r = indexedDB.deleteDatabase('webkit_asociaciones'); r.onsuccess = ok; r.onerror = mal; r.onblocked = ok; });
+    await new Promise((ok, mal) => {
+      const r = indexedDB.open('webkit_asociaciones', 1);
+      r.onupgradeneeded = () => r.result.createObjectStore('boveda');
+      r.onsuccess = () => { const tx = r.result.transaction('boveda', 'readwrite'); tx.objectStore('boveda').put(bloque, 'datos'); tx.oncomplete = () => { r.result.close(); ok(); }; tx.onerror = mal; };
+      r.onerror = mal;
+    });`);
+  await cargar();
+  const v1 = await evaluar(`
+    await WA.Sesion.desbloquear('frase v1');
+    const f = await WA.Sesion.datos.guardarArchivo({ nombre: "x.txt", tipoMime: "text/plain", categoria: "Otros" }, new TextEncoder().encode("hola"));
+    const leido = new TextDecoder().decode(await WA.Sesion.datos.leerArchivo(f.id));
+    await WA.Sesion.datos.borrarArchivo(f.id);
+    return { modo: WA.Sesion.modo, leido }`);
+  comprobar("una base de datos de la versión 1 se actualiza conservando los datos y admite adjuntos", v1.modo === "abierta" && v1.leido === "hola", v1);
+  await evaluar(`await WA.Sesion.cambiarContrasena('frase v1', 'frase de prueba file'); return 1`);
+
+  // Adjuntos cifrados: guardar, cambiar la contraseña, recargar, copia de seguridad y restaurar.
+  const adj = await evaluar(`
+    const bytes = new Uint8Array(300000).map((_, i) => (i * 7) % 256);
+    const ficha = await WA.Sesion.datos.guardarArchivo({ nombre: "prueba.bin", tipoMime: "application/octet-stream", categoria: "Otros" }, bytes);
+    await new Promise((r) => setTimeout(r, 300));
+    const crudo = await WA.Boveda.leerArchivo(ficha.id);
+    await WA.Sesion.cambiarContrasena('frase de prueba file', 'frase nueva de prueba');
+    return { id: ficha.id, cifrado: crudo && crudo.ct.length >= 300000 && crudo.ct[1] !== 7 }`);
+  comprobar("el adjunto se guarda cifrado", adj.cifrado, adj);
+  await cargar();
+  const tras2 = await evaluar(`
+    await WA.Sesion.desbloquear('frase nueva de prueba');
+    const b = await WA.Sesion.datos.leerArchivo(${JSON.stringify(adj.id)});
+    const ok = b && b.length === 300000 && b[1] === 7 && b[299999] === (299999 * 7) % 256;
+    const sobre = await WA.Sesion.contenidoCopia(true);
+    window.__copia = JSON.stringify(sobre);
+    return { ok, enCopia: !!(sobre.archivos && sobre.archivos[${JSON.stringify(adj.id)}]) }`);
+  comprobar("tras cambiar la contraseña y recargar, el adjunto se lee bien", tras2.ok, tras2);
+  comprobar("la copia de seguridad lleva el adjunto", tras2.enCopia, tras2);
+  const rest = await evaluar(`
+    const texto = window.__copia;
+    await WA.Sesion.borrarDelNavegador();
+    await WA.Sesion.bloquear();
+    const vacio = !(await WA.Boveda.hayDatos()) && !(await WA.Boveda.leerArchivo(${JSON.stringify(adj.id)}));
+    const r = await WA.Sesion.restaurar(WA.Copia.leer(texto), 'frase nueva de prueba', 'otra frase distinta');
+    const b = await WA.Sesion.datos.leerArchivo(${JSON.stringify(adj.id)});
+    return { vacio, r, ok: b && b.length === 300000 && b[299999] === (299999 * 7) % 256 }`);
+  comprobar("borrar del navegador quita también los adjuntos", rest.vacio, rest);
+  comprobar("restaurar la copia (con otra contraseña nueva) recupera el adjunto", rest.ok && rest.r.archivos === 1 && rest.r.faltan === 0, rest);
   ws.close();
 } catch (e) {
   comprobar("la prueba se ha podido ejecutar", false, e.message);

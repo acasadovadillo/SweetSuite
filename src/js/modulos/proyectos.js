@@ -107,6 +107,39 @@
     return { res: res, ej: T.ejecucion(p.presupuesto || {}, res, c.config.categorias) };
   }
 
+  var estadoSub = function (e) { return (WA.Obligaciones.ESTADOS_SUBVENCION.filter(function (x) { return x[0] === (e || "idea"); })[0] || ["", ""])[1]; };
+  /** El plazo que le toca ahora a una subvención (según su estado), o null. */
+  function proximoPlazo(p) {
+    return WA.Obligaciones.ocurrenciasSubvenciones([p], "1900-01-01", "2999-12-31")[0] || null;
+  }
+
+  /** Seguimiento de una subvención: estado, plazos, importes y requisitos. */
+  function seccionSubvencion(p, cobrado) {
+    var req = p.requisitos || [];
+    var prog = WA.Obligaciones.progresoRequisitos(p);
+    return '<form id="pr-sub" class="formulario tarjeta" novalidate><h2>Seguimiento de la subvención</h2><div class="rejilla">' +
+      UI.campo({ nombre: "estadoSubvencion", etiqueta: "Estado", tipo: "select", valor: p.estadoSubvencion || "idea", opciones: WA.Obligaciones.ESTADOS_SUBVENCION }) +
+      UI.campo({ nombre: "importeSolicitado", etiqueta: "Importe solicitado (€)", valor: p.importeSolicitado ? D.formatear(p.importeSolicitado, { simbolo: false }) : "", atributos: 'inputmode="decimal"' }) +
+      UI.campo({ nombre: "plazoSolicitud", etiqueta: "Fin del plazo de solicitud", tipo: "date", valor: p.plazoSolicitud }) +
+      UI.campo({ nombre: "fechaSolicitud", etiqueta: "Fecha en que se solicitó", tipo: "date", valor: p.fechaSolicitud }) +
+      UI.campo({ nombre: "fechaResolucion", etiqueta: "Fecha de la resolución", tipo: "date", valor: p.fechaResolucion }) +
+      UI.campo({ nombre: "plazoJustificacion", etiqueta: "Fin del plazo de justificación", tipo: "date", valor: p.plazoJustificacion }) +
+      UI.campo({ nombre: "fechaJustificacion", etiqueta: "Fecha en que se justificó", tipo: "date", valor: p.fechaJustificacion }) +
+      UI.campo({ nombre: "urlBases", etiqueta: "Enlace a las bases o la convocatoria", tipo: "url", valor: p.urlBases, ancho: "completo" }) +
+      "</div>" +
+      '<p class="detalle">Concedido ' + esc(D.formatear(p.importeConcedido || 0)) + " · cobrado " + esc(D.formatear(cobrado)) +
+      (p.importeConcedido ? " · pendiente de cobrar " + esc(D.formatear(Math.max((p.importeConcedido || 0) - cobrado, 0))) : "") + "</p>" +
+      "<h3>Documentación y requisitos " + (prog.total ? '<span class="detalle">(' + prog.hechos + " de " + prog.total + ")</span>" : "") + "</h3>" +
+      '<ul class="lista-editable" id="pr-req">' + req.map(function (r, i) {
+        return '<li><label class="casilla en-linea"><input type="checkbox" name="req-' + i + '"' + (r.hecho ? " checked" : "") + "><span>" + esc(r.texto) + "</span></label>" +
+          '<button type="button" class="btn btn-pequeno btn-peligro-suave" data-quitar-req="' + i + '">Quitar</button></li>';
+      }).join("") + "</ul>" +
+      '<div class="fila-anadir"><label class="sr" for="pr-req-nuevo">Nuevo requisito</label><input id="pr-req-nuevo" placeholder="Por ejemplo: memoria técnica, certificado de estar al corriente…">' +
+      '<button type="button" class="btn btn-secundario btn-pequeno" id="pr-req-anadir">Añadir</button></div>' +
+      '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar seguimiento</button></div>' +
+      U.ayuda("Los plazos de solicitud y de justificación aparecen en Obligaciones con aviso. Qué hay que presentar y cuándo lo dicen las bases de la convocatoria.") + "</form>";
+  }
+
   async function pintarLista(cont, datos) {
     var c = await U.cargar(datos);
     cont.innerHTML =
@@ -118,7 +151,8 @@
           var x = ejecucionProyecto(c, p);
           var pct = x.ej.gastos.previsto > 0 ? Math.round(x.ej.gastos.realizado / x.ej.gastos.previsto * 1000) / 10 : null;
           return '<tr><th scope="row"><a href="#/proyectos/ficha/' + encodeURIComponent(p.id) + '">' + esc(p.nombre) + "</a><br><span class=\"detalle\">" +
-            (p.tipo === "subvencion" ? "Subvención" : "Proyecto") + (p.financiador ? " · " + esc(p.financiador) : "") + (p.estado === "cerrado" ? " · Cerrado" : "") + "</span></th>" +
+            (p.tipo === "subvencion" ? "Subvención · " + esc(estadoSub(p.estadoSubvencion)) : "Proyecto") + (p.financiador ? " · " + esc(p.financiador) : "") + (p.estado === "cerrado" ? " · Cerrado" : "") + "</span>" +
+            (proximoPlazo(p) ? '<br><span class="estado ' + (proximoPlazo(p).estado === "vencida" ? "estado-error" : "estado-aviso") + '">' + esc(proximoPlazo(p).etiqueta) + ": " + esc(F.corta(proximoPlazo(p).fecha)) + "</span>" : "") + "</th>" +
             "<td>" + esc(F.corta(p.fechaInicio)) + (p.fechaFin ? " – " + esc(F.corta(p.fechaFin)) : "") + "</td>" +
             '<td class="importe">' + (p.importeConcedido ? esc(D.formatear(p.importeConcedido)) : "—") + '</td><td class="importe">' + esc(D.formatear(x.ej.gastos.previsto)) + "</td>" +
             '<td class="importe">' + esc(D.formatear(x.ej.gastos.realizado)) + "</td><td>" + (pct === null ? "—" : pct + " %" + barra(pct)) + "</td></tr>";
@@ -153,6 +187,7 @@
       UI.campo({ nombre: "estado", etiqueta: "Estado", tipo: "select", valor: p.estado, opciones: [["en curso", "En curso"], ["cerrado", "Cerrado"]] }) +
       UI.campo({ nombre: "notas", etiqueta: "Notas", tipo: "textarea", valor: p.notas, ancho: "completo" }) +
       '</div><div class="acciones"><button type="submit" class="btn btn-primario">Guardar datos</button><button type="button" class="btn btn-peligro-suave" id="pr-borrar">Borrar proyecto</button></div></form>' +
+      (p.tipo === "subvencion" ? seccionSubvencion(p, x.res.ingresos.subvenciones || 0) : "") +
       '<section class="tarjeta"><h2>Presupuesto y ejecución</h2><form id="pr-presu" novalidate>' + tablaEjecucion(ej, true) +
       '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar presupuesto</button></div></form>' +
       (p.importeConcedido ? '<p class="detalle">Concedido ' + esc(D.formatear(p.importeConcedido)) + " · cobrado de la subvención: " + esc(D.formatear(x.res.ingresos.subvenciones || 0)) + "</p>" : "") +
@@ -163,7 +198,42 @@
         }).join("") + gastosAnt.map(function (x2) {
           return "<tr><td>" + esc(F.corta(x2.g.fecha)) + "</td><td>" + esc(x2.g.concepto) + ' <a class="etiqueta" href="#/tesoreria/anticipo/' + encodeURIComponent(x2.a.id) + '">' + (x2.a.tipo === "anticipo" ? "Anticipo" : "Reembolso") +
             "</a></td><td>" + esc(U.nombreCategoria(c, x2.g.categoriaId)) + '</td><td class="importe">' + U.importeHtml(-x2.g.importe) + "</td></tr>";
-        }).join("") + "</tbody></table></div>" : '<p class="vacio">Todavía no hay movimientos con este proyecto.</p>') + "</section>";
+        }).join("") + "</tbody></table></div>" : '<p class="vacio">Todavía no hay movimientos con este proyecto.</p>') + "</section>" +
+      WA.DocsUI.seccion(c.documentos || [], { tipo: "proyecto", id: p.id }, "Documentos (bases, solicitud, resolución, justificación…)");
+    WA.DocsUI.conectarSeccion(cont, datos, { tipo: "proyecto", id: p.id }, "Subvenciones");
+
+    var fSub = cont.querySelector("#pr-sub");
+    if (fSub) {
+      var leerSub = function () {
+        var d = UI.leerFormulario(fSub);
+        (p.requisitos || []).forEach(function (r, i) { r.hecho = !!d["req-" + i]; });
+        Object.assign(p, { estadoSubvencion: d.estadoSubvencion, importeSolicitado: D.desdeTexto(d.importeSolicitado || "0") || 0, plazoSolicitud: d.plazoSolicitud,
+          fechaSolicitud: d.fechaSolicitud, fechaResolucion: d.fechaResolucion, plazoJustificacion: d.plazoJustificacion, fechaJustificacion: d.fechaJustificacion, urlBases: d.urlBases });
+      };
+      fSub.addEventListener("submit", async function (e) {
+        e.preventDefault();
+        leerSub();
+        await datos.guardar("proyectos", p);
+        UI.aviso("Seguimiento guardado.");
+        WA.App.repintar();
+      });
+      cont.querySelector("#pr-req-anadir").addEventListener("click", async function () {
+        var t = cont.querySelector("#pr-req-nuevo").value.trim();
+        if (!t) return;
+        leerSub();
+        p.requisitos = (p.requisitos || []).concat([{ id: WA.Esquema.nuevoId(), texto: t, hecho: false }]);
+        await datos.guardar("proyectos", p);
+        WA.App.repintar();
+      });
+      cont.querySelector("#pr-req").addEventListener("click", async function (e) {
+        var b = e.target.closest("[data-quitar-req]");
+        if (!b) return;
+        leerSub();
+        p.requisitos.splice(+b.getAttribute("data-quitar-req"), 1);
+        await datos.guardar("proyectos", p);
+        WA.App.repintar();
+      });
+    }
 
     cont.querySelector("#pr-datos").addEventListener("submit", async function (e) {
       e.preventDefault();

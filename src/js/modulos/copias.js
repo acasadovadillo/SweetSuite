@@ -71,6 +71,8 @@
     var demo = WA.Sesion.modo === "demostración";
     var e = await datos.estadoCopia();
     var tipo = await WA.Boveda.tipo();
+    var docs = await datos.listar("documentos");
+    var pesoDocs = docs.reduce(function (s, d) { return s + (d.tamano || 0); }, 0);
     var ultima = e.ultimaCopia
       ? "La última copia es del <strong>" + esc(WA.Fechas.corta(e.ultimaCopia.slice(0, 10))) + "</strong>" +
         (e.cambiosDesdeCopia ? " y desde entonces ha habido cambios." : " y no ha habido cambios después.")
@@ -82,6 +84,7 @@
       '<section class="tarjeta" aria-labelledby="t-descargar"><h2 id="t-descargar">Descargar copia</h2>' +
       (demo ? "" : "<p>" + ultima + "</p>") +
       "<p>La copia va <strong>cifrada con tu contraseña</strong>: sin ella no se puede abrir.</p>" +
+      (docs.length ? '<p class="detalle">Incluye ' + docs.length + (docs.length === 1 ? " documento adjunto" : " documentos adjuntos") + " (" + esc(WA.DocsUI.tamanoTexto(pesoDocs)) + "): el archivo de copia ocupará algo más.</p>" : "") +
       '<div class="acciones"><button type="button" class="btn btn-primario" id="c-descargar">Descargar copia cifrada</button>' +
       '<button type="button" class="btn btn-secundario" id="c-claro">Descargar sin cifrar…</button></div></section>' +
       '<section class="tarjeta" aria-labelledby="t-recuperar"><h2 id="t-recuperar">Recuperar una copia</h2>' +

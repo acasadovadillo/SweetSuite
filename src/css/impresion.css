@@ -21,6 +21,7 @@
   tr { break-inside: avoid; }
   .tabla-envoltorio { overflow: visible; }
   .tabla-asistencia th, .tabla-asistencia td { border: 1px solid #999; }
+  .documento-impreso { border: none; padding: 0; margin: 0; max-width: none; }
   .factura-impresa { border: none; padding: 0; margin: 0; max-width: none; }
   .importe-positivo, .importe-negativo { color: #000; }
 }

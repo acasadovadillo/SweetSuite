@@ -50,6 +50,12 @@
     var hoy = F.hoy();
     var anio = vista.anio || +hoy.slice(0, 4), mes = vista.mes || +hoy.slice(5, 7);
     var semanas = A.mes(c.actividades, anio, mes);
+    // Los vencimientos de obligaciones y subvenciones también aparecen en el calendario.
+    var primerDia = semanas[0][0].fecha, ultimoDia = semanas[semanas.length - 1][6].fecha;
+    var venc = WA.ObligacionesUI ? await WA.ObligacionesUI.vencimientos(datos, primerDia, ultimoDia) : [];
+    var vencPorDia = {};
+    venc.forEach(function (v) { (vencPorDia[v.fecha] = vencPorDia[v.fecha] || []).push(v); });
+    var vencMes = venc.filter(function (v) { return v.fecha.slice(0, 7) === anio + "-" + String(mes).padStart(2, "0"); });
     var delMes = A.ordenar(c.actividades).filter(function (a) { return A.fechaDe(a).slice(0, 7) === anio + "-" + String(mes).padStart(2, "0"); });
     var proximas = A.ordenar(c.actividades).filter(function (a) { return A.fechaDe(a) >= hoy && a.estado !== "cancelada"; }).slice(0, 5);
     cont.innerHTML =
@@ -66,10 +72,16 @@
           return '<div role="gridcell" class="cal-dia' + (d.delMes ? "" : " fuera") + (d.fecha === hoy ? " hoy" : "") + '"><span class="cal-num">' + +d.fecha.slice(8) + "</span>" +
             d.actividades.map(function (a) {
               return '<a class="cal-act ' + a.estado + '" href="#/actividades/ficha/' + encodeURIComponent(a.id) + '">' + (a.todoElDia ? "" : "<b>" + esc(hora(a.inicio)) + "</b> ") + esc(a.titulo) + "</a>";
+            }).join("") + (vencPorDia[d.fecha] || []).map(function (v) {
+              return '<a class="cal-act cal-oblig ' + v.estado + '" href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '" title="' + esc(v.titulo + (v.etiqueta ? " · " + v.etiqueta : "")) + '">⚑ ' + esc(v.titulo) + "</a>";
             }).join("") + "</div>";
         }).join("") + "</div>";
       }).join("") + "</div>" +
-      '<section class="tarjeta" aria-labelledby="t-mes"><h2 id="t-mes">Este mes</h2>' + listaCompacta(delMes, "No hay actividades este mes.") + "</section>" +
+      '<section class="tarjeta" aria-labelledby="t-mes"><h2 id="t-mes">Este mes</h2>' + listaCompacta(delMes, "No hay actividades este mes.") +
+      (vencMes.length ? '<h3>Plazos y obligaciones</h3><ul class="lista-actividades">' + vencMes.map(function (v) {
+        return '<li><a href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '"><strong>⚑ ' + esc(v.titulo) + "</strong></a>" +
+          '<span class="detalle">' + esc(F.corta(v.fecha)) + (v.etiqueta ? " · " + esc(v.etiqueta) : "") + (v.estado === "hecha" ? " · hecha" : "") + "</span></li>";
+      }).join("") + "</ul>" : "") + "</section>" +
       '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximas</h2>' + listaCompacta(proximas, "No hay actividades previstas.") + "</section>";
     cont.querySelectorAll("[data-mes]").forEach(function (b) {
       b.addEventListener("click", function () {

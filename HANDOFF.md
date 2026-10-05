@@ -1,62 +1,64 @@
 # HANDOFF.md — Estado actual
 
-*Última actualización: 2026-10-05 · Fase 4 (Actividades) terminada, **sin commit**; pendiente del OK del usuario.*
+*Última actualización: 2026-10-05 · Fase 5 (Gobierno y documentación) terminada salvo las convocatorias, **sin commit**; pendiente del OK del usuario.*
 
 El proyecto está en `~/ACV/PROYECTOS/IA/ABIES/webkit_asociaciones`.
 
 ## Commits
 
-- `6622e1f` Fase 1: base, datos de la asociación, copias cifradas.
-- `a952c19` Fase 2: socios y cuotas.
-- `f31c56c` Fase 3: tesorería, facturas, IVA y presupuestos.
+`6622e1f` Fase 1 · `a952c19` Fase 2 · `f31c56c` Fase 3 · `fd58330` Fase 4: actividades y calendario.
 
-## Fase 4: actividades y calendario
+## Fase 5: gobierno y documentación
 
-- **Esquema v5:** colección `actividades` (con sus inscripciones) y `config.zonaHoraria`. Migración 4→5 con test.
-- **Lógica con tests** (`logica/actividades.js`):
-  - inscribir (solo socios o abierta, precios de socio y general, sin duplicados, aforo, lista de espera);
-  - cancelar con subida automática del primero en espera, o darle plaza a mano;
-  - cobrar, cambiar importe, asistencia;
-  - menores (en socios, por la fecha de nacimiento el día de la actividad) y autorizaciones;
-  - resumen, duplicar, calendario del mes (lunes primero, actividades de varios días);
-  - balance económico y exportación .ics (RFC 5545, horario peninsular o canario).
-- **Tesorería ampliada:**
-  - las inscripciones cobradas entran como ingresos («Inscripciones a actividades»), salvo que un movimiento del banco las enlace (`inscripcionIds`);
-  - el extracto sugiere inscripciones;
-  - `actividadId` en movimientos y en gastos de anticipos;
-  - la forma de pago al conciliar se deduce del concepto del banco (BIZUM, RECIBO, TARJETA);
-  - el Excel incluye una hoja de actividades.
-- **Módulo Actividades:**
-  - calendario mensual (en el móvil, lista del mes) y próximas;
-  - lista con búsqueda;
-  - ficha con datos, cifras (plazas, espera, asistencia, menores sin autorización, cobrado y pendiente) e inscripciones (inscribir socio o no socio, cobrar, autorización, asistencia, cancelar, dar plaza, cambiar importe);
-  - balance con «Apuntar un gasto»;
-  - hoja de asistencia imprimible con columna de firma;
-  - exportar inscritos en CSV, copiar correos, duplicar, .ics de una actividad o de todas.
-- **Inicio:** tarjeta de próximas actividades.
-- **Demostración:** 6 actividades (2 realizadas con asistencia y cobros, 1 completa con lista de espera y menores, 1 taller, 1 asamblea solo para socios, 1 cancelada).
-- **Corregido:** `UI.leerFormulario` leía mal los botones de opción (radio): ahora solo cuenta la marcada.
+- **Esquema v6:** colecciones `actas`, `obligaciones` y `documentos`; en `config`, `organos`, `actas.numeracion` y `limiteArchivoMB`. Migración 5→6 con test.
+- **Adjuntos cifrados:**
+  - bytes en un almacén aparte de IndexedDB (base de datos versión 2), cifrados con la misma llave;
+  - van en la copia de seguridad, se recifran al cambiar la contraseña y al restaurar, y se borran con «borrar del navegador»;
+  - en la demostración viven en memoria.
+- **Lógica con tests:**
+  - `logica/actas.js`: órganos por defecto, plantillas del orden del día por tipo de órgano, numeración anual o correlativa, revisión, texto de votación, libro de acuerdos y texto plano del acta;
+  - `logica/obligaciones.js`: plantillas habituales con fechas orientativas, vencimientos con situación (hecha, vencida, próxima, pendiente), `desde` y plazos de subvenciones según su estado.
+- **Módulos:**
+  - **Actas:**
+    - lista con filtros;
+    - editor con datos de la sesión, asistentes (junta, socios con buscador u otras personas), orden del día editable (añadir, quitar, reordenar), acuerdos con votación (unanimidad, asentimiento o recuento) y resultado, ruegos y aprobación;
+    - versión para firmar, copiar texto, libro de acuerdos con buscador;
+    - órganos (añadir departamentos) y numeración;
+    - documentos del acta (acta firmada).
+  - **Obligaciones:** calendario de 12 meses más los vencidos, marcar como hecha con nota, elegir de las habituales, editar (anual con varias fechas o única), lista. Los vencimientos aparecen también en el calendario de Actividades y en Inicio («Plazos que vencen»).
+  - **Documentos:** adjuntar (límite configurable), ver, descargar, editar, borrar, categorías, aviso si faltan los estatutos y espacio usado. Componente `WA.DocsUI.seccion` dentro de actas y proyectos.
+  - **Presupuestos → subvenciones:** seguimiento (estado, importe solicitado, plazos, fechas, bases), requisitos con casillas, cobrado frente a concedido, documentos.
+- **Inicio:** plazos que vencen y nuevos pasos («Adjunta los estatutos», «Elige las obligaciones»).
+- **Demostración:** 2 actas, departamento de ejemplo, 9 obligaciones (una vencida), 2 subvenciones (una concedida y otra preparándose) y 3 documentos de texto inventados.
 
 ## Verificado
 
-- `npm test`: 96 tests en verde. `npm run comprobar` y `npm run probar-file` en verde.
+- `npm test`: 107 tests en verde. `npm run comprobar` en verde.
+- `npm run probar-file` (Brave, `file://`) ampliado y en verde:
+  - actualización de IndexedDB de la versión 1 a la 2 conservando los datos;
+  - adjunto cifrado;
+  - cambio de contraseña y recarga;
+  - copia con el adjunto;
+  - borrar del navegador;
+  - restaurar con otra contraseña y recuperar el adjunto.
 - En el navegador, con la demostración:
-  - las pantallas nuevas se pintan sin errores;
-  - inscribir en una actividad completa → espera; cancelar → sube la primera en espera, con aviso;
-  - cobrar en efectivo → caja; marcar autorización y asistencia; cifras correctas (pendiente de cobro calculado a mano);
-  - nueva actividad de todo el día y solo para socios (oculta el precio de no socios, cambia los campos a fecha);
-  - inscribir a un socio por número; .ics con fechas de día completo;
-  - conciliar un Bizum del banco con su inscripción: queda pagada, enlazada a la actividad y contada una sola vez.
+  - todas las pantallas nuevas sin errores;
+  - acta nueva con su plantilla, número correlativo, votación con recuento, reordenar puntos sin perder lo escrito, asistentes y libro de acuerdos;
+  - obligaciones: marcar la vencida como hecha, añadir habituales, editar fechas y validar fechas mal escritas;
+  - adjuntar, leer y descargar un documento;
+  - seguimiento de una subvención con requisitos.
 - **Móvil:** ninguna pantalla nueva desborda.
+- **Fallos encontrados y corregidos:**
+  - los plazos de años anteriores salían como vencidos al añadir una obligación (ahora existe `desde`);
+  - `.map(O.desdePlantilla)` recibía el índice como fecha y la segunda obligación fallaba en silencio;
+  - los campos sin `type` quedaban sin estilo;
+  - riesgo de dar los datos por perdidos si la actualización de IndexedDB queda bloqueada por otra pestaña.
+
+## Pendiente (decisión del usuario)
+
+- **Convocatorias de asamblea:** sin definir todavía (antelación, primera y segunda convocatoria, envío).
 
 ## Sin verificar
 
-- Importar el .ics en Google Calendar, Outlook o Apple Calendar reales (solo hay tests de formato).
-- Safari y Firefox; impresión real; abrir el Excel en Excel o LibreOffice.
-
-## Decisiones del usuario (Fase 4)
-
-- Cada actividad decide si es abierta a todos o solo para socios.
-- La inscripción a veces se cobra, y entonces se apunta en tesorería.
-- Aforo, lista de espera, asistencia real, y menores con autorización.
-- Sin actividades recurrentes: una a una.
+- Safari y Firefox; impresión real (actas, facturas, hoja de asistencia); el .ics en un calendario real; el Excel en Excel o LibreOffice.
+- Adjuntos grandes (varios MB) en móviles: el límite de espacio depende del navegador.

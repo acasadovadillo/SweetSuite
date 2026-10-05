@@ -4,7 +4,7 @@
 
 Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a 150 socios y unos pocos miles de euros al año) que hoy se apañan con hojas de cálculo.
 
-> ⚠️ **Estado: en desarrollo (versión 0.4, fase 4 de 6).** Incluye datos de la asociación, junta directiva, socios y cuotas, tesorería, facturas, ayuda para el IVA, presupuestos y **actividades con calendario e inscripciones**, copias de seguridad cifradas y ajustes. Todavía no hay actas, convocatorias, obligaciones ni informes. Ver la [hoja de ruta](#hoja-de-ruta).
+> ⚠️ **Estado: en desarrollo (versión 0.5, fase 5 de 6).** Incluye datos de la asociación, junta directiva, socios y cuotas, tesorería, facturas, ayuda para el IVA, presupuestos, actividades con calendario, **libro de actas, calendario de obligaciones, seguimiento de subvenciones y documentos adjuntos cifrados**, copias de seguridad cifradas y ajustes. Faltan las convocatorias de asamblea (pendientes de definir) y los informes. Ver la [hoja de ruta](#hoja-de-ruta).
 
 | Inicio | Socios | Actividades | Móvil (tema oscuro) |
 |---|---|---|---|
@@ -39,7 +39,7 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 | 2. Socios | Libro de registro de socios (ficha completa, altas, bajas, menores con tutor, consentimientos), búsqueda y filtros, importar/exportar CSV, tipos de socio con su cuota y periodicidad, emisión de cuotas por periodo, cobro por forma de pago (una o varias a la vez), devoluciones, impagados | ✅ Hecha |
 | 3. Tesorería | Cuentas y saldos, movimientos a mano o importando el extracto del banco (CSV o Excel) con reglas y conciliación con cuotas y facturas; facturas emitidas (numeración, PDF) y recibidas (con retención); anticipos y reembolsos; ayuda para el 303 trimestral y el resumen anual (sujeto, exento, no sujeto; «a compensar» frente a «a devolver»); presupuesto anual y por proyecto o subvención; exportar a Excel | ✅ Hecha |
 | 4. Actividades | Calendario mensual; actividades abiertas o solo para socios; inscripciones con aforo, lista de espera (sube sola), cobro (entra en tesorería sin duplicarse), asistencia, menores y autorizaciones; hoja de asistencia imprimible; exportar a .ics; balance económico por actividad | ✅ Hecha |
-| 5. Gobierno | Libro de actas, convocatorias de asamblea, calendario de obligaciones, seguimiento de subvenciones | Pendiente |
+| 5. Gobierno | Libro de actas por órgano (junta, coordinación, asamblea, departamentos) con orden del día, asistentes, acuerdos y votaciones, versión para firmar y libro de acuerdos; calendario de obligaciones (fiscales, asociativas, renovaciones) con aviso; seguimiento de subvenciones (estado, plazos, requisitos); documentos adjuntos cifrados. *Convocatorias: pendientes de definir* | ✅ Hecha (salvo convocatorias) |
 | 6. Informes | Memoria anual y cuentas imprimibles en PDF, panel de resumen | Pendiente |
 | Futuro | Versión con servidor (acceso de socios, pagos en línea). Solo diseñada | — |
 
@@ -49,6 +49,8 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 - **Un solo navegador y un solo ordenador a la vez.** No hay sincronización: para pasar los datos de un ordenador a otro, usa la copia de seguridad. Si dos personas editan en sitios distintos, sus cambios no se juntan.
 - **Varias copias del archivo en el mismo navegador comparten los datos.** El navegador guarda los datos por «sitio», y todos los archivos locales cuentan como el mismo sitio. Si llevas dos asociaciones, usa un navegador (o un perfil de navegador) distinto para cada una.
 - **El navegador puede borrar los datos** si se borra el historial o los datos de navegación, o si falta espacio. Por eso son imprescindibles las copias de seguridad.
+- **Documentos adjuntos:** se guardan cifrados en el navegador y van dentro de la copia de seguridad, que crece con ellos. Máximo 10 MB por archivo (configurable). Necesitan IndexedDB.
+- **Calendario de obligaciones:** fechas orientativas, editables; verificad con la asesoría qué os afecta.
 - **Tesorería por criterio de caja** (el dinero cuenta cuando entra o sale, con el IVA incluido). Las cuentas anuales formales pueden necesitar otro criterio: verificar con asesoría.
 - **La ayuda del IVA es orientativa.** Suma lo que hay en las facturas; no calcula la prorrata (se indica el porcentaje a mano) ni presenta nada. Revisadlo con la asesoría.
 - **Extractos del banco:** se leen CSV y Excel moderno (.xlsx). Los .xls antiguos hay que guardarlos antes como .xlsx o .csv.

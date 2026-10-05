@@ -2,25 +2,23 @@
 
 ## Ahora (esperando al usuario)
 
-1. Que el usuario revise la Fase 4 y dé el OK. Hacer el commit «Fase 4: actividades y calendario».
-2. Probar a importar el `.ics` en el calendario que usen (Google, Outlook, móvil).
-3. Pendiente desde fases anteriores: Safari y Firefox, abrir el Excel e imprimir a PDF.
+1. Que el usuario revise la Fase 5 y dé el OK. Hacer el commit «Fase 5: actas, obligaciones, subvenciones y documentos».
+2. Pendiente de decidir: **convocatorias de asamblea** (antelación mínima según estatutos, primera y segunda convocatoria, texto para correo con los correos en CCO, versión imprimible). Cuando se decida: colección `convocatorias` enlazada con el acta que la sigue.
+3. Pendiente de probar desde fases anteriores: Safari y Firefox, impresión real, .ics y Excel en sus programas.
 
-## Fase 5 — Gobierno y documentación (siguiente)
+## Fase 6 — Informes (siguiente)
 
 **Preguntas para el usuario antes de empezar:**
-- Actas: ¿de qué órganos (junta directiva, asamblea general ordinaria y extraordinaria)? ¿Numeración por año o correlativa? ¿Firman presidencia y secretaría?
-- Convocatorias: ¿con cuánta antelación según vuestros estatutos? ¿Primera y segunda convocatoria? ¿Se envían por correo (generar el texto para copiar) o se imprimen?
-- Obligaciones: ¿cuáles queréis ver con aviso? (Cuentas anuales, modelos 303/390, 111/190, 182 de donaciones, 347, renovación de cargos, seguros, registro de asociaciones…). Las fechas exactas: verificar con asesoría; se podrán editar.
-- Subvenciones: ¿qué datos seguís (convocatoria, plazo de solicitud, resolución, importe, plazo de justificación, documentos)? Ya existen «proyectos» con tipo subvención y presupuesto: ampliarlos en vez de duplicarlos.
-- ¿Adjuntar documentos (estatutos, actas firmadas)? Sería con IndexedDB y aumentaría el tamaño de las copias de seguridad.
+- Memoria anual: ¿qué apartados? (Datos de la entidad, junta, número de socios, actividades con asistentes, proyectos y subvenciones, resumen económico…) ¿Con texto libre de presentación?
+- Cuentas: ¿basta con el resumen de ingresos y gastos por categoría y los saldos (criterio de caja) o queréis algo más formal? Lo formal depende del plan contable aplicable: verificar con asesoría.
+- Panel de resumen: ¿qué cifras queréis ver de un vistazo en Inicio?
 
-**Primer paso concreto:** colecciones `actas`, `convocatorias` y `obligaciones` (esquema v6); ampliar `proyectos` con los campos de seguimiento de subvenciones (plazos, estado, justificación). Las obligaciones aparecerán también en el calendario de actividades y en Inicio.
+**Primer paso concreto:** `logica/informes.js` (con tests), que reúna los datos de un ejercicio (socios a 31/12, altas y bajas, cuotas, actividades y asistentes, menores, proyectos, ingresos y gastos, saldos, IVA, actas y acuerdos) en un objeto. Después, la vista imprimible (`#/informes/memoria/<año>`) con estilos de impresión, como el acta y la factura.
 
 ## Mejoras anotadas (no urgentes)
 
-- Remesa SEPA en fichero XML (pain.008); prorrateo automático de cuotas; facturas rectificativas.
-- Actividades: avisar por correo (generar texto) a quien pasa de la lista de espera; ver en la ficha del socio sus actividades.
-- Enlazar la junta directiva con fichas de socio.
-- Avisar si `navigator.storage.persist()` devuelve `false`.
-- Capturas nuevas para el README de Tesorería, Facturas e IVA.
+- Remesa SEPA en XML (pain.008); prorrateo de cuotas; facturas rectificativas.
+- Actividades: avisar a quien pasa de la lista de espera; ver en la ficha del socio sus actividades.
+- Varios archivos a la vez al adjuntar; vista previa de imágenes.
+- Enlazar la junta directiva con las fichas de socio.
+- Capturas nuevas para el README (Tesorería, Actas).

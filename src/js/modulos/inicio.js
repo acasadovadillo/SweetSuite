@@ -22,6 +22,17 @@
     var demo = WA.Sesion.modo === "demostración";
     var movimientos = await datos.listar("movimientos");
     var actividades = await datos.listar("actividades");
+    var documentos = await datos.listar("documentos");
+    var obligaciones = await datos.listar("obligaciones");
+    var hoyIso = WA.Fechas.hoy();
+    var venc = (await WA.ObligacionesUI.vencimientos(datos, (+hoyIso.slice(0, 4) - 1) + "-01-01", WA.Fechas.sumarDias(hoyIso, 60)))
+      .filter(function (v) { return v.estado === "vencida" || v.estado === "proxima"; }).slice(0, 6);
+    var vencHtml = venc.length ? '<section class="tarjeta' + (venc.some(function (v) { return v.estado === "vencida"; }) ? " tarjeta-alerta" : "") + '" aria-labelledby="t-venc"><h2 id="t-venc">Plazos que vencen</h2><ul class="lista-actividades">' +
+      venc.map(function (v) {
+        return '<li><a href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '"><strong>' + esc(v.titulo) + "</strong></a>" +
+          '<span class="detalle">' + esc(WA.Fechas.corta(v.fecha)) + (v.etiqueta ? " · " + esc(v.etiqueta) : "") + " · " +
+          (v.faltan < 0 ? '<span class="importe-negativo">venció hace ' + (-v.faltan) + " días</span>" : v.faltan === 0 ? "hoy" : "en " + v.faltan + " días") + "</span></li>";
+      }).join("") + '</ul><a class="enlace-flecha" href="#/obligaciones">Ver obligaciones</a></section>' : "";
     var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas, undefined, actividades).total;
     var proximas = WA.Actividades.ordenar(actividades).filter(function (x) { return WA.Actividades.fechaDe(x) >= WA.Fechas.hoy() && x.estado !== "cancelada"; }).slice(0, 3);
     var proximasHtml = '<section class="tarjeta" aria-labelledby="t-act"><h2 id="t-act">Próximas actividades</h2>' + (proximas.length ? '<ul class="lista-actividades">' + proximas.map(function (x) {
@@ -37,6 +48,8 @@
     if (!junta.length) pendientes.push('<a href="#/asociacion">Añade la junta directiva</a>');
     if (!(config.tiposSocio || []).some(function (t) { return t.cuota > 0; })) pendientes.push('<a href="#/cuotas/tipos">Pon el importe de la cuota de socio</a>');
     if (!socios.length) pendientes.push('<a href="#/socios">Da de alta a los socios (o impórtalos desde una hoja de cálculo)</a>');
+    if (!documentos.some(function (d) { return d.categoria === "Estatutos"; })) pendientes.push('<a href="#/documentos">Adjunta los estatutos</a>');
+    if (!obligaciones.length) pendientes.push('<a href="#/obligaciones">Elige las obligaciones (fiscales, asociativas, renovaciones) que queréis tener con aviso</a>');
     if (!demo && !copia.ultimaCopia) pendientes.push('<a href="#/copias">Descarga tu primera copia de seguridad</a>');
 
     var estadoCopia = demo ? "No aplica en la demostración."
@@ -50,7 +63,7 @@
       (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
         pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
       '<div class="rejilla-tarjetas">' +
-      proximasHtml +
+      vencHtml + proximasHtml +
       '<section class="tarjeta" aria-labelledby="t-saldo"><h2 id="t-saldo">Saldo</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(saldo)) + "</span></p>" +
       (sinClasificar ? '<p class="detalle">' + sinClasificar + " movimientos sin clasificar</p>" : "") + '<a class="enlace-flecha" href="#/tesoreria">Ver tesorería</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
@@ -60,7 +73,7 @@
       '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
       '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Actas, convocatorias, obligaciones, subvenciones e informes.</p></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Convocatorias de asamblea, memoria anual e informes.</p></section>' +
       "</div>";
   }
 

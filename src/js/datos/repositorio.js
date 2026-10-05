@@ -17,13 +17,19 @@
  *                                  (importaciones, remesas): un solo guardado
  *   borrar(coleccion, id)        → true si existía
  *   documento()                  → copia del documento completo (para copias de seguridad)
+ *   guardarArchivo(ficha, bytes) → adjunta un archivo: su ficha va a la colección
+ *                                  «documentos» y sus bytes a un almacén aparte
+ *   leerArchivo(id)              → los bytes (Uint8Array) de un adjunto
+ *   borrarArchivo(id)            → quita la ficha y los bytes
  *
  * Siempre se devuelven COPIAS: si un formulario modifica lo que recibió, no
  * cambia nada guardado hasta que llame a guardar().
  *
- * crearRepositorio(doc, alCambiar): «alCambiar(doc)» se llama tras cada cambio;
- * la sesión la usa para cifrar y guardar en el navegador. En los tests y en el
- * modo demostración no hace nada.
+ * crearRepositorio(doc, alCambiar, reloj, archivos): «alCambiar(doc)» se llama tras
+ * cada cambio; la sesión la usa para cifrar y guardar en el navegador. En los
+ * tests y en el modo demostración no hace nada. «archivos» es dónde van los bytes
+ * de los adjuntos: { guardar(id, bytes), leer(id), borrar(id) } (la sesión los
+ * cifra; si no se da, quedan en memoria).
  */
 (function (raiz, fabrica) {
   var Esquema = typeof require === "function" ? require("./esquema.js") : raiz.WA.Esquema;
@@ -35,9 +41,20 @@
 
   var copiar = function (x) { return x == null ? x : JSON.parse(JSON.stringify(x)); };
 
-  function crearRepositorio(doc, alCambiar, reloj) {
+  /** Almacén de bytes en memoria (demostración y tests). inicial: { id: Uint8Array }. */
+  function archivosEnMemoria(inicial) {
+    var m = Object.assign({}, inicial || {});
+    return {
+      guardar: async function (id, bytes) { m[id] = new Uint8Array(bytes); },
+      leer: async function (id) { return m[id] ? new Uint8Array(m[id]) : null; },
+      borrar: async function (id) { delete m[id]; },
+    };
+  }
+
+  function crearRepositorio(doc, alCambiar, reloj, archivos) {
     var ahora = reloj || function () { return new Date().toISOString(); };
     var avisar = alCambiar || function () {};
+    var bytes = archivos || archivosEnMemoria();
 
     function coleccion(nombre) {
       if (Esquema.COLECCIONES.indexOf(nombre) < 0) throw new Error("Colección desconocida: " + nombre);
@@ -108,6 +125,28 @@
 
       documento: async function () { return copiar(doc); },
 
+      guardarArchivo: async function (ficha, contenido) {
+        var r = copiar(ficha);
+        r.id = r.id || Esquema.nuevoId();
+        r.tamano = contenido.length;
+        // Primero los bytes: si fallan (sin espacio…), no queda una ficha sin archivo.
+        await bytes.guardar(r.id, contenido);
+        var t = ahora();
+        var lista = coleccion("documentos");
+        var i = lista.findIndex(function (x) { return x.id === r.id; });
+        if (i >= 0) { r.creado = lista[i].creado; r.modificado = t; lista[i] = r; } else { r.creado = t; r.modificado = t; lista.push(r); }
+        await cambiado();
+        return copiar(r);
+      },
+      leerArchivo: async function (id) { return bytes.leer(id); },
+      borrarArchivo: async function (id) {
+        await bytes.borrar(id);
+        var lista = coleccion("documentos");
+        var i = lista.findIndex(function (x) { return x.id === id; });
+        if (i >= 0) { lista.splice(i, 1); await cambiado(); }
+        return i >= 0;
+      },
+
       /** Estado de la copia de seguridad, para el aviso de la cabecera. */
       estadoCopia: async function () {
         return { ultimaCopia: doc.meta.ultimaCopia, cambiosDesdeCopia: doc.meta.cambiosDesdeCopia || 0 };
@@ -122,5 +161,5 @@
     };
   }
 
-  return { crearRepositorio: crearRepositorio };
+  return { crearRepositorio: crearRepositorio, archivosEnMemoria: archivosEnMemoria };
 });

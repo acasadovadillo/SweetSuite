@@ -14,10 +14,10 @@
   var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, T = WA.Tesoreria, Fac = WA.Facturas;
 
   async function cargar(datos) {
-    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion", "actividades"].map(function (k) {
+    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion", "actividades", "documentos"].map(function (k) {
       return k === "config" || k === "asociacion" ? datos.leer(k) : datos.listar(k);
     }));
-    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8], actividades: r[9] };
+    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8], actividades: r[9], documentos: r[10] };
   }
 
   var buscar = function (lista, id) { return (lista || []).filter(function (x) { return x.id === id; })[0]; };

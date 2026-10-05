@@ -14,6 +14,10 @@
  * El nombre de la asociación va fuera del cifrado para que sepas de quién es una
  * copia sin abrirla. Es lo único que va en claro.
  *
+ * Los ARCHIVOS ADJUNTOS van en «archivos»: { id: { iv, ct } } cifrados con la misma
+ * llave que los datos (copia cifrada) o { id: { datos } } en claro (copia sin
+ * cifrar), siempre en base64.
+ *
  * Este archivo solo arma y lee sobres (sin DOM): se puede probar en Node.
  */
 (function (raiz, fabrica) {
@@ -26,14 +30,18 @@
   var FORMATO = "webkit_asociaciones-copia";
   var VERSION = 1;
 
-  function sobreCifrado(bloque, nombreAsociacion, ahora) {
-    return { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
+  function sobreCifrado(bloque, nombreAsociacion, ahora, archivos) {
+    var s = { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
       cifrada: true, asociacion: nombreAsociacion || "", datos: bloque };
+    if (archivos && Object.keys(archivos).length) s.archivos = archivos;
+    return s;
   }
 
-  function sobreAbierto(documento, ahora) {
-    return { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
+  function sobreAbierto(documento, ahora, archivos) {
+    var s = { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
       cifrada: false, asociacion: (documento.asociacion && documento.asociacion.nombre) || "", documento: documento };
+    if (archivos && Object.keys(archivos).length) s.archivos = archivos;
+    return s;
   }
 
   /**
@@ -50,13 +58,13 @@
       if (j.version > VERSION) throw new Error("Esta copia es de una versión más nueva de la aplicación. Descarga la última versión.");
       if (j.cifrada) {
         if (!j.datos || typeof j.datos.ct !== "string") throw new Error("La copia está incompleta o dañada.");
-        return { cifrada: true, bloque: j.datos, asociacion: j.asociacion || "", creada: j.creada || null };
+        return { cifrada: true, bloque: j.datos, asociacion: j.asociacion || "", creada: j.creada || null, archivos: j.archivos || {} };
       }
       if (!j.documento || typeof j.documento !== "object") throw new Error("La copia está incompleta o dañada.");
-      return { cifrada: false, documento: j.documento, asociacion: j.asociacion || "", creada: j.creada || null };
+      return { cifrada: false, documento: j.documento, asociacion: j.asociacion || "", creada: j.creada || null, archivos: j.archivos || {} };
     }
     if (j && j.app === "webkit_asociaciones") {
-      return { cifrada: false, documento: j, asociacion: (j.asociacion && j.asociacion.nombre) || "", creada: null };
+      return { cifrada: false, documento: j, asociacion: (j.asociacion && j.asociacion.nombre) || "", creada: null, archivos: {} };
     }
     throw new Error("El archivo no es una copia de seguridad de webkit_asociaciones.");
   }

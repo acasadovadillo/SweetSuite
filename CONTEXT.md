@@ -12,9 +12,9 @@ Nace de **Solvento** (`../../Solvento`, app de finanzas personales del mismo aut
 src/index.html            se abre directamente para desarrollar (scripts clásicos, funciona con file://)
 src/css/                  tokens (colores) · base (estructura) · componentes · impresión
 src/js/nucleo/            dinero · fechas · validar · direccion · csv · xlsx · cripto · tema · preferencias · ui · form-direccion · app
-src/js/logica/            socios · cuotas · actividades · facturas · iva · tesoreria · extracto   (lógica de negocio pura, sin DOM, con tests)
+src/js/logica/            socios · cuotas · actividades · actas · obligaciones · facturas · iva · tesoreria · extracto   (lógica de negocio pura, sin DOM, con tests)
 src/js/datos/             esquema · repositorio · copia · demo · boveda · sesion
-src/js/modulos/           acceso · inicio · asociacion · socios · cuotas · tesoreria-comun · actividades · tesoreria · facturas · iva · proyectos · copias · ajustes
+src/js/modulos/           acceso · inicio · asociacion · socios · cuotas · tesoreria-comun · actividades · tesoreria · facturas · iva · proyectos · actas · obligaciones · documentos · copias · ajustes
 src/js/arranque.js        siempre el último
 tools/build.mjs           empaqueta todo en dist/webkit_asociaciones.html (sin dependencias)
 tests/*.test.js           node --test (incluido en Node, sin instalar nada)
@@ -57,6 +57,12 @@ tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium 
 | Menores: en socios se calcula con su fecha de nacimiento el día de la actividad; en no socios se marca a mano | Autorización firmada solo si la actividad lo pide |
 | .ics propio (RFC 5545) con VTIMEZONE Europe/Madrid o Atlantic/Canary, líneas plegadas a 75 octetos | Sin librerías; se elige el horario (peninsular o canario) y se guarda en `config.zonaHoraria` |
 | Sin actividades recurrentes | Decisión del usuario: se crean una a una (hay «Duplicar») |
+| Adjuntos: la ficha va en la colección `documentos`; los bytes, en un almacén aparte de IndexedDB (`archivos`, BD versión 2), cifrados con la misma llave (`Cripto.cifrarBytes`, AES-GCM con iv nuevo) | No se recifran varios MB en cada guardado. La copia los lleva en `archivos` (base64, cifrados o en claro según la copia). Al cambiar la contraseña o restaurar se recifran (primero todos en memoria, luego se escriben). `Repositorio` recibe un adaptador `{guardar, leer, borrar}`: la futura API podría implementarlo con subida de archivos |
+| IndexedDB versión 1 → 2 | Al actualizar, si otra pestaña tiene la base abierta, se espera (y se avisa) en vez de dar los datos por perdidos. Probado en `tools/probar-file.mjs` |
+| Actas por órgano configurable (`config.organos`: junta, coordinación, asamblea, departamento, otro), numeración por año o correlativa (`config.actas.numeracion`) | Decisión del usuario: actas de Junta Directiva, Coordinación, Asambleas y Departamentos. La app anota el resultado de cada acuerdo, no lo decide (mayorías según estatutos) |
+| Obligaciones: plantillas habituales (fiscales, asociativas, renovaciones) que se eligen, no se añaden solas; `desde` para no arrastrar plazos anteriores a cuando se empezó a llevarla | Fechas orientativas y editables («verificar con asesoría») |
+| Subvenciones = proyectos con `tipo: "subvencion"` ampliados (estado, plazos, requisitos); sus plazos se suman al calendario de obligaciones según el estado | No se duplica con «proyectos» (que ya tiene presupuesto y ejecución) |
+| Convocatorias de asamblea | Pendientes: el usuario aún no ha definido cómo convocan |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
 | Navegación por `#/modulo` | Funciona con `file://` sin servidor |
 | Capa de datos (`Repositorio`) asíncrona y como única puerta a los datos | **Preparada para la versión con servidor**: bastará con otro repositorio con las mismas funciones que use `fetch` contra una API |

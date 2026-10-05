@@ -238,7 +238,54 @@ test("migrar de la versión 4 añade las actividades y la zona horaria", () => {
   const v4 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
   delete v4.actividades; delete v4.config.zonaHoraria; v4.esquema = 4;
   const doc = Esquema.migrar(v4);
-  assert.equal(doc.esquema, 5);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.deepEqual(doc.actividades, []);
   assert.equal(doc.config.zonaHoraria, "Europe/Madrid");
+});
+
+test("migrar de la versión 5 añade actas, obligaciones, documentos y órganos", () => {
+  const v5 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  ["actas", "obligaciones", "documentos"].forEach((c) => delete v5[c]);
+  delete v5.config.organos; delete v5.config.actas; delete v5.config.limiteArchivoMB; v5.esquema = 5;
+  const doc = Esquema.migrar(v5);
+  assert.equal(doc.esquema, 6);
+  assert.deepEqual([doc.actas, doc.obligaciones, doc.documentos], [[], [], []]);
+  assert.deepEqual(doc.config.organos.map((o) => o.prefijo), ["JD", "CO", "AG"]);
+  assert.equal(doc.config.actas.numeracion, "anual");
+  assert.equal(doc.config.limiteArchivoMB, 10);
+});
+
+// ── Archivos adjuntos ───────────────────────────────────────────────────
+test("adjuntar, leer y borrar un archivo (ficha en «documentos», bytes aparte)", async () => {
+  const { repo, doc, llamadas } = repoDePrueba();
+  const bytes = new Uint8Array([37, 80, 68, 70, 0, 255, 128]);
+  const ficha = await repo.guardarArchivo({ nombre: "estatutos.pdf", tipoMime: "application/pdf", categoria: "Estatutos" }, bytes);
+  assert.ok(ficha.id);
+  assert.equal(ficha.tamano, 7);
+  assert.equal(doc.documentos.length, 1);
+  assert.ok(!JSON.stringify(doc).includes("37,80,68"), "los bytes no van dentro del documento");
+  assert.deepEqual(Array.from(await repo.leerArchivo(ficha.id)), Array.from(bytes));
+  assert.equal(llamadas(), 1);
+  assert.equal(await repo.borrarArchivo(ficha.id), true);
+  assert.equal(await repo.leerArchivo(ficha.id), null);
+  assert.equal(doc.documentos.length, 0);
+});
+
+test("cifrar y descifrar los bytes de un adjunto, y su paso a base64 para la copia", async () => {
+  const llave = await Cripto.crearLlave("contraseña de prueba");
+  const bytes = new Uint8Array(100000).map((_, i) => i % 251);
+  const cif = await Cripto.cifrarBytes(bytes, llave);
+  assert.notDeepEqual(Array.from(cif.ct.slice(0, 20)), Array.from(bytes.slice(0, 20)));
+  const ida = Cripto.archivoDesdeBase64(Cripto.archivoABase64(cif));
+  assert.deepEqual(Array.from(await Cripto.descifrarBytes(ida, llave)), Array.from(bytes));
+  const otra = await Cripto.crearLlave("otra contraseña");
+  await assert.rejects(() => Cripto.descifrarBytes(cif, otra), (e) => e.codigo === "CONTRASENA");
+});
+
+test("la copia de seguridad lleva los adjuntos", async () => {
+  const doc = Demo.documentoDemo();
+  const sobre = Copia.sobreAbierto(doc, null, { "doc-1": { datos: "AAEC" } });
+  const leida = Copia.leer(JSON.stringify(sobre));
+  assert.deepEqual(leida.archivos, { "doc-1": { datos: "AAEC" } });
+  assert.deepEqual(Copia.leer(JSON.stringify(Copia.sobreAbierto(doc))).archivos, {});
 });
