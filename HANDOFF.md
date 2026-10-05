@@ -1,70 +1,62 @@
 # HANDOFF.md — Estado actual
 
-*Última actualización: 2026-10-05 · Fase 3 (Tesorería) terminada, **sin commit**; pendiente del OK del usuario.*
+*Última actualización: 2026-10-05 · Fase 4 (Actividades) terminada, **sin commit**; pendiente del OK del usuario.*
 
-El proyecto está ahora en `~/ACV/PROYECTOS/IA/ABIES/webkit_asociaciones` (antes estuvo en `~/ACV/Claude_Directories/ABIES/`).
+El proyecto está en `~/ACV/PROYECTOS/IA/ABIES/webkit_asociaciones`.
 
-## Fases anteriores (con commit)
+## Commits
 
 - `6622e1f` Fase 1: base, datos de la asociación, copias cifradas.
 - `a952c19` Fase 2: socios y cuotas.
+- `f31c56c` Fase 3: tesorería, facturas, IVA y presupuestos.
 
-## Fase 3: tesorería
+## Fase 4: actividades y calendario
 
-- **Esquema v4:** en `config`, cuentas con saldo inicial e IBAN, categorías de ingreso y gasto (con su IVA habitual), IVA (presenta, prorrata, saldo a compensar inicial, devoluciones pedidas), facturación (serie, motivo de exención, forma de pago, pie), reglas de clasificación y presupuestos anuales. Nuevas colecciones: `movimientos`, `facturas`, `anticipos` y `proyectos`. Migración 3→4 con test.
-- **Lógica con tests:**
-  - `logica/facturas.js`: totales por tipo, retención, numeración, revisión y estado de cobro.
-  - `logica/iva.js`: trimestres, liquidaciones encadenadas con compensación, avisos y resumen anual.
-  - `logica/tesoreria.js`: libro con cuotas sin duplicar, saldos, resultados, ejecución de presupuesto, anticipos y conciliación con cuotas.
-  - `logica/extracto.js`: columnas, conversión, duplicados, reglas y sugerencias.
-  - `nucleo/xlsx.js`: escribir y leer Excel.
-- **Módulos:**
-  - **Tesorería:**
-    - Resumen: saldos, ingresos y gastos del año, pendientes y descarga del Excel.
-    - Movimientos: filtros, alta y edición con conciliación, importar extracto con mapeo de columnas y vista previa.
-    - Anticipos y reembolsos: explicación en letra pequeña, gastos justificados, entregas, devoluciones y pagos.
-    - Ajustes: cuentas, categorías, reglas, IVA y facturación.
-  - **Facturas:**
-    - Emitidas: borrador → emitir → cobrar → imprimir o PDF, más anular, desbloquear y duplicar.
-    - Recibidas: con retención y «deducible».
-    - Autocompletado de clientes y proveedores conocidos.
-  - **IVA:** trimestres con resultado y aviso «a compensar» o «a devolver», casilla para pedir la devolución en el 4.º trimestre, detalle por tipo, exentas, no sujetas y retenciones, y resumen anual.
-  - **Presupuestos:** presupuesto anual editable (copiar del año anterior) y proyectos o subvenciones con presupuesto por partidas, ejecución y movimientos.
-- **Inicio:** tarjeta de saldo y aviso de movimientos sin clasificar.
-- **Demostración:** cuentas, movimientos (algunos «del banco» sin clasificar), 2 facturas emitidas y 3 recibidas, un anticipo, un reembolso, un proyecto subvencionado y el presupuesto de 2026.
+- **Esquema v5:** colección `actividades` (con sus inscripciones) y `config.zonaHoraria`. Migración 4→5 con test.
+- **Lógica con tests** (`logica/actividades.js`):
+  - inscribir (solo socios o abierta, precios de socio y general, sin duplicados, aforo, lista de espera);
+  - cancelar con subida automática del primero en espera, o darle plaza a mano;
+  - cobrar, cambiar importe, asistencia;
+  - menores (en socios, por la fecha de nacimiento el día de la actividad) y autorizaciones;
+  - resumen, duplicar, calendario del mes (lunes primero, actividades de varios días);
+  - balance económico y exportación .ics (RFC 5545, horario peninsular o canario).
+- **Tesorería ampliada:**
+  - las inscripciones cobradas entran como ingresos («Inscripciones a actividades»), salvo que un movimiento del banco las enlace (`inscripcionIds`);
+  - el extracto sugiere inscripciones;
+  - `actividadId` en movimientos y en gastos de anticipos;
+  - la forma de pago al conciliar se deduce del concepto del banco (BIZUM, RECIBO, TARJETA);
+  - el Excel incluye una hoja de actividades.
+- **Módulo Actividades:**
+  - calendario mensual (en el móvil, lista del mes) y próximas;
+  - lista con búsqueda;
+  - ficha con datos, cifras (plazas, espera, asistencia, menores sin autorización, cobrado y pendiente) e inscripciones (inscribir socio o no socio, cobrar, autorización, asistencia, cancelar, dar plaza, cambiar importe);
+  - balance con «Apuntar un gasto»;
+  - hoja de asistencia imprimible con columna de firma;
+  - exportar inscritos en CSV, copiar correos, duplicar, .ics de una actividad o de todas.
+- **Inicio:** tarjeta de próximas actividades.
+- **Demostración:** 6 actividades (2 realizadas con asistencia y cobros, 1 completa con lista de espera y menores, 1 taller, 1 asamblea solo para socios, 1 cancelada).
+- **Corregido:** `UI.leerFormulario` leía mal los botones de opción (radio): ahora solo cuenta la marcada.
 
 ## Verificado
 
-- `npm test`: 87 tests en verde. `npm run probar-file` (Brave, `file://`) en verde.
+- `npm test`: 96 tests en verde. `npm run comprobar` y `npm run probar-file` en verde.
 - En el navegador, con la demostración:
-  - Las 23 pantallas se pintan sin errores.
-  - Importar un extracto: 2 nuevos, 1 duplicado saltado y la regla aplicada.
-  - Conciliar una transferencia con su cuota: queda pagada y el saldo no cambia, sin doble cómputo.
-  - Clasificar un movimiento.
-  - Factura completa: avisos al emitir vacía, autocompletado del cliente, línea exenta con motivo, emisión con el número 2026-0003, cobro, estado «Cobrada» e impresión.
-  - Cifras del IVA comprobadas a mano: T1 a ingresar 25,20 €; T2 −10,50 € a compensar, arrastrados.
-  - Excel descargado y vuelto a leer: 7 hojas; ZIP y XML válidos.
-  - Pago de un reembolso, que queda liquidado.
-  - Guardar el presupuesto anual.
-- **Móvil:** ninguna pantalla desborda. Se corrigió que los textos solo para lectores de pantalla ensanchaban la página: `position: relative` en `.tabla-envoltorio` y `.pestanas`.
-- **Fallos encontrados y corregidos en esta fase:**
-  - Nombres de hoja de Excel repetidos.
-  - La primera línea de una factura nueva salía «no sujeta».
-  - Las sugerencias de cuotas proponían socios que solo compartían un apellido.
-  - El concepto aparecía duplicado en los movimientos importados.
-  - La factura impresa desbordaba en el móvil.
+  - las pantallas nuevas se pintan sin errores;
+  - inscribir en una actividad completa → espera; cancelar → sube la primera en espera, con aviso;
+  - cobrar en efectivo → caja; marcar autorización y asistencia; cifras correctas (pendiente de cobro calculado a mano);
+  - nueva actividad de todo el día y solo para socios (oculta el precio de no socios, cambia los campos a fecha);
+  - inscribir a un socio por número; .ics con fechas de día completo;
+  - conciliar un Bizum del banco con su inscripción: queda pagada, enlazada a la actividad y contada una sola vez.
+- **Móvil:** ninguna pantalla nueva desborda.
 
 ## Sin verificar
 
-- Safari y Firefox con `file://`.
-- Abrir el Excel en Excel o LibreOffice reales: solo se validó su estructura.
-- Imprimir de verdad (solo el CSS de impresión).
-- Lectores de pantalla reales.
+- Importar el .ics en Google Calendar, Outlook o Apple Calendar reales (solo hay tests de formato).
+- Safari y Firefox; impresión real; abrir el Excel en Excel o LibreOffice.
 
-## Decisiones del usuario
+## Decisiones del usuario (Fase 4)
 
-- Licencia privativa. Si se sube a GitHub, repositorio privado.
-- IVA: presentan el 303 trimestral y el resumen anual, pero no todo está sujeto (cuotas y donaciones no). Cada línea puede ser sujeta, exenta o no sujeta.
-- Facturas: emiten y reciben.
-- Anticipos y reembolsos: las dos vías, explicadas en letra pequeña.
-- Banco: importar el extracto y apuntar a mano.
+- Cada actividad decide si es abierta a todos o solo para socios.
+- La inscripción a veces se cobra, y entonces se apunta en tesorería.
+- Aforo, lista de espera, asistencia real, y menores con autorización.
+- Sin actividades recurrentes: una a una.

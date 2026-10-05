@@ -4,11 +4,11 @@
 
 Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a 150 socios y unos pocos miles de euros al año) que hoy se apañan con hojas de cálculo.
 
-> ⚠️ **Estado: en desarrollo (versión 0.3, fase 3 de 6).** Incluye datos de la asociación, junta directiva, socios y cuotas, **tesorería, facturas, ayuda para el IVA y presupuestos**, copias de seguridad cifradas y ajustes. Todavía no hay actividades, actas ni informes. Ver la [hoja de ruta](#hoja-de-ruta).
+> ⚠️ **Estado: en desarrollo (versión 0.4, fase 4 de 6).** Incluye datos de la asociación, junta directiva, socios y cuotas, tesorería, facturas, ayuda para el IVA, presupuestos y **actividades con calendario e inscripciones**, copias de seguridad cifradas y ajustes. Todavía no hay actas, convocatorias, obligaciones ni informes. Ver la [hoja de ruta](#hoja-de-ruta).
 
-| Inicio | Socios | Junta directiva | Móvil (tema oscuro) |
+| Inicio | Socios | Actividades | Móvil (tema oscuro) |
 |---|---|---|---|
-| ![Inicio](docs/capturas/inicio.jpg) | ![Socios](docs/capturas/socios.jpg) | ![Junta](docs/capturas/junta.jpg) | ![Móvil](docs/capturas/movil-oscuro.jpg) |
+| ![Inicio](docs/capturas/inicio.jpg) | ![Socios](docs/capturas/socios.jpg) | ![Actividades](docs/capturas/actividades.jpg) | ![Móvil](docs/capturas/movil-oscuro.jpg) |
 
 *(Capturas con los datos de demostración: todo es inventado.)*
 
@@ -38,7 +38,7 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 | 1. Base y datos | Datos de la asociación y junta directiva, almacenamiento cifrado, copias de seguridad, demostración, tema claro/oscuro, diseño adaptado al móvil | ✅ Hecha |
 | 2. Socios | Libro de registro de socios (ficha completa, altas, bajas, menores con tutor, consentimientos), búsqueda y filtros, importar/exportar CSV, tipos de socio con su cuota y periodicidad, emisión de cuotas por periodo, cobro por forma de pago (una o varias a la vez), devoluciones, impagados | ✅ Hecha |
 | 3. Tesorería | Cuentas y saldos, movimientos a mano o importando el extracto del banco (CSV o Excel) con reglas y conciliación con cuotas y facturas; facturas emitidas (numeración, PDF) y recibidas (con retención); anticipos y reembolsos; ayuda para el 303 trimestral y el resumen anual (sujeto, exento, no sujeto; «a compensar» frente a «a devolver»); presupuesto anual y por proyecto o subvención; exportar a Excel | ✅ Hecha |
-| 4. Actividades | Calendario, inscripciones, exportar a .ics, enlace con gastos e ingresos | Pendiente |
+| 4. Actividades | Calendario mensual; actividades abiertas o solo para socios; inscripciones con aforo, lista de espera (sube sola), cobro (entra en tesorería sin duplicarse), asistencia, menores y autorizaciones; hoja de asistencia imprimible; exportar a .ics; balance económico por actividad | ✅ Hecha |
 | 5. Gobierno | Libro de actas, convocatorias de asamblea, calendario de obligaciones, seguimiento de subvenciones | Pendiente |
 | 6. Informes | Memoria anual y cuentas imprimibles en PDF, panel de resumen | Pendiente |
 | Futuro | Versión con servidor (acceso de socios, pagos en línea). Solo diseñada | — |

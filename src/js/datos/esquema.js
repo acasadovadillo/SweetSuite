@@ -5,13 +5,14 @@
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 4,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 5,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
  *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
  *     junta: [ { id, cargo, nombre, ... } ],      ← colecciones: listas de registros
  *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
  *     movimientos, facturas, anticipos, proyectos   (ver logica/tesoreria.js y logica/facturas.js)
+ *     actividades (con sus inscripciones)           (ver logica/actividades.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -28,7 +29,8 @@
  * Así, una copia de seguridad antigua siempre se puede abrir con la versión nueva.
  *
  * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
- *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3).
+ *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3)
+ *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -40,10 +42,10 @@
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 4;
+  var VERSION = 5;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -72,6 +74,7 @@
    *   facturacion { serie, motivoExencion, condicionesPago, pie }   (para las facturas emitidas)
    *   reglas      para clasificar el extracto del banco: [{ texto, categoriaId }]
    *   presupuestos  presupuesto anual aprobado: { "2026": { categoriaId: céntimos } }
+   *   zonaHoraria   para exportar el calendario (.ics): "Europe/Madrid" o "Atlantic/Canary"
    */
   function configVacia() {
     return {
@@ -84,6 +87,7 @@
       facturacion: { serie: "", motivoExencion: "", condicionesPago: "", pie: "" },
       reglas: [],
       presupuestos: {},
+      zonaHoraria: "Europe/Madrid",
     };
   }
 
@@ -154,6 +158,14 @@
       doc.esquema = 4;
       return doc;
     },
+
+    // 4 → 5: actividades (Fase 4).
+    4: function (doc) {
+      if (!Array.isArray(doc.actividades)) doc.actividades = [];
+      doc.config = Object.assign({ zonaHoraria: "Europe/Madrid" }, doc.config || {});
+      doc.esquema = 5;
+      return doc;
+    },
   };
 
   /**
@@ -195,6 +207,7 @@
     doc.config.facturacion = Object.assign(configVacia().facturacion, doc.config.facturacion || {});
     if (!Array.isArray(doc.config.reglas)) doc.config.reglas = [];
     if (!doc.config.presupuestos || typeof doc.config.presupuestos !== "object") doc.config.presupuestos = {};
+    if (!doc.config.zonaHoraria) doc.config.zonaHoraria = "Europe/Madrid";
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }

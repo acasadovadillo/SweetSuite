@@ -61,6 +61,7 @@
     var datos = {};
     Array.prototype.forEach.call(form.elements, function (el) {
       if (!el.name || el.type === "submit" || el.type === "button") return;
+      if (el.type === "radio") { if (el.checked) datos[el.name] = el.value; return; } // solo cuenta la opción marcada
       datos[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
     });
     return datos;

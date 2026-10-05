@@ -17,6 +17,7 @@
   var modulo = fabrica(Esquema);
   // Las cuotas de demostración se calculan con la misma lógica que las de verdad.
   modulo.Cuotas = typeof require === "function" ? require("../logica/cuotas.js") : raiz.WA.Cuotas;
+  modulo.Actividades = typeof require === "function" ? require("../logica/actividades.js") : raiz.WA.Actividades;
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Demo = modulo;
 })(typeof self !== "undefined" ? self : this, function (Esquema) {
@@ -57,7 +58,67 @@
       email: "antiguo@example.org", telefono: "600 000 006", desde: "2020-03-14", hasta: "2024-03-16", creado: t, modificado: t });
     rellenarSocios(doc, t);
     rellenarTesoreria(doc, t);
+    rellenarActividades(doc, t);
     return doc;
+  }
+
+  /*
+   * Actividades de demostración: dos ya realizadas (con asistencia y cobros), una
+   * completa con lista de espera y menores, una solo para socios, un taller y una
+   * cancelada. Las fechas son fijas (2026) para que la demostración sea siempre igual.
+   */
+  function rellenarActividades(doc, t) {
+    var Act = Demo.Actividades;
+    var socio = function (n) { return doc.socios[n - 1]; };
+    var n = 0;
+    var marca = function () { n++; return "2026-01-01T10:" + String(Math.floor(n / 60)).padStart(2, "0") + ":" + String(n % 60).padStart(2, "0") + ".000Z"; };
+    function crear(id, datos, personas) {
+      var a = Object.assign(Act.vacia(), datos, { id: "demo-act-" + id, creado: t, modificado: t, inscripciones: [] });
+      personas.forEach(function (p) { a = Act.inscribir(a, p, { ahora: marca() }).actividad; });
+      a.inscripciones.forEach(function (ins, k) { ins.id = "demo-ins-" + id + "-" + (k + 1); });
+      return a;
+    }
+    var externo = function (nombre, extra) { return Object.assign({ nombre: nombre, contacto: nombre.split(" ")[0].toLowerCase() + "@example.org" }, extra || {}); };
+
+    var anillamiento = crear(1, { titulo: "Anillamiento científico de aves", tipo: "Salida de campo", inicio: "2026-04-18T08:30", fin: "2026-04-18T13:30",
+      lugar: "Embalse de ejemplo", responsable: "Lucía Ficticia Ejemplo", aforo: 20, precioSocio: 0, precioGeneral: 500, proyectoId: "demo-proyecto-1",
+      estado: "realizada", descripcion: "Jornada de anillamiento con explicación del trabajo científico." },
+      [1, 2, 3, 6, 9, 11].map(function (k) { return { socio: socio(k) }; }).concat([externo("Rosa Visitante Ejemplo"), externo("Tomás Visitante Prueba"), externo("Inés Visitante Demo")]));
+    anillamiento.inscripciones.forEach(function (ins, k) {
+      ins.asistio = k !== 4;                                  // una persona no vino
+      if (ins.importe > 0 && k < 8) ins.pago = { fecha: "2026-04-18", forma: "Efectivo", cuentaId: "caja", referencia: "" };
+    });
+
+    var charla = crear(2, { titulo: "Charla: aves de ribera", tipo: "Charla", inicio: "2026-04-24T18:30", fin: "2026-04-24T20:00", lugar: "Centro cívico de Villaejemplo, sala 2",
+      responsable: "Mateo Inventado Prueba", estado: "realizada", proyectoId: "demo-proyecto-1" },
+      [4, 7, 8, 10, 12, 13, 15, 16].map(function (k) { return { socio: socio(k) }; }).concat([externo("Alba Vecina Ejemplo"), externo("Rubén Vecino Prueba")]));
+    charla.inscripciones.forEach(function (ins, k) { ins.asistio = k % 5 !== 3; });
+
+    var salida = crear(3, { titulo: "Salida de campo: el encinar en otoño", tipo: "Salida de campo", inicio: "2026-10-24T09:00", fin: "2026-10-24T14:00",
+      lugar: "Monte de ejemplo (punto de encuentro: plaza Mayor)", responsable: "Javier Supuesto Modelo", aforo: 10, listaEspera: true, precioSocio: 300, precioGeneral: 800,
+      autorizacionMenores: true, descripcion: "Ruta fácil de 6 km. Traed agua y calzado de montaña." },
+      [5, 17, 18, 19, 20, 21].map(function (k) { return { socio: socio(k) }; }).concat([
+        externo("Hugo Menor Ejemplo", { esMenor: true, autorizacion: true }), externo("Clara Visitante Ejemplo"), externo("Pedro Visitante Prueba"),
+        externo("Marina Visitante Demo"), externo("Diego Espera Ejemplo"), externo("Laura Espera Prueba")]));
+    salida.inscripciones.forEach(function (ins, k) {
+      if (k < 5 && ins.importe > 0) ins.pago = { fecha: "2026-10-0" + (k + 1), forma: k % 2 ? "Transferencia" : "Bizum", cuentaId: "banco", referencia: "" };
+    });
+
+    var taller = crear(4, { titulo: "Taller de ilustración científica", tipo: "Taller", inicio: "2026-11-07T10:00", fin: "2026-11-07T13:00", lugar: "Local de la asociación",
+      responsable: "Nora Imaginaria Caso", aforo: 15, precioSocio: 1000, precioGeneral: 1500, proyectoId: "demo-proyecto-1" },
+      [22, 24, 25].map(function (k) { return { socio: socio(k) }; }).concat([externo("Elena Dibujo Ejemplo")]));
+
+    var asamblea = crear(5, { titulo: "Asamblea general ordinaria", tipo: "Reunión", inicio: "2026-11-14T11:00", fin: "2026-11-14T13:00", lugar: "Local de la asociación",
+      responsable: "Carmen Demo Muestra", abierta: "socios", listaEspera: false, descripcion: "Aprobación de cuentas y presupuesto." },
+      [1, 2, 3, 4].map(function (k) { return { socio: socio(k) }; }));
+
+    var limpieza = crear(6, { titulo: "Jornada de limpieza del río", tipo: "Voluntariado", inicio: "2026-10-12T00:00", fin: "2026-10-12T00:00", todoElDia: true,
+      lugar: "Ribera de ejemplo", estado: "cancelada", notas: "Cancelada por previsión de lluvia." }, []);
+
+    doc.actividades = [anillamiento, charla, salida, taller, asamblea, limpieza];
+    // Lo ya apuntado en tesorería que corresponde al anillamiento.
+    doc.movimientos.forEach(function (m) { if (m.id === "demo-mov-12") { m.actividadId = "demo-act-1"; m.concepto = "Inscripciones anillamiento (cobradas aparte)"; } });
+    doc.anticipos.forEach(function (a) { if (a.id === "demo-ant-1") a.gastos.forEach(function (g) { g.actividadId = "demo-act-1"; }); });
   }
 
   /*
@@ -210,6 +271,6 @@
     doc.cuotas = cuotas;
   }
 
-  var Demo = { documentoDemo: documentoDemo, Cuotas: null };
+  var Demo = { documentoDemo: documentoDemo, Cuotas: null, Actividades: null };
   return Demo;
 });

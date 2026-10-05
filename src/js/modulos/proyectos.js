@@ -65,7 +65,7 @@
     var c = await U.cargar(datos);
     var anio = anioVista || +F.hoy().slice(0, 4);
     var previsto = (c.config.presupuestos || {})[anio] || {};
-    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), anio + "-01-01", anio + "-12-31");
+    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades), anio + "-01-01", anio + "-12-31");
     var ej = T.ejecucion(conTodas(previsto, c.config.categorias), res, c.config.categorias);
     var anios = {};
     [anio, +F.hoy().slice(0, 4), +F.hoy().slice(0, 4) + 1].forEach(function (a) { anios[a] = true; });
@@ -102,7 +102,7 @@
 
   // ── Proyectos y subvenciones ───────────────────────────────────────────
   function ejecucionProyecto(c, p) {
-    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos).filter(function (x) { return x.proyectoId === p.id; });
+    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades).filter(function (x) { return x.proyectoId === p.id; });
     var res = T.resultados(partidas);
     return { res: res, ej: T.ejecucion(p.presupuesto || {}, res, c.config.categorias) };
   }
@@ -136,7 +136,7 @@
     if (!p) { cont.innerHTML = '<h1>No encontrado</h1><p><a href="#/proyectos/lista">Volver</a></p>'; return; }
     var x = ejecucionProyecto(c, p);
     var ej = T.ejecucion(conTodas(p.presupuesto, c.config.categorias), x.res, c.config.categorias);
-    var lineas = T.libro(c.movimientos, c.cuotas).filter(function (m) { return m.proyectoId === p.id; });
+    var lineas = T.libro(c.movimientos, c.cuotas, c.actividades).filter(function (m) { return m.proyectoId === p.id; });
     var gastosAnt = [];
     c.anticipos.forEach(function (a) { a.gastos.forEach(function (g) { if ((g.proyectoId || a.proyectoId) === p.id) gastosAnt.push({ a: a, g: g }); }); });
     cont.innerHTML =

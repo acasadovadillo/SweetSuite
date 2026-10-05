@@ -2,27 +2,25 @@
 
 ## Ahora (esperando al usuario)
 
-1. Que el usuario revise la Fase 3 y dé el OK. Hacer el commit «Fase 3: tesorería, facturas, IVA y presupuestos».
-2. Probar el Excel descargado en Excel o LibreOffice, y la impresión de una factura a PDF.
-3. Probar en **Safari y Firefox** con doble clic.
+1. Que el usuario revise la Fase 4 y dé el OK. Hacer el commit «Fase 4: actividades y calendario».
+2. Probar a importar el `.ics` en el calendario que usen (Google, Outlook, móvil).
+3. Pendiente desde fases anteriores: Safari y Firefox, abrir el Excel e imprimir a PDF.
 
-## Fase 4 — Actividades y calendario (siguiente)
+## Fase 5 — Gobierno y documentación (siguiente)
 
 **Preguntas para el usuario antes de empezar:**
-- ¿Qué datos tiene una actividad? (Fecha y hora, lugar, plazas, precio para socios y no socios, responsable…)
-- Inscripciones: ¿también de personas que no son socias? ¿Lista de espera? ¿Cobro de la inscripción (que generaría un ingreso en tesorería con la categoría «Inscripciones»)?
-- ¿Tenéis actividades recurrentes (todos los martes…)?
+- Actas: ¿de qué órganos (junta directiva, asamblea general ordinaria y extraordinaria)? ¿Numeración por año o correlativa? ¿Firman presidencia y secretaría?
+- Convocatorias: ¿con cuánta antelación según vuestros estatutos? ¿Primera y segunda convocatoria? ¿Se envían por correo (generar el texto para copiar) o se imprimen?
+- Obligaciones: ¿cuáles queréis ver con aviso? (Cuentas anuales, modelos 303/390, 111/190, 182 de donaciones, 347, renovación de cargos, seguros, registro de asociaciones…). Las fechas exactas: verificar con asesoría; se podrán editar.
+- Subvenciones: ¿qué datos seguís (convocatoria, plazo de solicitud, resolución, importe, plazo de justificación, documentos)? Ya existen «proyectos» con tipo subvención y presupuesto: ampliarlos en vez de duplicarlos.
+- ¿Adjuntar documentos (estatutos, actas firmadas)? Sería con IndexedDB y aumentaría el tamaño de las copias de seguridad.
 
-**Primer paso concreto:** colección `actividades` (esquema v5) con `{ id, titulo, descripcion, inicio, fin, lugar, plazas, precioSocio, precioGeneral, proyectoId, responsable, estado, inscripciones: [{ socioId | nombre, contacto, pagado, movimientoId, asistio }] }`.
-- Lógica con tests: plazas libres, lista de espera, exportar `.ics` (RFC 5545: escapar comas y puntos y comas, líneas de 75 octetos, fechas en UTC o con TZID).
-- Enlazar actividad ↔ proyecto (ya existe `proyectoId` en movimientos) y ↔ gastos e ingresos (añadir `actividadId` a movimientos y gastos de anticipos).
-- Calendario mensual en la interfaz, que reúna actividades y, más adelante, obligaciones (Fase 5).
+**Primer paso concreto:** colecciones `actas`, `convocatorias` y `obligaciones` (esquema v6); ampliar `proyectos` con los campos de seguimiento de subvenciones (plazos, estado, justificación). Las obligaciones aparecerán también en el calendario de actividades y en Inicio.
 
 ## Mejoras anotadas (no urgentes)
 
-- Remesa SEPA en fichero XML (pain.008) para quien domicilie cuotas.
-- Prorrateo automático de cuotas.
-- Facturas rectificativas.
+- Remesa SEPA en fichero XML (pain.008); prorrateo automático de cuotas; facturas rectificativas.
+- Actividades: avisar por correo (generar texto) a quien pasa de la lista de espera; ver en la ficha del socio sus actividades.
 - Enlazar la junta directiva con fichas de socio.
 - Avisar si `navigator.storage.persist()` devuelve `false`.
-- Capturas nuevas para el README (Tesorería, Facturas, IVA): el panel del navegador estaba oculto al terminar.
+- Capturas nuevas para el README de Tesorería, Facturas e IVA.

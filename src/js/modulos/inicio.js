@@ -21,7 +21,14 @@
     var deuda = WA.Dinero.sumar(deud.map(function (d) { return d.total; }));
     var demo = WA.Sesion.modo === "demostración";
     var movimientos = await datos.listar("movimientos");
-    var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas).total;
+    var actividades = await datos.listar("actividades");
+    var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas, undefined, actividades).total;
+    var proximas = WA.Actividades.ordenar(actividades).filter(function (x) { return WA.Actividades.fechaDe(x) >= WA.Fechas.hoy() && x.estado !== "cancelada"; }).slice(0, 3);
+    var proximasHtml = '<section class="tarjeta" aria-labelledby="t-act"><h2 id="t-act">Próximas actividades</h2>' + (proximas.length ? '<ul class="lista-actividades">' + proximas.map(function (x) {
+      var n = WA.Actividades.ocupadas(x);
+      return '<li><a href="#/actividades/ficha/' + encodeURIComponent(x.id) + '"><strong>' + esc(x.titulo) + '</strong></a><span class="detalle">' +
+        esc(WA.Fechas.corta(WA.Actividades.fechaDe(x))) + (x.todoElDia ? "" : " · " + esc(String(x.inicio).slice(11, 16))) + " · " + (x.aforo > 0 ? n + "/" + x.aforo + " plazas" : n + " inscritas") + "</span></li>";
+    }).join("") + "</ul>" : '<p class="detalle">No hay ninguna prevista.</p>') + '<a class="enlace-flecha" href="#/actividades">Ver calendario</a></section>';
     var sinClasificar = movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
 
     var pendientes = [];
@@ -43,6 +50,7 @@
       (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
         pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
       '<div class="rejilla-tarjetas">' +
+      proximasHtml +
       '<section class="tarjeta" aria-labelledby="t-saldo"><h2 id="t-saldo">Saldo</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(saldo)) + "</span></p>" +
       (sinClasificar ? '<p class="detalle">' + sinClasificar + " movimientos sin clasificar</p>" : "") + '<a class="enlace-flecha" href="#/tesoreria">Ver tesorería</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
@@ -52,7 +60,7 @@
       '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
       '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Actividades y calendario, actas, convocatorias, obligaciones, subvenciones e informes.</p></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Actas, convocatorias, obligaciones, subvenciones e informes.</p></section>' +
       "</div>";
   }
 

@@ -1,5 +1,5 @@
 <!--
-  webkit_asociaciones 0.3.0
+  webkit_asociaciones 0.4.0
   Archivo generado por tools/build.mjs a partir de src/. No lo edites a mano.
 -->
 <!doctype html>
@@ -12,7 +12,7 @@
   <meta name="description" content="Gestión de asociaciones en un solo archivo: datos, socios, tesorería, actas. Sin servidores: todo se queda en tu navegador.">
   <title>webkit_asociaciones</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232f6f4f'/%3E%3Cpath d='M14 33V19l10-6 10 6v14' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <script>window.WA_VERSION = "0.3.0";</script>
+  <script>window.WA_VERSION = "0.4.0";</script>
   <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
   <script>/* js/nucleo/tema.js */
 /*
@@ -459,6 +459,34 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   .tabla-lineas { min-width: 640px; }
   .factura-impresa { padding: 1.25rem; }
 }
+
+/* ── Actividades y calendario ──────────────────────────────────────────── */
+.select-pequeno { width: auto !important; min-height: 36px !important; padding: 0.3rem 0.5rem !important; font-size: 0.9rem; }
+.calendario-barra { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+.calendario-titulo { margin: 0 0.5rem; min-width: 11rem; text-align: center; }
+.calendario { border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; margin-bottom: 1.25rem; background: var(--superficie); }
+.cal-fila { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-cabecera div { padding: 0.4rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--texto-3); text-align: center; border-bottom: 1px solid var(--borde); }
+.cal-dia { min-height: 6.5rem; padding: 0.3rem; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.cal-fila .cal-dia:last-child { border-right: none; }
+.cal-dia.fuera { background: var(--superficie-2); }
+.cal-dia.fuera .cal-num { color: var(--texto-3); }
+.cal-num { font-size: 0.85rem; font-weight: 600; }
+.cal-dia.hoy .cal-num { background: var(--acento); color: var(--acento-texto); border-radius: 999px; padding: 0 0.45rem; align-self: flex-start; }
+.cal-act { display: block; font-size: 0.78rem; line-height: 1.25; padding: 0.15rem 0.3rem; border-radius: 4px; background: var(--acento-suave); color: var(--texto);
+  text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 3px solid var(--acento); }
+.cal-act.cancelada { text-decoration: line-through; opacity: 0.7; border-left-color: var(--peligro); }
+.cal-act.realizada { opacity: 0.75; border-left-color: var(--borde-fuerte); background: var(--superficie-2); }
+.lista-actividades { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+.lista-actividades li { padding: 0.45rem 0; border-bottom: 1px solid var(--borde); }
+.lista-actividades li:last-child { border-bottom: none; }
+.lista-actividades .detalle { display: block; }
+.tabla-asistencia .col-firma { width: 40%; }
+.tabla-asistencia td { height: 2.4rem; }
+/* En el móvil la cuadrícula no cabe: se ve la lista del mes, que va debajo. */
+@media (max-width: 760px) {
+  .calendario { display: none; }
+}
 </style>
   <style>/* css/impresion.css */
 /*
@@ -483,6 +511,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   thead { display: table-header-group; } /* la cabecera se repite en cada hoja */
   tr { break-inside: avoid; }
   .tabla-envoltorio { overflow: visible; }
+  .tabla-asistencia th, .tabla-asistencia td { border: 1px solid #999; }
   .factura-impresa { border: none; padding: 0; margin: 0; max-width: none; }
   .importe-positivo, .importe-negativo { color: #000; }
 }
@@ -1685,6 +1714,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var datos = {};
     Array.prototype.forEach.call(form.elements, function (el) {
       if (!el.name || el.type === "submit" || el.type === "button") return;
+      if (el.type === "radio") { if (el.checked) datos[el.name] = el.value; return; } // solo cuenta la opción marcada
       datos[el.name] = el.type === "checkbox" ? el.checked : el.value.trim();
     });
     return datos;
@@ -2470,6 +2500,320 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   };
 });
 </script>
+  <script>/* js/logica/actividades.js */
+/*
+ * webkit_asociaciones — Lógica de actividades (sin interfaz: tests/actividades.test.js).
+ *
+ * ACTIVIDAD:
+ *   { id, titulo, tipo, descripcion, inicio ("aaaa-mm-ddThh:mm"), fin, todoElDia,
+ *     lugar, responsable, abierta: "todos" | "socios",
+ *     aforo (0 = sin límite), listaEspera, precioSocio, precioGeneral (céntimos),
+ *     autorizacionMenores (si los menores necesitan autorización firmada),
+ *     proyectoId, estado: "prevista" | "realizada" | "cancelada", notas,
+ *     inscripciones: [INSCRIPCIÓN] }
+ *
+ * INSCRIPCIÓN:
+ *   { id, socioId (si es socio), nombre, contacto, esMenor (no socios; en los socios
+ *     se calcula con su fecha de nacimiento), autorizacion (sí/no),
+ *     estado: "inscrita" | "espera" | "cancelada", fecha (marca de tiempo: decide
+ *     el orden de la lista de espera), importe (céntimos, fijado al inscribirse),
+ *     pago: { fecha, forma, cuentaId, referencia } | null, asistio: true | false | null, notas }
+ *
+ * CONTABILIDAD: igual que las cuotas, una inscripción PAGADA es un ingreso
+ * (categoría «Inscripciones a actividades»). aMovimientos() la traduce a
+ * movimiento; la tesorería la cuenta salvo que un movimiento del banco ya la
+ * enlace (inscripcionIds), para no contarla dos veces.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { Fechas: require("../nucleo/fechas.js"), Dinero: require("../nucleo/dinero.js"), Socios: require("./socios.js") }
+    : { Fechas: raiz.WA.Fechas, Dinero: raiz.WA.Dinero, Socios: raiz.WA.Socios };
+  var modulo = fabrica(dep.Fechas, dep.Dinero, dep.Socios);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Actividades = modulo;
+})(typeof self !== "undefined" ? self : this, function (F, D, S) {
+  "use strict";
+
+  var CATEGORIA_INSCRIPCIONES = "inscripciones";
+  var ESTADOS = { prevista: "Prevista", realizada: "Realizada", cancelada: "Cancelada" };
+  var TIPOS = ["Charla", "Taller", "Salida de campo", "Curso", "Reunión", "Voluntariado", "Exposición", "Fiesta o encuentro", "Otra"];
+
+  function vacia(ahora) {
+    var hoy = F.hoy(ahora);
+    return { titulo: "", tipo: "", descripcion: "", inicio: hoy + "T18:00", fin: hoy + "T20:00", todoElDia: false,
+      lugar: "", responsable: "", abierta: "todos", aforo: 0, listaEspera: true, precioSocio: 0, precioGeneral: 0,
+      autorizacionMenores: false, proyectoId: "", estado: "prevista", notas: "", inscripciones: [] };
+  }
+
+  var nuevoId = function () {
+    return typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : "i-" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  };
+  var copia = function (x) { return JSON.parse(JSON.stringify(x)); };
+  var fechaDe = function (a) { return String(a.inicio || "").slice(0, 10); };
+
+  /** ¿Es menor de edad el día de la actividad? (socios: por su fecha de nacimiento) */
+  function esMenor(ins, socio, actividad) {
+    if (socio) return S.esMenor(socio, fechaDe(actividad) || F.hoy());
+    return !!ins.esMenor;
+  }
+
+  function ocupadas(a) { return (a.inscripciones || []).filter(function (i) { return i.estado === "inscrita"; }).length; }
+  function enEspera(a) {
+    return (a.inscripciones || []).filter(function (i) { return i.estado === "espera"; })
+      .sort(function (x, y) { return String(x.fecha).localeCompare(String(y.fecha)); });
+  }
+  function libres(a) { return a.aforo > 0 ? Math.max(a.aforo - ocupadas(a), 0) : Infinity; }
+
+  /**
+   * Inscribe a una persona. persona: { socio } o { nombre, contacto, esMenor }.
+   * Devuelve { actividad (copia nueva), inscripcion, enEspera }. Lanza un error
+   * con un texto claro si no se puede (solo socios, completa, ya inscrita…).
+   */
+  function inscribir(actividad, persona, opciones) {
+    var o = opciones || {};
+    var a = copia(actividad);
+    a.inscripciones = a.inscripciones || [];
+    var socio = persona.socio || null;
+    if (a.estado === "cancelada") throw new Error("La actividad está cancelada.");
+    if (a.abierta === "socios" && !socio) throw new Error("Esta actividad es solo para socios.");
+    var nombre = socio ? S.nombreCompleto(socio) : String(persona.nombre || "").trim();
+    if (!nombre) throw new Error("Falta el nombre.");
+    var contacto = socio ? (socio.email || socio.telefono || "") : String(persona.contacto || "").trim();
+    var plano = function (s) { return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim(); };
+    var repetida = a.inscripciones.some(function (i) {
+      if (i.estado === "cancelada") return false;
+      return socio ? i.socioId === socio.id : !i.socioId && plano(i.nombre) === plano(nombre) && plano(i.contacto) === plano(contacto);
+    });
+    if (repetida) throw new Error(nombre + " ya está inscrito/a.");
+    var llena = a.aforo > 0 && ocupadas(a) >= a.aforo;
+    if (llena && !a.listaEspera) throw new Error("La actividad está completa (" + a.aforo + " plazas).");
+    var ins = {
+      id: nuevoId(), socioId: socio ? socio.id : "", nombre: nombre, contacto: contacto,
+      esMenor: socio ? false : !!persona.esMenor, autorizacion: !!persona.autorizacion,
+      estado: llena ? "espera" : "inscrita", fecha: o.ahora || new Date().toISOString(),
+      importe: socio ? (a.precioSocio || 0) : (a.precioGeneral || 0), pago: null, asistio: null, notas: persona.notas || "",
+    };
+    a.inscripciones.push(ins);
+    return { actividad: a, inscripcion: ins, enEspera: llena };
+  }
+
+  /**
+   * Cancela una inscripción. Si deja una plaza libre y hay lista de espera,
+   * sube a la primera persona en espera. Devuelve { actividad, promovida (o null) }.
+   */
+  function cancelar(actividad, inscripcionId) {
+    var a = copia(actividad);
+    var ins = a.inscripciones.filter(function (i) { return i.id === inscripcionId; })[0];
+    if (!ins) throw new Error("No existe esa inscripción.");
+    var teniaPlaza = ins.estado === "inscrita";
+    ins.estado = "cancelada";
+    var promovida = null;
+    if (teniaPlaza && libres(a) > 0) {
+      var siguiente = enEspera(a)[0];
+      if (siguiente) { siguiente.estado = "inscrita"; promovida = siguiente; }
+    }
+    return { actividad: a, promovida: promovida };
+  }
+
+  /** Sube a mano a alguien de la lista de espera (aunque supere el aforo, si se decide así). */
+  function promover(actividad, inscripcionId) {
+    var a = copia(actividad);
+    a.inscripciones.forEach(function (i) { if (i.id === inscripcionId && i.estado === "espera") i.estado = "inscrita"; });
+    return a;
+  }
+
+  function cambiarInscripcion(actividad, inscripcionId, cambios) {
+    var a = copia(actividad);
+    a.inscripciones.forEach(function (i) { if (i.id === inscripcionId) Object.assign(i, cambios); });
+    return a;
+  }
+
+  /** Cobra una inscripción. pago: { fecha, forma, cuentaId, referencia }. */
+  function cobrar(actividad, inscripcionId, pago) {
+    if (!pago || !F.esValida(pago.fecha)) throw new Error("Falta la fecha del pago.");
+    if (S.FORMAS_PAGO.indexOf(pago.forma) < 0) throw new Error("Elige la forma de pago.");
+    var ins = (actividad.inscripciones || []).filter(function (i) { return i.id === inscripcionId; })[0];
+    if (!ins) throw new Error("No existe esa inscripción.");
+    if (!(ins.importe > 0)) throw new Error("Esta inscripción no tiene importe.");
+    return cambiarInscripcion(actividad, inscripcionId, { pago: { fecha: pago.fecha, forma: pago.forma, cuentaId: pago.cuentaId || "", referencia: pago.referencia || "" } });
+  }
+
+  /**
+   * Cifras de una actividad. socios: lista para saber quién es menor.
+   * { inscritas, espera, canceladas, libres, asistentes, noAsistieron, menores,
+   *   menoresSinAutorizacion, recaudado, pendienteCobro }
+   */
+  function resumen(actividad, socios) {
+    var porId = {};
+    (socios || []).forEach(function (s) { porId[s.id] = s; });
+    var r = { inscritas: 0, espera: 0, canceladas: 0, asistentes: 0, noAsistieron: 0, menores: 0, menoresSinAutorizacion: 0, recaudado: 0, pendienteCobro: 0 };
+    (actividad.inscripciones || []).forEach(function (i) {
+      if (i.estado === "cancelada") { r.canceladas++; if (i.pago) r.recaudado += i.importe; return; }
+      if (i.estado === "espera") { r.espera++; return; }
+      r.inscritas++;
+      if (i.asistio === true) r.asistentes++;
+      if (i.asistio === false) r.noAsistieron++;
+      if (esMenor(i, porId[i.socioId], actividad)) {
+        r.menores++;
+        if (actividad.autorizacionMenores && !i.autorizacion) r.menoresSinAutorizacion++;
+      }
+      if (i.pago) r.recaudado += i.importe; else if (i.importe > 0) r.pendienteCobro += i.importe;
+    });
+    r.libres = libres(actividad);
+    return r;
+  }
+
+  /** Inscripciones pagadas → movimientos de ingreso (para la tesorería). */
+  function aMovimientos(actividades) {
+    var out = [];
+    (actividades || []).forEach(function (a) {
+      (a.inscripciones || []).forEach(function (i) {
+        if (!i.pago || !(i.importe > 0)) return;
+        out.push({
+          fecha: i.pago.fecha, tipo: "ingreso", importe: i.importe, cuentaId: i.pago.cuentaId, categoriaId: CATEGORIA_INSCRIPCIONES,
+          proyectoId: a.proyectoId || "", actividadId: a.id, forma: i.pago.forma,
+          concepto: "Inscripción · " + a.titulo + " · " + i.nombre, origen: { tipo: "inscripcion", id: a.id + ":" + i.id },
+        });
+      });
+    });
+    return out;
+  }
+
+  /** Duplica una actividad (sin inscripciones), para crear otra parecida. */
+  function duplicar(actividad) {
+    var a = copia(actividad);
+    delete a.id; delete a.creado; delete a.modificado;
+    a.inscripciones = [];
+    a.estado = "prevista";
+    a.titulo = a.titulo + " (copia)";
+    return a;
+  }
+
+  function ordenar(actividades) {
+    return (actividades || []).slice().sort(function (a, b) { return String(a.inicio).localeCompare(String(b.inicio)); });
+  }
+
+  /**
+   * Semanas de un mes para un calendario (lunes primero):
+   * [[{ fecha, delMes, actividades: [...] } × 7], …]
+   */
+  function mes(actividades, anio, mesNumero) {
+    var primero = new Date(anio, mesNumero - 1, 1);
+    var desplazamiento = (primero.getDay() + 6) % 7; // lunes = 0
+    var inicio = new Date(anio, mesNumero - 1, 1 - desplazamiento);
+    var porDia = {};
+    ordenar(actividades).forEach(function (a) {
+      var d0 = fechaDe(a), d1 = String(a.fin || a.inicio).slice(0, 10);
+      if (!F.esValida(d0)) return;
+      if (!F.esValida(d1) || d1 < d0) d1 = d0;
+      // Las de varios días aparecen en cada uno de ellos.
+      for (var d = d0, n = 0; d <= d1 && n < 62; d = F.sumarDias(d, 1), n++) (porDia[d] = porDia[d] || []).push(a);
+    });
+    var semanas = [];
+    for (var s = 0; s < 6; s++) {
+      var semana = [];
+      for (var k = 0; k < 7; k++) {
+        var f = new Date(inicio.getFullYear(), inicio.getMonth(), inicio.getDate() + s * 7 + k);
+        var iso = F.aISO(f);
+        semana.push({ fecha: iso, delMes: f.getMonth() === mesNumero - 1, actividades: porDia[iso] || [] });
+      }
+      if (s >= 4 && !semana.some(function (d) { return d.delMes; })) break;
+      semanas.push(semana);
+    }
+    return semanas;
+  }
+
+  /** Balance económico: lo cobrado y lo gastado enlazado a la actividad. partidas: Tesoreria.partidas(). */
+  function balance(actividadId, partidas) {
+    var r = { ingresos: 0, gastos: 0 };
+    (partidas || []).forEach(function (p) {
+      if (p.actividadId !== actividadId) return;
+      if (p.tipo === "ingreso") r.ingresos += p.importe; else r.gastos += p.importe;
+    });
+    r.resultado = r.ingresos - r.gastos;
+    return r;
+  }
+
+  // ── Calendario .ics (RFC 5545) ───────────────────────────────────────────
+  var ZONAS = {
+    "Europe/Madrid": ["+0100", "+0200", "CET", "CEST"],
+    "Atlantic/Canary": ["+0000", "+0100", "WET", "WEST"],
+  };
+  function vtimezone(tz) {
+    var z = ZONAS[tz] || ZONAS["Europe/Madrid"];
+    return ["BEGIN:VTIMEZONE", "TZID:" + tz,
+      "BEGIN:DAYLIGHT", "TZOFFSETFROM:" + z[0], "TZOFFSETTO:" + z[1], "TZNAME:" + z[3], "DTSTART:19700329T020000", "RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU", "END:DAYLIGHT",
+      "BEGIN:STANDARD", "TZOFFSETFROM:" + z[1], "TZOFFSETTO:" + z[0], "TZNAME:" + z[2], "DTSTART:19701025T030000", "RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU", "END:STANDARD",
+      "END:VTIMEZONE"];
+  }
+  /** Escapa un texto para una propiedad de .ics. */
+  function escaparIcs(s) {
+    return String(s == null ? "" : s).replace(/\\/g, "\\\\").replace(/;/g, "\\;").replace(/,/g, "\\,").replace(/\r?\n/g, "\\n");
+  }
+  /** Parte una línea en trozos de 75 octetos como mucho (sin romper letras con tilde). */
+  function plegar(linea) {
+    var enc = new TextEncoder();
+    if (enc.encode(linea).length <= 75) return linea;
+    var trozos = [], actual = "", bytes = 0, limite = 75;
+    for (var i = 0; i < linea.length; i++) {
+      var ch = linea[i];
+      var cp = linea.codePointAt(i);
+      if (cp > 0xffff) { ch = linea.slice(i, i + 2); i++; }
+      var b = enc.encode(ch).length;
+      if (bytes + b > limite) { trozos.push(actual); actual = ""; bytes = 0; limite = 74; } // las siguientes empiezan con un espacio
+      actual += ch; bytes += b;
+    }
+    trozos.push(actual);
+    return trozos.join("\r\n ");
+  }
+  var compacta = function (iso) { return iso.replace(/[-:]/g, ""); };            // "2026-10-05T18:00" → "20261005T1800"
+  function marcaUTC(fecha) {
+    return fecha.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}/, "");       // 20261005T160000Z
+  }
+
+  /**
+   * Genera un archivo .ics. opciones: { nombreCalendario, zona ("Europe/Madrid" | "Atlantic/Canary"), ahora }.
+   */
+  function ics(actividades, opciones) {
+    var o = opciones || {};
+    var tz = ZONAS[o.zona] ? o.zona : "Europe/Madrid";
+    var lineas = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//webkit_asociaciones//ES", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+    if (o.nombreCalendario) lineas.push("X-WR-CALNAME:" + escaparIcs(o.nombreCalendario));
+    var conHora = (actividades || []).some(function (a) { return !a.todoElDia; });
+    if (conHora) lineas = lineas.concat(vtimezone(tz));
+    var stamp = marcaUTC(o.ahora || new Date());
+    (actividades || []).forEach(function (a) {
+      var ini = String(a.inicio || ""), fin = String(a.fin || "");
+      if (!F.esValida(ini.slice(0, 10))) return;
+      lineas.push("BEGIN:VEVENT", "UID:" + a.id + "@webkit-asociaciones", "DTSTAMP:" + stamp);
+      if (a.todoElDia) {
+        var ultimo = F.esValida(fin.slice(0, 10)) && fin.slice(0, 10) >= ini.slice(0, 10) ? fin.slice(0, 10) : ini.slice(0, 10);
+        lineas.push("DTSTART;VALUE=DATE:" + compacta(ini.slice(0, 10)), "DTEND;VALUE=DATE:" + compacta(F.sumarDias(ultimo, 1))); // DTEND es el día siguiente (no incluido)
+      } else {
+        var h0 = /T\d{2}:\d{2}/.test(ini) ? ini.slice(0, 16) : ini.slice(0, 10) + "T00:00";
+        var h1 = /T\d{2}:\d{2}/.test(fin) && fin.slice(0, 16) > h0 ? fin.slice(0, 16) : null;
+        lineas.push("DTSTART;TZID=" + tz + ":" + compacta(h0) + "00");
+        if (h1) lineas.push("DTEND;TZID=" + tz + ":" + compacta(h1) + "00");
+      }
+      lineas.push("SUMMARY:" + escaparIcs(a.titulo));
+      if (a.lugar) lineas.push("LOCATION:" + escaparIcs(a.lugar));
+      var desc = [a.descripcion, a.responsable ? "Responsable: " + a.responsable : "", a.abierta === "socios" ? "Solo para socios." : ""].filter(Boolean).join("\n");
+      if (desc) lineas.push("DESCRIPTION:" + escaparIcs(desc));
+      lineas.push("STATUS:" + (a.estado === "cancelada" ? "CANCELLED" : "CONFIRMED"), "END:VEVENT");
+    });
+    lineas.push("END:VCALENDAR");
+    return lineas.map(plegar).join("\r\n") + "\r\n";
+  }
+
+  return {
+    CATEGORIA_INSCRIPCIONES: CATEGORIA_INSCRIPCIONES, ESTADOS: ESTADOS, TIPOS: TIPOS, ZONAS: Object.keys(ZONAS),
+    vacia: vacia, esMenor: esMenor, ocupadas: ocupadas, enEspera: enEspera, libres: libres,
+    inscribir: inscribir, cancelar: cancelar, promover: promover, cambiarInscripcion: cambiarInscripcion, cobrar: cobrar,
+    resumen: resumen, aMovimientos: aMovimientos, duplicar: duplicar, ordenar: ordenar, mes: mes, balance: balance,
+    ics: ics, escaparIcs: escaparIcs, plegar: plegar, fechaDe: fechaDe,
+  };
+});
+</script>
   <script>/* js/logica/facturas.js */
 /*
  * webkit_asociaciones — Lógica de facturas (sin interfaz: tests/facturas.test.js).
@@ -2804,7 +3148,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  *     cuentaDestinoId    (traspaso entre cuentas propias)
  *     sentido            (anticipo: "salida" = se entrega o reembolsa dinero a una
  *                         persona; "entrada" = la persona devuelve lo que sobró)
- *     anticipoId, facturaId, cuotaIds: [ids]   (enlaces: qué paga o cobra)
+ *     anticipoId, facturaId, cuotaIds: [ids], inscripcionIds: ["actividadId:inscripcionId"],
+ *     actividadId                              (enlaces: qué paga o cobra, y a qué actividad corresponde)
  *     origen: "manual" | "extracto", conceptoBanco, notas }
  *   tipo: "ingreso" | "gasto" | "traspaso" | "anticipo"
  *
@@ -2814,8 +3159,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  * contabilidad de entidades sin fines lucrativos): verificar con asesoría.
  *
  * DE DÓNDE SALE CADA COSA:
- *   · Saldo de una cuenta = saldo inicial + movimientos + cuotas cobradas que
- *     no estén ya enlazadas a un movimiento (para no contarlas dos veces).
+ *   · Saldo de una cuenta = saldo inicial + movimientos + cuotas e inscripciones
+ *     cobradas que no estén ya enlazadas a un movimiento (para no contarlas dos veces).
  *   · Ingresos y gastos (por categoría y proyecto) = movimientos de ingreso y
  *     gasto + cuotas cobradas no enlazadas + gastos justificados en anticipos y
  *     reembolsos. Los traspasos y las entregas/devoluciones de anticipos NO son
@@ -2824,12 +3169,12 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  */
 (function (raiz, fabrica) {
   var dep = typeof require === "function"
-    ? { Dinero: require("../nucleo/dinero.js"), Fechas: require("../nucleo/fechas.js"), Cuotas: require("./cuotas.js") }
-    : { Dinero: raiz.WA.Dinero, Fechas: raiz.WA.Fechas, Cuotas: raiz.WA.Cuotas };
-  var modulo = fabrica(dep.Dinero, dep.Fechas, dep.Cuotas);
+    ? { Dinero: require("../nucleo/dinero.js"), Fechas: require("../nucleo/fechas.js"), Cuotas: require("./cuotas.js"), Actividades: require("./actividades.js") }
+    : { Dinero: raiz.WA.Dinero, Fechas: raiz.WA.Fechas, Cuotas: raiz.WA.Cuotas, Actividades: raiz.WA.Actividades };
+  var modulo = fabrica(dep.Dinero, dep.Fechas, dep.Cuotas, dep.Actividades);
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Tesoreria = modulo;
-})(typeof self !== "undefined" ? self : this, function (D, F, Cuotas) {
+})(typeof self !== "undefined" ? self : this, function (D, F, Cuotas, Actividades) {
   "use strict";
 
   var TIPOS = [["ingreso", "Ingreso"], ["gasto", "Gasto"], ["traspaso", "Traspaso entre cuentas"], ["anticipo", "Anticipo o reembolso"]];
@@ -2880,16 +3225,30 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     (movimientos || []).forEach(function (m) { (m.cuotaIds || []).forEach(function (id) { s[id] = true; }); });
     return s;
   }
+  /** Lo mismo para las inscripciones a actividades ("actividadId:inscripcionId"). */
+  function inscripcionesEnlazadas(movimientos) {
+    var s = {};
+    (movimientos || []).forEach(function (m) { (m.inscripcionIds || []).forEach(function (id) { s[id] = true; }); });
+    return s;
+  }
 
   /**
-   * El libro: movimientos reales + cuotas cobradas no enlazadas, convertidas en
-   * movimientos de solo lectura (virtual: true). Ordenado por fecha, del más reciente al más antiguo.
+   * El libro: movimientos reales + cuotas e inscripciones cobradas no enlazadas,
+   * convertidas en movimientos de solo lectura (virtual: true). Ordenado por fecha,
+   * del más reciente al más antiguo.
    */
-  function libro(movimientos, cuotas) {
+  function libro(movimientos, cuotas, actividades) {
     var enlazadas = cuotasEnlazadas(movimientos);
     var virtuales = Cuotas.aMovimientos((cuotas || []).filter(function (c) { return !enlazadas[c.id]; })).map(function (v) {
       return { id: "cuota:" + v.origen.id, virtual: true, fecha: v.fecha, cuentaId: v.cuentaId, tipo: "ingreso", importe: v.importe,
         concepto: v.concepto, categoriaId: CATEGORIA_CUOTAS, proyectoId: "", forma: v.forma, cuotaIds: [v.origen.id] };
+    });
+    var inscEnlazadas = inscripcionesEnlazadas(movimientos);
+    Actividades.aMovimientos(actividades).forEach(function (v) {
+      if (inscEnlazadas[v.origen.id]) return;
+      virtuales.push({ id: "inscripcion:" + v.origen.id, virtual: true, origenVirtual: "inscripcion", fecha: v.fecha, cuentaId: v.cuentaId, tipo: "ingreso",
+        importe: v.importe, concepto: v.concepto, categoriaId: v.categoriaId, proyectoId: v.proyectoId, actividadId: v.actividadId,
+        forma: v.forma, inscripcionIds: [v.origen.id] });
     });
     return (movimientos || []).concat(virtuales).sort(function (a, b) {
       return b.fecha.localeCompare(a.fecha) || String(b.creado || "").localeCompare(String(a.creado || ""));
@@ -2897,11 +3256,11 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   }
 
   /** Saldo de cada cuenta en una fecha (incluida). cuentas: config.cuentas con saldoInicial. */
-  function saldos(cuentas, movimientos, cuotas, hasta) {
+  function saldos(cuentas, movimientos, cuotas, hasta, actividades) {
     var h = hasta || "9999-12-31";
     var r = {};
     (cuentas || []).forEach(function (c) { r[c.id] = Number(c.saldoInicial) || 0; });
-    libro(movimientos, cuotas).forEach(function (m) {
+    libro(movimientos, cuotas, actividades).forEach(function (m) {
       if (m.fecha > h) return;
       var e = efecto(m);
       Object.keys(e).forEach(function (k) { r[k] = (r[k] || 0) + e[k]; });
@@ -2911,18 +3270,20 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   }
 
   /**
-   * Partidas de ingreso y gasto (para resultados y presupuestos):
-   * [{ fecha, tipo: "ingreso"|"gasto", importe, categoriaId, proyectoId, origen }]
+   * Partidas de ingreso y gasto (para resultados, presupuestos y balance de actividades):
+   * [{ fecha, tipo: "ingreso"|"gasto", importe, categoriaId, proyectoId, actividadId, origen }]
    */
-  function partidas(movimientos, cuotas, anticipos) {
+  function partidas(movimientos, cuotas, anticipos, actividades) {
     var out = [];
-    libro(movimientos, cuotas).forEach(function (m) {
+    libro(movimientos, cuotas, actividades).forEach(function (m) {
       if (m.tipo !== "ingreso" && m.tipo !== "gasto") return;
-      out.push({ fecha: m.fecha, tipo: m.tipo, importe: m.importe, categoriaId: m.categoriaId || SIN_CLASIFICAR, proyectoId: m.proyectoId || "", origen: m.virtual ? "cuota" : "movimiento", id: m.id });
+      out.push({ fecha: m.fecha, tipo: m.tipo, importe: m.importe, categoriaId: m.categoriaId || SIN_CLASIFICAR, proyectoId: m.proyectoId || "",
+        actividadId: m.actividadId || "", origen: m.virtual ? (m.origenVirtual || "cuota") : "movimiento", id: m.id });
     });
     (anticipos || []).forEach(function (a) {
       (a.gastos || []).forEach(function (g) {
-        out.push({ fecha: g.fecha, tipo: "gasto", importe: g.importe, categoriaId: g.categoriaId || SIN_CLASIFICAR, proyectoId: g.proyectoId || a.proyectoId || "", origen: "anticipo", id: a.id });
+        out.push({ fecha: g.fecha, tipo: "gasto", importe: g.importe, categoriaId: g.categoriaId || SIN_CLASIFICAR, proyectoId: g.proyectoId || a.proyectoId || "",
+          actividadId: g.actividadId || "", origen: "anticipo", id: a.id });
       });
     });
     return out;
@@ -3005,10 +3366,19 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     return { entregado: entregado, devuelto: devuelto, justificado: justificado, saldo: saldo, estado: estado };
   }
 
+  /** Forma de pago que se deduce del concepto del banco (BIZUM…); si no, transferencia. */
+  function formaDesdeConcepto(m) {
+    var t = String((m.conceptoBanco || "") + " " + (m.concepto || "")).toLowerCase();
+    if (t.indexOf("bizum") >= 0) return "Bizum";
+    if (/\brecibo\b|domicil/.test(t)) return "Domiciliación";
+    if (/\btarjeta\b|\btpv\b/.test(t)) return "Tarjeta";
+    return "Transferencia";
+  }
+
   // ── Conciliar con cuotas ────────────────────────────────────────────────
   /**
    * Enlaza un movimiento de ingreso con cuotas: las que estén pendientes se marcan
-   * pagadas (fecha y cuenta del movimiento, forma «Transferencia» salvo que se diga otra).
+   * pagadas (fecha y cuenta del movimiento; la forma se deduce del concepto del banco).
    * Devuelve { movimiento, cuotas (las modificadas), diferencia } sin guardar nada.
    */
   function conciliarCuotas(movimiento, cuotas, forma) {
@@ -3017,14 +3387,38 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     m.categoriaId = CATEGORIA_CUOTAS;
     var cambiadas = (cuotas || []).map(function (c) {
       if (c.estado === "pagada") return c;
-      return Cuotas.registrarPago(c, { fecha: m.fecha, forma: forma || "Transferencia", cuentaId: m.cuentaId, referencia: m.conceptoBanco || m.concepto });
+      return Cuotas.registrarPago(c, { fecha: m.fecha, forma: forma || formaDesdeConcepto(m), cuentaId: m.cuentaId, referencia: m.conceptoBanco || m.concepto });
     });
     var suma = D.sumar((cuotas || []).map(function (c) { return c.importe; }));
     return { movimiento: m, cuotas: cambiadas, diferencia: m.importe - suma };
   }
 
+  /**
+   * Enlaza un ingreso del banco con inscripciones a actividades (refs: [{ actividadId, inscripcionId }]).
+   * Las que no estaban pagadas se marcan pagadas con la fecha y cuenta del movimiento.
+   * Devuelve { movimiento, actividades (las modificadas), diferencia } sin guardar nada.
+   */
+  function conciliarInscripciones(movimiento, refs, actividades, forma) {
+    var m = JSON.parse(JSON.stringify(movimiento));
+    m.inscripcionIds = (refs || []).map(function (r) { return r.actividadId + ":" + r.inscripcionId; });
+    m.categoriaId = Actividades.CATEGORIA_INSCRIPCIONES;
+    var porId = {}, suma = 0;
+    (actividades || []).forEach(function (a) { porId[a.id] = a; });
+    (refs || []).forEach(function (r) {
+      var a = porId[r.actividadId];
+      if (!a) return;
+      var ins = (a.inscripciones || []).filter(function (i) { return i.id === r.inscripcionId; })[0];
+      if (!ins) return;
+      suma += ins.importe;
+      if (!m.actividadId) m.actividadId = a.id;
+      if (!ins.pago) porId[a.id] = Actividades.cobrar(a, ins.id, { fecha: m.fecha, forma: forma || formaDesdeConcepto(m), cuentaId: m.cuentaId, referencia: m.conceptoBanco || m.concepto });
+    });
+    var cambiadas = (refs || []).map(function (r) { return porId[r.actividadId]; }).filter(function (a, i, arr) { return a && arr.indexOf(a) === i; });
+    return { movimiento: m, actividades: cambiadas, diferencia: m.importe - suma };
+  }
+
   return {
-    TIPOS: TIPOS, CATEGORIA_CUOTAS: CATEGORIA_CUOTAS, EXPLICACION: EXPLICACION,
+    TIPOS: TIPOS, CATEGORIA_CUOTAS: CATEGORIA_CUOTAS, EXPLICACION: EXPLICACION, conciliarInscripciones: conciliarInscripciones, inscripcionesEnlazadas: inscripcionesEnlazadas, formaDesdeConcepto: formaDesdeConcepto,
     categoriasPorDefecto: categoriasPorDefecto, efecto: efecto, conSigno: conSigno, cuotasEnlazadas: cuotasEnlazadas,
     libro: libro, saldos: saldos, partidas: partidas, resultados: resultados, ejecucion: ejecucion,
     situacionAnticipo: situacionAnticipo, conciliarCuotas: conciliarCuotas,
@@ -3158,10 +3552,10 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
   /**
    * Sugerencias de conciliación para un movimiento:
-   *   ingreso → cuotas sin cobrar del mismo importe cuyo socio aparece en el concepto,
+   *   ingreso → cuotas e inscripciones sin cobrar del mismo importe cuya persona aparece en el concepto,
    *             y facturas emitidas pendientes por ese importe;
    *   gasto   → facturas recibidas pendientes por ese importe.
-   * Devuelve [{ tipo: "cuota" | "factura", id, texto, puntos }] de más a menos probable.
+   * Devuelve [{ tipo: "cuota" | "inscripcion" | "factura", id, texto, puntos }] de más a menos probable.
    */
   function sugerencias(m, datos) {
     var out = [];
@@ -3179,6 +3573,17 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       // si hay otra cuota que coincide en nombre y apellidos.
       var mejor = Math.max.apply(null, [0].concat(deCuotas.map(function (x) { return x.puntos; })));
       out = out.concat(deCuotas.filter(function (x) { return x.puntos === mejor; }));
+      // Inscripciones a actividades sin cobrar por ese importe, de alguien que aparece en el concepto.
+      var deInsc = [];
+      (datos.actividades || []).forEach(function (a) {
+        (a.inscripciones || []).forEach(function (i) {
+          if (i.pago || i.estado === "cancelada" || i.importe !== m.importe) return;
+          var coinciden = palabras(i.nombre).filter(function (p) { return concepto.indexOf(p) >= 0; }).length;
+          if (coinciden) deInsc.push({ tipo: "inscripcion", id: a.id + ":" + i.id, texto: "Inscripción de " + i.nombre + " · " + a.titulo, puntos: coinciden });
+        });
+      });
+      var mejorI = Math.max.apply(null, [0].concat(deInsc.map(function (x) { return x.puntos; })));
+      out = out.concat(deInsc.filter(function (x) { return x.puntos === mejorI; }));
     }
     (datos.facturas || []).forEach(function (f) {
       var buscada = m.tipo === "ingreso" ? "emitida" : "recibida";
@@ -3204,13 +3609,14 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 4,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 5,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
  *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
  *     junta: [ { id, cargo, nombre, ... } ],      ← colecciones: listas de registros
  *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
  *     movimientos, facturas, anticipos, proyectos   (ver logica/tesoreria.js y logica/facturas.js)
+ *     actividades (con sus inscripciones)           (ver logica/actividades.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -3227,7 +3633,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  * Así, una copia de seguridad antigua siempre se puede abrir con la versión nueva.
  *
  * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
- *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3).
+ *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3)
+ *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -3239,10 +3646,10 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 4;
+  var VERSION = 5;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -3271,6 +3678,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
    *   facturacion { serie, motivoExencion, condicionesPago, pie }   (para las facturas emitidas)
    *   reglas      para clasificar el extracto del banco: [{ texto, categoriaId }]
    *   presupuestos  presupuesto anual aprobado: { "2026": { categoriaId: céntimos } }
+   *   zonaHoraria   para exportar el calendario (.ics): "Europe/Madrid" o "Atlantic/Canary"
    */
   function configVacia() {
     return {
@@ -3283,6 +3691,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       facturacion: { serie: "", motivoExencion: "", condicionesPago: "", pie: "" },
       reglas: [],
       presupuestos: {},
+      zonaHoraria: "Europe/Madrid",
     };
   }
 
@@ -3353,6 +3762,14 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       doc.esquema = 4;
       return doc;
     },
+
+    // 4 → 5: actividades (Fase 4).
+    4: function (doc) {
+      if (!Array.isArray(doc.actividades)) doc.actividades = [];
+      doc.config = Object.assign({ zonaHoraria: "Europe/Madrid" }, doc.config || {});
+      doc.esquema = 5;
+      return doc;
+    },
   };
 
   /**
@@ -3394,6 +3811,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     doc.config.facturacion = Object.assign(configVacia().facturacion, doc.config.facturacion || {});
     if (!Array.isArray(doc.config.reglas)) doc.config.reglas = [];
     if (!doc.config.presupuestos || typeof doc.config.presupuestos !== "object") doc.config.presupuestos = {};
+    if (!doc.config.zonaHoraria) doc.config.zonaHoraria = "Europe/Madrid";
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }
@@ -3634,6 +4052,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   var modulo = fabrica(Esquema);
   // Las cuotas de demostración se calculan con la misma lógica que las de verdad.
   modulo.Cuotas = typeof require === "function" ? require("../logica/cuotas.js") : raiz.WA.Cuotas;
+  modulo.Actividades = typeof require === "function" ? require("../logica/actividades.js") : raiz.WA.Actividades;
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Demo = modulo;
 })(typeof self !== "undefined" ? self : this, function (Esquema) {
@@ -3674,7 +4093,67 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       email: "antiguo@example.org", telefono: "600 000 006", desde: "2020-03-14", hasta: "2024-03-16", creado: t, modificado: t });
     rellenarSocios(doc, t);
     rellenarTesoreria(doc, t);
+    rellenarActividades(doc, t);
     return doc;
+  }
+
+  /*
+   * Actividades de demostración: dos ya realizadas (con asistencia y cobros), una
+   * completa con lista de espera y menores, una solo para socios, un taller y una
+   * cancelada. Las fechas son fijas (2026) para que la demostración sea siempre igual.
+   */
+  function rellenarActividades(doc, t) {
+    var Act = Demo.Actividades;
+    var socio = function (n) { return doc.socios[n - 1]; };
+    var n = 0;
+    var marca = function () { n++; return "2026-01-01T10:" + String(Math.floor(n / 60)).padStart(2, "0") + ":" + String(n % 60).padStart(2, "0") + ".000Z"; };
+    function crear(id, datos, personas) {
+      var a = Object.assign(Act.vacia(), datos, { id: "demo-act-" + id, creado: t, modificado: t, inscripciones: [] });
+      personas.forEach(function (p) { a = Act.inscribir(a, p, { ahora: marca() }).actividad; });
+      a.inscripciones.forEach(function (ins, k) { ins.id = "demo-ins-" + id + "-" + (k + 1); });
+      return a;
+    }
+    var externo = function (nombre, extra) { return Object.assign({ nombre: nombre, contacto: nombre.split(" ")[0].toLowerCase() + "@example.org" }, extra || {}); };
+
+    var anillamiento = crear(1, { titulo: "Anillamiento científico de aves", tipo: "Salida de campo", inicio: "2026-04-18T08:30", fin: "2026-04-18T13:30",
+      lugar: "Embalse de ejemplo", responsable: "Lucía Ficticia Ejemplo", aforo: 20, precioSocio: 0, precioGeneral: 500, proyectoId: "demo-proyecto-1",
+      estado: "realizada", descripcion: "Jornada de anillamiento con explicación del trabajo científico." },
+      [1, 2, 3, 6, 9, 11].map(function (k) { return { socio: socio(k) }; }).concat([externo("Rosa Visitante Ejemplo"), externo("Tomás Visitante Prueba"), externo("Inés Visitante Demo")]));
+    anillamiento.inscripciones.forEach(function (ins, k) {
+      ins.asistio = k !== 4;                                  // una persona no vino
+      if (ins.importe > 0 && k < 8) ins.pago = { fecha: "2026-04-18", forma: "Efectivo", cuentaId: "caja", referencia: "" };
+    });
+
+    var charla = crear(2, { titulo: "Charla: aves de ribera", tipo: "Charla", inicio: "2026-04-24T18:30", fin: "2026-04-24T20:00", lugar: "Centro cívico de Villaejemplo, sala 2",
+      responsable: "Mateo Inventado Prueba", estado: "realizada", proyectoId: "demo-proyecto-1" },
+      [4, 7, 8, 10, 12, 13, 15, 16].map(function (k) { return { socio: socio(k) }; }).concat([externo("Alba Vecina Ejemplo"), externo("Rubén Vecino Prueba")]));
+    charla.inscripciones.forEach(function (ins, k) { ins.asistio = k % 5 !== 3; });
+
+    var salida = crear(3, { titulo: "Salida de campo: el encinar en otoño", tipo: "Salida de campo", inicio: "2026-10-24T09:00", fin: "2026-10-24T14:00",
+      lugar: "Monte de ejemplo (punto de encuentro: plaza Mayor)", responsable: "Javier Supuesto Modelo", aforo: 10, listaEspera: true, precioSocio: 300, precioGeneral: 800,
+      autorizacionMenores: true, descripcion: "Ruta fácil de 6 km. Traed agua y calzado de montaña." },
+      [5, 17, 18, 19, 20, 21].map(function (k) { return { socio: socio(k) }; }).concat([
+        externo("Hugo Menor Ejemplo", { esMenor: true, autorizacion: true }), externo("Clara Visitante Ejemplo"), externo("Pedro Visitante Prueba"),
+        externo("Marina Visitante Demo"), externo("Diego Espera Ejemplo"), externo("Laura Espera Prueba")]));
+    salida.inscripciones.forEach(function (ins, k) {
+      if (k < 5 && ins.importe > 0) ins.pago = { fecha: "2026-10-0" + (k + 1), forma: k % 2 ? "Transferencia" : "Bizum", cuentaId: "banco", referencia: "" };
+    });
+
+    var taller = crear(4, { titulo: "Taller de ilustración científica", tipo: "Taller", inicio: "2026-11-07T10:00", fin: "2026-11-07T13:00", lugar: "Local de la asociación",
+      responsable: "Nora Imaginaria Caso", aforo: 15, precioSocio: 1000, precioGeneral: 1500, proyectoId: "demo-proyecto-1" },
+      [22, 24, 25].map(function (k) { return { socio: socio(k) }; }).concat([externo("Elena Dibujo Ejemplo")]));
+
+    var asamblea = crear(5, { titulo: "Asamblea general ordinaria", tipo: "Reunión", inicio: "2026-11-14T11:00", fin: "2026-11-14T13:00", lugar: "Local de la asociación",
+      responsable: "Carmen Demo Muestra", abierta: "socios", listaEspera: false, descripcion: "Aprobación de cuentas y presupuesto." },
+      [1, 2, 3, 4].map(function (k) { return { socio: socio(k) }; }));
+
+    var limpieza = crear(6, { titulo: "Jornada de limpieza del río", tipo: "Voluntariado", inicio: "2026-10-12T00:00", fin: "2026-10-12T00:00", todoElDia: true,
+      lugar: "Ribera de ejemplo", estado: "cancelada", notas: "Cancelada por previsión de lluvia." }, []);
+
+    doc.actividades = [anillamiento, charla, salida, taller, asamblea, limpieza];
+    // Lo ya apuntado en tesorería que corresponde al anillamiento.
+    doc.movimientos.forEach(function (m) { if (m.id === "demo-mov-12") { m.actividadId = "demo-act-1"; m.concepto = "Inscripciones anillamiento (cobradas aparte)"; } });
+    doc.anticipos.forEach(function (a) { if (a.id === "demo-ant-1") a.gastos.forEach(function (g) { g.actividadId = "demo-act-1"; }); });
   }
 
   /*
@@ -3827,7 +4306,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     doc.cuotas = cuotas;
   }
 
-  var Demo = { documentoDemo: documentoDemo, Cuotas: null };
+  var Demo = { documentoDemo: documentoDemo, Cuotas: null, Actividades: null };
   return Demo;
 });
 </script>
@@ -4464,7 +4943,14 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var deuda = WA.Dinero.sumar(deud.map(function (d) { return d.total; }));
     var demo = WA.Sesion.modo === "demostración";
     var movimientos = await datos.listar("movimientos");
-    var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas).total;
+    var actividades = await datos.listar("actividades");
+    var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas, undefined, actividades).total;
+    var proximas = WA.Actividades.ordenar(actividades).filter(function (x) { return WA.Actividades.fechaDe(x) >= WA.Fechas.hoy() && x.estado !== "cancelada"; }).slice(0, 3);
+    var proximasHtml = '<section class="tarjeta" aria-labelledby="t-act"><h2 id="t-act">Próximas actividades</h2>' + (proximas.length ? '<ul class="lista-actividades">' + proximas.map(function (x) {
+      var n = WA.Actividades.ocupadas(x);
+      return '<li><a href="#/actividades/ficha/' + encodeURIComponent(x.id) + '"><strong>' + esc(x.titulo) + '</strong></a><span class="detalle">' +
+        esc(WA.Fechas.corta(WA.Actividades.fechaDe(x))) + (x.todoElDia ? "" : " · " + esc(String(x.inicio).slice(11, 16))) + " · " + (x.aforo > 0 ? n + "/" + x.aforo + " plazas" : n + " inscritas") + "</span></li>";
+    }).join("") + "</ul>" : '<p class="detalle">No hay ninguna prevista.</p>') + '<a class="enlace-flecha" href="#/actividades">Ver calendario</a></section>';
     var sinClasificar = movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
 
     var pendientes = [];
@@ -4486,6 +4972,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
         pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
       '<div class="rejilla-tarjetas">' +
+      proximasHtml +
       '<section class="tarjeta" aria-labelledby="t-saldo"><h2 id="t-saldo">Saldo</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(saldo)) + "</span></p>" +
       (sinClasificar ? '<p class="detalle">' + sinClasificar + " movimientos sin clasificar</p>" : "") + '<a class="enlace-flecha" href="#/tesoreria">Ver tesorería</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
@@ -4495,7 +4982,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
       '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Actividades y calendario, actas, convocatorias, obligaciones, subvenciones e informes.</p></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Actas, convocatorias, obligaciones, subvenciones e informes.</p></section>' +
       "</div>";
   }
 
@@ -5561,16 +6048,24 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, T = WA.Tesoreria, Fac = WA.Facturas;
 
   async function cargar(datos) {
-    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion"].map(function (k) {
+    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion", "actividades"].map(function (k) {
       return k === "config" || k === "asociacion" ? datos.leer(k) : datos.listar(k);
     }));
-    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8] };
+    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8], actividades: r[9] };
   }
 
   var buscar = function (lista, id) { return (lista || []).filter(function (x) { return x.id === id; })[0]; };
   function nombreCategoria(c, id) { var x = buscar(c.config.categorias, id); return x ? x.nombre : id ? id : "Sin clasificar"; }
   function nombreCuenta(c, id) { var x = buscar(c.config.cuentas, id); return x ? x.nombre : id || "—"; }
   function nombreProyecto(c, id) { var x = buscar(c.proyectos, id); return x ? x.nombre : ""; }
+  function nombreActividad(c, id) { var x = buscar(c.actividades, id); return x ? x.titulo : ""; }
+  /** Actividades para un desplegable: las más recientes primero (y la ya elegida, aunque sea antigua). */
+  function opcionesActividades(c, actual) {
+    var lista = (c.actividades || []).slice().sort(function (a, b) { return String(b.inicio).localeCompare(String(a.inicio)); });
+    return [["", "—"]].concat(lista.filter(function (a, i) { return i < 60 || a.id === actual; }).map(function (a) {
+      return [a.id, String(a.inicio).slice(0, 10).split("-").reverse().join("/") + " · " + a.titulo];
+    }));
+  }
 
   function opcionesCategorias(c, tipo, conVacia) {
     var lista = (c.config.categorias || []).filter(function (x) { return (!tipo || x.tipo === tipo) && x.activa !== false; })
@@ -5596,10 +6091,10 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   async function editarMovimiento(datos, c, mov, valores) {
     var nuevo = !mov;
     var m = Object.assign({ fecha: F.hoy(), cuentaId: (c.config.cuentas[0] || {}).id, tipo: "gasto", importe: 0, concepto: "", categoriaId: "",
-      proyectoId: "", cuentaDestinoId: "", sentido: "salida", anticipoId: "", facturaId: "", cuotaIds: [], origen: "manual", conceptoBanco: "", notas: "" },
+      proyectoId: "", actividadId: "", cuentaDestinoId: "", sentido: "salida", anticipoId: "", facturaId: "", cuotaIds: [], inscripcionIds: [], origen: "manual", conceptoBanco: "", notas: "" },
     mov || {}, valores || {});
     // Sugerencias de conciliación (solo si aún no está enlazado a nada).
-    var sugerencias = !nuevo && (m.tipo === "ingreso" || m.tipo === "gasto") && !m.facturaId && !(m.cuotaIds || []).length
+    var sugerencias = !nuevo && (m.tipo === "ingreso" || m.tipo === "gasto") && !m.facturaId && !(m.cuotaIds || []).length && !(m.inscripcionIds || []).length
       ? WA.Extracto.sugerencias(m, c) : [];
     var facturasPendientes = c.facturas.filter(function (f) {
       if (f.estado === "borrador" || f.estado === "anulada") return false;
@@ -5612,6 +6107,11 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     };
     var anticipos = [["", "—"]].concat(c.anticipos.map(function (a) { return [a.id, (a.tipo === "anticipo" ? "Anticipo" : "Reembolso") + " · " + a.persona + " · " + a.concepto]; }));
     var enlazadas = (m.cuotaIds || []).map(function (id) { return buscar(c.cuotas, id); }).filter(Boolean);
+    var inscEnlazadas = (m.inscripcionIds || []).map(function (ref) {
+      var p = String(ref).split(":"), a = buscar(c.actividades, p[0]);
+      var i = a && (a.inscripciones || []).filter(function (x) { return x.id === p[1]; })[0];
+      return i ? i.nombre + " · " + a.titulo + " (" + D.formatear(i.importe) + ")" : null;
+    }).filter(Boolean);
 
     var r = await UI.dialogo({
       titulo: nuevo ? "Nuevo movimiento" : "Movimiento",
@@ -5626,6 +6126,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
         UI.campo({ nombre: "categoriaIngreso", etiqueta: "Categoría", tipo: "select", valor: m.tipo === "ingreso" ? m.categoriaId : "", opciones: opcionesCategorias(c, "ingreso"), clase: "solo-ingreso" }) +
         UI.campo({ nombre: "categoriaGasto", etiqueta: "Categoría", tipo: "select", valor: m.tipo === "gasto" ? m.categoriaId : "", opciones: opcionesCategorias(c, "gasto"), clase: "solo-gasto" }) +
         UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: m.proyectoId, opciones: opcionesProyectos(c) }) +
+        UI.campo({ nombre: "actividadId", etiqueta: "Actividad", tipo: "select", valor: m.actividadId, opciones: opcionesActividades(c, m.actividadId) }) +
         UI.campo({ nombre: "facturaEmitida", etiqueta: "Cobro de la factura", tipo: "select", valor: m.tipo === "ingreso" ? m.facturaId : "", opciones: opcFactura("emitida"), clase: "solo-ingreso" }) +
         UI.campo({ nombre: "facturaRecibida", etiqueta: "Pago de la factura", tipo: "select", valor: m.tipo === "gasto" ? m.facturaId : "", opciones: opcFactura("recibida"), clase: "solo-gasto" }) +
         "</div></div>" +
@@ -5635,6 +6136,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
         UI.campo({ nombre: "sentido", etiqueta: "Sentido", tipo: "select", valor: m.sentido, opciones: [["salida", "La asociación da dinero a la persona"], ["entrada", "La persona devuelve dinero"]] }) +
         UI.campo({ nombre: "anticipoId", etiqueta: "Anticipo o reembolso", tipo: "select", valor: m.anticipoId, opciones: anticipos }) +
         "</div>" + ayuda("Entregar un anticipo, pagar un reembolso o recibir la devolución del sobrante no es un gasto ni un ingreso: solo mueve dinero. El gasto son los tickets que se justifican en el anticipo o reembolso.") + "</div>" +
+        (inscEnlazadas.length ? '<p class="campo-completo detalle">Corresponde a las inscripciones: ' + esc(inscEnlazadas.join(", ")) + "</p>" : "") +
         (enlazadas.length ? '<p class="campo-completo detalle">Corresponde a las cuotas: ' + esc(enlazadas.map(function (q) { return q.socioNombre + " (" + D.formatear(q.importe) + ")"; }).join(", ")) + "</p>" : "") +
         (sugerencias.length ? '<fieldset class="campo-completo"><legend>¿Corresponde a…?</legend>' + sugerencias.slice(0, 6).map(function (s) {
           return '<label class="casilla"><input type="checkbox" name="sug-' + esc(s.tipo) + "-" + esc(s.id) + '"><span>' + esc(s.texto) + "</span></label>";
@@ -5675,19 +6177,21 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var d = r.datos;
     m.tipo = d.tipo; m.fecha = d.fecha; m.cuentaId = d.cuentaId; m.importe = D.desdeTexto(d.importe);
     m.concepto = d.concepto; m.notas = d.notas; m.proyectoId = d.tipo === "ingreso" || d.tipo === "gasto" ? d.proyectoId : "";
+    m.actividadId = d.tipo === "ingreso" || d.tipo === "gasto" ? d.actividadId : "";
     m.categoriaId = d.tipo === "ingreso" ? d.categoriaIngreso : d.tipo === "gasto" ? d.categoriaGasto : "";
     m.facturaId = d.tipo === "ingreso" ? d.facturaEmitida : d.tipo === "gasto" ? d.facturaRecibida : "";
     m.cuentaDestinoId = d.tipo === "traspaso" ? d.cuentaDestinoId : "";
     m.sentido = d.tipo === "anticipo" ? d.sentido : "";
     m.anticipoId = d.tipo === "anticipo" ? d.anticipoId : "";
-    if (d.tipo !== "ingreso") m.cuotaIds = [];
+    if (d.tipo !== "ingreso") { m.cuotaIds = []; m.inscripcionIds = []; }
 
     // Sugerencias marcadas: cuotas (se marcan pagadas) o una factura.
-    var cuotasElegidas = [], facturaElegida = "";
+    var cuotasElegidas = [], inscripcionesElegidas = [], facturaElegida = "";
     Object.keys(d).forEach(function (k) {
       if (!d[k] || k.indexOf("sug-") !== 0) return;
       var partes = k.split("-"), tipo = partes[1], id = partes.slice(2).join("-");
       if (tipo === "cuota") cuotasElegidas.push(buscar(c.cuotas, id));
+      if (tipo === "inscripcion") inscripcionesElegidas.push({ actividadId: id.split(":")[0], inscripcionId: id.split(":")[1] });
       if (tipo === "factura") facturaElegida = id;
     });
     if (facturaElegida) m.facturaId = facturaElegida;
@@ -5697,6 +6201,12 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       m = con.movimiento;
       await datos.guardarVarios("cuotas", con.cuotas);
       if (con.diferencia) UI.aviso("Ojo: las cuotas suman " + D.formatear(m.importe - con.diferencia) + " y el movimiento es de " + D.formatear(m.importe) + ".", "info");
+    }
+    if (inscripcionesElegidas.length) {
+      var ci = T.conciliarInscripciones(m, inscripcionesElegidas, c.actividades);
+      m = ci.movimiento;
+      await datos.guardarVarios("actividades", ci.actividades);
+      if (ci.diferencia) UI.aviso("Ojo: las inscripciones suman " + D.formatear(m.importe - ci.diferencia) + " y el movimiento es de " + D.formatear(m.importe) + ".", "info");
     }
     if (!m.concepto) m.concepto = m.conceptoBanco || "";
     await datos.guardar("movimientos", m);
@@ -5710,15 +6220,16 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var desde = anio + "-01-01", hasta = anio + "-12-31";
     var enAnio = function (f) { return f >= desde && f <= hasta; };
     var hojas = [];
-    var lib = T.libro(c.movimientos, c.cuotas).filter(function (m) { return enAnio(m.fecha); }).reverse();
+    var lib = T.libro(c.movimientos, c.cuotas, c.actividades).filter(function (m) { return enAnio(m.fecha); }).reverse();
     hojas.push({ nombre: "Movimientos " + anio, columnas: [
       { titulo: "Fecha", tipo: "fecha" }, { titulo: "Cuenta" }, { titulo: "Tipo", ancho: 14 }, { titulo: "Concepto", ancho: 40 }, { titulo: "Categoría" },
-      { titulo: "Proyecto" }, { titulo: "Importe", tipo: "dinero" }, { titulo: "Según el banco", ancho: 40 }],
+      { titulo: "Proyecto" }, { titulo: "Actividad" }, { titulo: "Importe", tipo: "dinero" }, { titulo: "Según el banco", ancho: 40 }],
       filas: lib.map(function (m) {
         return [m.fecha, nombreCuenta(c, m.cuentaId), (T.TIPOS.filter(function (t) { return t[0] === m.tipo; })[0] || [])[1] + (m.tipo === "traspaso" ? " → " + nombreCuenta(c, m.cuentaDestinoId) : ""),
-          m.concepto, m.tipo === "ingreso" || m.tipo === "gasto" ? nombreCategoria(c, m.categoriaId) : "", nombreProyecto(c, m.proyectoId), T.conSigno(m), m.conceptoBanco || ""];
+          m.concepto, m.tipo === "ingreso" || m.tipo === "gasto" ? nombreCategoria(c, m.categoriaId) : "", nombreProyecto(c, m.proyectoId), nombreActividad(c, m.actividadId), T.conSigno(m), m.conceptoBanco || ""];
       }) });
-    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), desde, hasta);
+    var todasPartidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades);
+    var res = T.resultados(todasPartidas, desde, hasta);
     var filasRes = [];
     Object.keys(res.ingresos).forEach(function (k) { filasRes.push(["Ingreso", nombreCategoria(c, k), res.ingresos[k]]); });
     Object.keys(res.gastos).forEach(function (k) { filasRes.push(["Gasto", nombreCategoria(c, k), res.gastos[k]]); });
@@ -5758,15 +6269,545 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
         var s = T.situacionAnticipo(a, c.movimientos);
         return [a.tipo === "anticipo" ? "Anticipo" : "Reembolso", a.persona, a.fecha, a.concepto, s.entregado, s.justificado, s.devuelto, s.saldo];
       }) });
+    hojas.push({ nombre: "Actividades " + anio, columnas: [{ titulo: "Fecha", tipo: "fecha" }, { titulo: "Actividad", ancho: 36 }, { titulo: "Estado", ancho: 12 },
+      { titulo: "Inscritos", tipo: "numero" }, { titulo: "Asistentes", tipo: "numero" }, { titulo: "Menores", tipo: "numero" },
+      { titulo: "Ingresos", tipo: "dinero" }, { titulo: "Gastos", tipo: "dinero" }, { titulo: "Resultado", tipo: "dinero" }],
+      filas: (c.actividades || []).filter(function (a) { return enAnio(String(a.inicio).slice(0, 10)); })
+        .sort(function (a, b) { return String(a.inicio).localeCompare(String(b.inicio)); }).map(function (a) {
+          var r = WA.Actividades.resumen(a, c.socios), b = WA.Actividades.balance(a.id, todasPartidas);
+          return [String(a.inicio).slice(0, 10), a.titulo, WA.Actividades.ESTADOS[a.estado], r.inscritas, r.asistentes, r.menores, b.ingresos, b.gastos, b.resultado];
+        }) });
     var bytes = WA.XLSX.escribir(hojas);
     UI.descargar("tesoreria-" + anio + "-descargado-" + F.hoy() + ".xlsx", new Blob([bytes], { type: WA.XLSX.TIPO_MIME }));
   }
 
   WA.TesUI = {
     cargar: cargar, nombreCategoria: nombreCategoria, nombreCuenta: nombreCuenta, nombreProyecto: nombreProyecto,
+    nombreActividad: nombreActividad, opcionesActividades: opcionesActividades,
     opcionesCategorias: opcionesCategorias, opcionesCuentas: opcionesCuentas, opcionesProyectos: opcionesProyectos,
     editarMovimiento: editarMovimiento, exportarExcel: exportarExcel, ayuda: ayuda, importeHtml: importeHtml, buscar: buscar,
   };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/actividades.js */
+/*
+ * webkit_asociaciones — Módulo «Actividades».
+ *
+ *   #/actividades                 calendario del mes y próximas actividades
+ *   #/actividades/lista           todas, con búsqueda
+ *   #/actividades/nueva           alta
+ *   #/actividades/ficha/<id>      datos, inscripciones, cobros, asistencia y balance
+ *   #/actividades/asistencia/<id> hoja de asistencia para imprimir (con columna de firma)
+ *
+ * La lógica (aforo, lista de espera, cobros, menores, .ics) está en
+ * logica/actividades.js, con tests.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, A = WA.Actividades, S = WA.Socios, U = WA.TesUI, T = WA.Tesoreria;
+
+  var vista = { anio: null, mes: null, texto: "", cuando: "proximas", canceladas: false };
+  var DIAS = ["lun", "mar", "mié", "jue", "vie", "sáb", "dom"];
+  var ESTADO_CLASE = { prevista: "estado-ok", realizada: "estado-neutro", cancelada: "estado-error" };
+
+  function pestanas(actual) {
+    return '<nav class="pestanas" aria-label="Vistas de actividades"><a href="#/actividades"' + (actual === "calendario" ? ' aria-current="page"' : "") + ">Calendario</a>" +
+      '<a href="#/actividades/lista"' + (actual === "lista" ? ' aria-current="page"' : "") + ">Todas</a></nav>";
+  }
+
+  var hora = function (iso) { return String(iso || "").slice(11, 16); };
+  /** «sáb 10/10/2026 · 09:00–14:00», «… (todo el día)» o con dos días. */
+  function cuando(a) {
+    var d0 = A.fechaDe(a), d1 = String(a.fin || "").slice(0, 10);
+    var f0 = F.desdeISO(d0);
+    var dia = f0 ? DIAS[(f0.getDay() + 6) % 7] + " " : "";
+    if (a.todoElDia) return dia + F.corta(d0) + (d1 && d1 > d0 ? " – " + F.corta(d1) : "") + " (todo el día)";
+    if (d1 && d1 > d0) return dia + F.corta(d0) + " " + hora(a.inicio) + " → " + F.corta(d1) + " " + hora(a.fin);
+    return dia + F.corta(d0) + " · " + hora(a.inicio) + (hora(a.fin) && a.fin > a.inicio ? "–" + hora(a.fin) : "");
+  }
+  function plazasTexto(a) {
+    var n = A.ocupadas(a);
+    return a.aforo > 0 ? n + "/" + a.aforo + " plazas" : n + (n === 1 ? " inscrita" : " inscritas");
+  }
+
+  async function cargar(datos) {
+    var c = await U.cargar(datos);
+    c.socios = c.socios.map(S.completar);
+    return c;
+  }
+
+  // ── Calendario ──────────────────────────────────────────────────────────
+  async function pintarCalendario(cont, datos) {
+    var c = await cargar(datos);
+    var hoy = F.hoy();
+    var anio = vista.anio || +hoy.slice(0, 4), mes = vista.mes || +hoy.slice(5, 7);
+    var semanas = A.mes(c.actividades, anio, mes);
+    var delMes = A.ordenar(c.actividades).filter(function (a) { return A.fechaDe(a).slice(0, 7) === anio + "-" + String(mes).padStart(2, "0"); });
+    var proximas = A.ordenar(c.actividades).filter(function (a) { return A.fechaDe(a) >= hoy && a.estado !== "cancelada"; }).slice(0, 5);
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Actividades</h1><div class="acciones-cabecera">' + botonIcs(c) +
+      '<a class="btn btn-primario" href="#/actividades/nueva">Nueva actividad</a></div></div>' + pestanas("calendario") +
+      '<div class="calendario-barra"><button type="button" class="btn btn-secundario btn-pequeno" data-mes="-1" aria-label="Mes anterior">‹</button>' +
+      '<h2 class="calendario-titulo">' + esc(F.MESES[mes - 1].charAt(0).toUpperCase() + F.MESES[mes - 1].slice(1)) + " " + anio + "</h2>" +
+      '<button type="button" class="btn btn-secundario btn-pequeno" data-mes="1" aria-label="Mes siguiente">›</button>' +
+      '<button type="button" class="btn btn-secundario btn-pequeno" data-mes="0">Hoy</button></div>' +
+      '<div class="calendario" role="grid" aria-label="Calendario de ' + esc(F.MESES[mes - 1]) + '">' +
+      '<div class="cal-fila cal-cabecera" role="row">' + DIAS.map(function (d) { return '<div role="columnheader">' + d + "</div>"; }).join("") + "</div>" +
+      semanas.map(function (sem) {
+        return '<div class="cal-fila" role="row">' + sem.map(function (d) {
+          return '<div role="gridcell" class="cal-dia' + (d.delMes ? "" : " fuera") + (d.fecha === hoy ? " hoy" : "") + '"><span class="cal-num">' + +d.fecha.slice(8) + "</span>" +
+            d.actividades.map(function (a) {
+              return '<a class="cal-act ' + a.estado + '" href="#/actividades/ficha/' + encodeURIComponent(a.id) + '">' + (a.todoElDia ? "" : "<b>" + esc(hora(a.inicio)) + "</b> ") + esc(a.titulo) + "</a>";
+            }).join("") + "</div>";
+        }).join("") + "</div>";
+      }).join("") + "</div>" +
+      '<section class="tarjeta" aria-labelledby="t-mes"><h2 id="t-mes">Este mes</h2>' + listaCompacta(delMes, "No hay actividades este mes.") + "</section>" +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximas</h2>' + listaCompacta(proximas, "No hay actividades previstas.") + "</section>";
+    cont.querySelectorAll("[data-mes]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        var paso = +b.getAttribute("data-mes");
+        if (paso === 0) { vista.anio = null; vista.mes = null; }
+        else { var f = new Date(anio, mes - 1 + paso, 1); vista.anio = f.getFullYear(); vista.mes = f.getMonth() + 1; }
+        WA.App.repintar();
+      });
+    });
+    conectarIcs(cont, datos, c);
+  }
+
+  function listaCompacta(lista, vacio) {
+    if (!lista.length) return '<p class="vacio">' + vacio + "</p>";
+    return '<ul class="lista-actividades">' + lista.map(function (a) {
+      return '<li><a href="#/actividades/ficha/' + encodeURIComponent(a.id) + '"><strong>' + esc(a.titulo) + '</strong></a><span class="detalle">' + esc(cuando(a)) +
+        (a.lugar ? " · " + esc(a.lugar) : "") + " · " + esc(plazasTexto(a)) + "</span>" +
+        (a.estado !== "prevista" ? ' <span class="estado ' + ESTADO_CLASE[a.estado] + '">' + A.ESTADOS[a.estado] + "</span>" : "") + "</li>";
+    }).join("") + "</ul>";
+  }
+
+  // ── Exportar a calendario (.ics) ────────────────────────────────────────
+  function botonIcs(c) {
+    return '<label class="sr" for="a-zona">Horario</label><select id="a-zona" class="select-pequeno" title="Horario del calendario">' +
+      [["Europe/Madrid", "Horario peninsular"], ["Atlantic/Canary", "Horario canario"]].map(function (o) {
+        return '<option value="' + o[0] + '"' + (c.config.zonaHoraria === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
+      }).join("") + "</select>" +
+      '<button type="button" class="btn btn-secundario" id="a-ics">Descargar calendario (.ics)</button>';
+  }
+  function conectarIcs(cont, datos, c) {
+    cont.querySelector("#a-zona").addEventListener("change", async function (e) {
+      c.config.zonaHoraria = e.target.value;
+      await datos.escribir("config", c.config);
+      UI.aviso("Horario guardado.");
+    });
+    cont.querySelector("#a-ics").addEventListener("click", function () {
+      descargarIcs(c, c.actividades, "actividades-" + F.hoy() + ".ics");
+      UI.aviso("Calendario descargado. Ábrelo o impórtalo en Google Calendar, Outlook o el calendario del móvil.");
+    });
+  }
+  function descargarIcs(c, actividades, nombre) {
+    var texto = A.ics(actividades, { nombreCalendario: c.asociacion.nombre || "Actividades", zona: c.config.zonaHoraria });
+    UI.descargar(nombre, texto, "text/calendar;charset=utf-8");
+  }
+
+  // ── Lista ───────────────────────────────────────────────────────────────
+  async function pintarLista(cont, datos) {
+    var c = await cargar(datos);
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Actividades</h1><div class="acciones-cabecera">' + botonIcs(c) +
+      '<a class="btn btn-primario" href="#/actividades/nueva">Nueva actividad</a></div></div>' + pestanas("lista") +
+      '<div class="barra-filtros"><label><span class="sr">Cuándo</span><select id="l-cuando">' +
+      [["proximas", "Próximas"], ["pasadas", "Pasadas"], ["todas", "Todas"]].map(function (o) {
+        return '<option value="' + o[0] + '"' + (vista.cuando === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
+      }).join("") + "</select></label>" +
+      '<label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="l-buscar" placeholder="Buscar por título, lugar o responsable…" value="' + esc(vista.texto) + '"></label></div>' +
+      '<div id="l-tabla"></div>';
+    function refrescar() {
+      var hoy = F.hoy(), t = vista.texto.trim().toLowerCase();
+      var lista = A.ordenar(c.actividades).filter(function (a) {
+        if (vista.cuando === "proximas" && A.fechaDe(a) < hoy) return false;
+        if (vista.cuando === "pasadas" && A.fechaDe(a) >= hoy) return false;
+        return !t || [a.titulo, a.lugar, a.responsable, a.tipo].join(" ").toLowerCase().indexOf(t) >= 0;
+      });
+      if (vista.cuando === "pasadas") lista.reverse();
+      cont.querySelector("#l-tabla").innerHTML = !lista.length ? '<p class="vacio">No hay actividades.</p>' :
+        '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Actividades</caption><thead><tr><th scope="col">Cuándo</th><th scope="col">Actividad</th>' +
+        '<th scope="col">Plazas</th><th scope="col" class="solo-ancho">Para</th><th scope="col">Estado</th></tr></thead><tbody>' +
+        lista.map(function (a) {
+          var r = A.resumen(a, c.socios);
+          return "<tr><td>" + esc(cuando(a)) + '</td><th scope="row"><a href="#/actividades/ficha/' + encodeURIComponent(a.id) + '">' + esc(a.titulo) + "</a>" +
+            (a.lugar ? '<br><span class="detalle">' + esc(a.lugar) + "</span>" : "") + "</th>" +
+            "<td>" + esc(plazasTexto(a)) + (r.espera ? '<br><span class="detalle">' + r.espera + " en espera</span>" : "") + "</td>" +
+            '<td class="solo-ancho">' + (a.abierta === "socios" ? "Solo socios" : "Abierta") + "</td>" +
+            '<td><span class="estado ' + ESTADO_CLASE[a.estado] + '">' + A.ESTADOS[a.estado] + "</span></td></tr>";
+        }).join("") + "</tbody></table></div>";
+    }
+    refrescar();
+    cont.querySelector("#l-cuando").addEventListener("change", function (e) { vista.cuando = e.target.value; refrescar(); });
+    cont.querySelector("#l-buscar").addEventListener("input", function (e) { vista.texto = e.target.value; refrescar(); });
+    conectarIcs(cont, datos, c);
+  }
+
+  // ── Ficha ───────────────────────────────────────────────────────────────
+  function personas(c) {
+    var n = {};
+    c.junta.forEach(function (j) { if (!j.hasta) n[j.nombre] = true; });
+    c.socios.forEach(function (s) { if (S.estado(s) === "activo") n[S.nombreCompleto(s)] = true; });
+    return Object.keys(n).sort(function (a, b) { return a.localeCompare(b, "es"); });
+  }
+
+  function formularioDatos(a, c) {
+    var tipoFecha = a.todoElDia ? "date" : "datetime-local";
+    var valor = function (iso) { return a.todoElDia ? String(iso || "").slice(0, 10) : String(iso || "").slice(0, 16); };
+    return '<form id="a-datos" class="formulario" novalidate>' +
+      '<section class="tarjeta"><h2>Qué, cuándo y dónde</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "titulo", etiqueta: "Título", valor: a.titulo, requerido: true, clase: "col-7 col-movil-completo" }) +
+      UI.campo({ nombre: "tipo", etiqueta: "Tipo", valor: a.tipo, lista: A.TIPOS, clase: "col-5 col-movil-completo" }) +
+      UI.campo({ nombre: "inicio", etiqueta: "Empieza", tipo: tipoFecha, valor: valor(a.inicio), requerido: true, clase: "col-4 col-movil-completo" }) +
+      UI.campo({ nombre: "fin", etiqueta: "Termina", tipo: tipoFecha, valor: valor(a.fin), clase: "col-4 col-movil-completo" }) +
+      '<div class="col-4 col-movil-completo"><label class="casilla"><input type="checkbox" name="todoElDia"' + (a.todoElDia ? " checked" : "") + "><span>Todo el día</span></label></div>" +
+      UI.campo({ nombre: "lugar", etiqueta: "Lugar", valor: a.lugar, clase: "col-7 col-movil-completo" }) +
+      UI.campo({ nombre: "responsable", etiqueta: "Responsable", valor: a.responsable, lista: personas(c), clase: "col-5 col-movil-completo" }) +
+      UI.campo({ nombre: "descripcion", etiqueta: "Descripción", tipo: "textarea", valor: a.descripcion, clase: "col-12" }) +
+      UI.campo({ nombre: "estado", etiqueta: "Estado", tipo: "select", valor: a.estado, opciones: Object.keys(A.ESTADOS).map(function (k) { return [k, A.ESTADOS[k]]; }), clase: "col-4" }) +
+      UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto o subvención", tipo: "select", valor: a.proyectoId, opciones: U.opcionesProyectos(c), clase: "col-8 col-movil-completo" }) +
+      "</div></section>" +
+      '<section class="tarjeta"><h2>Inscripción</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "abierta", etiqueta: "Pueden apuntarse", tipo: "select", valor: a.abierta, opciones: [["todos", "Socios y no socios"], ["socios", "Solo socios"]], clase: "col-4 col-movil-completo" }) +
+      UI.campo({ nombre: "aforo", etiqueta: "Plazas", tipo: "number", valor: a.aforo ? String(a.aforo) : "", clase: "col-3", atributos: 'min="0" step="1"', ayuda: "Vacío = sin límite." }) +
+      '<div class="col-5 col-movil-completo"><label class="casilla"><input type="checkbox" name="listaEspera"' + (a.listaEspera ? " checked" : "") +
+      "><span>Lista de espera cuando se llene</span></label></div>" +
+      UI.campo({ nombre: "precioSocio", etiqueta: "Precio para socios (€)", valor: a.precioSocio ? D.formatear(a.precioSocio, { simbolo: false }) : "", clase: "col-4", atributos: 'inputmode="decimal"', ayuda: "Vacío = gratis." }) +
+      UI.campo({ nombre: "precioGeneral", etiqueta: "Precio para no socios (€)", valor: a.precioGeneral ? D.formatear(a.precioGeneral, { simbolo: false }) : "", clase: "col-4 solo-abierta", atributos: 'inputmode="decimal"' }) +
+      '<div class="col-12"><label class="casilla"><input type="checkbox" name="autorizacionMenores"' + (a.autorizacionMenores ? " checked" : "") +
+      "><span>Los menores necesitan autorización firmada de su madre, padre o tutor</span></label></div>" +
+      UI.campo({ nombre: "notas", etiqueta: "Notas internas", tipo: "textarea", valor: a.notas, clase: "col-12", filas: 2 }) +
+      "</div>" + U.ayuda("Si se cobra la inscripción, al marcarla pagada entra en Tesorería como ingreso de «Inscripciones a actividades». Qué autorizaciones hacen falta para menores y cómo se custodian: verificar con asesoría.") +
+      "</section>" +
+      '<div class="acciones barra-guardar"><button type="submit" class="btn btn-primario">' + (a.id ? "Guardar cambios" : "Crear actividad") + "</button>" +
+      '<a class="btn btn-secundario" href="#/actividades">Volver</a></div></form>';
+  }
+
+  function leerDatos(form, a) {
+    var d = UI.leerFormulario(form);
+    var todo = !!d.todoElDia;
+    var norm = function (v, porDefecto) {
+      if (!v) return porDefecto || "";
+      return todo ? String(v).slice(0, 10) + "T00:00" : String(v).slice(0, 16);
+    };
+    var inicio = norm(d.inicio);
+    var aforo = parseInt(d.aforo, 10);
+    return Object.assign(a, {
+      titulo: d.titulo, tipo: d.tipo, inicio: inicio, fin: norm(d.fin, inicio), todoElDia: todo, lugar: d.lugar, responsable: d.responsable,
+      descripcion: d.descripcion, estado: d.estado, proyectoId: d.proyectoId, abierta: d.abierta, aforo: isFinite(aforo) && aforo > 0 ? aforo : 0,
+      listaEspera: !!d.listaEspera, precioSocio: D.desdeTexto(d.precioSocio || "0") || 0,
+      precioGeneral: d.abierta === "socios" ? 0 : D.desdeTexto(d.precioGeneral || "0") || 0,
+      autorizacionMenores: !!d.autorizacionMenores, notas: d.notas,
+    });
+  }
+
+  async function pintarFicha(cont, datos, id) {
+    var c = await cargar(datos);
+    var a = id ? U.buscar(c.actividades, id) : A.vacia();
+    if (!a) { cont.innerHTML = '<h1>Actividad no encontrada</h1><p><a href="#/actividades">Volver</a></p>'; return; }
+    var nueva = !a.id;
+    var porId = {};
+    c.socios.forEach(function (s) { porId[s.id] = s; });
+    var r = nueva ? null : A.resumen(a, c.socios);
+    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades);
+    var bal = nueva ? null : A.balance(a.id, partidas);
+    var enlazadas = T.inscripcionesEnlazadas(c.movimientos);
+
+    cont.innerHTML =
+      '<p class="miga"><a href="#/actividades">Actividades</a> › ' + esc(nueva ? "Nueva" : a.titulo) + "</p>" +
+      '<div class="cabecera-pagina"><h1>' + esc(nueva ? "Nueva actividad" : a.titulo) + "</h1>" +
+      (nueva ? "" : '<span class="estado ' + ESTADO_CLASE[a.estado] + '">' + A.ESTADOS[a.estado] + "</span>") + "</div>" +
+      (nueva ? "" : '<p class="intro">' + esc(cuando(a)) + (a.lugar ? " · " + esc(a.lugar) : "") + "</p>") +
+      (nueva ? "" :
+        '<div class="rejilla-tarjetas cifras">' +
+        '<section class="tarjeta"><h2>Inscritas</h2><p class="cifra">' + esc(plazasTexto(a)) + "</p>" + (r.espera ? '<p class="detalle">' + r.espera + " en lista de espera</p>" : "") + "</section>" +
+        '<section class="tarjeta"><h2>Asistencia</h2><p class="cifra">' + r.asistentes + '</p><p class="detalle">' + (r.noAsistieron ? r.noAsistieron + " no vinieron" : "Marca quién vino en la lista") + "</p></section>" +
+        '<section class="tarjeta"><h2>Menores</h2><p class="cifra">' + r.menores + "</p>" +
+        (r.menoresSinAutorizacion ? '<p><span class="estado estado-error">' + r.menoresSinAutorizacion + " sin autorización</span></p>" : "") + "</section>" +
+        '<section class="tarjeta"><h2>Cobrado</h2><p class="cifra">' + esc(D.formatear(r.recaudado)) + "</p>" +
+        (r.pendienteCobro ? '<p class="detalle">Pendiente: ' + esc(D.formatear(r.pendienteCobro)) + "</p>" : "") + "</section></div>" +
+
+        '<section class="tarjeta" aria-labelledby="t-insc"><div class="tarjeta-cabecera"><h2 id="t-insc">Inscripciones</h2><div class="acciones-cabecera">' +
+        '<button type="button" class="btn btn-primario" id="i-nueva"' + (a.estado === "cancelada" ? " disabled" : "") + ">Inscribir a alguien</button></div></div>" +
+        '<label class="casilla"><input type="checkbox" id="i-canceladas"' + (vista.canceladas ? " checked" : "") + "><span>Ver también las canceladas</span></label>" +
+        '<div id="i-tabla">' + tablaInscripciones(a, porId, enlazadas) + "</div>" +
+        '<div class="acciones"><a class="btn btn-secundario" href="#/actividades/asistencia/' + encodeURIComponent(a.id) + '">Hoja de asistencia para imprimir</a>' +
+        '<button type="button" class="btn btn-secundario" id="i-csv">Exportar inscritos (CSV)</button>' +
+        '<button type="button" class="btn btn-secundario" id="i-correos">Copiar correos</button></div></section>' +
+
+        '<section class="tarjeta" aria-labelledby="t-bal"><div class="tarjeta-cabecera"><h2 id="t-bal">Balance económico</h2>' +
+        '<button type="button" class="btn btn-secundario" id="b-gasto">Apuntar un gasto</button></div>' +
+        '<ul class="lista-cifras"><li><span>Ingresos (inscripciones y otros)</span><strong>' + esc(D.formatear(bal.ingresos)) + "</strong></li>" +
+        "<li><span>Gastos</span><strong>" + esc(D.formatear(bal.gastos)) + '</strong></li><li class="total"><span>Resultado</span><strong class="' + (bal.resultado < 0 ? "importe-negativo" : "") + '">' +
+        esc(D.formatear(bal.resultado)) + "</strong></li></ul>" +
+        U.ayuda("Cuenta lo cobrado de las inscripciones y los movimientos o gastos de anticipos que tengan esta actividad elegida.") + "</section>") +
+      formularioDatos(a, c) +
+      (nueva ? "" : '<div class="acciones"><button type="button" class="btn btn-secundario" id="a-duplicar">Duplicar</button>' +
+        '<button type="button" class="btn btn-secundario" id="a-ics1">Añadir a mi calendario (.ics)</button>' +
+        '<button type="button" class="btn btn-peligro-suave" id="a-borrar">Borrar actividad</button></div>');
+
+    var form = cont.querySelector("#a-datos");
+    function dependencias() {
+      var d = UI.leerFormulario(form);
+      cont.querySelectorAll(".solo-abierta").forEach(function (x) { x.hidden = d.abierta === "socios"; });
+      var tipo = d.todoElDia ? "date" : "datetime-local";
+      ["inicio", "fin"].forEach(function (n) {
+        var el = form.elements[n];
+        if (el.type === tipo) return;
+        var v = el.value;
+        el.type = tipo;
+        el.value = tipo === "date" ? v.slice(0, 10) : (v ? v.slice(0, 10) + "T" + (n === "inicio" ? "18:00" : "20:00") : "");
+      });
+    }
+    form.addEventListener("change", dependencias);
+    dependencias();
+    form.addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var x = leerDatos(form, a);
+      var errores = {};
+      if (!x.titulo) errores.titulo = "Escribe el título.";
+      if (!F.esValida(String(x.inicio).slice(0, 10))) errores.inicio = "Pon la fecha.";
+      if (x.fin && x.fin < x.inicio) errores.fin = "No puede terminar antes de empezar.";
+      ["titulo", "inicio", "fin"].forEach(function (k) { UI.marcarError(form, k, errores[k] || ""); });
+      if (Object.keys(errores).length) { UI.aviso("Revisa los campos marcados.", "error"); return; }
+      // Si se reduce el aforo por debajo de las inscritas, no se echa a nadie: solo se avisa.
+      var aviso = x.aforo > 0 && A.ocupadas(x) > x.aforo ? " Hay más inscritas que plazas." : "";
+      var g = await datos.guardar("actividades", x);
+      UI.aviso((nueva ? "Actividad creada." : "Cambios guardados.") + aviso, aviso ? "info" : "ok");
+      if (nueva) location.hash = "#/actividades/ficha/" + encodeURIComponent(g.id); else WA.App.repintar();
+    });
+    if (nueva) return;
+
+    var guardarAct = async function (nuevaA, texto) { await datos.guardar("actividades", nuevaA); if (texto) UI.aviso(texto); WA.App.repintar(); };
+    cont.querySelector("#i-canceladas").addEventListener("change", function (e) {
+      vista.canceladas = e.target.checked;
+      cont.querySelector("#i-tabla").innerHTML = tablaInscripciones(a, porId, enlazadas);
+    });
+    cont.querySelector("#i-nueva").addEventListener("click", function () { nuevaInscripcion(datos, c, a); });
+    cont.querySelector("#i-tabla").addEventListener("change", async function (e) {
+      var el = e.target, insId = el.getAttribute("data-ins");
+      if (!insId) return;
+      if (el.name === "asistio") await guardarAct(A.cambiarInscripcion(a, insId, { asistio: el.value === "" ? null : el.value === "si" }));
+      if (el.name === "autorizacion") await guardarAct(A.cambiarInscripcion(a, insId, { autorizacion: el.checked }), el.checked ? "Autorización marcada." : "");
+    });
+    cont.querySelector("#i-tabla").addEventListener("click", async function (e) {
+      var b = e.target.closest("[data-accion]");
+      if (!b) return;
+      var insId = b.getAttribute("data-ins"), ins = a.inscripciones.filter(function (i) { return i.id === insId; })[0];
+      if (b.getAttribute("data-accion") === "cobrar") {
+        var pago = await pedirPago(ins, porId[ins.socioId], c.config);
+        if (pago) await guardarAct(A.cobrar(a, insId, pago), "Inscripción cobrada.");
+      } else await masOpciones(datos, c, a, ins, enlazadas, guardarAct);
+    });
+    cont.querySelector("#i-csv").addEventListener("click", function () { exportarCsv(a, porId); });
+    cont.querySelector("#i-correos").addEventListener("click", async function () {
+      var correos = a.inscripciones.filter(function (i) { return i.estado !== "cancelada" && /@/.test(i.contacto); }).map(function (i) { return i.contacto; });
+      try { await navigator.clipboard.writeText(correos.join(", ")); UI.aviso(correos.length + " correos copiados. Pégalos en «CCO» para que nadie vea los de los demás."); }
+      catch (err) { UI.aviso("No se han podido copiar: " + correos.join(", "), "info"); }
+    });
+    cont.querySelector("#b-gasto").addEventListener("click", async function () {
+      if (await U.editarMovimiento(datos, c, null, { tipo: "gasto", actividadId: a.id, proyectoId: a.proyectoId, categoriaId: "actividades", concepto: a.titulo + ": " })) WA.App.repintar();
+    });
+    cont.querySelector("#a-duplicar").addEventListener("click", async function () {
+      var g = await datos.guardar("actividades", A.duplicar(a));
+      UI.aviso("Copia creada sin inscripciones. Cambia la fecha.");
+      location.hash = "#/actividades/ficha/" + encodeURIComponent(g.id);
+    });
+    cont.querySelector("#a-ics1").addEventListener("click", function () { descargarIcs(c, [a], "actividad-" + A.fechaDe(a) + ".ics"); });
+    cont.querySelector("#a-borrar").addEventListener("click", async function () {
+      var pagadas = a.inscripciones.filter(function (i) { return i.pago; }).length;
+      if (pagadas) { UI.aviso("Tiene " + pagadas + " inscripciones cobradas: márcala como cancelada en vez de borrarla, para que el dinero siga constando.", "error"); return; }
+      if (!(await UI.confirmar("Se borrará la actividad con sus inscripciones.", { titulo: "Borrar actividad", aceptar: "Borrar", peligro: true }))) return;
+      await datos.borrar("actividades", a.id);
+      location.hash = "#/actividades";
+    });
+  }
+
+  function tablaInscripciones(a, porId, enlazadas) {
+    var lista = a.inscripciones.filter(function (i) { return vista.canceladas || i.estado !== "cancelada"; })
+      .sort(function (x, y) { var o = { inscrita: 0, espera: 1, cancelada: 2 }; return o[x.estado] - o[y.estado] || String(x.fecha).localeCompare(String(y.fecha)); });
+    if (!lista.length) return '<p class="vacio">Nadie inscrito todavía.</p>';
+    var espera = A.enEspera(a).map(function (i) { return i.id; });
+    return '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Inscripciones</caption><thead><tr><th scope="col">Persona</th><th scope="col">Estado</th>' +
+      (a.autorizacionMenores ? '<th scope="col">Autorización</th>' : "") + '<th scope="col">Pago</th><th scope="col">¿Vino?</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead><tbody>' +
+      lista.map(function (i) {
+        var socio = porId[i.socioId], menor = A.esMenor(i, socio, a);
+        var estado = i.estado === "inscrita" ? '<span class="estado estado-ok">Inscrita</span>' : i.estado === "espera"
+          ? '<span class="estado estado-aviso">En espera (' + (espera.indexOf(i.id) + 1) + ".º)</span>" : '<span class="estado estado-neutro">Cancelada</span>';
+        var pago = i.pago ? '<span class="estado estado-ok">Pagada</span><br><span class="detalle">' + esc(F.corta(i.pago.fecha)) + " · " + esc(i.pago.forma) + "</span>"
+          : i.importe > 0 ? (i.estado === "cancelada" ? '<span class="detalle">' + esc(D.formatear(i.importe)) + "</span>"
+            : '<button type="button" class="btn btn-pequeno btn-primario" data-accion="cobrar" data-ins="' + esc(i.id) + '">Cobrar ' + esc(D.formatear(i.importe)) + "</button>")
+          : '<span class="detalle">Gratis</span>';
+        return '<tr><th scope="row">' + (socio ? '<a href="#/socios/ficha/' + encodeURIComponent(socio.id) + '">' + esc(i.nombre) + '</a> <span class="etiqueta">Socio n.º ' + esc(socio.numero) + "</span>" : esc(i.nombre)) +
+          (menor ? ' <span class="etiqueta">Menor</span>' : "") + (i.contacto ? '<br><span class="detalle">' + esc(i.contacto) + "</span>" : "") + "</th>" +
+          "<td>" + estado + "</td>" +
+          (a.autorizacionMenores ? "<td>" + (menor ? '<label class="casilla en-linea"><input type="checkbox" name="autorizacion" data-ins="' + esc(i.id) + '"' + (i.autorizacion ? " checked" : "") +
+            '><span class="sr">Autorización de ' + esc(i.nombre) + "</span></label>" + (i.autorizacion ? "" : ' <span class="estado estado-error">Falta</span>') : '<span class="detalle">—</span>') + "</td>" : "") +
+          "<td>" + pago + "</td>" +
+          "<td>" + (i.estado === "inscrita" ? '<label class="sr" for="as-' + esc(i.id) + '">¿Vino ' + esc(i.nombre) + '?</label><select id="as-' + esc(i.id) + '" name="asistio" data-ins="' + esc(i.id) + '" class="select-pequeno">' +
+            [["", "—"], ["si", "Sí"], ["no", "No"]].map(function (o) {
+              var v = i.asistio === true ? "si" : i.asistio === false ? "no" : "";
+              return '<option value="' + o[0] + '"' + (v === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
+            }).join("") + "</select>" : "") + "</td>" +
+          '<td class="celda-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-accion="mas" data-ins="' + esc(i.id) + '" aria-label="Más opciones de ' + esc(i.nombre) + '">Más…</button></td></tr>';
+      }).join("") + "</tbody></table></div>";
+  }
+
+  async function nuevaInscripcion(datos, c, a) {
+    var activos = c.socios.filter(function (s) { return S.estado(s) === "activo"; }).sort(function (x, y) { return (x.numero || 0) - (y.numero || 0); });
+    var etiqueta = function (s) { return s.numero + " · " + S.nombreCompleto(s); };
+    var soloSocios = a.abierta === "socios";
+    var r = await UI.dialogo({
+      titulo: "Inscribir en «" + a.titulo + "»",
+      contenido: (a.aforo > 0 && A.libres(a) === 0 ? '<div class="caja-aviso">' + (a.listaEspera ? "Está completa: la inscripción irá a la lista de espera." : "Está completa y no tiene lista de espera.") + "</div>" : "") +
+        '<form class="formulario" novalidate>' +
+        (soloSocios ? "" : '<fieldset class="grupo-opciones"><legend>¿Quién?</legend><label class="opcion"><input type="radio" name="quien" value="socio" checked><span>Un socio</span></label>' +
+          '<label class="opcion"><input type="radio" name="quien" value="otro"><span>Otra persona</span></label></fieldset>') +
+        '<div data-quien="socio">' + UI.campo({ nombre: "socio", etiqueta: "Socio", valor: "", lista: activos.map(etiqueta), ancho: "completo", ayuda: "Escribe su número o su nombre y elígelo de la lista.",
+          atributos: 'autocomplete="off"' }) + "</div>" +
+        '<div data-quien="otro" hidden><div class="rejilla">' +
+        UI.campo({ nombre: "nombre", etiqueta: "Nombre y apellidos", valor: "", ancho: "completo" }) +
+        UI.campo({ nombre: "contacto", etiqueta: "Correo o teléfono", valor: "", ancho: "completo" }) + "</div>" +
+        '<label class="casilla"><input type="checkbox" name="esMenor"><span>Es menor de edad</span></label></div>' +
+        (a.autorizacionMenores ? '<label class="casilla"><input type="checkbox" name="autorizacion"><span>Ha entregado la autorización firmada (si es menor)</span></label>' : "") +
+        UI.campo({ nombre: "notas", etiqueta: "Notas (alergias, necesidades…)", valor: "", ancho: "completo" }) +
+        "</form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Inscribir", valor: "enviar", estilo: "btn-primario" }],
+      alAbrir: function (d) {
+        var f = d.querySelector("form");
+        var ver = function () {
+          var q = soloSocios ? "socio" : (f.querySelector("input[name=quien]:checked") || {}).value;
+          d.querySelectorAll("[data-quien]").forEach(function (x) { x.hidden = x.getAttribute("data-quien") !== q; });
+        };
+        f.addEventListener("change", ver);
+        ver();
+      },
+      validar: function (form) {
+        var dd = UI.leerFormulario(form);
+        var q = soloSocios ? "socio" : (form.querySelector("input[name=quien]:checked") || {}).value;
+        if (q === "socio") {
+          var ok = activos.some(function (s) { return etiqueta(s) === dd.socio; });
+          UI.marcarError(form, "socio", ok ? "" : "Elige un socio de la lista.");
+          return ok;
+        }
+        UI.marcarError(form, "nombre", dd.nombre ? "" : "Escribe el nombre.");
+        return !!dd.nombre;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    var dd = r.datos;
+    var quien = soloSocios ? "socio" : (r.form.querySelector("input[name=quien]:checked") || {}).value;
+    var persona = quien === "socio"
+      ? { socio: activos.filter(function (s) { return etiqueta(s) === dd.socio; })[0], autorizacion: !!dd.autorizacion, notas: dd.notas }
+      : { nombre: dd.nombre, contacto: dd.contacto, esMenor: !!dd.esMenor, autorizacion: !!dd.autorizacion, notas: dd.notas };
+    try {
+      var res = A.inscribir(a, persona);
+      await datos.guardar("actividades", res.actividad);
+      UI.aviso(res.enEspera ? res.inscripcion.nombre + " queda en lista de espera." : res.inscripcion.nombre + " inscrito/a.", res.enEspera ? "info" : "ok");
+      WA.App.repintar();
+    } catch (err) { UI.aviso(err.message, "error"); }
+  }
+
+  async function pedirPago(ins, socio, config) {
+    var forma = (socio && socio.formaPago) || "Bizum";
+    var r = await UI.dialogo({
+      titulo: "Cobrar inscripción",
+      contenido: "<p>" + esc(ins.nombre) + " · <strong>" + esc(D.formatear(ins.importe)) + "</strong></p>" +
+        '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha del pago", tipo: "date", valor: F.hoy(), requerido: true }) +
+        UI.campo({ nombre: "forma", etiqueta: "Forma de pago", tipo: "select", valor: forma, opciones: S.FORMAS_PAGO }) +
+        UI.campo({ nombre: "cuentaId", etiqueta: "Dónde entra el dinero", tipo: "select", valor: WA.Cuotas.cuentaPorDefecto(forma, config.cuentas), opciones: U.opcionesCuentas({ config: config }) }) +
+        UI.campo({ nombre: "referencia", etiqueta: "Referencia (opcional)", valor: "" }) + "</div></form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Marcar como pagada", valor: "enviar", estilo: "btn-primario" }],
+      alAbrir: function (d) {
+        var f = d.querySelector("form");
+        f.elements.forma.addEventListener("change", function () { f.elements.cuentaId.value = WA.Cuotas.cuentaPorDefecto(f.elements.forma.value, config.cuentas); });
+      },
+      validar: function (form) { var ok = F.esValida(form.elements.fecha.value); UI.marcarError(form, "fecha", ok ? "" : "Pon la fecha."); return ok; },
+    });
+    return r.valor === "enviar" ? r.datos : null;
+  }
+
+  async function masOpciones(datos, c, a, ins, enlazadas, guardarAct) {
+    var ref = a.id + ":" + ins.id;
+    var botones = [{ texto: "Cerrar", valor: "cancelar" }];
+    if (ins.estado !== "cancelada") botones.unshift({ texto: "Cancelar inscripción", valor: "cancelar-ins", estilo: "btn-peligro-suave" });
+    if (ins.estado === "espera") botones.unshift({ texto: "Darle plaza ya", valor: "promover" });
+    if (ins.pago) botones.unshift({ texto: "Deshacer el cobro", valor: "deshacer" });
+    if (ins.estado !== "cancelada" && !ins.pago) botones.unshift({ texto: "Cambiar importe…", valor: "importe" });
+    var r = await UI.dialogo({ titulo: ins.nombre, contenido: "<p>" + esc(a.titulo) + (ins.notas ? '</p><p class="detalle">Notas: ' + esc(ins.notas) : "") + "</p>" +
+      (ins.pago && enlazadas[ref] ? '<p class="detalle">Este cobro está enlazado a un movimiento del banco: para deshacerlo, quita el enlace en Tesorería.</p>' : ""), botones: botones });
+    if (r.valor === "cancelar-ins") {
+      var res = A.cancelar(a, ins.id);
+      await guardarAct(res.actividad, res.promovida ? "Cancelada. " + res.promovida.nombre + " pasa de la lista de espera a tener plaza (avísale)." : "Inscripción cancelada." + (ins.pago ? " El cobro sigue constando: si se devuelve el dinero, apunta el gasto en Tesorería." : ""));
+    } else if (r.valor === "promover") {
+      await guardarAct(A.promover(a, ins.id), "Ya tiene plaza.");
+    } else if (r.valor === "deshacer") {
+      if (enlazadas[ref]) { UI.aviso("Está enlazado a un movimiento del banco: quita el enlace en Tesorería.", "error"); return; }
+      await guardarAct(A.cambiarInscripcion(a, ins.id, { pago: null }), "Cobro deshecho.");
+    } else if (r.valor === "importe") {
+      var ri = await UI.dialogo({ titulo: "Cambiar importe", contenido: '<form class="formulario" novalidate>' +
+        UI.campo({ nombre: "importe", etiqueta: "Importe (€)", valor: D.formatear(ins.importe, { simbolo: false }), atributos: 'inputmode="decimal"', ayuda: "0 si no paga (beca, voluntario…)." }) + "</form>",
+        botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }],
+        validar: function (form) { var v = D.desdeTexto(form.elements.importe.value || "0"); var ok = v !== null && v >= 0; UI.marcarError(form, "importe", ok ? "" : "Escribe un importe."); return ok; } });
+      if (ri.valor === "enviar") await guardarAct(A.cambiarInscripcion(a, ins.id, { importe: D.desdeTexto(ri.datos.importe || "0") || 0 }), "Importe cambiado.");
+    }
+  }
+
+  function exportarCsv(a, porId) {
+    var columnas = [
+      { titulo: "Nombre", clave: "nombre" }, { titulo: "Socio n.º", valor: function (i) { return porId[i.socioId] ? porId[i.socioId].numero : ""; } },
+      { titulo: "Contacto", clave: "contacto" }, { titulo: "Estado", clave: "estado" },
+      { titulo: "Menor", valor: function (i) { return A.esMenor(i, porId[i.socioId], a) ? "Sí" : ""; } },
+      { titulo: "Autorización", valor: function (i) { return i.autorizacion ? "Sí" : ""; } },
+      { titulo: "Importe (€)", valor: function (i) { return D.formatear(i.importe, { simbolo: false }); } },
+      { titulo: "Pagado", valor: function (i) { return i.pago ? F.corta(i.pago.fecha) + " " + i.pago.forma : ""; } },
+      { titulo: "Asistió", valor: function (i) { return i.asistio === true ? "Sí" : i.asistio === false ? "No" : ""; } },
+      { titulo: "Notas", clave: "notas" },
+    ];
+    UI.descargar("inscritos-" + A.fechaDe(a) + ".csv", WA.CSV.escribir(columnas, a.inscripciones), "text/csv;charset=utf-8");
+  }
+
+  // ── Hoja de asistencia ──────────────────────────────────────────────────
+  async function pintarAsistencia(cont, datos, id) {
+    var c = await cargar(datos);
+    var a = U.buscar(c.actividades, id);
+    if (!a) { cont.innerHTML = "<h1>No encontrada</h1>"; return; }
+    var porId = {};
+    c.socios.forEach(function (s) { porId[s.id] = s; });
+    var lista = a.inscripciones.filter(function (i) { return i.estado === "inscrita"; }).sort(function (x, y) { return x.nombre.localeCompare(y.nombre, "es"); });
+    cont.innerHTML =
+      '<p class="miga no-imprimir"><a href="#/actividades/ficha/' + encodeURIComponent(a.id) + '">' + esc(a.titulo) + "</a> › Hoja de asistencia</p>" +
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="h-imprimir">Imprimir o guardar en PDF</button></div>' +
+      "<h1>" + esc(a.titulo) + "</h1>" +
+      '<p class="intro">' + esc(c.asociacion.nombre || "") + " · " + esc(cuando(a)) + (a.lugar ? " · " + esc(a.lugar) : "") + "</p>" +
+      '<div class="tabla-envoltorio"><table class="tabla tabla-asistencia"><thead><tr><th scope="col" class="num">#</th><th scope="col">Nombre</th><th scope="col">Menor</th>' +
+      (a.autorizacionMenores ? '<th scope="col">Autorización</th>' : "") + '<th scope="col" class="col-firma">Firma</th></tr></thead><tbody>' +
+      lista.map(function (i, k) {
+        var menor = A.esMenor(i, porId[i.socioId], a);
+        return '<tr><td class="num">' + (k + 1) + "</td><td>" + esc(i.nombre) + "</td><td>" + (menor ? "Sí" : "") + "</td>" +
+          (a.autorizacionMenores ? "<td>" + (menor ? (i.autorizacion ? "Sí" : "FALTA") : "") + "</td>" : "") + '<td class="col-firma"></td></tr>';
+      }).join("") +
+      // Unas filas vacías para quien llegue sin inscribirse.
+      [1, 2, 3, 4, 5].map(function (k) { return '<tr><td class="num">' + (lista.length + k) + "</td><td></td><td></td>" + (a.autorizacionMenores ? "<td></td>" : "") + '<td class="col-firma"></td></tr>'; }).join("") +
+      "</tbody></table></div>";
+    cont.querySelector("#h-imprimir").addEventListener("click", function () { window.print(); });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "lista") return pintarLista(cont, datos);
+    if (ruta[0] === "nueva") return pintarFicha(cont, datos, null);
+    if (ruta[0] === "ficha") return pintarFicha(cont, datos, ruta[1]);
+    if (ruta[0] === "asistencia") return pintarAsistencia(cont, datos, ruta[1]);
+    return pintarCalendario(cont, datos);
+  }
+
+  WA.App.registrar({
+    id: "actividades", titulo: "Actividades", orden: 28, pintar: pintar,
+    icono: '<rect x="3" y="4.5" width="18" height="16" rx="2"/><path d="M3 9.5h18"/><path d="M8 2.5v4M16 2.5v4"/><path d="M7.5 13.5h3M13.5 13.5h3M7.5 17h3"/>',
+  });
 })(typeof self !== "undefined" ? self : this);
 </script>
   <script>/* js/modulos/tesoreria.js */
@@ -5808,8 +6849,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   async function pintarResumen(cont, datos) {
     var c = await U.cargar(datos);
     var anio = anioActual();
-    var s = T.saldos(c.config.cuentas, c.movimientos, c.cuotas);
-    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), anio + "-01-01", anio + "-12-31");
+    var s = T.saldos(c.config.cuentas, c.movimientos, c.cuotas, undefined, c.actividades);
+    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades), anio + "-01-01", anio + "-12-31");
     var sinClasificar = c.movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
     var pend = { emitida: 0, recibida: 0, nE: 0, nR: 0 };
     c.facturas.forEach(function (f) {
@@ -5863,7 +6904,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
     function visibles() {
       var anio = String(anioActual()), t = vista.texto.trim().toLowerCase();
-      return T.libro(c.movimientos, c.cuotas).filter(function (m) {
+      return T.libro(c.movimientos, c.cuotas, c.actividades).filter(function (m) {
         if (m.fecha.slice(0, 4) !== anio) return false;
         if (vista.cuenta && m.cuentaId !== vista.cuenta && m.cuentaDestinoId !== vista.cuenta) return false;
         if (vista.categoria !== "*") {
@@ -5875,7 +6916,9 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     }
     function etiquetas(m) {
       var e = [];
-      if (m.virtual) e.push('<span class="etiqueta">Cuota cobrada</span>');
+      if (m.virtual) e.push('<span class="etiqueta">' + (m.origenVirtual === "inscripcion" ? "Inscripción cobrada" : "Cuota cobrada") + "</span>");
+      if ((m.inscripcionIds || []).length && !m.virtual) e.push('<span class="etiqueta">' + m.inscripcionIds.length + (m.inscripcionIds.length === 1 ? " inscripción" : " inscripciones") + "</span>");
+      if (m.actividadId) { var act = U.buscar(c.actividades, m.actividadId); if (act) e.push('<a class="etiqueta" href="#/actividades/ficha/' + encodeURIComponent(act.id) + '">' + esc(act.titulo) + "</a>"); }
       if ((m.cuotaIds || []).length && !m.virtual) e.push('<span class="etiqueta">' + m.cuotaIds.length + (m.cuotaIds.length === 1 ? " cuota" : " cuotas") + "</span>");
       if (m.facturaId) { var f = U.buscar(c.facturas, m.facturaId); if (f) e.push('<a class="etiqueta" href="#/facturas/ver/' + encodeURIComponent(f.id) + '">Factura ' + esc(f.numero) + "</a>"); }
       if (m.anticipoId) e.push('<a class="etiqueta" href="#/tesoreria/anticipo/' + encodeURIComponent(m.anticipoId) + '">' + (m.sentido === "entrada" ? "Devolución" : "Anticipo/reembolso") + "</a>");
@@ -5900,7 +6943,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
             "<td>" + cat + (m.proyectoId ? '<br><span class="detalle">' + esc(U.nombreProyecto(c, m.proyectoId)) + "</span>" : "") + "</td>" +
             '<td class="solo-ancho">' + esc(U.nombreCuenta(c, m.cuentaId)) + "</td>" +
             '<td class="importe">' + U.importeHtml(importe) + "</td>" +
-            '<td class="celda-acciones">' + (m.virtual ? '<a class="btn btn-pequeno btn-secundario" href="#/cuotas">Ver</a>'
+            '<td class="celda-acciones">' + (m.virtual ? '<a class="btn btn-pequeno btn-secundario" href="' + (m.origenVirtual === "inscripcion" ? "#/actividades/ficha/" + encodeURIComponent(m.actividadId) : "#/cuotas") + '">Ver</a>'
               : '<button type="button" class="btn btn-pequeno btn-secundario" data-mov="' + esc(m.id) + '">' + (m.categoriaId || m.tipo === "traspaso" || m.tipo === "anticipo" ? "Editar" : "Clasificar") + "</button>") + "</td></tr>";
         }).join("") + "</tbody></table></div>";
     }
@@ -6058,7 +7101,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   }
 
   async function editarGasto(datos, c, a, gasto) {
-    var g = gasto || { id: WA.Esquema.nuevoId(), fecha: F.hoy(), concepto: "", importe: 0, categoriaId: "", proyectoId: a.proyectoId || "", justificante: "", facturaId: "" };
+    var g = gasto || { id: WA.Esquema.nuevoId(), fecha: F.hoy(), concepto: "", importe: 0, categoriaId: "", proyectoId: a.proyectoId || "", actividadId: a.actividadId || "", justificante: "", facturaId: "" };
     var facturas = [["", "—"]].concat(c.facturas.filter(function (f) { return f.tipo === "recibida"; }).map(function (f) { return [f.id, f.numero + " · " + (f.tercero || {}).nombre + " · " + D.formatear(Fac.totales(f).total)]; }));
     var r = await UI.dialogo({
       titulo: gasto ? "Editar gasto" : "Añadir gasto justificado",
@@ -6068,6 +7111,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
         UI.campo({ nombre: "importe", etiqueta: "Importe (€)", valor: g.importe ? D.formatear(g.importe, { simbolo: false }) : "", atributos: 'inputmode="decimal"' }) +
         UI.campo({ nombre: "categoriaId", etiqueta: "Categoría", tipo: "select", valor: g.categoriaId, opciones: U.opcionesCategorias(c, "gasto") }) +
         UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: g.proyectoId, opciones: U.opcionesProyectos(c) }) +
+        UI.campo({ nombre: "actividadId", etiqueta: "Actividad", tipo: "select", valor: g.actividadId, opciones: U.opcionesActividades(c, g.actividadId) }) +
         UI.campo({ nombre: "justificante", etiqueta: "Justificante", valor: g.justificante, ayuda: "Ticket, factura simplificada… y dónde está guardado." }) +
         UI.campo({ nombre: "facturaId", etiqueta: "Factura recibida (si la hay)", tipo: "select", valor: g.facturaId, opciones: facturas, ayuda: "Para que conste como pagada y su IVA cuente." }) +
         "</div></form>",
@@ -6800,7 +7844,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     var c = await U.cargar(datos);
     var anio = anioVista || +F.hoy().slice(0, 4);
     var previsto = (c.config.presupuestos || {})[anio] || {};
-    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), anio + "-01-01", anio + "-12-31");
+    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades), anio + "-01-01", anio + "-12-31");
     var ej = T.ejecucion(conTodas(previsto, c.config.categorias), res, c.config.categorias);
     var anios = {};
     [anio, +F.hoy().slice(0, 4), +F.hoy().slice(0, 4) + 1].forEach(function (a) { anios[a] = true; });
@@ -6837,7 +7881,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
   // ── Proyectos y subvenciones ───────────────────────────────────────────
   function ejecucionProyecto(c, p) {
-    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos).filter(function (x) { return x.proyectoId === p.id; });
+    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades).filter(function (x) { return x.proyectoId === p.id; });
     var res = T.resultados(partidas);
     return { res: res, ej: T.ejecucion(p.presupuesto || {}, res, c.config.categorias) };
   }
@@ -6871,7 +7915,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     if (!p) { cont.innerHTML = '<h1>No encontrado</h1><p><a href="#/proyectos/lista">Volver</a></p>'; return; }
     var x = ejecucionProyecto(c, p);
     var ej = T.ejecucion(conTodas(p.presupuesto, c.config.categorias), x.res, c.config.categorias);
-    var lineas = T.libro(c.movimientos, c.cuotas).filter(function (m) { return m.proyectoId === p.id; });
+    var lineas = T.libro(c.movimientos, c.cuotas, c.actividades).filter(function (m) { return m.proyectoId === p.id; });
     var gastosAnt = [];
     c.anticipos.forEach(function (a) { a.gastos.forEach(function (g) { if ((g.proyectoId || a.proyectoId) === p.id) gastosAnt.push({ a: a, g: g }); }); });
     cont.innerHTML =

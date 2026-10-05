@@ -12,9 +12,9 @@ Nace de **Solvento** (`../../Solvento`, app de finanzas personales del mismo aut
 src/index.html            se abre directamente para desarrollar (scripts clásicos, funciona con file://)
 src/css/                  tokens (colores) · base (estructura) · componentes · impresión
 src/js/nucleo/            dinero · fechas · validar · direccion · csv · xlsx · cripto · tema · preferencias · ui · form-direccion · app
-src/js/logica/            socios · cuotas · facturas · iva · tesoreria · extracto   (lógica de negocio pura, sin DOM, con tests)
+src/js/logica/            socios · cuotas · actividades · facturas · iva · tesoreria · extracto   (lógica de negocio pura, sin DOM, con tests)
 src/js/datos/             esquema · repositorio · copia · demo · boveda · sesion
-src/js/modulos/           acceso · inicio · asociacion · socios · cuotas · tesoreria-comun · tesoreria · facturas · iva · proyectos · copias · ajustes
+src/js/modulos/           acceso · inicio · asociacion · socios · cuotas · tesoreria-comun · actividades · tesoreria · facturas · iva · proyectos · copias · ajustes
 src/js/arranque.js        siempre el último
 tools/build.mjs           empaqueta todo en dist/webkit_asociaciones.html (sin dependencias)
 tests/*.test.js           node --test (incluido en Node, sin instalar nada)
@@ -51,6 +51,12 @@ tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium 
 | Importar extracto: detección de columnas, duplicados por (cuenta, fecha, importe, concepto), reglas de categoría y sugerencias de conciliación | Los bancos exportan cada uno a su manera; la persona puede corregir qué columna es cada cosa |
 | Excel (.xlsx) escrito y leído sin librerías (`nucleo/xlsx.js`, portado de Solvento y sin DOMParser para poder probarlo en Node) | Funciona sin conexión y sin dependencias |
 | Presupuestos: anual en `config.presupuestos[año]` y por proyecto en `proyectos[].presupuesto`, por categoría | Las categorías son las partidas. Lo realizado sale de `Tesoreria.partidas` |
+| Actividades con inscripciones dentro (`actividades[].inscripciones`) | Una actividad y su lista se guardan juntas. Estado de cada inscripción: inscrita, espera o cancelada. La lista de espera se ordena por la marca de tiempo de inscripción y sube sola al cancelar |
+| Inscripciones cobradas = ingresos «virtuales» del libro (categoría `inscripciones`), salvo que un movimiento las enlace (`inscripcionIds: ["actividadId:inscripcionId"]`) | El mismo mecanismo que las cuotas: nada se cuenta dos veces. La forma de pago al conciliar se deduce del concepto del banco (BIZUM, RECIBO…) |
+| `actividadId` en movimientos y en gastos de anticipos | Para el balance económico de cada actividad (`Actividades.balance` sobre `Tesoreria.partidas`) |
+| Menores: en socios se calcula con su fecha de nacimiento el día de la actividad; en no socios se marca a mano | Autorización firmada solo si la actividad lo pide |
+| .ics propio (RFC 5545) con VTIMEZONE Europe/Madrid o Atlantic/Canary, líneas plegadas a 75 octetos | Sin librerías; se elige el horario (peninsular o canario) y se guarda en `config.zonaHoraria` |
+| Sin actividades recurrentes | Decisión del usuario: se crean una a una (hay «Duplicar») |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
 | Navegación por `#/modulo` | Funciona con `file://` sin servidor |
 | Capa de datos (`Repositorio`) asíncrona y como única puerta a los datos | **Preparada para la versión con servidor**: bastará con otro repositorio con las mismas funciones que use `fetch` contra una API |

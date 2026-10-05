@@ -14,16 +14,24 @@
   var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, T = WA.Tesoreria, Fac = WA.Facturas;
 
   async function cargar(datos) {
-    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion"].map(function (k) {
+    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion", "actividades"].map(function (k) {
       return k === "config" || k === "asociacion" ? datos.leer(k) : datos.listar(k);
     }));
-    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8] };
+    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8], actividades: r[9] };
   }
 
   var buscar = function (lista, id) { return (lista || []).filter(function (x) { return x.id === id; })[0]; };
   function nombreCategoria(c, id) { var x = buscar(c.config.categorias, id); return x ? x.nombre : id ? id : "Sin clasificar"; }
   function nombreCuenta(c, id) { var x = buscar(c.config.cuentas, id); return x ? x.nombre : id || "—"; }
   function nombreProyecto(c, id) { var x = buscar(c.proyectos, id); return x ? x.nombre : ""; }
+  function nombreActividad(c, id) { var x = buscar(c.actividades, id); return x ? x.titulo : ""; }
+  /** Actividades para un desplegable: las más recientes primero (y la ya elegida, aunque sea antigua). */
+  function opcionesActividades(c, actual) {
+    var lista = (c.actividades || []).slice().sort(function (a, b) { return String(b.inicio).localeCompare(String(a.inicio)); });
+    return [["", "—"]].concat(lista.filter(function (a, i) { return i < 60 || a.id === actual; }).map(function (a) {
+      return [a.id, String(a.inicio).slice(0, 10).split("-").reverse().join("/") + " · " + a.titulo];
+    }));
+  }
 
   function opcionesCategorias(c, tipo, conVacia) {
     var lista = (c.config.categorias || []).filter(function (x) { return (!tipo || x.tipo === tipo) && x.activa !== false; })
@@ -49,10 +57,10 @@
   async function editarMovimiento(datos, c, mov, valores) {
     var nuevo = !mov;
     var m = Object.assign({ fecha: F.hoy(), cuentaId: (c.config.cuentas[0] || {}).id, tipo: "gasto", importe: 0, concepto: "", categoriaId: "",
-      proyectoId: "", cuentaDestinoId: "", sentido: "salida", anticipoId: "", facturaId: "", cuotaIds: [], origen: "manual", conceptoBanco: "", notas: "" },
+      proyectoId: "", actividadId: "", cuentaDestinoId: "", sentido: "salida", anticipoId: "", facturaId: "", cuotaIds: [], inscripcionIds: [], origen: "manual", conceptoBanco: "", notas: "" },
     mov || {}, valores || {});
     // Sugerencias de conciliación (solo si aún no está enlazado a nada).
-    var sugerencias = !nuevo && (m.tipo === "ingreso" || m.tipo === "gasto") && !m.facturaId && !(m.cuotaIds || []).length
+    var sugerencias = !nuevo && (m.tipo === "ingreso" || m.tipo === "gasto") && !m.facturaId && !(m.cuotaIds || []).length && !(m.inscripcionIds || []).length
       ? WA.Extracto.sugerencias(m, c) : [];
     var facturasPendientes = c.facturas.filter(function (f) {
       if (f.estado === "borrador" || f.estado === "anulada") return false;
@@ -65,6 +73,11 @@
     };
     var anticipos = [["", "—"]].concat(c.anticipos.map(function (a) { return [a.id, (a.tipo === "anticipo" ? "Anticipo" : "Reembolso") + " · " + a.persona + " · " + a.concepto]; }));
     var enlazadas = (m.cuotaIds || []).map(function (id) { return buscar(c.cuotas, id); }).filter(Boolean);
+    var inscEnlazadas = (m.inscripcionIds || []).map(function (ref) {
+      var p = String(ref).split(":"), a = buscar(c.actividades, p[0]);
+      var i = a && (a.inscripciones || []).filter(function (x) { return x.id === p[1]; })[0];
+      return i ? i.nombre + " · " + a.titulo + " (" + D.formatear(i.importe) + ")" : null;
+    }).filter(Boolean);
 
     var r = await UI.dialogo({
       titulo: nuevo ? "Nuevo movimiento" : "Movimiento",
@@ -79,6 +92,7 @@
         UI.campo({ nombre: "categoriaIngreso", etiqueta: "Categoría", tipo: "select", valor: m.tipo === "ingreso" ? m.categoriaId : "", opciones: opcionesCategorias(c, "ingreso"), clase: "solo-ingreso" }) +
         UI.campo({ nombre: "categoriaGasto", etiqueta: "Categoría", tipo: "select", valor: m.tipo === "gasto" ? m.categoriaId : "", opciones: opcionesCategorias(c, "gasto"), clase: "solo-gasto" }) +
         UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: m.proyectoId, opciones: opcionesProyectos(c) }) +
+        UI.campo({ nombre: "actividadId", etiqueta: "Actividad", tipo: "select", valor: m.actividadId, opciones: opcionesActividades(c, m.actividadId) }) +
         UI.campo({ nombre: "facturaEmitida", etiqueta: "Cobro de la factura", tipo: "select", valor: m.tipo === "ingreso" ? m.facturaId : "", opciones: opcFactura("emitida"), clase: "solo-ingreso" }) +
         UI.campo({ nombre: "facturaRecibida", etiqueta: "Pago de la factura", tipo: "select", valor: m.tipo === "gasto" ? m.facturaId : "", opciones: opcFactura("recibida"), clase: "solo-gasto" }) +
         "</div></div>" +
@@ -88,6 +102,7 @@
         UI.campo({ nombre: "sentido", etiqueta: "Sentido", tipo: "select", valor: m.sentido, opciones: [["salida", "La asociación da dinero a la persona"], ["entrada", "La persona devuelve dinero"]] }) +
         UI.campo({ nombre: "anticipoId", etiqueta: "Anticipo o reembolso", tipo: "select", valor: m.anticipoId, opciones: anticipos }) +
         "</div>" + ayuda("Entregar un anticipo, pagar un reembolso o recibir la devolución del sobrante no es un gasto ni un ingreso: solo mueve dinero. El gasto son los tickets que se justifican en el anticipo o reembolso.") + "</div>" +
+        (inscEnlazadas.length ? '<p class="campo-completo detalle">Corresponde a las inscripciones: ' + esc(inscEnlazadas.join(", ")) + "</p>" : "") +
         (enlazadas.length ? '<p class="campo-completo detalle">Corresponde a las cuotas: ' + esc(enlazadas.map(function (q) { return q.socioNombre + " (" + D.formatear(q.importe) + ")"; }).join(", ")) + "</p>" : "") +
         (sugerencias.length ? '<fieldset class="campo-completo"><legend>¿Corresponde a…?</legend>' + sugerencias.slice(0, 6).map(function (s) {
           return '<label class="casilla"><input type="checkbox" name="sug-' + esc(s.tipo) + "-" + esc(s.id) + '"><span>' + esc(s.texto) + "</span></label>";
@@ -128,19 +143,21 @@
     var d = r.datos;
     m.tipo = d.tipo; m.fecha = d.fecha; m.cuentaId = d.cuentaId; m.importe = D.desdeTexto(d.importe);
     m.concepto = d.concepto; m.notas = d.notas; m.proyectoId = d.tipo === "ingreso" || d.tipo === "gasto" ? d.proyectoId : "";
+    m.actividadId = d.tipo === "ingreso" || d.tipo === "gasto" ? d.actividadId : "";
     m.categoriaId = d.tipo === "ingreso" ? d.categoriaIngreso : d.tipo === "gasto" ? d.categoriaGasto : "";
     m.facturaId = d.tipo === "ingreso" ? d.facturaEmitida : d.tipo === "gasto" ? d.facturaRecibida : "";
     m.cuentaDestinoId = d.tipo === "traspaso" ? d.cuentaDestinoId : "";
     m.sentido = d.tipo === "anticipo" ? d.sentido : "";
     m.anticipoId = d.tipo === "anticipo" ? d.anticipoId : "";
-    if (d.tipo !== "ingreso") m.cuotaIds = [];
+    if (d.tipo !== "ingreso") { m.cuotaIds = []; m.inscripcionIds = []; }
 
     // Sugerencias marcadas: cuotas (se marcan pagadas) o una factura.
-    var cuotasElegidas = [], facturaElegida = "";
+    var cuotasElegidas = [], inscripcionesElegidas = [], facturaElegida = "";
     Object.keys(d).forEach(function (k) {
       if (!d[k] || k.indexOf("sug-") !== 0) return;
       var partes = k.split("-"), tipo = partes[1], id = partes.slice(2).join("-");
       if (tipo === "cuota") cuotasElegidas.push(buscar(c.cuotas, id));
+      if (tipo === "inscripcion") inscripcionesElegidas.push({ actividadId: id.split(":")[0], inscripcionId: id.split(":")[1] });
       if (tipo === "factura") facturaElegida = id;
     });
     if (facturaElegida) m.facturaId = facturaElegida;
@@ -150,6 +167,12 @@
       m = con.movimiento;
       await datos.guardarVarios("cuotas", con.cuotas);
       if (con.diferencia) UI.aviso("Ojo: las cuotas suman " + D.formatear(m.importe - con.diferencia) + " y el movimiento es de " + D.formatear(m.importe) + ".", "info");
+    }
+    if (inscripcionesElegidas.length) {
+      var ci = T.conciliarInscripciones(m, inscripcionesElegidas, c.actividades);
+      m = ci.movimiento;
+      await datos.guardarVarios("actividades", ci.actividades);
+      if (ci.diferencia) UI.aviso("Ojo: las inscripciones suman " + D.formatear(m.importe - ci.diferencia) + " y el movimiento es de " + D.formatear(m.importe) + ".", "info");
     }
     if (!m.concepto) m.concepto = m.conceptoBanco || "";
     await datos.guardar("movimientos", m);
@@ -163,15 +186,16 @@
     var desde = anio + "-01-01", hasta = anio + "-12-31";
     var enAnio = function (f) { return f >= desde && f <= hasta; };
     var hojas = [];
-    var lib = T.libro(c.movimientos, c.cuotas).filter(function (m) { return enAnio(m.fecha); }).reverse();
+    var lib = T.libro(c.movimientos, c.cuotas, c.actividades).filter(function (m) { return enAnio(m.fecha); }).reverse();
     hojas.push({ nombre: "Movimientos " + anio, columnas: [
       { titulo: "Fecha", tipo: "fecha" }, { titulo: "Cuenta" }, { titulo: "Tipo", ancho: 14 }, { titulo: "Concepto", ancho: 40 }, { titulo: "Categoría" },
-      { titulo: "Proyecto" }, { titulo: "Importe", tipo: "dinero" }, { titulo: "Según el banco", ancho: 40 }],
+      { titulo: "Proyecto" }, { titulo: "Actividad" }, { titulo: "Importe", tipo: "dinero" }, { titulo: "Según el banco", ancho: 40 }],
       filas: lib.map(function (m) {
         return [m.fecha, nombreCuenta(c, m.cuentaId), (T.TIPOS.filter(function (t) { return t[0] === m.tipo; })[0] || [])[1] + (m.tipo === "traspaso" ? " → " + nombreCuenta(c, m.cuentaDestinoId) : ""),
-          m.concepto, m.tipo === "ingreso" || m.tipo === "gasto" ? nombreCategoria(c, m.categoriaId) : "", nombreProyecto(c, m.proyectoId), T.conSigno(m), m.conceptoBanco || ""];
+          m.concepto, m.tipo === "ingreso" || m.tipo === "gasto" ? nombreCategoria(c, m.categoriaId) : "", nombreProyecto(c, m.proyectoId), nombreActividad(c, m.actividadId), T.conSigno(m), m.conceptoBanco || ""];
       }) });
-    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), desde, hasta);
+    var todasPartidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades);
+    var res = T.resultados(todasPartidas, desde, hasta);
     var filasRes = [];
     Object.keys(res.ingresos).forEach(function (k) { filasRes.push(["Ingreso", nombreCategoria(c, k), res.ingresos[k]]); });
     Object.keys(res.gastos).forEach(function (k) { filasRes.push(["Gasto", nombreCategoria(c, k), res.gastos[k]]); });
@@ -211,12 +235,21 @@
         var s = T.situacionAnticipo(a, c.movimientos);
         return [a.tipo === "anticipo" ? "Anticipo" : "Reembolso", a.persona, a.fecha, a.concepto, s.entregado, s.justificado, s.devuelto, s.saldo];
       }) });
+    hojas.push({ nombre: "Actividades " + anio, columnas: [{ titulo: "Fecha", tipo: "fecha" }, { titulo: "Actividad", ancho: 36 }, { titulo: "Estado", ancho: 12 },
+      { titulo: "Inscritos", tipo: "numero" }, { titulo: "Asistentes", tipo: "numero" }, { titulo: "Menores", tipo: "numero" },
+      { titulo: "Ingresos", tipo: "dinero" }, { titulo: "Gastos", tipo: "dinero" }, { titulo: "Resultado", tipo: "dinero" }],
+      filas: (c.actividades || []).filter(function (a) { return enAnio(String(a.inicio).slice(0, 10)); })
+        .sort(function (a, b) { return String(a.inicio).localeCompare(String(b.inicio)); }).map(function (a) {
+          var r = WA.Actividades.resumen(a, c.socios), b = WA.Actividades.balance(a.id, todasPartidas);
+          return [String(a.inicio).slice(0, 10), a.titulo, WA.Actividades.ESTADOS[a.estado], r.inscritas, r.asistentes, r.menores, b.ingresos, b.gastos, b.resultado];
+        }) });
     var bytes = WA.XLSX.escribir(hojas);
     UI.descargar("tesoreria-" + anio + "-descargado-" + F.hoy() + ".xlsx", new Blob([bytes], { type: WA.XLSX.TIPO_MIME }));
   }
 
   WA.TesUI = {
     cargar: cargar, nombreCategoria: nombreCategoria, nombreCuenta: nombreCuenta, nombreProyecto: nombreProyecto,
+    nombreActividad: nombreActividad, opcionesActividades: opcionesActividades,
     opcionesCategorias: opcionesCategorias, opcionesCuentas: opcionesCuentas, opcionesProyectos: opcionesProyectos,
     editarMovimiento: editarMovimiento, exportarExcel: exportarExcel, ayuda: ayuda, importeHtml: importeHtml, buscar: buscar,
   };

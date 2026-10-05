@@ -237,3 +237,31 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   .tabla-lineas { min-width: 640px; }
   .factura-impresa { padding: 1.25rem; }
 }
+
+/* ── Actividades y calendario ──────────────────────────────────────────── */
+.select-pequeno { width: auto !important; min-height: 36px !important; padding: 0.3rem 0.5rem !important; font-size: 0.9rem; }
+.calendario-barra { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0 1rem; }
+.calendario-titulo { margin: 0 0.5rem; min-width: 11rem; text-align: center; }
+.calendario { border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; margin-bottom: 1.25rem; background: var(--superficie); }
+.cal-fila { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.cal-cabecera div { padding: 0.4rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--texto-3); text-align: center; border-bottom: 1px solid var(--borde); }
+.cal-dia { min-height: 6.5rem; padding: 0.3rem; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.cal-fila .cal-dia:last-child { border-right: none; }
+.cal-dia.fuera { background: var(--superficie-2); }
+.cal-dia.fuera .cal-num { color: var(--texto-3); }
+.cal-num { font-size: 0.85rem; font-weight: 600; }
+.cal-dia.hoy .cal-num { background: var(--acento); color: var(--acento-texto); border-radius: 999px; padding: 0 0.45rem; align-self: flex-start; }
+.cal-act { display: block; font-size: 0.78rem; line-height: 1.25; padding: 0.15rem 0.3rem; border-radius: 4px; background: var(--acento-suave); color: var(--texto);
+  text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 3px solid var(--acento); }
+.cal-act.cancelada { text-decoration: line-through; opacity: 0.7; border-left-color: var(--peligro); }
+.cal-act.realizada { opacity: 0.75; border-left-color: var(--borde-fuerte); background: var(--superficie-2); }
+.lista-actividades { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+.lista-actividades li { padding: 0.45rem 0; border-bottom: 1px solid var(--borde); }
+.lista-actividades li:last-child { border-bottom: none; }
+.lista-actividades .detalle { display: block; }
+.tabla-asistencia .col-firma { width: 40%; }
+.tabla-asistencia td { height: 2.4rem; }
+/* En el móvil la cuadrícula no cabe: se ve la lista del mes, que va debajo. */
+@media (max-width: 760px) {
+  .calendario { display: none; }
+}

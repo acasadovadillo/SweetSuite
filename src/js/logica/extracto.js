@@ -124,10 +124,10 @@
 
   /**
    * Sugerencias de conciliación para un movimiento:
-   *   ingreso → cuotas sin cobrar del mismo importe cuyo socio aparece en el concepto,
+   *   ingreso → cuotas e inscripciones sin cobrar del mismo importe cuya persona aparece en el concepto,
    *             y facturas emitidas pendientes por ese importe;
    *   gasto   → facturas recibidas pendientes por ese importe.
-   * Devuelve [{ tipo: "cuota" | "factura", id, texto, puntos }] de más a menos probable.
+   * Devuelve [{ tipo: "cuota" | "inscripcion" | "factura", id, texto, puntos }] de más a menos probable.
    */
   function sugerencias(m, datos) {
     var out = [];
@@ -145,6 +145,17 @@
       // si hay otra cuota que coincide en nombre y apellidos.
       var mejor = Math.max.apply(null, [0].concat(deCuotas.map(function (x) { return x.puntos; })));
       out = out.concat(deCuotas.filter(function (x) { return x.puntos === mejor; }));
+      // Inscripciones a actividades sin cobrar por ese importe, de alguien que aparece en el concepto.
+      var deInsc = [];
+      (datos.actividades || []).forEach(function (a) {
+        (a.inscripciones || []).forEach(function (i) {
+          if (i.pago || i.estado === "cancelada" || i.importe !== m.importe) return;
+          var coinciden = palabras(i.nombre).filter(function (p) { return concepto.indexOf(p) >= 0; }).length;
+          if (coinciden) deInsc.push({ tipo: "inscripcion", id: a.id + ":" + i.id, texto: "Inscripción de " + i.nombre + " · " + a.titulo, puntos: coinciden });
+        });
+      });
+      var mejorI = Math.max.apply(null, [0].concat(deInsc.map(function (x) { return x.puntos; })));
+      out = out.concat(deInsc.filter(function (x) { return x.puntos === mejorI; }));
     }
     (datos.facturas || []).forEach(function (f) {
       var buscada = m.tipo === "ingreso" ? "emitida" : "recibida";

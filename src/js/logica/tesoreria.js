@@ -7,7 +7,8 @@
  *     cuentaDestinoId    (traspaso entre cuentas propias)
  *     sentido            (anticipo: "salida" = se entrega o reembolsa dinero a una
  *                         persona; "entrada" = la persona devuelve lo que sobró)
- *     anticipoId, facturaId, cuotaIds: [ids]   (enlaces: qué paga o cobra)
+ *     anticipoId, facturaId, cuotaIds: [ids], inscripcionIds: ["actividadId:inscripcionId"],
+ *     actividadId                              (enlaces: qué paga o cobra, y a qué actividad corresponde)
  *     origen: "manual" | "extracto", conceptoBanco, notas }
  *   tipo: "ingreso" | "gasto" | "traspaso" | "anticipo"
  *
@@ -17,8 +18,8 @@
  * contabilidad de entidades sin fines lucrativos): verificar con asesoría.
  *
  * DE DÓNDE SALE CADA COSA:
- *   · Saldo de una cuenta = saldo inicial + movimientos + cuotas cobradas que
- *     no estén ya enlazadas a un movimiento (para no contarlas dos veces).
+ *   · Saldo de una cuenta = saldo inicial + movimientos + cuotas e inscripciones
+ *     cobradas que no estén ya enlazadas a un movimiento (para no contarlas dos veces).
  *   · Ingresos y gastos (por categoría y proyecto) = movimientos de ingreso y
  *     gasto + cuotas cobradas no enlazadas + gastos justificados en anticipos y
  *     reembolsos. Los traspasos y las entregas/devoluciones de anticipos NO son
@@ -27,12 +28,12 @@
  */
 (function (raiz, fabrica) {
   var dep = typeof require === "function"
-    ? { Dinero: require("../nucleo/dinero.js"), Fechas: require("../nucleo/fechas.js"), Cuotas: require("./cuotas.js") }
-    : { Dinero: raiz.WA.Dinero, Fechas: raiz.WA.Fechas, Cuotas: raiz.WA.Cuotas };
-  var modulo = fabrica(dep.Dinero, dep.Fechas, dep.Cuotas);
+    ? { Dinero: require("../nucleo/dinero.js"), Fechas: require("../nucleo/fechas.js"), Cuotas: require("./cuotas.js"), Actividades: require("./actividades.js") }
+    : { Dinero: raiz.WA.Dinero, Fechas: raiz.WA.Fechas, Cuotas: raiz.WA.Cuotas, Actividades: raiz.WA.Actividades };
+  var modulo = fabrica(dep.Dinero, dep.Fechas, dep.Cuotas, dep.Actividades);
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Tesoreria = modulo;
-})(typeof self !== "undefined" ? self : this, function (D, F, Cuotas) {
+})(typeof self !== "undefined" ? self : this, function (D, F, Cuotas, Actividades) {
   "use strict";
 
   var TIPOS = [["ingreso", "Ingreso"], ["gasto", "Gasto"], ["traspaso", "Traspaso entre cuentas"], ["anticipo", "Anticipo o reembolso"]];
@@ -83,16 +84,30 @@
     (movimientos || []).forEach(function (m) { (m.cuotaIds || []).forEach(function (id) { s[id] = true; }); });
     return s;
   }
+  /** Lo mismo para las inscripciones a actividades ("actividadId:inscripcionId"). */
+  function inscripcionesEnlazadas(movimientos) {
+    var s = {};
+    (movimientos || []).forEach(function (m) { (m.inscripcionIds || []).forEach(function (id) { s[id] = true; }); });
+    return s;
+  }
 
   /**
-   * El libro: movimientos reales + cuotas cobradas no enlazadas, convertidas en
-   * movimientos de solo lectura (virtual: true). Ordenado por fecha, del más reciente al más antiguo.
+   * El libro: movimientos reales + cuotas e inscripciones cobradas no enlazadas,
+   * convertidas en movimientos de solo lectura (virtual: true). Ordenado por fecha,
+   * del más reciente al más antiguo.
    */
-  function libro(movimientos, cuotas) {
+  function libro(movimientos, cuotas, actividades) {
     var enlazadas = cuotasEnlazadas(movimientos);
     var virtuales = Cuotas.aMovimientos((cuotas || []).filter(function (c) { return !enlazadas[c.id]; })).map(function (v) {
       return { id: "cuota:" + v.origen.id, virtual: true, fecha: v.fecha, cuentaId: v.cuentaId, tipo: "ingreso", importe: v.importe,
         concepto: v.concepto, categoriaId: CATEGORIA_CUOTAS, proyectoId: "", forma: v.forma, cuotaIds: [v.origen.id] };
+    });
+    var inscEnlazadas = inscripcionesEnlazadas(movimientos);
+    Actividades.aMovimientos(actividades).forEach(function (v) {
+      if (inscEnlazadas[v.origen.id]) return;
+      virtuales.push({ id: "inscripcion:" + v.origen.id, virtual: true, origenVirtual: "inscripcion", fecha: v.fecha, cuentaId: v.cuentaId, tipo: "ingreso",
+        importe: v.importe, concepto: v.concepto, categoriaId: v.categoriaId, proyectoId: v.proyectoId, actividadId: v.actividadId,
+        forma: v.forma, inscripcionIds: [v.origen.id] });
     });
     return (movimientos || []).concat(virtuales).sort(function (a, b) {
       return b.fecha.localeCompare(a.fecha) || String(b.creado || "").localeCompare(String(a.creado || ""));
@@ -100,11 +115,11 @@
   }
 
   /** Saldo de cada cuenta en una fecha (incluida). cuentas: config.cuentas con saldoInicial. */
-  function saldos(cuentas, movimientos, cuotas, hasta) {
+  function saldos(cuentas, movimientos, cuotas, hasta, actividades) {
     var h = hasta || "9999-12-31";
     var r = {};
     (cuentas || []).forEach(function (c) { r[c.id] = Number(c.saldoInicial) || 0; });
-    libro(movimientos, cuotas).forEach(function (m) {
+    libro(movimientos, cuotas, actividades).forEach(function (m) {
       if (m.fecha > h) return;
       var e = efecto(m);
       Object.keys(e).forEach(function (k) { r[k] = (r[k] || 0) + e[k]; });
@@ -114,18 +129,20 @@
   }
 
   /**
-   * Partidas de ingreso y gasto (para resultados y presupuestos):
-   * [{ fecha, tipo: "ingreso"|"gasto", importe, categoriaId, proyectoId, origen }]
+   * Partidas de ingreso y gasto (para resultados, presupuestos y balance de actividades):
+   * [{ fecha, tipo: "ingreso"|"gasto", importe, categoriaId, proyectoId, actividadId, origen }]
    */
-  function partidas(movimientos, cuotas, anticipos) {
+  function partidas(movimientos, cuotas, anticipos, actividades) {
     var out = [];
-    libro(movimientos, cuotas).forEach(function (m) {
+    libro(movimientos, cuotas, actividades).forEach(function (m) {
       if (m.tipo !== "ingreso" && m.tipo !== "gasto") return;
-      out.push({ fecha: m.fecha, tipo: m.tipo, importe: m.importe, categoriaId: m.categoriaId || SIN_CLASIFICAR, proyectoId: m.proyectoId || "", origen: m.virtual ? "cuota" : "movimiento", id: m.id });
+      out.push({ fecha: m.fecha, tipo: m.tipo, importe: m.importe, categoriaId: m.categoriaId || SIN_CLASIFICAR, proyectoId: m.proyectoId || "",
+        actividadId: m.actividadId || "", origen: m.virtual ? (m.origenVirtual || "cuota") : "movimiento", id: m.id });
     });
     (anticipos || []).forEach(function (a) {
       (a.gastos || []).forEach(function (g) {
-        out.push({ fecha: g.fecha, tipo: "gasto", importe: g.importe, categoriaId: g.categoriaId || SIN_CLASIFICAR, proyectoId: g.proyectoId || a.proyectoId || "", origen: "anticipo", id: a.id });
+        out.push({ fecha: g.fecha, tipo: "gasto", importe: g.importe, categoriaId: g.categoriaId || SIN_CLASIFICAR, proyectoId: g.proyectoId || a.proyectoId || "",
+          actividadId: g.actividadId || "", origen: "anticipo", id: a.id });
       });
     });
     return out;
@@ -208,10 +225,19 @@
     return { entregado: entregado, devuelto: devuelto, justificado: justificado, saldo: saldo, estado: estado };
   }
 
+  /** Forma de pago que se deduce del concepto del banco (BIZUM…); si no, transferencia. */
+  function formaDesdeConcepto(m) {
+    var t = String((m.conceptoBanco || "") + " " + (m.concepto || "")).toLowerCase();
+    if (t.indexOf("bizum") >= 0) return "Bizum";
+    if (/\brecibo\b|domicil/.test(t)) return "Domiciliación";
+    if (/\btarjeta\b|\btpv\b/.test(t)) return "Tarjeta";
+    return "Transferencia";
+  }
+
   // ── Conciliar con cuotas ────────────────────────────────────────────────
   /**
    * Enlaza un movimiento de ingreso con cuotas: las que estén pendientes se marcan
-   * pagadas (fecha y cuenta del movimiento, forma «Transferencia» salvo que se diga otra).
+   * pagadas (fecha y cuenta del movimiento; la forma se deduce del concepto del banco).
    * Devuelve { movimiento, cuotas (las modificadas), diferencia } sin guardar nada.
    */
   function conciliarCuotas(movimiento, cuotas, forma) {
@@ -220,14 +246,38 @@
     m.categoriaId = CATEGORIA_CUOTAS;
     var cambiadas = (cuotas || []).map(function (c) {
       if (c.estado === "pagada") return c;
-      return Cuotas.registrarPago(c, { fecha: m.fecha, forma: forma || "Transferencia", cuentaId: m.cuentaId, referencia: m.conceptoBanco || m.concepto });
+      return Cuotas.registrarPago(c, { fecha: m.fecha, forma: forma || formaDesdeConcepto(m), cuentaId: m.cuentaId, referencia: m.conceptoBanco || m.concepto });
     });
     var suma = D.sumar((cuotas || []).map(function (c) { return c.importe; }));
     return { movimiento: m, cuotas: cambiadas, diferencia: m.importe - suma };
   }
 
+  /**
+   * Enlaza un ingreso del banco con inscripciones a actividades (refs: [{ actividadId, inscripcionId }]).
+   * Las que no estaban pagadas se marcan pagadas con la fecha y cuenta del movimiento.
+   * Devuelve { movimiento, actividades (las modificadas), diferencia } sin guardar nada.
+   */
+  function conciliarInscripciones(movimiento, refs, actividades, forma) {
+    var m = JSON.parse(JSON.stringify(movimiento));
+    m.inscripcionIds = (refs || []).map(function (r) { return r.actividadId + ":" + r.inscripcionId; });
+    m.categoriaId = Actividades.CATEGORIA_INSCRIPCIONES;
+    var porId = {}, suma = 0;
+    (actividades || []).forEach(function (a) { porId[a.id] = a; });
+    (refs || []).forEach(function (r) {
+      var a = porId[r.actividadId];
+      if (!a) return;
+      var ins = (a.inscripciones || []).filter(function (i) { return i.id === r.inscripcionId; })[0];
+      if (!ins) return;
+      suma += ins.importe;
+      if (!m.actividadId) m.actividadId = a.id;
+      if (!ins.pago) porId[a.id] = Actividades.cobrar(a, ins.id, { fecha: m.fecha, forma: forma || formaDesdeConcepto(m), cuentaId: m.cuentaId, referencia: m.conceptoBanco || m.concepto });
+    });
+    var cambiadas = (refs || []).map(function (r) { return porId[r.actividadId]; }).filter(function (a, i, arr) { return a && arr.indexOf(a) === i; });
+    return { movimiento: m, actividades: cambiadas, diferencia: m.importe - suma };
+  }
+
   return {
-    TIPOS: TIPOS, CATEGORIA_CUOTAS: CATEGORIA_CUOTAS, EXPLICACION: EXPLICACION,
+    TIPOS: TIPOS, CATEGORIA_CUOTAS: CATEGORIA_CUOTAS, EXPLICACION: EXPLICACION, conciliarInscripciones: conciliarInscripciones, inscripcionesEnlazadas: inscripcionesEnlazadas, formaDesdeConcepto: formaDesdeConcepto,
     categoriasPorDefecto: categoriasPorDefecto, efecto: efecto, conSigno: conSigno, cuotasEnlazadas: cuotasEnlazadas,
     libro: libro, saldos: saldos, partidas: partidas, resultados: resultados, ejecucion: ejecucion,
     situacionAnticipo: situacionAnticipo, conciliarCuotas: conciliarCuotas,

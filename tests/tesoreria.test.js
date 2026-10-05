@@ -81,3 +81,10 @@ test("conciliar un ingreso del banco con varias cuotas", () => {
   const l = T.libro([r.movimiento], r.cuotas);
   assert.equal(l.length, 1);
 });
+
+test("la forma de pago se deduce del concepto del banco", () => {
+  assert.equal(T.formaDesdeConcepto({ conceptoBanco: "BIZUM DE ANA" }), "Bizum");
+  assert.equal(T.formaDesdeConcepto({ conceptoBanco: "RECIBO CUOTA" }), "Domiciliación");
+  assert.equal(T.formaDesdeConcepto({ conceptoBanco: "PAGO TARJETA" }), "Tarjeta");
+  assert.equal(T.formaDesdeConcepto({ conceptoBanco: "TRANSF DE LUIS" }), "Transferencia");
+});

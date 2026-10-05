@@ -226,10 +226,19 @@ test("migrar de la versión 3 añade la tesorería y completa las cuentas que ya
   v3.config = { tiposSocio: v3.config.tiposSocio, cuentas: [{ id: "banco", nombre: "Mi banco", tipo: "banco" }], siguienteNumeroSocio: 5 };
   v3.esquema = 3;
   const doc = Esquema.migrar(v3);
-  assert.equal(doc.esquema, 4);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.deepEqual(doc.config.cuentas, [{ id: "banco", nombre: "Mi banco", tipo: "banco", iban: "", saldoInicial: 0, fechaSaldoInicial: "" }]);
   assert.equal(doc.config.siguienteNumeroSocio, 5, "no pierde la configuración que había");
   assert.ok(doc.config.categorias.some((c) => c.id === "cuotas"));
   assert.equal(doc.config.iva.prorrata, 100);
   for (const c of ["movimientos", "facturas", "anticipos", "proyectos"]) assert.deepEqual(doc[c], []);
+});
+
+test("migrar de la versión 4 añade las actividades y la zona horaria", () => {
+  const v4 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  delete v4.actividades; delete v4.config.zonaHoraria; v4.esquema = 4;
+  const doc = Esquema.migrar(v4);
+  assert.equal(doc.esquema, 5);
+  assert.deepEqual(doc.actividades, []);
+  assert.equal(doc.config.zonaHoraria, "Europe/Madrid");
 });

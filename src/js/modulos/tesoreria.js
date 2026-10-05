@@ -36,8 +36,8 @@
   async function pintarResumen(cont, datos) {
     var c = await U.cargar(datos);
     var anio = anioActual();
-    var s = T.saldos(c.config.cuentas, c.movimientos, c.cuotas);
-    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), anio + "-01-01", anio + "-12-31");
+    var s = T.saldos(c.config.cuentas, c.movimientos, c.cuotas, undefined, c.actividades);
+    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades), anio + "-01-01", anio + "-12-31");
     var sinClasificar = c.movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
     var pend = { emitida: 0, recibida: 0, nE: 0, nR: 0 };
     c.facturas.forEach(function (f) {
@@ -91,7 +91,7 @@
 
     function visibles() {
       var anio = String(anioActual()), t = vista.texto.trim().toLowerCase();
-      return T.libro(c.movimientos, c.cuotas).filter(function (m) {
+      return T.libro(c.movimientos, c.cuotas, c.actividades).filter(function (m) {
         if (m.fecha.slice(0, 4) !== anio) return false;
         if (vista.cuenta && m.cuentaId !== vista.cuenta && m.cuentaDestinoId !== vista.cuenta) return false;
         if (vista.categoria !== "*") {
@@ -103,7 +103,9 @@
     }
     function etiquetas(m) {
       var e = [];
-      if (m.virtual) e.push('<span class="etiqueta">Cuota cobrada</span>');
+      if (m.virtual) e.push('<span class="etiqueta">' + (m.origenVirtual === "inscripcion" ? "Inscripción cobrada" : "Cuota cobrada") + "</span>");
+      if ((m.inscripcionIds || []).length && !m.virtual) e.push('<span class="etiqueta">' + m.inscripcionIds.length + (m.inscripcionIds.length === 1 ? " inscripción" : " inscripciones") + "</span>");
+      if (m.actividadId) { var act = U.buscar(c.actividades, m.actividadId); if (act) e.push('<a class="etiqueta" href="#/actividades/ficha/' + encodeURIComponent(act.id) + '">' + esc(act.titulo) + "</a>"); }
       if ((m.cuotaIds || []).length && !m.virtual) e.push('<span class="etiqueta">' + m.cuotaIds.length + (m.cuotaIds.length === 1 ? " cuota" : " cuotas") + "</span>");
       if (m.facturaId) { var f = U.buscar(c.facturas, m.facturaId); if (f) e.push('<a class="etiqueta" href="#/facturas/ver/' + encodeURIComponent(f.id) + '">Factura ' + esc(f.numero) + "</a>"); }
       if (m.anticipoId) e.push('<a class="etiqueta" href="#/tesoreria/anticipo/' + encodeURIComponent(m.anticipoId) + '">' + (m.sentido === "entrada" ? "Devolución" : "Anticipo/reembolso") + "</a>");
@@ -128,7 +130,7 @@
             "<td>" + cat + (m.proyectoId ? '<br><span class="detalle">' + esc(U.nombreProyecto(c, m.proyectoId)) + "</span>" : "") + "</td>" +
             '<td class="solo-ancho">' + esc(U.nombreCuenta(c, m.cuentaId)) + "</td>" +
             '<td class="importe">' + U.importeHtml(importe) + "</td>" +
-            '<td class="celda-acciones">' + (m.virtual ? '<a class="btn btn-pequeno btn-secundario" href="#/cuotas">Ver</a>'
+            '<td class="celda-acciones">' + (m.virtual ? '<a class="btn btn-pequeno btn-secundario" href="' + (m.origenVirtual === "inscripcion" ? "#/actividades/ficha/" + encodeURIComponent(m.actividadId) : "#/cuotas") + '">Ver</a>'
               : '<button type="button" class="btn btn-pequeno btn-secundario" data-mov="' + esc(m.id) + '">' + (m.categoriaId || m.tipo === "traspaso" || m.tipo === "anticipo" ? "Editar" : "Clasificar") + "</button>") + "</td></tr>";
         }).join("") + "</tbody></table></div>";
     }
@@ -286,7 +288,7 @@
   }
 
   async function editarGasto(datos, c, a, gasto) {
-    var g = gasto || { id: WA.Esquema.nuevoId(), fecha: F.hoy(), concepto: "", importe: 0, categoriaId: "", proyectoId: a.proyectoId || "", justificante: "", facturaId: "" };
+    var g = gasto || { id: WA.Esquema.nuevoId(), fecha: F.hoy(), concepto: "", importe: 0, categoriaId: "", proyectoId: a.proyectoId || "", actividadId: a.actividadId || "", justificante: "", facturaId: "" };
     var facturas = [["", "—"]].concat(c.facturas.filter(function (f) { return f.tipo === "recibida"; }).map(function (f) { return [f.id, f.numero + " · " + (f.tercero || {}).nombre + " · " + D.formatear(Fac.totales(f).total)]; }));
     var r = await UI.dialogo({
       titulo: gasto ? "Editar gasto" : "Añadir gasto justificado",
@@ -296,6 +298,7 @@
         UI.campo({ nombre: "importe", etiqueta: "Importe (€)", valor: g.importe ? D.formatear(g.importe, { simbolo: false }) : "", atributos: 'inputmode="decimal"' }) +
         UI.campo({ nombre: "categoriaId", etiqueta: "Categoría", tipo: "select", valor: g.categoriaId, opciones: U.opcionesCategorias(c, "gasto") }) +
         UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: g.proyectoId, opciones: U.opcionesProyectos(c) }) +
+        UI.campo({ nombre: "actividadId", etiqueta: "Actividad", tipo: "select", valor: g.actividadId, opciones: U.opcionesActividades(c, g.actividadId) }) +
         UI.campo({ nombre: "justificante", etiqueta: "Justificante", valor: g.justificante, ayuda: "Ticket, factura simplificada… y dónde está guardado." }) +
         UI.campo({ nombre: "facturaId", etiqueta: "Factura recibida (si la hay)", tipo: "select", valor: g.facturaId, opciones: facturas, ayuda: "Para que conste como pagada y su IVA cuente." }) +
         "</div></form>",
