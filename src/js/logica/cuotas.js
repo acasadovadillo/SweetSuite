@@ -229,13 +229,13 @@
 
   /**
    * Cuotas pagadas → movimientos de ingreso para la contabilidad (Fase 3).
-   * { fecha, tipo: "ingreso", importe, cuentaId, categoria, concepto, forma, origen: { tipo: "cuota", id } }
+   * { fecha, tipo: "ingreso", importe, cuentaId, categoria, categoriaId: "cuotas", concepto, forma, origen: { tipo: "cuota", id } }
    */
   function aMovimientos(cuotas) {
     return (cuotas || []).filter(function (c) { return c.estado === "pagada" && c.pago; }).map(function (c) {
       return {
         fecha: c.pago.fecha, tipo: "ingreso", importe: c.importe, cuentaId: c.pago.cuentaId,
-        categoria: CATEGORIA_CONTABLE, forma: c.pago.forma,
+        categoria: CATEGORIA_CONTABLE, categoriaId: "cuotas", forma: c.pago.forma,
         concepto: c.concepto + " · n.º " + c.socioNumero + " " + c.socioNombre,
         origen: { tipo: "cuota", id: c.id },
       };

@@ -201,7 +201,7 @@ test("migrar de la versión 2 añade socios, cuotas, remesas y la configuración
   const v2 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
   delete v2.socios; delete v2.cuotas; delete v2.remesas; delete v2.config; v2.esquema = 2;
   const doc = Esquema.migrar(v2);
-  assert.equal(doc.esquema, 3);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.deepEqual([doc.socios, doc.cuotas, doc.remesas], [[], [], []]);
   assert.equal(doc.config.tiposSocio[0].nombre, "Socio");
   assert.equal(doc.config.siguienteNumeroSocio, 1);
@@ -218,4 +218,18 @@ test("guardarVarios guarda todo con un solo aviso de cambio", async () => {
   assert.equal(llamadas(), 2);
   await repo.guardarVarios("socios", []);
   assert.equal(llamadas(), 2, "una lista vacía no cuenta como cambio");
+});
+
+test("migrar de la versión 3 añade la tesorería y completa las cuentas que ya había", () => {
+  const v3 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  ["movimientos", "facturas", "anticipos", "proyectos"].forEach((c) => delete v3[c]);
+  v3.config = { tiposSocio: v3.config.tiposSocio, cuentas: [{ id: "banco", nombre: "Mi banco", tipo: "banco" }], siguienteNumeroSocio: 5 };
+  v3.esquema = 3;
+  const doc = Esquema.migrar(v3);
+  assert.equal(doc.esquema, 4);
+  assert.deepEqual(doc.config.cuentas, [{ id: "banco", nombre: "Mi banco", tipo: "banco", iban: "", saldoInicial: 0, fechaSaldoInicial: "" }]);
+  assert.equal(doc.config.siguienteNumeroSocio, 5, "no pierde la configuración que había");
+  assert.ok(doc.config.categorias.some((c) => c.id === "cuotas"));
+  assert.equal(doc.config.iva.prorrata, 100);
+  for (const c of ["movimientos", "facturas", "anticipos", "proyectos"]) assert.deepEqual(doc[c], []);
 });

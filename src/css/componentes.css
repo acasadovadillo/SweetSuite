@@ -108,7 +108,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .casilla input { width: 20px; height: 20px; margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--acento); }
 
 /* ── Tablas ──────────────────────────────────────────────────────────── */
-.tabla-envoltorio { overflow-x: auto; }
+/* position: relative para que los textos solo para lectores de pantalla (.sr, con
+   posición absoluta) queden dentro del recorte y no ensanchen la página en el móvil. */
+.tabla-envoltorio { overflow-x: auto; position: relative; }
 .tabla { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
 .tabla th, .tabla td { text-align: left; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
 .tabla thead th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); font-weight: 700; }
@@ -167,7 +169,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .etiqueta { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.05rem 0.45rem; border-radius: 4px; background: var(--superficie-2); color: var(--texto-2); vertical-align: middle; }
 .estado-neutro { background: var(--superficie-2); color: var(--texto-2); }
 .estado-error { background: var(--peligro-suave); color: var(--peligro); }
-.pestanas { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--borde); margin: 0.75rem 0 1.25rem; overflow-x: auto; }
+.pestanas { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--borde); margin: 0.75rem 0 1.25rem; overflow-x: auto; position: relative; }
 .pestanas a { padding: 0.6rem 1rem; text-decoration: none; color: var(--texto-2); font-weight: 600; border-bottom: 3px solid transparent; white-space: nowrap; }
 .pestanas a:hover { color: var(--texto); }
 .pestanas a[aria-current="page"] { color: var(--texto); border-bottom-color: var(--acento); }
@@ -181,3 +183,57 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .dato-numero strong { font-size: 1.3rem; }
 .barra-guardar { position: sticky; bottom: 0; background: var(--fondo); padding: 0.75rem 0; margin-top: 0; z-index: 5; }
 .formulario .tarjeta fieldset { margin-top: 0.75rem; }
+
+/* ── Tesorería, facturas, IVA y presupuestos ───────────────────────────── */
+.acciones-cabecera { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.letra-pequena { font-size: 0.82rem; color: var(--texto-3); line-height: 1.45; margin: 0.4rem 0 0.75rem; }
+.importe-positivo { color: var(--ok); font-weight: 600; }
+.importe-negativo { color: var(--peligro); font-weight: 600; }
+.etiquetas { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem; }
+a.etiqueta { text-decoration: none; color: var(--enlace); }
+.lista-cifras li.total { border-top: 2px solid var(--borde-fuerte); border-bottom: none; font-weight: 700; margin-top: 0.25rem; padding-top: 0.4rem; }
+.lista-editable { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+.lista-editable li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid var(--borde); }
+.tarjeta h3 { font-size: 1rem; margin: 0.75rem 0 0.4rem; }
+.tarjeta h4 { font-size: 0.9rem; color: var(--texto-2); margin: 0.75rem 0 0.3rem; }
+.titulo-seccion { margin-top: 2rem; }
+.tabla tfoot th, .tabla tfoot td { font-weight: 700; border-top: 2px solid var(--borde-fuerte); border-bottom: none; }
+.tabla .total th, .tabla .total td { font-weight: 700; border-top: 2px solid var(--borde-fuerte); }
+.fila-grupo th { background: var(--superficie-2); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-2); }
+.fila-aviso td { border-bottom: 1px solid var(--borde); padding-top: 0; }
+.aviso-iva { display: inline-block; color: var(--aviso); font-weight: 600; font-size: 0.9rem; margin-right: 1rem; }
+.casilla.en-linea { display: inline-flex; margin: 0.25rem 0; }
+.vista-previa-tabla { margin-top: 0.75rem; }
+.vista-previa-tabla .tabla { font-size: 0.85rem; }
+.input-importe { max-width: 9rem; text-align: right; min-height: 38px !important; }
+.barra-progreso { height: 6px; border-radius: 3px; background: var(--superficie-2); overflow: hidden; margin-top: 0.25rem; min-width: 60px; }
+.barra-progreso span { display: block; height: 100%; background: var(--acento); }
+.barra-progreso.pasada span { background: var(--peligro); }
+.tabla-lineas input, .tabla-lineas select { min-height: 38px; padding: 0.35rem 0.5rem; }
+.tabla-lineas .col-cantidad { width: 6rem; }
+.tabla-lineas .col-precio { width: 8rem; }
+.tabla-lineas .col-tipo { width: 6.5rem; }
+.tabla-lineas td { vertical-align: middle; }
+.tabla-totales { max-width: 22rem; margin: 1rem 0 0 auto; }
+.tabla-totales .total th, .tabla-totales .total td { font-size: 1.1rem; }
+fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea { background: var(--superficie-2); color: var(--texto); opacity: 1; }
+.formulario > fieldset { border: none; padding: 0; margin: 0; min-width: 0; }
+
+/* Factura para imprimir: siempre en blanco y negro, también con el tema oscuro. */
+.factura-impresa { background: #fff; color: #111; max-width: 800px; padding: 2.5rem; border: 1px solid var(--borde); border-radius: var(--radio); margin: 1rem 0; }
+.factura-impresa .tabla th, .factura-impresa .tabla td { border-color: #ccc; color: #111; }
+.factura-impresa .tabla thead th { color: #555; }
+.fi-cabecera { display: flex; justify-content: space-between; gap: 2rem; flex-wrap: wrap; border-bottom: 2px solid #111; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.fi-cabecera h1 { font-size: 1.3rem; }
+.fi-cabecera p, .fi-cliente p { margin: 0; line-height: 1.5; }
+.fi-datos { text-align: right; }
+.fi-datos h2 { font-size: 1.5rem; letter-spacing: 0.08em; }
+.fi-cliente { margin-bottom: 1.5rem; }
+.fi-cliente h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin-bottom: 0.25rem; }
+.fi-totales .tabla-totales { color: #111; }
+.fi-nota { font-size: 0.9rem; margin-top: 1rem; }
+.fi-pie { margin-top: 2rem; padding-top: 0.75rem; border-top: 1px solid #ccc; font-size: 0.8rem; color: #555; }
+@media (max-width: 760px) {
+  .tabla-lineas { min-width: 640px; }
+  .factura-impresa { padding: 1.25rem; }
+}

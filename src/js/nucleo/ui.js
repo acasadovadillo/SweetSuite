@@ -11,7 +11,7 @@
  *   dialogo({...})        ventana modal; devuelve una promesa con el botón pulsado
  *   confirmar(texto, {peligro})  atajo de dialogo() con Cancelar / Aceptar
  *   descargar(nombre, contenido, tipo)  baja un archivo generado aquí mismo
- *   elegirArchivo(accept) abre el selector de archivos y devuelve su texto
+ *   elegirArchivo(accept, binario) abre el selector de archivos y devuelve su texto (o sus bytes)
  */
 (function (raiz) {
   "use strict";
@@ -160,7 +160,11 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
   }
 
-  function elegirArchivo(accept) {
+  /**
+   * Abre el selector de archivos. Devuelve { nombre, texto } o, con binario = true,
+   * { nombre, bytes: Uint8Array } (para leer un Excel). null si se cancela.
+   */
+  function elegirArchivo(accept, binario) {
     return new Promise(function (resolver) {
       var input = document.createElement("input");
       input.type = "file";
@@ -169,9 +173,11 @@
         var f = input.files && input.files[0];
         if (!f) return resolver(null);
         var lector = new FileReader();
-        lector.onload = function () { resolver({ nombre: f.name, texto: String(lector.result) }); };
+        lector.onload = function () {
+          resolver(binario ? { nombre: f.name, bytes: new Uint8Array(lector.result) } : { nombre: f.name, texto: String(lector.result) });
+        };
         lector.onerror = function () { resolver(null); };
-        lector.readAsText(f, "utf-8");
+        if (binario) lector.readAsArrayBuffer(f); else lector.readAsText(f, "utf-8");
       });
       input.click();
     });

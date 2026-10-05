@@ -4,7 +4,7 @@
 
 Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a 150 socios y unos pocos miles de euros al año) que hoy se apañan con hojas de cálculo.
 
-> ⚠️ **Estado: en desarrollo (versión 0.2, fase 2 de 6).** Incluye datos de la asociación, junta directiva, **socios y cuotas**, copias de seguridad cifradas y ajustes. Todavía no hay tesorería (facturas, IVA, presupuestos). Ver la [hoja de ruta](#hoja-de-ruta).
+> ⚠️ **Estado: en desarrollo (versión 0.3, fase 3 de 6).** Incluye datos de la asociación, junta directiva, socios y cuotas, **tesorería, facturas, ayuda para el IVA y presupuestos**, copias de seguridad cifradas y ajustes. Todavía no hay actividades, actas ni informes. Ver la [hoja de ruta](#hoja-de-ruta).
 
 | Inicio | Socios | Junta directiva | Móvil (tema oscuro) |
 |---|---|---|---|
@@ -37,7 +37,7 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 |---|---|---|
 | 1. Base y datos | Datos de la asociación y junta directiva, almacenamiento cifrado, copias de seguridad, demostración, tema claro/oscuro, diseño adaptado al móvil | ✅ Hecha |
 | 2. Socios | Libro de registro de socios (ficha completa, altas, bajas, menores con tutor, consentimientos), búsqueda y filtros, importar/exportar CSV, tipos de socio con su cuota y periodicidad, emisión de cuotas por periodo, cobro por forma de pago (una o varias a la vez), devoluciones, impagados | ✅ Hecha |
-| 3. Tesorería | Facturas emitidas y de gasto, anticipos, ayuda para el modelo 303 de IVA, presupuestos por proyecto o subvención, exportar a Excel | Pendiente |
+| 3. Tesorería | Cuentas y saldos, movimientos a mano o importando el extracto del banco (CSV o Excel) con reglas y conciliación con cuotas y facturas; facturas emitidas (numeración, PDF) y recibidas (con retención); anticipos y reembolsos; ayuda para el 303 trimestral y el resumen anual (sujeto, exento, no sujeto; «a compensar» frente a «a devolver»); presupuesto anual y por proyecto o subvención; exportar a Excel | ✅ Hecha |
 | 4. Actividades | Calendario, inscripciones, exportar a .ics, enlace con gastos e ingresos | Pendiente |
 | 5. Gobierno | Libro de actas, convocatorias de asamblea, calendario de obligaciones, seguimiento de subvenciones | Pendiente |
 | 6. Informes | Memoria anual y cuentas imprimibles en PDF, panel de resumen | Pendiente |
@@ -49,6 +49,9 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 - **Un solo navegador y un solo ordenador a la vez.** No hay sincronización: para pasar los datos de un ordenador a otro, usa la copia de seguridad. Si dos personas editan en sitios distintos, sus cambios no se juntan.
 - **Varias copias del archivo en el mismo navegador comparten los datos.** El navegador guarda los datos por «sitio», y todos los archivos locales cuentan como el mismo sitio. Si llevas dos asociaciones, usa un navegador (o un perfil de navegador) distinto para cada una.
 - **El navegador puede borrar los datos** si se borra el historial o los datos de navegación, o si falta espacio. Por eso son imprescindibles las copias de seguridad.
+- **Tesorería por criterio de caja** (el dinero cuenta cuando entra o sale, con el IVA incluido). Las cuentas anuales formales pueden necesitar otro criterio: verificar con asesoría.
+- **La ayuda del IVA es orientativa.** Suma lo que hay en las facturas; no calcula la prorrata (se indica el porcentaje a mano) ni presenta nada. Revisadlo con la asesoría.
+- **Extractos del banco:** se leen CSV y Excel moderno (.xlsx). Los .xls antiguos hay que guardarlos antes como .xlsx o .csv.
 - **Probado en Chrome y en navegadores Chromium (Brave, Edge) abriendo el archivo directamente.** Falta probar Safari y Firefox con `file://`.
 
 ## Privacidad y RGPD

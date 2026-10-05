@@ -86,8 +86,9 @@ try {
   const migrado = await evaluar(`
     await WA.Sesion.desbloquear('frase de prueba file');
     const g = (await WA.Cripto.descifrar(await WA.Boveda.leer(), 'frase de prueba file')).objeto;
-    return { esquema: g.esquema, tipos: g.config.tiposSocio.length, socios: Array.isArray(g.socios), donde: await WA.Boveda.tipo() }`);
-  comprobar("datos de la versión anterior migrados y guardados al día", migrado.esquema === 3 && migrado.tipos === 1 && migrado.socios, migrado);
+    return { esquema: g.esquema, actual: WA.Esquema.VERSION, tipos: g.config.tiposSocio.length,
+      colecciones: WA.Esquema.COLECCIONES.every((c) => Array.isArray(g[c])), donde: await WA.Boveda.tipo() }`);
+  comprobar("datos de una versión anterior migrados y guardados al día", migrado.esquema === migrado.actual && migrado.tipos === 1 && migrado.colecciones, migrado);
   comprobar("se guarda en IndexedDB", migrado.donde === "IndexedDB", migrado);
 
   await evaluar(`await WA.Sesion.datos.guardar('socios', WA.Socios.completar({ numero: 1, nombre: 'Uno', fechaAlta: '2026-01-01', tipoSocioId: 'socio' }));

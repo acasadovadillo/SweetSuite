@@ -1,5 +1,5 @@
 <!--
-  webkit_asociaciones 0.2.0
+  webkit_asociaciones 0.3.0
   Archivo generado por tools/build.mjs a partir de src/. No lo edites a mano.
 -->
 <!doctype html>
@@ -12,7 +12,7 @@
   <meta name="description" content="Gestión de asociaciones en un solo archivo: datos, socios, tesorería, actas. Sin servidores: todo se queda en tu navegador.">
   <title>webkit_asociaciones</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232f6f4f'/%3E%3Cpath d='M14 33V19l10-6 10 6v14' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <script>window.WA_VERSION = "0.2.0";</script>
+  <script>window.WA_VERSION = "0.3.0";</script>
   <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
   <script>/* js/nucleo/tema.js */
 /*
@@ -330,7 +330,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .casilla input { width: 20px; height: 20px; margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--acento); }
 
 /* ── Tablas ──────────────────────────────────────────────────────────── */
-.tabla-envoltorio { overflow-x: auto; }
+/* position: relative para que los textos solo para lectores de pantalla (.sr, con
+   posición absoluta) queden dentro del recorte y no ensanchen la página en el móvil. */
+.tabla-envoltorio { overflow-x: auto; position: relative; }
 .tabla { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
 .tabla th, .tabla td { text-align: left; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
 .tabla thead th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); font-weight: 700; }
@@ -389,7 +391,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .etiqueta { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.05rem 0.45rem; border-radius: 4px; background: var(--superficie-2); color: var(--texto-2); vertical-align: middle; }
 .estado-neutro { background: var(--superficie-2); color: var(--texto-2); }
 .estado-error { background: var(--peligro-suave); color: var(--peligro); }
-.pestanas { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--borde); margin: 0.75rem 0 1.25rem; overflow-x: auto; }
+.pestanas { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--borde); margin: 0.75rem 0 1.25rem; overflow-x: auto; position: relative; }
 .pestanas a { padding: 0.6rem 1rem; text-decoration: none; color: var(--texto-2); font-weight: 600; border-bottom: 3px solid transparent; white-space: nowrap; }
 .pestanas a:hover { color: var(--texto); }
 .pestanas a[aria-current="page"] { color: var(--texto); border-bottom-color: var(--acento); }
@@ -403,6 +405,60 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .dato-numero strong { font-size: 1.3rem; }
 .barra-guardar { position: sticky; bottom: 0; background: var(--fondo); padding: 0.75rem 0; margin-top: 0; z-index: 5; }
 .formulario .tarjeta fieldset { margin-top: 0.75rem; }
+
+/* ── Tesorería, facturas, IVA y presupuestos ───────────────────────────── */
+.acciones-cabecera { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+.letra-pequena { font-size: 0.82rem; color: var(--texto-3); line-height: 1.45; margin: 0.4rem 0 0.75rem; }
+.importe-positivo { color: var(--ok); font-weight: 600; }
+.importe-negativo { color: var(--peligro); font-weight: 600; }
+.etiquetas { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem; }
+a.etiqueta { text-decoration: none; color: var(--enlace); }
+.lista-cifras li.total { border-top: 2px solid var(--borde-fuerte); border-bottom: none; font-weight: 700; margin-top: 0.25rem; padding-top: 0.4rem; }
+.lista-editable { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+.lista-editable li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid var(--borde); }
+.tarjeta h3 { font-size: 1rem; margin: 0.75rem 0 0.4rem; }
+.tarjeta h4 { font-size: 0.9rem; color: var(--texto-2); margin: 0.75rem 0 0.3rem; }
+.titulo-seccion { margin-top: 2rem; }
+.tabla tfoot th, .tabla tfoot td { font-weight: 700; border-top: 2px solid var(--borde-fuerte); border-bottom: none; }
+.tabla .total th, .tabla .total td { font-weight: 700; border-top: 2px solid var(--borde-fuerte); }
+.fila-grupo th { background: var(--superficie-2); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-2); }
+.fila-aviso td { border-bottom: 1px solid var(--borde); padding-top: 0; }
+.aviso-iva { display: inline-block; color: var(--aviso); font-weight: 600; font-size: 0.9rem; margin-right: 1rem; }
+.casilla.en-linea { display: inline-flex; margin: 0.25rem 0; }
+.vista-previa-tabla { margin-top: 0.75rem; }
+.vista-previa-tabla .tabla { font-size: 0.85rem; }
+.input-importe { max-width: 9rem; text-align: right; min-height: 38px !important; }
+.barra-progreso { height: 6px; border-radius: 3px; background: var(--superficie-2); overflow: hidden; margin-top: 0.25rem; min-width: 60px; }
+.barra-progreso span { display: block; height: 100%; background: var(--acento); }
+.barra-progreso.pasada span { background: var(--peligro); }
+.tabla-lineas input, .tabla-lineas select { min-height: 38px; padding: 0.35rem 0.5rem; }
+.tabla-lineas .col-cantidad { width: 6rem; }
+.tabla-lineas .col-precio { width: 8rem; }
+.tabla-lineas .col-tipo { width: 6.5rem; }
+.tabla-lineas td { vertical-align: middle; }
+.tabla-totales { max-width: 22rem; margin: 1rem 0 0 auto; }
+.tabla-totales .total th, .tabla-totales .total td { font-size: 1.1rem; }
+fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea { background: var(--superficie-2); color: var(--texto); opacity: 1; }
+.formulario > fieldset { border: none; padding: 0; margin: 0; min-width: 0; }
+
+/* Factura para imprimir: siempre en blanco y negro, también con el tema oscuro. */
+.factura-impresa { background: #fff; color: #111; max-width: 800px; padding: 2.5rem; border: 1px solid var(--borde); border-radius: var(--radio); margin: 1rem 0; }
+.factura-impresa .tabla th, .factura-impresa .tabla td { border-color: #ccc; color: #111; }
+.factura-impresa .tabla thead th { color: #555; }
+.fi-cabecera { display: flex; justify-content: space-between; gap: 2rem; flex-wrap: wrap; border-bottom: 2px solid #111; padding-bottom: 1rem; margin-bottom: 1.5rem; }
+.fi-cabecera h1 { font-size: 1.3rem; }
+.fi-cabecera p, .fi-cliente p { margin: 0; line-height: 1.5; }
+.fi-datos { text-align: right; }
+.fi-datos h2 { font-size: 1.5rem; letter-spacing: 0.08em; }
+.fi-cliente { margin-bottom: 1.5rem; }
+.fi-cliente h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; color: #555; margin-bottom: 0.25rem; }
+.fi-totales .tabla-totales { color: #111; }
+.fi-nota { font-size: 0.9rem; margin-top: 1rem; }
+.fi-pie { margin-top: 2rem; padding-top: 0.75rem; border-top: 1px solid #ccc; font-size: 0.8rem; color: #555; }
+@media (max-width: 760px) {
+  .tabla-lineas { min-width: 640px; }
+  .factura-impresa { padding: 1.25rem; }
+}
 </style>
   <style>/* css/impresion.css */
 /*
@@ -426,6 +482,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   .tabla-libro th, .tabla-libro td { padding: 0.25rem 0.35rem; }
   thead { display: table-header-group; } /* la cabecera se repite en cada hoja */
   tr { break-inside: avoid; }
+  .tabla-envoltorio { overflow: visible; }
+  .factura-impresa { border: none; padding: 0; margin: 0; max-width: none; }
+  .importe-positivo, .importe-negativo { color: #000; }
 }
 </style>
 </head>
@@ -1151,6 +1210,273 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   return { escribir: escribir, leer: leer, BOM: BOM };
 });
 </script>
+  <script>/* js/nucleo/xlsx.js */
+/*
+ * webkit_asociaciones — Excel (.xlsx) sin librerías: escribir y leer.
+ *
+ * Un .xlsx es un ZIP con unos cuantos XML dentro. Escribirlo cabe aquí (portado
+ * de exportar.js de Solvento) y así no hace falta traer una librería de medio
+ * mega que dejaría la aplicación sin funcionar sin conexión.
+ *
+ *   escribir(hojas) → Uint8Array con el .xlsx
+ *     hojas: [{ nombre, columnas: [{ titulo, tipo: "texto" | "fecha" | "dinero" | "numero" }], filas: [[valor…]] }]
+ *     · "fecha": texto ISO «aaaa-mm-dd» → fecha de Excel (se puede ordenar y agrupar)
+ *     · "dinero": CÉNTIMOS enteros → euros con dos decimales
+ *   leer(bytes) → Promise<{ nombreHoja: [[valor…]] }>   (filas y columnas desde 0)
+ *     Las celdas numéricas vienen como número; las fechas de Excel también (número
+ *     de días): usar serieAFecha() para convertirlas.
+ *
+ * Funciona en el navegador y en Node ≥ 18 (lee con DecompressionStream, que
+ * los dos traen). No usa DOMParser, así que se puede probar en Node.
+ */
+(function (raiz, fabrica) {
+  var modulo = fabrica();
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).XLSX = modulo;
+})(typeof self !== "undefined" ? self : this, function () {
+  "use strict";
+
+  var utf8 = function (s) { return new TextEncoder().encode(s); };
+
+  // ── ZIP sin comprimir (método «store») ───────────────────────────────────
+  var TABLA_CRC = (function () {
+    var t = new Uint32Array(256);
+    for (var i = 0; i < 256; i++) {
+      var c = i;
+      for (var k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1;
+      t[i] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(bytes) {
+    var c = 0xFFFFFFFF;
+    for (var i = 0; i < bytes.length; i++) c = TABLA_CRC[(c ^ bytes[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+
+  function zip(archivos) {
+    var partes = [], central = [], offset = 0;
+    var ahora = new Date();
+    var hora = ((ahora.getHours() << 11) | (ahora.getMinutes() << 5) | (ahora.getSeconds() >> 1)) & 0xFFFF;
+    var fecha = (((ahora.getFullYear() - 1980) << 9) | ((ahora.getMonth() + 1) << 5) | ahora.getDate()) & 0xFFFF;
+    archivos.forEach(function (a) {
+      var nombre = utf8(a.nombre), datos = a.datos, crc = crc32(datos);
+      var cab = new DataView(new ArrayBuffer(30));
+      cab.setUint32(0, 0x04034b50, true); cab.setUint16(4, 20, true); cab.setUint16(6, 0x0800, true);
+      cab.setUint16(8, 0, true); cab.setUint16(10, hora, true); cab.setUint16(12, fecha, true);
+      cab.setUint32(14, crc, true); cab.setUint32(18, datos.length, true); cab.setUint32(22, datos.length, true);
+      cab.setUint16(26, nombre.length, true); cab.setUint16(28, 0, true);
+      partes.push(new Uint8Array(cab.buffer), nombre, datos);
+      var cen = new DataView(new ArrayBuffer(46));
+      cen.setUint32(0, 0x02014b50, true); cen.setUint16(4, 20, true); cen.setUint16(6, 20, true);
+      cen.setUint16(8, 0x0800, true); cen.setUint16(10, 0, true); cen.setUint16(12, hora, true); cen.setUint16(14, fecha, true);
+      cen.setUint32(16, crc, true); cen.setUint32(20, datos.length, true); cen.setUint32(24, datos.length, true);
+      cen.setUint16(28, nombre.length, true); cen.setUint32(42, offset, true);
+      central.push(new Uint8Array(cen.buffer), nombre);
+      offset += 30 + nombre.length + datos.length;
+    });
+    var tamCentral = central.reduce(function (s, x) { return s + x.length; }, 0);
+    var fin = new DataView(new ArrayBuffer(22));
+    fin.setUint32(0, 0x06054b50, true);
+    fin.setUint16(8, archivos.length, true); fin.setUint16(10, archivos.length, true);
+    fin.setUint32(12, tamCentral, true); fin.setUint32(16, offset, true);
+    var todo = partes.concat(central, [new Uint8Array(fin.buffer)]);
+    var total = todo.reduce(function (s, x) { return s + x.length; }, 0);
+    var out = new Uint8Array(total), p = 0;
+    todo.forEach(function (x) { out.set(x, p); p += x.length; });
+    return out;
+  }
+
+  // ── Escribir ─────────────────────────────────────────────────────────────
+  var xmlEsc = function (s) {
+    return String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;")
+      // XML no admite caracteres de control: si se cuela uno, Excel da el archivo por dañado.
+      .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+  };
+  function letra(i) { // 0 → A, 26 → AA
+    var s = "";
+    for (var n = i + 1; n > 0; n = Math.floor((n - 1) / 26)) s = String.fromCharCode(65 + ((n - 1) % 26)) + s;
+    return s;
+  }
+  /** "2026-10-01" → días desde el 30/12/1899 (la fecha cero de Excel). */
+  function fechaASerie(iso) {
+    var m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(iso || ""));
+    if (!m) return null;
+    return Math.round((Date.UTC(+m[1], +m[2] - 1, +m[3]) - Date.UTC(1899, 11, 30)) / 864e5);
+  }
+  function serieAFecha(n) {
+    if (typeof n !== "number" || !isFinite(n)) return null;
+    var d = new Date(Date.UTC(1899, 11, 30) + Math.round(n) * 864e5);
+    return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
+  }
+
+  var ESTILO = { fecha: 1, dinero: 2, numero: 0 };
+  function celda(ref, valor, tipo) {
+    if (valor == null || valor === "") return "";
+    if (tipo === "fecha") {
+      var s = fechaASerie(valor);
+      if (s !== null) return '<c r="' + ref + '" s="1"><v>' + s + "</v></c>";
+    } else if (tipo === "dinero" && typeof valor === "number" && isFinite(valor)) {
+      return '<c r="' + ref + '" s="2"><v>' + (valor / 100).toFixed(2) + "</v></c>";
+    } else if (tipo === "numero" && typeof valor === "number" && isFinite(valor)) {
+      return '<c r="' + ref + '"><v>' + valor + "</v></c>";
+    }
+    return '<c r="' + ref + '" t="inlineStr"><is><t xml:space="preserve">' + xmlEsc(valor) + "</t></is></c>";
+  }
+  function hojaXml(h) {
+    var tipos = h.columnas.map(function (c) { return c.tipo || "texto"; });
+    var filas = ['<row r="1">' + h.columnas.map(function (c, i) { return celda(letra(i) + "1", c.titulo, "texto"); }).join("") + "</row>"];
+    (h.filas || []).forEach(function (f, r) {
+      filas.push('<row r="' + (r + 2) + '">' + f.map(function (v, i) { return celda(letra(i) + (r + 2), v, tipos[i]); }).join("") + "</row>");
+    });
+    // Columnas algo más anchas que las de por defecto y la primera fila fija.
+    var cols = "<cols>" + h.columnas.map(function (c, i) {
+      return '<col min="' + (i + 1) + '" max="' + (i + 1) + '" width="' + (c.ancho || (c.tipo === "texto" || !c.tipo ? 28 : 14)) + '" customWidth="1"/>';
+    }).join("") + "</cols>";
+    return '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+      '<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>' +
+      cols + "<sheetData>" + filas.join("") + "</sheetData></worksheet>";
+  }
+  /** Excel no admite en el nombre de una hoja \ / ? * [ ] : ni más de 31 caracteres. */
+  var nombreHoja = function (n, i) { return (String(n || "Hoja " + (i + 1)).replace(/[\\\/?*\[\]:]/g, " ").slice(0, 31)) || "Hoja " + (i + 1); };
+
+  function escribir(hojas) {
+    // Nombres válidos y sin repetir (Excel no abre un libro con dos hojas iguales).
+    var usados = {};
+    var nombres = hojas.map(function (h, i) {
+      var base = nombreHoja(h.nombre, i), n = base, k = 2;
+      while (usados[n.toLowerCase()]) n = base.slice(0, 27) + " (" + (k++) + ")";
+      usados[n.toLowerCase()] = true;
+      return n;
+    });
+    var archivos = [
+      { nombre: "[Content_Types].xml", datos: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>' +
+        '<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>' +
+        hojas.map(function (h, i) { return '<Override PartName="/xl/worksheets/sheet' + (i + 1) + '.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>'; }).join("") +
+        "</Types>") },
+      { nombre: "_rels/.rels", datos: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>') },
+      { nombre: "xl/workbook.xml", datos: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>' +
+        nombres.map(function (n, i) { return '<sheet name="' + xmlEsc(n) + '" sheetId="' + (i + 1) + '" r:id="rId' + (i + 1) + '"/>'; }).join("") + "</sheets></workbook>") },
+      { nombre: "xl/_rels/workbook.xml.rels", datos: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        hojas.map(function (h, i) { return '<Relationship Id="rId' + (i + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet' + (i + 1) + '.xml"/>'; }).join("") +
+        '<Relationship Id="rId' + (hojas.length + 1) + '" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/></Relationships>') },
+      // Tres estilos: normal, fecha dd/mm/aaaa y dinero con dos decimales y separador de miles.
+      { nombre: "xl/styles.xml", datos: utf8('<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">' +
+        '<numFmts count="1"><numFmt numFmtId="164" formatCode="dd/mm/yyyy"/></numFmts><fonts count="1"><font><sz val="11"/><name val="Calibri"/></font></fonts>' +
+        '<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>' +
+        '<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders><cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>' +
+        '<cellXfs count="3"><xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/><xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>' +
+        '<xf numFmtId="4" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/></cellXfs>' +
+        '<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles></styleSheet>') },
+    ];
+    hojas.forEach(function (h, i) { archivos.push({ nombre: "xl/worksheets/sheet" + (i + 1) + ".xml", datos: utf8(hojaXml(h)) }); });
+    return zip(archivos);
+  }
+
+  // ── Leer ─────────────────────────────────────────────────────────────────
+  async function leerZip(bytes) {
+    var u8 = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
+    var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    var eocd = -1;
+    for (var i = u8.length - 22; i >= Math.max(0, u8.length - 65557); i--) {
+      if (dv.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+    }
+    if (eocd < 0) throw new Error("El archivo no es un Excel moderno (.xlsx). Si es .xls, ábrelo y guárdalo como .xlsx o .csv.");
+    var n = dv.getUint16(eocd + 10, true), p = dv.getUint32(eocd + 16, true);
+    var dec = new TextDecoder(), partes = {};
+    for (var k = 0; k < n; k++) {
+      if (dv.getUint32(p, true) !== 0x02014b50) break;
+      var lNombre = dv.getUint16(p + 28, true), lExtra = dv.getUint16(p + 30, true), lComent = dv.getUint16(p + 32, true);
+      partes[dec.decode(u8.subarray(p + 46, p + 46 + lNombre))] = {
+        metodo: dv.getUint16(p + 10, true), comprimido: dv.getUint32(p + 20, true), local: dv.getUint32(p + 42, true),
+      };
+      p += 46 + lNombre + lExtra + lComent;
+    }
+    return async function (nombre) {
+      var e = partes[nombre];
+      if (!e) return null;
+      var ini = e.local + 30 + dv.getUint16(e.local + 26, true) + dv.getUint16(e.local + 28, true);
+      var datos = u8.subarray(ini, ini + e.comprimido);
+      if (e.metodo === 0) return dec.decode(datos);
+      if (e.metodo !== 8) throw new Error("Compresión no soportada en el Excel.");
+      var flujo = new Blob([datos]).stream().pipeThrough(new DecompressionStream("deflate-raw"));
+      return await new Response(flujo).text();
+    };
+  }
+
+  var desescapar = function (s) {
+    return s.replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&quot;/g, '"').replace(/&apos;/g, "'")
+      .replace(/&#(\d+);/g, function (_, d) { return String.fromCharCode(+d); })
+      .replace(/&#x([0-9a-f]+);/gi, function (_, h) { return String.fromCharCode(parseInt(h, 16)); })
+      .replace(/&amp;/g, "&");
+  };
+  /** Todo el texto de los <t> de un trozo de XML (las cadenas con formato tienen varios). */
+  var textos = function (xml) {
+    var out = "", re = /<t(?:\s[^>]*)?>([\s\S]*?)<\/t>|<t(?:\s[^>]*)?\/>/g, m;
+    while ((m = re.exec(xml))) out += m[1] ? desescapar(m[1]) : "";
+    return out;
+  };
+  var colNum = function (ref) {
+    var n = 0, letras = ref.replace(/\d+/g, "");
+    for (var i = 0; i < letras.length; i++) n = n * 26 + (letras.charCodeAt(i) - 64);
+    return n - 1;
+  };
+  var atributo = function (etiqueta, nombre) {
+    var m = new RegExp("\\s" + nombre + '="([^"]*)"').exec(etiqueta);
+    return m ? m[1] : null;
+  };
+
+  async function leer(bytes) {
+    var parte = await leerZip(bytes);
+    var compartidas = [];
+    var ss = await parte("xl/sharedStrings.xml");
+    if (ss) (ss.match(/<si>[\s\S]*?<\/si>|<si\/>/g) || []).forEach(function (si) { compartidas.push(textos(si)); });
+    var libro = await parte("xl/workbook.xml");
+    var rels = await parte("xl/_rels/workbook.xml.rels") || "";
+    var destino = {};
+    (rels.match(/<Relationship\b[^>]*>/g) || []).forEach(function (r) { destino[atributo(r, "Id")] = atributo(r, "Target"); });
+    var hojas = {};
+    var etiquetas = (libro || "").match(/<sheet\b[^>]*>/g) || [];
+    for (var i = 0; i < etiquetas.length; i++) {
+      var et = etiquetas[i];
+      var ruta = destino[atributo(et, "r:id")] || "";
+      ruta = ruta.charAt(0) === "/" ? ruta.slice(1) : "xl/" + ruta.replace(/^\.\//, "");
+      var xml = await parte(ruta);
+      if (!xml) continue;
+      var filas = [];
+      var reC = /<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g, m;
+      while ((m = reC.exec(xml))) {
+        var attrs = " " + m[1], dentro = m[2] || "";
+        var ref = atributo(attrs, "r"), tipo = atributo(attrs, "t");
+        if (!ref) continue;
+        var v = /<v>([\s\S]*?)<\/v>/.exec(dentro), valor = null;
+        if (tipo === "s" && v) valor = compartidas[+v[1]];
+        else if (tipo === "inlineStr") valor = textos(dentro);
+        else if (tipo === "str" && v) valor = desescapar(v[1]);
+        else if (tipo === "b" && v) valor = v[1] === "1";
+        else if (tipo === "e") valor = null;           // #REF!, #DIV/0!…
+        else if (v) valor = parseFloat(v[1]);
+        if (valor === null || valor === undefined || valor === "" || (typeof valor === "number" && !isFinite(valor))) continue;
+        var fila = +ref.replace(/[A-Z]+/g, "") - 1, col = colNum(ref);
+        while (filas.length <= fila) filas.push([]);
+        filas[fila][col] = valor;
+      }
+      // Huecos como "" para que cada fila sea una lista normal.
+      hojas[desescapar(atributo(et, "name") || "Hoja " + (i + 1))] = filas.map(function (f) {
+        var r = [];
+        for (var j = 0; j < f.length; j++) r.push(f[j] === undefined ? "" : f[j]);
+        return r;
+      });
+    }
+    return hojas;
+  }
+
+  return { escribir: escribir, leer: leer, fechaASerie: fechaASerie, serieAFecha: serieAFecha, TIPO_MIME: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" };
+});
+</script>
   <script>/* js/nucleo/cripto.js */
 /*
  * webkit_asociaciones — Cifrado (Web Crypto API del navegador, sin librerías).
@@ -1309,7 +1635,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  *   dialogo({...})        ventana modal; devuelve una promesa con el botón pulsado
  *   confirmar(texto, {peligro})  atajo de dialogo() con Cancelar / Aceptar
  *   descargar(nombre, contenido, tipo)  baja un archivo generado aquí mismo
- *   elegirArchivo(accept) abre el selector de archivos y devuelve su texto
+ *   elegirArchivo(accept, binario) abre el selector de archivos y devuelve su texto (o sus bytes)
  */
 (function (raiz) {
   "use strict";
@@ -1458,7 +1784,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
   }
 
-  function elegirArchivo(accept) {
+  /**
+   * Abre el selector de archivos. Devuelve { nombre, texto } o, con binario = true,
+   * { nombre, bytes: Uint8Array } (para leer un Excel). null si se cancela.
+   */
+  function elegirArchivo(accept, binario) {
     return new Promise(function (resolver) {
       var input = document.createElement("input");
       input.type = "file";
@@ -1467,9 +1797,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
         var f = input.files && input.files[0];
         if (!f) return resolver(null);
         var lector = new FileReader();
-        lector.onload = function () { resolver({ nombre: f.name, texto: String(lector.result) }); };
+        lector.onload = function () {
+          resolver(binario ? { nombre: f.name, bytes: new Uint8Array(lector.result) } : { nombre: f.name, texto: String(lector.result) });
+        };
         lector.onerror = function () { resolver(null); };
-        lector.readAsText(f, "utf-8");
+        if (binario) lector.readAsArrayBuffer(f); else lector.readAsText(f, "utf-8");
       });
       input.click();
     });
@@ -2116,13 +2448,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 
   /**
    * Cuotas pagadas → movimientos de ingreso para la contabilidad (Fase 3).
-   * { fecha, tipo: "ingreso", importe, cuentaId, categoria, concepto, forma, origen: { tipo: "cuota", id } }
+   * { fecha, tipo: "ingreso", importe, cuentaId, categoria, categoriaId: "cuotas", concepto, forma, origen: { tipo: "cuota", id } }
    */
   function aMovimientos(cuotas) {
     return (cuotas || []).filter(function (c) { return c.estado === "pagada" && c.pago; }).map(function (c) {
       return {
         fecha: c.pago.fecha, tipo: "ingreso", importe: c.importe, cuentaId: c.pago.cuentaId,
-        categoria: CATEGORIA_CONTABLE, forma: c.pago.forma,
+        categoria: CATEGORIA_CONTABLE, categoriaId: "cuotas", forma: c.pago.forma,
         concepto: c.concepto + " · n.º " + c.socioNumero + " " + c.socioNombre,
         origen: { tipo: "cuota", id: c.id },
       };
@@ -2138,6 +2470,731 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   };
 });
 </script>
+  <script>/* js/logica/facturas.js */
+/*
+ * webkit_asociaciones — Lógica de facturas (sin interfaz: tests/facturas.test.js).
+ *
+ * FACTURA:
+ *   { id, tipo: "emitida" | "recibida",
+ *     estado: "borrador" | "emitida" | "anulada"    (las recibidas nacen «emitida»)
+ *     serie, numero (texto: «2026-0007» en las emitidas; el del proveedor en las recibidas),
+ *     fecha, fechaOperacion (si es distinta), vencimiento,
+ *     tercero: { nombre, nif, direccion, email },   (cliente o proveedor)
+ *     lineas: [{ concepto, cantidad (número, admite decimales), precio (céntimos),
+ *                tratamiento: "sujeto" | "exento" | "no_sujeto", tipoIva (21, 10, 4, 0) }],
+ *     retencionPct (IRPF, p. ej. 15), deducible (recibidas: si su IVA se deduce),
+ *     motivoExencion (texto que debe figurar si hay líneas exentas),
+ *     categoriaId, proyectoId, notas }
+ *
+ * CÁLCULO (todo en céntimos):
+ *   · base de cada línea = cantidad × precio, redondeada al céntimo;
+ *   · la cuota de IVA se calcula sobre la SUMA de bases de cada tipo (no línea a
+ *     línea), que es como suele hacerse en una factura con varias líneas;
+ *   · retención = % sobre la suma de bases;
+ *   · total = bases + cuotas − retención.
+ * Criterio de redondeo y menciones obligatorias de una factura (Real Decreto
+ * 1619/2012): verificar con asesoría.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { Dinero: require("../nucleo/dinero.js"), Fechas: require("../nucleo/fechas.js") }
+    : { Dinero: raiz.WA.Dinero, Fechas: raiz.WA.Fechas };
+  var modulo = fabrica(dep.Dinero, dep.Fechas);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Facturas = modulo;
+})(typeof self !== "undefined" ? self : this, function (D, F) {
+  "use strict";
+
+  var TIPOS_IVA = [21, 10, 4, 0];
+  var TRATAMIENTOS = [["sujeto", "Sujeto a IVA"], ["exento", "Exento de IVA"], ["no_sujeto", "No sujeto a IVA"]];
+
+  function lineaVacia(tratamiento) {
+    return { concepto: "", cantidad: 1, precio: 0, tratamiento: tratamiento || "sujeto", tipoIva: 21 };
+  }
+
+  function baseLinea(l) {
+    var cantidad = Number(l.cantidad);
+    if (!isFinite(cantidad)) cantidad = 0;
+    return D.redondear(cantidad * (Number(l.precio) || 0));
+  }
+
+  /**
+   * Totales de una factura:
+   *   { porTipo: [{ tratamiento, tipoIva, base, cuota }], base, cuota, baseSujeta, baseExenta,
+   *     baseNoSujeta, retencion, total }
+   */
+  function totales(f) {
+    var grupos = {};
+    (f.lineas || []).forEach(function (l) {
+      var trat = l.tratamiento || "sujeto";
+      var tipo = trat === "sujeto" ? Number(l.tipoIva) || 0 : 0;
+      var k = trat + "|" + tipo;
+      if (!grupos[k]) grupos[k] = { tratamiento: trat, tipoIva: tipo, base: 0, cuota: 0 };
+      grupos[k].base += baseLinea(l);
+    });
+    var porTipo = Object.keys(grupos).map(function (k) {
+      var g = grupos[k];
+      g.cuota = g.tratamiento === "sujeto" ? D.porcentaje(g.base, g.tipoIva) : 0;
+      return g;
+    }).sort(function (a, b) { return a.tratamiento.localeCompare(b.tratamiento) || b.tipoIva - a.tipoIva; });
+    var suma = function (filtro, campo) {
+      return D.sumar(porTipo.filter(filtro).map(function (g) { return g[campo]; }));
+    };
+    var todos = function () { return true; };
+    var base = suma(todos, "base"), cuota = suma(todos, "cuota");
+    var retencion = f.retencionPct > 0 ? D.porcentaje(base, Number(f.retencionPct)) : 0;
+    return {
+      porTipo: porTipo, base: base, cuota: cuota, retencion: retencion, total: base + cuota - retencion,
+      baseSujeta: suma(function (g) { return g.tratamiento === "sujeto"; }, "base"),
+      baseExenta: suma(function (g) { return g.tratamiento === "exento"; }, "base"),
+      baseNoSujeta: suma(function (g) { return g.tratamiento === "no_sujeto"; }, "base"),
+    };
+  }
+
+  /**
+   * Siguiente número de una factura emitida: «2026-0001», correlativo por año
+   * (y por serie si la hay: «A-2026-0001»). Se calcula a partir de las ya
+   * emitidas, así nunca se repite ni salta un número aunque se borre un borrador.
+   */
+  function siguienteNumero(facturas, anio, serie) {
+    var prefijo = (serie ? serie + "-" : "") + anio + "-";
+    var max = 0;
+    (facturas || []).forEach(function (f) {
+      if (f.tipo !== "emitida" || f.estado === "borrador" || !f.numero || f.numero.indexOf(prefijo) !== 0) return;
+      var n = parseInt(f.numero.slice(prefijo.length), 10);
+      if (n > max) max = n;
+    });
+    return prefijo + String(max + 1).padStart(4, "0");
+  }
+
+  /** ¿Se puede emitir? Devuelve la lista de problemas (vacía si está bien). */
+  function revisar(f) {
+    var p = [];
+    if (!F.esValida(f.fecha)) p.push("Falta la fecha.");
+    if (!String((f.tercero || {}).nombre || "").trim()) p.push(f.tipo === "emitida" ? "Falta el cliente." : "Falta el proveedor.");
+    var lineas = (f.lineas || []).filter(function (l) { return String(l.concepto || "").trim() || l.precio; });
+    if (!lineas.length) p.push("La factura no tiene ninguna línea.");
+    lineas.forEach(function (l, i) {
+      if (!String(l.concepto || "").trim()) p.push("La línea " + (i + 1) + " no tiene concepto.");
+      if (!isFinite(Number(l.cantidad)) || Number(l.cantidad) === 0) p.push("La línea " + (i + 1) + " no tiene cantidad.");
+    });
+    if (f.tipo === "emitida" && lineas.some(function (l) { return l.tratamiento === "exento"; }) && !String(f.motivoExencion || "").trim()) {
+      p.push("Hay líneas exentas: indica el motivo de la exención (el artículo de la ley que la ampara).");
+    }
+    if (f.tipo === "recibida" && !String(f.numero || "").trim()) p.push("Falta el número de la factura del proveedor.");
+    return p;
+  }
+
+  /**
+   * Cuánto se ha cobrado (emitidas) o pagado (recibidas) de una factura, mirando
+   * los movimientos y los gastos de anticipos/reembolsos enlazados a ella.
+   */
+  function estadoPago(f, movimientos, anticipos) {
+    var t = totales(f).total;
+    var pagado = 0;
+    (movimientos || []).forEach(function (m) { if (m.facturaId === f.id) pagado += m.importe; });
+    (anticipos || []).forEach(function (a) {
+      (a.gastos || []).forEach(function (g) { if (g.facturaId === f.id) pagado += g.importe; });
+    });
+    var pendiente = t - pagado;
+    return {
+      total: t, pagado: pagado, pendiente: pendiente,
+      estado: f.estado === "anulada" ? "anulada" : f.estado === "borrador" ? "borrador"
+        : pendiente <= 0 ? (f.tipo === "emitida" ? "cobrada" : "pagada") : pagado > 0 ? "parcial" : "pendiente",
+    };
+  }
+
+  /** Trimestre de una fecha: "2026-10-01" → "2026-T4". */
+  function trimestre(fechaISO) {
+    var m = +String(fechaISO).slice(5, 7);
+    return String(fechaISO).slice(0, 4) + "-T" + Math.ceil(m / 3);
+  }
+
+  return {
+    TIPOS_IVA: TIPOS_IVA, TRATAMIENTOS: TRATAMIENTOS, lineaVacia: lineaVacia, baseLinea: baseLinea,
+    totales: totales, siguienteNumero: siguienteNumero, revisar: revisar, estadoPago: estadoPago, trimestre: trimestre,
+  };
+});
+</script>
+  <script>/* js/logica/iva.js */
+/*
+ * webkit_asociaciones — Ayuda para el IVA (sin interfaz: tests/iva.test.js).
+ *
+ * ⚠️ ES UNA AYUDA ORIENTATIVA, NO ASESORAMIENTO FISCAL. Suma lo que hay en las
+ * facturas para que sea más fácil rellenar el modelo 303 (trimestral) y el
+ * resumen anual, pero quien presenta los modelos debe revisarlo. Todo lo que
+ * depende de la norma lleva «verificar con asesoría».
+ *
+ * Qué hace:
+ *   · IVA devengado: el de las facturas EMITIDAS (no borradores ni anuladas)
+ *     con fecha en el trimestre, por tipo (21, 10, 4 %).
+ *   · IVA deducible: el de las facturas RECIBIDAS marcadas como deducibles, con
+ *     fecha en el trimestre, multiplicado por el porcentaje de deducción
+ *     (prorrata) que se haya configurado. La app NO calcula la prorrata: hay que
+ *     indicarla (verificar con asesoría).
+ *   · Resultado del trimestre = devengado − deducible − lo que quedaba por
+ *     compensar de trimestres anteriores (solo hasta dejarlo en cero).
+ *   · Si sale NEGATIVO:
+ *       – en el 1.º, 2.º y 3.er trimestre la diferencia queda «A COMPENSAR» en
+ *         los siguientes; no se puede pedir que la devuelvan;
+ *       – en el 4.º trimestre se puede elegir entre compensar o pedir la
+ *         devolución.
+ *     (Regla general; las entidades inscritas en el registro de devolución
+ *     mensual, REDEME, tienen otro régimen. Verificar con asesoría.)
+ *   · Retenciones de IRPF practicadas en facturas recibidas (las que se
+ *     ingresan con el modelo 111), por trimestre.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { Dinero: require("../nucleo/dinero.js"), Facturas: require("./facturas.js") }
+    : { Dinero: raiz.WA.Dinero, Facturas: raiz.WA.Facturas };
+  var modulo = fabrica(dep.Dinero, dep.Facturas);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).IVA = modulo;
+})(typeof self !== "undefined" ? self : this, function (D, Fac) {
+  "use strict";
+
+  var cuenta = function (f) { return f.estado !== "borrador" && f.estado !== "anulada"; };
+  var trimestres = function (anio) { return [1, 2, 3, 4].map(function (t) { return anio + "-T" + t; }); };
+  var anterior = function (clave) {
+    var a = +clave.slice(0, 4), t = +clave.slice(-1);
+    return t === 1 ? (a - 1) + "-T4" : a + "-T" + (t - 1);
+  };
+
+  /** Sumas de un trimestre (sin compensaciones). */
+  function sumasTrimestre(facturas, clave, config) {
+    var cfg = (config && config.iva) || {};
+    var prorrata = cfg.prorrata == null ? 100 : Number(cfg.prorrata);
+    var devengado = {}, soportado = {};
+    var r = { clave: clave, devengadoPorTipo: [], soportadoPorTipo: [], devengado: 0, soportado: 0, deducible: 0,
+      baseExenta: 0, baseNoSujeta: 0, retenciones: 0, nEmitidas: 0, nRecibidas: 0, prorrata: prorrata };
+    (facturas || []).forEach(function (f) {
+      if (!cuenta(f) || !f.fecha || Fac.trimestre(f.fecha) !== clave) return;
+      var t = Fac.totales(f);
+      if (f.tipo === "emitida") {
+        r.nEmitidas++;
+        r.baseExenta += t.baseExenta;
+        r.baseNoSujeta += t.baseNoSujeta;
+        t.porTipo.forEach(function (g) {
+          if (g.tratamiento !== "sujeto") return;
+          var k = g.tipoIva;
+          devengado[k] = devengado[k] || { tipoIva: k, base: 0, cuota: 0 };
+          devengado[k].base += g.base; devengado[k].cuota += g.cuota;
+        });
+      } else {
+        r.nRecibidas++;
+        r.retenciones += t.retencion;
+        if (f.deducible === false) return;
+        t.porTipo.forEach(function (g) {
+          if (g.tratamiento !== "sujeto") return;
+          var k = g.tipoIva;
+          soportado[k] = soportado[k] || { tipoIva: k, base: 0, cuota: 0 };
+          soportado[k].base += g.base; soportado[k].cuota += g.cuota;
+        });
+      }
+    });
+    var lista = function (o) { return Object.keys(o).map(function (k) { return o[k]; }).sort(function (a, b) { return b.tipoIva - a.tipoIva; }); };
+    r.devengadoPorTipo = lista(devengado);
+    r.soportadoPorTipo = lista(soportado);
+    r.devengado = D.sumar(r.devengadoPorTipo.map(function (x) { return x.cuota; }));
+    r.soportado = D.sumar(r.soportadoPorTipo.map(function (x) { return x.cuota; }));
+    r.deducible = prorrata >= 100 ? r.soportado : D.porcentaje(r.soportado, prorrata);
+    return r;
+  }
+
+  /**
+   * Liquidaciones encadenadas: calcula trimestre a trimestre desde el primero
+   * que tiene facturas (o desde config.iva.periodoSaldoInicial) hasta «hasta»,
+   * arrastrando lo que queda a compensar.
+   * config.iva: { prorrata, saldoACompensarInicial, periodoSaldoInicial, devolucionesSolicitadas: ["2025-T4"] }
+   * Devuelve un objeto { "2026-T1": liquidación, ... }.
+   */
+  function liquidaciones(facturas, config, hasta) {
+    var cfg = (config && config.iva) || {};
+    var claves = (facturas || []).filter(function (f) { return cuenta(f) && f.fecha; }).map(function (f) { return Fac.trimestre(f.fecha); });
+    if (cfg.periodoSaldoInicial) claves.push(cfg.periodoSaldoInicial);
+    claves.push(hasta);
+    claves.sort();
+    var desde = claves[0];
+    var devoluciones = cfg.devolucionesSolicitadas || [];
+    var pendiente = cfg.periodoSaldoInicial ? Number(cfg.saldoACompensarInicial) || 0 : 0;
+    var out = {}, clave = desde, vueltas = 0;
+    while (clave <= hasta && vueltas++ < 400) {
+      var s = sumasTrimestre(facturas, clave, config);
+      s.resultadoPeriodo = s.devengado - s.deducible;
+      s.compensacionDisponible = pendiente;
+      s.compensacionAplicada = s.resultadoPeriodo > 0 ? Math.min(pendiente, s.resultadoPeriodo) : 0;
+      s.resultado = s.resultadoPeriodo - s.compensacionAplicada;
+      pendiente -= s.compensacionAplicada;
+      var cuarto = clave.slice(-1) === "4";
+      if (s.resultado > 0) {
+        s.situacion = "ingresar";
+        s.aviso = "";
+      } else if (s.resultado === 0) {
+        s.situacion = "cero";
+        s.aviso = "";
+      } else if (cuarto && devoluciones.indexOf(clave) >= 0) {
+        s.situacion = "devolver";
+        s.aviso = "Se ha marcado que en este 4.º trimestre se pide la devolución.";
+      } else {
+        s.situacion = "compensar";
+        pendiente += -s.resultado;
+        s.aviso = cuarto
+          ? "Resultado negativo en el 4.º trimestre: se puede pedir la devolución o dejarlo a compensar. Ahora está «a compensar»."
+          : "Resultado negativo: márcalo «A COMPENSAR», no «a devolver». Solo en el 4.º trimestre se puede pedir la devolución (salvo REDEME).";
+      }
+      s.quedaACompensar = pendiente;
+      out[clave] = s;
+      clave = siguiente(clave);
+    }
+    return out;
+  }
+  function siguiente(clave) {
+    var a = +clave.slice(0, 4), t = +clave.slice(-1);
+    return t === 4 ? (a + 1) + "-T1" : a + "-T" + (t + 1);
+  }
+
+  /** Resumen de un año: los cuatro trimestres y los totales por tipo. */
+  function resumenAnual(facturas, config, anio) {
+    var todas = liquidaciones(facturas, config, anio + "-T4");
+    var trs = trimestres(anio).map(function (k) { return todas[k] || Object.assign(sumasTrimestre(facturas, k, config), { resultado: 0, situacion: "cero" }); });
+    var acumular = function (campo) {
+      var o = {};
+      trs.forEach(function (t) {
+        (t[campo] || []).forEach(function (g) {
+          o[g.tipoIva] = o[g.tipoIva] || { tipoIva: g.tipoIva, base: 0, cuota: 0 };
+          o[g.tipoIva].base += g.base; o[g.tipoIva].cuota += g.cuota;
+        });
+      });
+      return Object.keys(o).map(function (k) { return o[k]; }).sort(function (a, b) { return b.tipoIva - a.tipoIva; });
+    };
+    var suma = function (campo) { return D.sumar(trs.map(function (t) { return t[campo] || 0; })); };
+    return {
+      anio: anio, trimestres: trs,
+      devengadoPorTipo: acumular("devengadoPorTipo"), soportadoPorTipo: acumular("soportadoPorTipo"),
+      devengado: suma("devengado"), deducible: suma("deducible"), baseExenta: suma("baseExenta"),
+      baseNoSujeta: suma("baseNoSujeta"), retenciones: suma("retenciones"),
+      ingresado: D.sumar(trs.filter(function (t) { return t.situacion === "ingresar"; }).map(function (t) { return t.resultado; })),
+      quedaACompensar: trs[3].quedaACompensar || 0,
+    };
+  }
+
+  /** Avisos generales según la configuración y las facturas. */
+  function avisos(facturas, config) {
+    var cfg = (config && config.iva) || {};
+    var out = [];
+    var hayExentas = (facturas || []).some(function (f) { return f.tipo === "emitida" && cuenta(f) && Fac.totales(f).baseExenta > 0; });
+    if (hayExentas && !(cfg.prorrata < 100)) {
+      out.push("Hay facturas emitidas con operaciones exentas. Cuando una entidad hace operaciones exentas y sujetas a la vez, puede que no pueda deducir todo el IVA soportado (prorrata). Consultadlo con la asesoría y, si procede, indicad el porcentaje en Tesorería → Ajustes.");
+    }
+    if (cfg.prorrata < 100) out.push("Se está aplicando un porcentaje de deducción del " + cfg.prorrata + " % al IVA soportado (prorrata indicada en Ajustes).");
+    return out;
+  }
+
+  return { sumasTrimestre: sumasTrimestre, liquidaciones: liquidaciones, resumenAnual: resumenAnual, avisos: avisos, trimestres: trimestres, anterior: anterior, siguiente: siguiente };
+});
+</script>
+  <script>/* js/logica/tesoreria.js */
+/*
+ * webkit_asociaciones — Lógica de tesorería (sin interfaz: tests/tesoreria.test.js).
+ *
+ * MOVIMIENTO (dinero que entra o sale de una cuenta):
+ *   { id, fecha, cuentaId, tipo, importe (céntimos, siempre positivo), concepto,
+ *     categoriaId, proyectoId,
+ *     cuentaDestinoId    (traspaso entre cuentas propias)
+ *     sentido            (anticipo: "salida" = se entrega o reembolsa dinero a una
+ *                         persona; "entrada" = la persona devuelve lo que sobró)
+ *     anticipoId, facturaId, cuotaIds: [ids]   (enlaces: qué paga o cobra)
+ *     origen: "manual" | "extracto", conceptoBanco, notas }
+ *   tipo: "ingreso" | "gasto" | "traspaso" | "anticipo"
+ *
+ * CRITERIO: la tesorería cuenta el dinero cuando entra o sale (criterio de
+ * caja), con el IVA incluido. Es lo práctico para una asociación pequeña, pero
+ * las cuentas anuales formales pueden exigir otro criterio (plan de
+ * contabilidad de entidades sin fines lucrativos): verificar con asesoría.
+ *
+ * DE DÓNDE SALE CADA COSA:
+ *   · Saldo de una cuenta = saldo inicial + movimientos + cuotas cobradas que
+ *     no estén ya enlazadas a un movimiento (para no contarlas dos veces).
+ *   · Ingresos y gastos (por categoría y proyecto) = movimientos de ingreso y
+ *     gasto + cuotas cobradas no enlazadas + gastos justificados en anticipos y
+ *     reembolsos. Los traspasos y las entregas/devoluciones de anticipos NO son
+ *     ingresos ni gastos: solo mueven dinero.
+ *   · Las facturas no cuentan por sí mismas: cuenta su cobro o su pago.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { Dinero: require("../nucleo/dinero.js"), Fechas: require("../nucleo/fechas.js"), Cuotas: require("./cuotas.js") }
+    : { Dinero: raiz.WA.Dinero, Fechas: raiz.WA.Fechas, Cuotas: raiz.WA.Cuotas };
+  var modulo = fabrica(dep.Dinero, dep.Fechas, dep.Cuotas);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Tesoreria = modulo;
+})(typeof self !== "undefined" ? self : this, function (D, F, Cuotas) {
+  "use strict";
+
+  var TIPOS = [["ingreso", "Ingreso"], ["gasto", "Gasto"], ["traspaso", "Traspaso entre cuentas"], ["anticipo", "Anticipo o reembolso"]];
+  var CATEGORIA_CUOTAS = "cuotas";
+  var SIN_CLASIFICAR = "";
+
+  /** Categorías con las que empieza una asociación (se pueden cambiar). «iva» es el tratamiento habitual del ingreso. */
+  function categoriasPorDefecto() {
+    var c = function (id, nombre, tipo, iva) { return { id: id, nombre: nombre, tipo: tipo, iva: iva || "", activa: true }; };
+    return [
+      c("cuotas", "Cuotas de socios", "ingreso", "no_sujeto"),
+      c("donaciones", "Donaciones", "ingreso", "no_sujeto"),
+      c("subvenciones", "Subvenciones", "ingreso", "no_sujeto"),
+      c("inscripciones", "Inscripciones a actividades", "ingreso", "sujeto"),
+      c("ventas", "Venta de productos", "ingreso", "sujeto"),
+      c("servicios", "Prestación de servicios", "ingreso", "sujeto"),
+      c("otros-ingresos", "Otros ingresos", "ingreso", "no_sujeto"),
+      c("actividades", "Gastos de actividades", "gasto"),
+      c("material", "Material y suministros", "gasto"),
+      c("seguros", "Seguros", "gasto"),
+      c("banco", "Comisiones bancarias", "gasto"),
+      c("web", "Web y servicios digitales", "gasto"),
+      c("administracion", "Gastos administrativos y tasas", "gasto"),
+      c("difusion", "Comunicación y difusión", "gasto"),
+      c("desplazamientos", "Desplazamientos", "gasto"),
+      c("profesionales", "Servicios profesionales", "gasto"),
+      c("impuestos", "Impuestos (pago de IVA, etc.)", "gasto"),
+      c("otros-gastos", "Otros gastos", "gasto"),
+    ];
+  }
+
+  /** Efecto de un movimiento en cada cuenta: { cuentaId: céntimos con signo }. */
+  function efecto(m) {
+    var e = {};
+    var poner = function (c, v) { if (c) e[c] = (e[c] || 0) + v; };
+    if (m.tipo === "ingreso") poner(m.cuentaId, m.importe);
+    else if (m.tipo === "gasto") poner(m.cuentaId, -m.importe);
+    else if (m.tipo === "traspaso") { poner(m.cuentaId, -m.importe); poner(m.cuentaDestinoId, m.importe); }
+    else if (m.tipo === "anticipo") poner(m.cuentaId, m.sentido === "entrada" ? m.importe : -m.importe);
+    return e;
+  }
+  /** Importe con signo para listados (traspasos: negativo en la cuenta de origen). */
+  var conSigno = function (m) { return m.tipo === "ingreso" || (m.tipo === "anticipo" && m.sentido === "entrada") ? m.importe : -m.importe; };
+
+  /** Ids de cuotas ya enlazadas a algún movimiento (conciliadas con el banco). */
+  function cuotasEnlazadas(movimientos) {
+    var s = {};
+    (movimientos || []).forEach(function (m) { (m.cuotaIds || []).forEach(function (id) { s[id] = true; }); });
+    return s;
+  }
+
+  /**
+   * El libro: movimientos reales + cuotas cobradas no enlazadas, convertidas en
+   * movimientos de solo lectura (virtual: true). Ordenado por fecha, del más reciente al más antiguo.
+   */
+  function libro(movimientos, cuotas) {
+    var enlazadas = cuotasEnlazadas(movimientos);
+    var virtuales = Cuotas.aMovimientos((cuotas || []).filter(function (c) { return !enlazadas[c.id]; })).map(function (v) {
+      return { id: "cuota:" + v.origen.id, virtual: true, fecha: v.fecha, cuentaId: v.cuentaId, tipo: "ingreso", importe: v.importe,
+        concepto: v.concepto, categoriaId: CATEGORIA_CUOTAS, proyectoId: "", forma: v.forma, cuotaIds: [v.origen.id] };
+    });
+    return (movimientos || []).concat(virtuales).sort(function (a, b) {
+      return b.fecha.localeCompare(a.fecha) || String(b.creado || "").localeCompare(String(a.creado || ""));
+    });
+  }
+
+  /** Saldo de cada cuenta en una fecha (incluida). cuentas: config.cuentas con saldoInicial. */
+  function saldos(cuentas, movimientos, cuotas, hasta) {
+    var h = hasta || "9999-12-31";
+    var r = {};
+    (cuentas || []).forEach(function (c) { r[c.id] = Number(c.saldoInicial) || 0; });
+    libro(movimientos, cuotas).forEach(function (m) {
+      if (m.fecha > h) return;
+      var e = efecto(m);
+      Object.keys(e).forEach(function (k) { r[k] = (r[k] || 0) + e[k]; });
+    });
+    var total = D.sumar(Object.keys(r).map(function (k) { return r[k]; }));
+    return { porCuenta: r, total: total };
+  }
+
+  /**
+   * Partidas de ingreso y gasto (para resultados y presupuestos):
+   * [{ fecha, tipo: "ingreso"|"gasto", importe, categoriaId, proyectoId, origen }]
+   */
+  function partidas(movimientos, cuotas, anticipos) {
+    var out = [];
+    libro(movimientos, cuotas).forEach(function (m) {
+      if (m.tipo !== "ingreso" && m.tipo !== "gasto") return;
+      out.push({ fecha: m.fecha, tipo: m.tipo, importe: m.importe, categoriaId: m.categoriaId || SIN_CLASIFICAR, proyectoId: m.proyectoId || "", origen: m.virtual ? "cuota" : "movimiento", id: m.id });
+    });
+    (anticipos || []).forEach(function (a) {
+      (a.gastos || []).forEach(function (g) {
+        out.push({ fecha: g.fecha, tipo: "gasto", importe: g.importe, categoriaId: g.categoriaId || SIN_CLASIFICAR, proyectoId: g.proyectoId || a.proyectoId || "", origen: "anticipo", id: a.id });
+      });
+    });
+    return out;
+  }
+
+  /** Ingresos y gastos por categoría entre dos fechas (incluidas). */
+  function resultados(lista, desde, hasta) {
+    var r = { ingresos: {}, gastos: {}, totalIngresos: 0, totalGastos: 0 };
+    lista.forEach(function (p) {
+      if ((desde && p.fecha < desde) || (hasta && p.fecha > hasta)) return;
+      var grupo = p.tipo === "ingreso" ? r.ingresos : r.gastos;
+      grupo[p.categoriaId] = (grupo[p.categoriaId] || 0) + p.importe;
+      if (p.tipo === "ingreso") r.totalIngresos += p.importe; else r.totalGastos += p.importe;
+    });
+    r.resultado = r.totalIngresos - r.totalGastos;
+    return r;
+  }
+
+  /**
+   * Ejecución de un presupuesto: lo previsto contra lo realizado, por categoría.
+   * previsto: { categoriaId: céntimos }. realizado: lo que devuelve resultados().
+   */
+  function ejecucion(previsto, realizado, categorias) {
+    var porId = {};
+    (categorias || []).forEach(function (c) { porId[c.id] = c; });
+    var ids = {};
+    Object.keys(previsto || {}).forEach(function (k) { ids[k] = true; });
+    Object.keys(realizado.ingresos).concat(Object.keys(realizado.gastos)).forEach(function (k) { ids[k] = true; });
+    var filas = Object.keys(ids).map(function (id) {
+      var c = porId[id] || { id: id, nombre: id ? id : "Sin clasificar", tipo: realizado.ingresos[id] ? "ingreso" : "gasto" };
+      var hecho = (c.tipo === "ingreso" ? realizado.ingresos[id] : realizado.gastos[id]) || 0;
+      var prev = Number((previsto || {})[id]) || 0;
+      return { categoriaId: id, nombre: c.nombre, tipo: c.tipo, previsto: prev, realizado: hecho, diferencia: prev - hecho,
+        pct: prev > 0 ? Math.round(hecho / prev * 1000) / 10 : null };
+    });
+    filas.sort(function (a, b) { return a.tipo.localeCompare(b.tipo) || a.nombre.localeCompare(b.nombre, "es"); });
+    var suma = function (tipo, campo) { return D.sumar(filas.filter(function (f) { return f.tipo === tipo; }).map(function (f) { return f[campo]; })); };
+    return {
+      filas: filas,
+      ingresos: { previsto: suma("ingreso", "previsto"), realizado: suma("ingreso", "realizado") },
+      gastos: { previsto: suma("gasto", "previsto"), realizado: suma("gasto", "realizado") },
+    };
+  }
+
+  // ── Anticipos y reembolsos ──────────────────────────────────────────────
+  /*
+   * ANTICIPO: la asociación entrega dinero por adelantado a una persona para que
+   *   haga gastos en su nombre; después justifica con tickets o facturas y
+   *   devuelve lo que sobre (o se le abona lo que falte).
+   * REEMBOLSO: una persona paga un gasto de la asociación con su dinero y
+   *   presenta el justificante; la asociación le devuelve el importe.
+   *
+   * { id, tipo: "anticipo" | "reembolso", persona, socioId, fecha, concepto, proyectoId,
+   *   gastos: [{ id, fecha, concepto, importe, categoriaId, proyectoId, justificante, facturaId }],
+   *   cerrado, notas }
+   * El dinero entregado, reembolsado o devuelto son movimientos de tipo
+   * «anticipo» enlazados (anticipoId).
+   */
+  var EXPLICACION = {
+    anticipo: "La asociación adelanta dinero a una persona para que haga gastos en su nombre. Después justifica con tickets o facturas y devuelve lo que sobre (o se le paga lo que falte).",
+    reembolso: "Una persona paga un gasto de la asociación con su propio dinero y entrega el justificante. La asociación le devuelve el importe.",
+  };
+
+  /**
+   * Situación de un anticipo o reembolso:
+   *   entregado (dinero que le ha dado la asociación), devuelto (lo que ha devuelto la persona),
+   *   justificado (gastos), saldo = entregado − devuelto − justificado
+   *     saldo > 0 → la persona tiene dinero de la asociación (debe justificarlo o devolverlo)
+   *     saldo < 0 → la asociación le debe dinero (hay que pagarle)
+   */
+  function situacionAnticipo(a, movimientos) {
+    var entregado = 0, devuelto = 0;
+    (movimientos || []).forEach(function (m) {
+      if (m.anticipoId !== a.id || m.tipo !== "anticipo") return;
+      if (m.sentido === "entrada") devuelto += m.importe; else entregado += m.importe;
+    });
+    var justificado = D.sumar((a.gastos || []).map(function (g) { return g.importe; }));
+    var saldo = entregado - devuelto - justificado;
+    var estado = saldo > 0 ? "debe la persona" : saldo < 0 ? "se le debe" : justificado > 0 || entregado > 0 ? "liquidado" : "sin movimientos";
+    return { entregado: entregado, devuelto: devuelto, justificado: justificado, saldo: saldo, estado: estado };
+  }
+
+  // ── Conciliar con cuotas ────────────────────────────────────────────────
+  /**
+   * Enlaza un movimiento de ingreso con cuotas: las que estén pendientes se marcan
+   * pagadas (fecha y cuenta del movimiento, forma «Transferencia» salvo que se diga otra).
+   * Devuelve { movimiento, cuotas (las modificadas), diferencia } sin guardar nada.
+   */
+  function conciliarCuotas(movimiento, cuotas, forma) {
+    var m = JSON.parse(JSON.stringify(movimiento));
+    m.cuotaIds = (cuotas || []).map(function (c) { return c.id; });
+    m.categoriaId = CATEGORIA_CUOTAS;
+    var cambiadas = (cuotas || []).map(function (c) {
+      if (c.estado === "pagada") return c;
+      return Cuotas.registrarPago(c, { fecha: m.fecha, forma: forma || "Transferencia", cuentaId: m.cuentaId, referencia: m.conceptoBanco || m.concepto });
+    });
+    var suma = D.sumar((cuotas || []).map(function (c) { return c.importe; }));
+    return { movimiento: m, cuotas: cambiadas, diferencia: m.importe - suma };
+  }
+
+  return {
+    TIPOS: TIPOS, CATEGORIA_CUOTAS: CATEGORIA_CUOTAS, EXPLICACION: EXPLICACION,
+    categoriasPorDefecto: categoriasPorDefecto, efecto: efecto, conSigno: conSigno, cuotasEnlazadas: cuotasEnlazadas,
+    libro: libro, saldos: saldos, partidas: partidas, resultados: resultados, ejecucion: ejecucion,
+    situacionAnticipo: situacionAnticipo, conciliarCuotas: conciliarCuotas,
+  };
+});
+</script>
+  <script>/* js/logica/extracto.js */
+/*
+ * webkit_asociaciones — Importar el extracto del banco (sin interfaz: tests/extracto.test.js).
+ *
+ * Cada banco exporta a su manera (CSV o Excel, con unas filas de cabecera
+ * antes de la tabla, importe en una columna con signo o en dos columnas
+ * «cargo» y «abono»…). Esto:
+ *   1. busca la fila de títulos y adivina qué columna es cada cosa
+ *      (se puede corregir a mano en la pantalla de importación);
+ *   2. convierte cada fila en un movimiento (ingreso si el importe es positivo,
+ *      gasto si es negativo), sin categoría salvo que una regla la ponga;
+ *   3. descarta los que ya estaban importados (misma cuenta, fecha, importe y concepto);
+ *   4. sugiere con qué cuota o factura casa cada movimiento.
+ * No guarda nada: devuelve lo que habría que guardar.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { Dinero: require("../nucleo/dinero.js"), Fechas: require("../nucleo/fechas.js"), Facturas: require("./facturas.js"), Cuotas: require("./cuotas.js") }
+    : { Dinero: raiz.WA.Dinero, Fechas: raiz.WA.Fechas, Facturas: raiz.WA.Facturas, Cuotas: raiz.WA.Cuotas };
+  var modulo = fabrica(dep.Dinero, dep.Fechas, dep.Facturas, dep.Cuotas);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Extracto = modulo;
+})(typeof self !== "undefined" ? self : this, function (D, F, Fac, Cuotas) {
+  "use strict";
+
+  var plano = function (s) {
+    return String(s == null ? "" : s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+  };
+
+  var CAMPOS = {
+    fecha: ["fecha", "fecha operacion", "fecha de operacion", "f. operacion", "fecha contable", "fecha valor", "f. valor", "date"],
+    concepto: ["concepto", "descripcion", "movimiento", "detalle", "concepto / descripcion", "observaciones", "descripcion del movimiento", "description"],
+    importe: ["importe", "cantidad", "importe (eur)", "importe eur", "importe (€)", "importe euros", "amount"],
+    cargo: ["cargo", "cargos", "debe", "salida", "salidas", "gastos", "reintegro"],
+    abono: ["abono", "abonos", "haber", "entrada", "entradas", "ingresos", "ingreso"],
+    saldo: ["saldo", "saldo (eur)", "saldo eur", "saldo disponible", "balance"],
+  };
+
+  /**
+   * Busca, en las primeras filas, la que parece la cabecera y qué columna es cada campo.
+   * Devuelve { fila: índice, columnas: { fecha, concepto, importe, cargo, abono, saldo } } o null.
+   */
+  function detectarColumnas(filas) {
+    var limite = Math.min(filas.length, 30);
+    for (var f = 0; f < limite; f++) {
+      var cols = {};
+      (filas[f] || []).forEach(function (celda, i) {
+        var t = plano(celda).replace(/[:.]$/, "");
+        Object.keys(CAMPOS).forEach(function (campo) {
+          if (cols[campo] === undefined && CAMPOS[campo].indexOf(t) >= 0) cols[campo] = i;
+        });
+      });
+      var tieneImporte = cols.importe !== undefined || cols.cargo !== undefined || cols.abono !== undefined;
+      if (cols.fecha !== undefined && tieneImporte) {
+        // Si hay «fecha operación» y «fecha valor», nos quedamos con la primera que apareció.
+        return { fila: f, columnas: cols };
+      }
+    }
+    return null;
+  }
+
+  /** Lee una fecha de una celda: texto («01/10/2026», «2026-10-01») o número de Excel. */
+  function leerFecha(v) {
+    if (typeof v === "number" && v > 20000 && v < 80000) {
+      var d = new Date(Date.UTC(1899, 11, 30) + Math.round(v) * 864e5);
+      return d.getUTCFullYear() + "-" + String(d.getUTCMonth() + 1).padStart(2, "0") + "-" + String(d.getUTCDate()).padStart(2, "0");
+    }
+    return F.desdeTexto(String(v == null ? "" : v).trim().slice(0, 10));
+  }
+  /** Lee un importe: número (Excel) o texto («-1.234,56», «1.234,56 €»). */
+  function leerImporte(v) {
+    if (v === "" || v == null) return null;
+    if (typeof v === "number") return D.aCentimos(v);
+    return D.desdeTexto(v);
+  }
+
+  /** Clave para detectar duplicados: misma cuenta, fecha, importe con signo y concepto. */
+  var claveDe = function (cuentaId, fecha, importeConSigno, concepto) {
+    return [cuentaId, fecha, importeConSigno, plano(concepto).slice(0, 60)].join("|");
+  };
+
+  /**
+   * Convierte las filas del extracto en movimientos.
+   * opciones: { filas, columnas (de detectarColumnas o elegidas a mano), filaCabecera,
+   *             cuentaId, existentes (movimientos ya guardados), reglas: [{ texto, categoriaId }] }
+   * Devuelve { nuevos: [movimiento], duplicados: n, problemas: [{ fila, mensaje }] }
+   */
+  function convertir(o) {
+    var c = o.columnas, problemas = [], nuevos = [], duplicados = 0;
+    // Cuántas veces aparece cada clave en lo ya guardado (dos cargos iguales el mismo día son posibles).
+    var ya = {};
+    (o.existentes || []).forEach(function (m) {
+      if (m.tipo !== "ingreso" && m.tipo !== "gasto") return;
+      var k = claveDe(m.cuentaId, m.fecha, m.tipo === "ingreso" ? m.importe : -m.importe, m.conceptoBanco || m.concepto);
+      ya[k] = (ya[k] || 0) + 1;
+    });
+    var reglas = (o.reglas || []).filter(function (r) { return plano(r.texto); });
+    for (var i = (o.filaCabecera || 0) + 1; i < o.filas.length; i++) {
+      var fila = o.filas[i] || [];
+      if (!fila.some(function (x) { return String(x).trim() !== ""; })) continue;
+      var nFila = i + 1;
+      var fecha = leerFecha(fila[c.fecha]);
+      var importe = null;
+      if (c.importe !== undefined && c.importe !== null && c.importe !== "") importe = leerImporte(fila[c.importe]);
+      else {
+        var cargo = c.cargo !== undefined ? leerImporte(fila[c.cargo]) : null;
+        var abono = c.abono !== undefined ? leerImporte(fila[c.abono]) : null;
+        if (cargo || abono) importe = (abono || 0) - Math.abs(cargo || 0);
+      }
+      if (!fecha && importe === null) continue;            // filas de totales o notas al pie
+      if (!fecha) { problemas.push({ fila: nFila, mensaje: "Sin fecha válida: no se importa." }); continue; }
+      if (importe === null || importe === 0) { problemas.push({ fila: nFila, mensaje: "Sin importe: no se importa." }); continue; }
+      var concepto = c.concepto !== undefined ? String(fila[c.concepto] == null ? "" : fila[c.concepto]).trim() : "";
+      var k = claveDe(o.cuentaId, fecha, importe, concepto);
+      if (ya[k]) { ya[k]--; duplicados++; continue; }
+      var regla = reglas.filter(function (r) { return plano(concepto).indexOf(plano(r.texto)) >= 0; })[0];
+      nuevos.push({
+        fecha: fecha, cuentaId: o.cuentaId, tipo: importe > 0 ? "ingreso" : "gasto", importe: Math.abs(importe),
+        concepto: concepto, conceptoBanco: concepto, categoriaId: regla ? regla.categoriaId : "", proyectoId: "",
+        origen: "extracto", cuotaIds: [], facturaId: "", anticipoId: "", notas: "",
+      });
+    }
+    return { nuevos: nuevos, duplicados: duplicados, problemas: problemas };
+  }
+
+  /**
+   * Sugerencias de conciliación para un movimiento:
+   *   ingreso → cuotas sin cobrar del mismo importe cuyo socio aparece en el concepto,
+   *             y facturas emitidas pendientes por ese importe;
+   *   gasto   → facturas recibidas pendientes por ese importe.
+   * Devuelve [{ tipo: "cuota" | "factura", id, texto, puntos }] de más a menos probable.
+   */
+  function sugerencias(m, datos) {
+    var out = [];
+    var concepto = plano(m.conceptoBanco || m.concepto);
+    var palabras = function (nombre) { return plano(nombre).split(" ").filter(function (p) { return p.length > 2; }); };
+    if (m.tipo === "ingreso") {
+      var deCuotas = [];
+      (datos.cuotas || []).forEach(function (q) {
+        if (!Cuotas.debe(q) || q.importe !== m.importe) return;
+        var coinciden = palabras(q.socioNombre).filter(function (p) { return concepto.indexOf(p) >= 0; }).length;
+        if (!coinciden) return;
+        deCuotas.push({ tipo: "cuota", id: q.id, texto: "Cuota de " + q.socioNombre + " · " + q.concepto, puntos: coinciden });
+      });
+      // Solo las que más palabras del nombre comparten: un apellido suelto en común no basta
+      // si hay otra cuota que coincide en nombre y apellidos.
+      var mejor = Math.max.apply(null, [0].concat(deCuotas.map(function (x) { return x.puntos; })));
+      out = out.concat(deCuotas.filter(function (x) { return x.puntos === mejor; }));
+    }
+    (datos.facturas || []).forEach(function (f) {
+      var buscada = m.tipo === "ingreso" ? "emitida" : "recibida";
+      if (f.tipo !== buscada || f.estado === "borrador" || f.estado === "anulada") return;
+      var e = Fac.estadoPago(f, datos.movimientos, datos.anticipos);
+      if (e.pendiente !== m.importe) return;
+      var puntos = 1 + palabras((f.tercero || {}).nombre).filter(function (p) { return concepto.indexOf(p) >= 0; }).length +
+        (f.numero && concepto.indexOf(plano(f.numero)) >= 0 ? 3 : 0);
+      out.push({ tipo: "factura", id: f.id, texto: "Factura " + (f.numero || "") + " · " + ((f.tercero || {}).nombre || ""), puntos: puntos });
+    });
+    return out.sort(function (a, b) { return b.puntos - a.puntos; });
+  }
+
+  return { CAMPOS: CAMPOS, detectarColumnas: detectarColumnas, leerFecha: leerFecha, leerImporte: leerImporte, convertir: convertir, sugerencias: sugerencias };
+});
+</script>
   <!-- Datos -->
   <script>/* js/datos/esquema.js */
 /*
@@ -2147,12 +3204,13 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 3,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 4,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
- *     config: { tiposSocio, cuentas, siguienteNumeroSocio },  ← ajustes de la asociación
+ *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
  *     junta: [ { id, cargo, nombre, ... } ],      ← colecciones: listas de registros
  *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
+ *     movimientos, facturas, anticipos, proyectos   (ver logica/tesoreria.js y logica/facturas.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -2168,21 +3226,23 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
  *   3. añade un test en tests/esquema.test.js.
  * Así, una copia de seguridad antigua siempre se puede abrir con la versión nueva.
  *
- * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2).
+ * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
+ *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
-  var modulo = fabrica(Direccion);
+  var Tesoreria = typeof require === "function" ? require("../logica/tesoreria.js") : raiz.WA.Tesoreria;
+  var modulo = fabrica(Direccion, Tesoreria);
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Esquema = modulo;
-})(typeof self !== "undefined" ? self : this, function (Direccion) {
+})(typeof self !== "undefined" ? self : this, function (Direccion, Tesoreria) {
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 3;
+  var VERSION = 4;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -2203,28 +3263,40 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   /*
    * Configuración de la asociación (no de este ordenador):
    *   tiposSocio  tipos de socio con su cuota y periodicidad (ver logica/cuotas.js)
-   *   cuentas     dónde entra el dinero: { id, nombre, tipo: "banco" | "caja" }.
-   *               La Fase 3 (tesorería) las ampliará.
+   *   cuentas     dónde está el dinero: { id, nombre, tipo: "banco" | "caja", iban, saldoInicial (céntimos), fechaSaldoInicial }
    *   siguienteNumeroSocio  contador: un número de socio nunca se reutiliza
+   *   categorias  de ingreso y gasto: { id, nombre, tipo: "ingreso" | "gasto", iva (tratamiento habitual), activa }
+   *   iva         { presenta, prorrata (% de deducción, 100 = todo), saldoACompensarInicial,
+   *                 periodoSaldoInicial ("2026-T1"), devolucionesSolicitadas: ["2026-T4"] }
+   *   facturacion { serie, motivoExencion, condicionesPago, pie }   (para las facturas emitidas)
+   *   reglas      para clasificar el extracto del banco: [{ texto, categoriaId }]
+   *   presupuestos  presupuesto anual aprobado: { "2026": { categoriaId: céntimos } }
    */
   function configVacia() {
     return {
       tiposSocio: [{ id: "socio", nombre: "Socio", cuota: 0, periodicidad: "anual", activo: true }],
-      cuentas: [{ id: "banco", nombre: "Cuenta bancaria", tipo: "banco" }, { id: "caja", nombre: "Caja (efectivo)", tipo: "caja" }],
+      cuentas: [{ id: "banco", nombre: "Cuenta bancaria", tipo: "banco", iban: "", saldoInicial: 0, fechaSaldoInicial: "" },
+        { id: "caja", nombre: "Caja (efectivo)", tipo: "caja", iban: "", saldoInicial: 0, fechaSaldoInicial: "" }],
       siguienteNumeroSocio: 1,
+      categorias: Tesoreria.categoriasPorDefecto(),
+      iva: { presenta: false, prorrata: 100, saldoACompensarInicial: 0, periodoSaldoInicial: "", devolucionesSolicitadas: [] },
+      facturacion: { serie: "", motivoExencion: "", condicionesPago: "", pie: "" },
+      reglas: [],
+      presupuestos: {},
     };
   }
 
   function documentoVacio(ahora) {
     var t = (ahora || new Date()).toISOString();
-    return {
+    var doc = {
       app: APP,
       esquema: VERSION,
       meta: { creado: t, modificado: t, ultimaCopia: null, cambiosDesdeCopia: 0 },
       asociacion: asociacionVacia(),
       config: configVacia(),
-      junta: [], socios: [], cuotas: [], remesas: [],
     };
+    COLECCIONES.forEach(function (c) { doc[c] = []; });
+    return doc;
   }
 
   /*
@@ -2269,6 +3341,18 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       doc.esquema = 3;
       return doc;
     },
+
+    // 3 → 4: tesorería (Fase 3). Las cuentas que ya había ganan saldo inicial e IBAN.
+    3: function (doc) {
+      var base = configVacia();
+      doc.config = Object.assign(base, doc.config || {});
+      doc.config.cuentas = (doc.config.cuentas || []).map(function (c) {
+        return Object.assign({ iban: "", saldoInicial: 0, fechaSaldoInicial: "" }, c);
+      });
+      ["movimientos", "facturas", "anticipos", "proyectos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+      doc.esquema = 4;
+      return doc;
+    },
   };
 
   /**
@@ -2305,6 +3389,11 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     doc.config = Object.assign(configVacia(), doc.config || {});
     if (!Array.isArray(doc.config.tiposSocio) || !doc.config.tiposSocio.length) doc.config.tiposSocio = configVacia().tiposSocio;
     if (!Array.isArray(doc.config.cuentas) || !doc.config.cuentas.length) doc.config.cuentas = configVacia().cuentas;
+    if (!Array.isArray(doc.config.categorias) || !doc.config.categorias.length) doc.config.categorias = configVacia().categorias;
+    doc.config.iva = Object.assign(configVacia().iva, doc.config.iva || {});
+    doc.config.facturacion = Object.assign(configVacia().facturacion, doc.config.facturacion || {});
+    if (!Array.isArray(doc.config.reglas)) doc.config.reglas = [];
+    if (!doc.config.presupuestos || typeof doc.config.presupuestos !== "object") doc.config.presupuestos = {};
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }
@@ -2584,7 +3673,84 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     doc.junta.push({ id: "demo-junta-6", cargo: "Tesorería", cargoOtro: "", nombre: "Pablo Antiguo Ejemplo",
       email: "antiguo@example.org", telefono: "600 000 006", desde: "2020-03-14", hasta: "2024-03-16", creado: t, modificado: t });
     rellenarSocios(doc, t);
+    rellenarTesoreria(doc, t);
     return doc;
+  }
+
+  /*
+   * Tesorería de demostración (2026): cuentas con saldo inicial, movimientos
+   * manuales y otros «importados del banco» sin clasificar, facturas emitidas y
+   * recibidas (una con retención), un anticipo, un reembolso, un proyecto con
+   * subvención y el presupuesto anual. Terceros y NIF inventados.
+   */
+  function rellenarTesoreria(doc, t) {
+    var cfg = doc.config;
+    cfg.cuentas = [
+      { id: "banco", nombre: "Cuenta corriente (Banco Ejemplo)", tipo: "banco", iban: "ES9121000418450200051332", saldoInicial: 125000, fechaSaldoInicial: "2025-01-01" },
+      { id: "caja", nombre: "Caja (efectivo)", tipo: "caja", iban: "", saldoInicial: 8000, fechaSaldoInicial: "2025-01-01" },
+    ];
+    cfg.iva = { presenta: true, prorrata: 100, saldoACompensarInicial: 0, periodoSaldoInicial: "", devolucionesSolicitadas: [] };
+    cfg.facturacion = { serie: "", motivoExencion: "", condicionesPago: "Transferencia a la cuenta ES91 2100 0418 4502 0005 1332 en 30 días.", pie: "Asociación inscrita en el registro de ejemplo." };
+    cfg.reglas = [{ texto: "comision", categoriaId: "banco" }, { texto: "seguro", categoriaId: "seguros" }];
+    cfg.presupuestos = { "2026": { cuotas: 105000, donaciones: 30000, subvenciones: 150000, inscripciones: 40000, servicios: 60000,
+      actividades: 120000, material: 40000, seguros: 18000, banco: 3000, web: 6000, difusion: 15000, profesionales: 30000 } };
+    var reg = function (o) { return Object.assign({ creado: t, modificado: t }, o); };
+    var mov = function (id, fecha, cuentaId, tipo, importe, concepto, categoriaId, extra) {
+      return reg(Object.assign({ id: "demo-mov-" + id, fecha: fecha, cuentaId: cuentaId, tipo: tipo, importe: importe, concepto: concepto,
+        categoriaId: categoriaId || "", proyectoId: "", cuentaDestinoId: "", sentido: "", anticipoId: "", facturaId: "", cuotaIds: [],
+        origen: "manual", conceptoBanco: "", notas: "" }, extra || {}));
+    };
+    doc.proyectos = [reg({ id: "demo-proyecto-1", nombre: "Taller de ciencia en el barrio", tipo: "subvencion", financiador: "Ayuntamiento de Villaejemplo",
+      referencia: "Convocatoria de ejemplo 2026", importeConcedido: 150000, fechaInicio: "2026-03-01", fechaFin: "2026-12-31", estado: "en curso",
+      presupuesto: { actividades: 80000, material: 30000, difusion: 10000, profesionales: 30000 }, notas: "" })];
+    var linea = function (concepto, cantidad, precio, tratamiento, tipoIva) { return { concepto: concepto, cantidad: cantidad, precio: precio, tratamiento: tratamiento, tipoIva: tipoIva }; };
+    doc.facturas = [
+      reg({ id: "demo-fac-e1", tipo: "emitida", estado: "emitida", serie: "", numero: "2026-0001", fecha: "2026-02-20", fechaOperacion: "", vencimiento: "2026-03-22",
+        tercero: { nombre: "Colegio Público de Ejemplo", nif: "P0000000J", direccion: "Calle de la Escuela, 2, 28000 Villaejemplo", email: "colegio@example.org" },
+        lineas: [linea("Taller de observación de aves (2 sesiones)", 2, 15000, "sujeto", 21)], retencionPct: 0, deducible: true,
+        motivoExencion: "", categoriaId: "servicios", proyectoId: "", notas: "" }),
+      reg({ id: "demo-fac-e2", tipo: "emitida", estado: "emitida", serie: "", numero: "2026-0002", fecha: "2026-05-12", fechaOperacion: "", vencimiento: "2026-06-11",
+        tercero: { nombre: "Empresa Ejemplo, S.L.", nif: "B00000000", direccion: "Avenida del Comercio, 10, 28000 Villaejemplo", email: "empresa@example.org" },
+        lineas: [linea("Charla divulgativa para su plantilla", 1, 25000, "sujeto", 21), linea("Láminas ilustradas", 10, 800, "sujeto", 21)],
+        retencionPct: 0, deducible: true, motivoExencion: "", categoriaId: "servicios", proyectoId: "", notas: "" }),
+      reg({ id: "demo-fac-r1", tipo: "recibida", estado: "emitida", serie: "", numero: "IMP-0457", fecha: "2026-03-10", fechaOperacion: "", vencimiento: "",
+        tercero: { nombre: "Imprenta Ejemplo, S.L.", nif: "B00000000", direccion: "", email: "imprenta@example.org" },
+        lineas: [linea("Carteles y folletos del taller", 1, 18000, "sujeto", 21)], retencionPct: 0, deducible: true,
+        motivoExencion: "", categoriaId: "difusion", proyectoId: "demo-proyecto-1", notas: "" }),
+      reg({ id: "demo-fac-r2", tipo: "recibida", estado: "emitida", serie: "", numero: "2026/12", fecha: "2026-04-18", fechaOperacion: "", vencimiento: "",
+        tercero: { nombre: "Ponente Ficticio Ejemplo", nif: "00000000T", direccion: "", email: "ponente@example.org" },
+        lineas: [linea("Charla «Aves de ribera»", 1, 20000, "sujeto", 21)], retencionPct: 15, deducible: true,
+        motivoExencion: "", categoriaId: "profesionales", proyectoId: "demo-proyecto-1", notas: "" }),
+      reg({ id: "demo-fac-r3", tipo: "recibida", estado: "emitida", serie: "", numero: "T-2026-889", fecha: "2026-06-03", fechaOperacion: "", vencimiento: "",
+        tercero: { nombre: "Tienda de Material Ejemplo", nif: "B00000000", direccion: "", email: "" },
+        lineas: [linea("Prismáticos para préstamo", 4, 4500, "sujeto", 21)], retencionPct: 0, deducible: true,
+        motivoExencion: "", categoriaId: "material", proyectoId: "demo-proyecto-1", notas: "" }),
+    ];
+    doc.anticipos = [
+      reg({ id: "demo-ant-1", tipo: "anticipo", persona: "Javier Supuesto Modelo", socioId: "", fecha: "2026-04-02", concepto: "Compras para la salida de campo", proyectoId: "demo-proyecto-1",
+        gastos: [{ id: "g1", fecha: "2026-04-05", concepto: "Bocadillos y agua", importe: 6240, categoriaId: "actividades", proyectoId: "demo-proyecto-1", justificante: "Ticket supermercado", facturaId: "" },
+          { id: "g2", fecha: "2026-04-05", concepto: "Material de dibujo", importe: 2380, categoriaId: "material", proyectoId: "demo-proyecto-1", justificante: "Ticket papelería", facturaId: "" }],
+        cerrado: false, notas: "" }),
+      reg({ id: "demo-ant-2", tipo: "reembolso", persona: "Carmen Demo Muestra", socioId: "", fecha: "2026-05-20", concepto: "Sellos y envíos de la convocatoria", proyectoId: "",
+        gastos: [{ id: "g3", fecha: "2026-05-18", concepto: "Correos: envío de convocatorias", importe: 1850, categoriaId: "administracion", proyectoId: "", justificante: "Ticket Correos", facturaId: "" }],
+        cerrado: false, notas: "" }),
+    ];
+    doc.movimientos = [
+      mov(1, "2026-01-31", "banco", "gasto", 300, "Comisión de mantenimiento", "banco", { origen: "extracto", conceptoBanco: "COMISION MANTENIMIENTO" }),
+      mov(2, "2026-02-14", "banco", "ingreso", 5000, "Donación de un socio", "donaciones"),
+      mov(3, "2026-02-28", "banco", "gasto", 300, "Comisión de mantenimiento", "banco", { origen: "extracto", conceptoBanco: "COMISION MANTENIMIENTO" }),
+      mov(4, "2026-03-05", "banco", "gasto", 18000, "Seguro de responsabilidad civil", "seguros", { origen: "extracto", conceptoBanco: "RECIBO SEGURO RC ASEGURADORA EJEMPLO" }),
+      mov(5, "2026-03-15", "banco", "ingreso", 36300, "Cobro factura 2026-0001", "servicios", { facturaId: "demo-fac-e1", origen: "extracto", conceptoBanco: "TRANSF COLEGIO PUBLICO DE EJEMPLO FRA 2026-0001" }),
+      mov(6, "2026-03-20", "banco", "gasto", 21780, "Pago imprenta", "difusion", { facturaId: "demo-fac-r1", proyectoId: "demo-proyecto-1" }),
+      mov(7, "2026-04-02", "banco", "traspaso", 10000, "Dinero a caja", "", { cuentaDestinoId: "caja" }),
+      mov(8, "2026-04-02", "caja", "anticipo", 10000, "Anticipo para la salida de campo", "", { sentido: "salida", anticipoId: "demo-ant-1" }),
+      mov(9, "2026-04-10", "caja", "anticipo", 1380, "Devolución del sobrante del anticipo", "", { sentido: "entrada", anticipoId: "demo-ant-1" }),
+      mov(10, "2026-04-30", "banco", "gasto", 21200, "Pago ponente (neto de retención)", "profesionales", { facturaId: "demo-fac-r2", proyectoId: "demo-proyecto-1" }),
+      mov(11, "2026-04-30", "banco", "ingreso", 75000, "Subvención: primer pago", "subvenciones", { proyectoId: "demo-proyecto-1", origen: "extracto", conceptoBanco: "TRANSF AYUNTAMIENTO DE VILLAEJEMPLO SUBV" }),
+      mov(12, "2026-05-15", "caja", "ingreso", 12000, "Inscripciones salida de campo", "inscripciones"),
+      mov(13, "2026-06-10", "banco", "gasto", 1200, "", "", { origen: "extracto", conceptoBanco: "CARGO DOMINIO WEB EJEMPLO" }),
+      mov(14, "2026-06-12", "banco", "ingreso", 2000, "", "", { origen: "extracto", conceptoBanco: "BIZUM DE PERSONA ANONIMA DONATIVO" }),
+    ];
   }
 
   /*
@@ -3297,6 +4463,9 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
     var deud = WA.Cuotas.deudores(cuotas);
     var deuda = WA.Dinero.sumar(deud.map(function (d) { return d.total; }));
     var demo = WA.Sesion.modo === "demostración";
+    var movimientos = await datos.listar("movimientos");
+    var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas).total;
+    var sinClasificar = movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
 
     var pendientes = [];
     if (!a.nombre) pendientes.push('<a href="#/asociacion">Escribe el nombre y los datos de la asociación</a>');
@@ -3317,6 +4486,8 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
         pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
       '<div class="rejilla-tarjetas">' +
+      '<section class="tarjeta" aria-labelledby="t-saldo"><h2 id="t-saldo">Saldo</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(saldo)) + "</span></p>" +
+      (sinClasificar ? '<p class="detalle">' + sinClasificar + " movimientos sin clasificar</p>" : "") + '<a class="enlace-flecha" href="#/tesoreria">Ver tesorería</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-socios"><h2 id="t-socios">Socios</h2><p><span class="cifra">' + activos + "</span> " + (activos === 1 ? "activo" : "activos") +
       '</p><a class="enlace-flecha" href="#/socios">Ver socios</a></section>' +
@@ -3324,7 +4495,7 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
       '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
       '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
       '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Tesorería e IVA, actividades, actas, obligaciones, subvenciones e informes.</p></section>' +
+      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Actividades y calendario, actas, convocatorias, obligaciones, subvenciones e informes.</p></section>' +
       "</div>";
   }
 
@@ -4370,6 +5541,1398 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
   WA.App.registrar({
     id: "cuotas", titulo: "Cuotas", orden: 25, pintar: pintar,
     icono: '<rect x="2.5" y="5.5" width="19" height="13" rx="2"/><path d="M2.5 10h19"/><path d="M6.5 14.5h4"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/tesoreria-comun.js */
+/*
+ * webkit_asociaciones — Piezas de interfaz compartidas por Tesorería, Facturas,
+ * IVA y Proyectos (WA.TesUI):
+ *
+ *   cargar(datos)              todo lo que hace falta, de una vez
+ *   nombreCategoria/Cuenta/Proyecto(c, id)
+ *   opcionesCategorias(c, tipo, conVacia) · opcionesCuentas(c) · opcionesProyectos(c)
+ *   editarMovimiento(datos, c, mov, valores)   diálogo de alta/edición, con conciliación
+ *   exportarExcel(c, anio)     libro de Excel con movimientos, resultados, facturas, IVA…
+ *   ayuda(texto)               párrafo de «letra pequeña»
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, T = WA.Tesoreria, Fac = WA.Facturas;
+
+  async function cargar(datos) {
+    var r = await Promise.all(["config", "movimientos", "cuotas", "facturas", "anticipos", "proyectos", "socios", "junta", "asociacion"].map(function (k) {
+      return k === "config" || k === "asociacion" ? datos.leer(k) : datos.listar(k);
+    }));
+    return { config: r[0], movimientos: r[1], cuotas: r[2], facturas: r[3], anticipos: r[4], proyectos: r[5], socios: r[6], junta: r[7], asociacion: r[8] };
+  }
+
+  var buscar = function (lista, id) { return (lista || []).filter(function (x) { return x.id === id; })[0]; };
+  function nombreCategoria(c, id) { var x = buscar(c.config.categorias, id); return x ? x.nombre : id ? id : "Sin clasificar"; }
+  function nombreCuenta(c, id) { var x = buscar(c.config.cuentas, id); return x ? x.nombre : id || "—"; }
+  function nombreProyecto(c, id) { var x = buscar(c.proyectos, id); return x ? x.nombre : ""; }
+
+  function opcionesCategorias(c, tipo, conVacia) {
+    var lista = (c.config.categorias || []).filter(function (x) { return (!tipo || x.tipo === tipo) && x.activa !== false; })
+      .map(function (x) { return [x.id, x.nombre]; });
+    return (conVacia === false ? [] : [["", "Sin clasificar"]]).concat(lista);
+  }
+  function opcionesCuentas(c) { return (c.config.cuentas || []).map(function (x) { return [x.id, x.nombre]; }); }
+  function opcionesProyectos(c) {
+    return [["", "—"]].concat((c.proyectos || []).filter(function (p) { return p.estado !== "cerrado"; }).map(function (p) { return [p.id, p.nombre]; }));
+  }
+  function ayuda(texto) { return '<p class="letra-pequena">' + esc(texto) + "</p>"; }
+
+  /** Importe con su signo y color: verde si entra, rojo si sale. */
+  function importeHtml(centimos) {
+    return '<span class="' + (centimos < 0 ? "importe-negativo" : "importe-positivo") + '">' + (centimos > 0 ? "+" : "") + esc(D.formatear(centimos)) + "</span>";
+  }
+
+  // ── Alta y edición de un movimiento ──────────────────────────────────────
+  /**
+   * Diálogo de movimiento. mov = null para uno nuevo; valores = datos iniciales
+   * (p. ej. { tipo: "anticipo", anticipoId, sentido }). Devuelve true si guardó.
+   */
+  async function editarMovimiento(datos, c, mov, valores) {
+    var nuevo = !mov;
+    var m = Object.assign({ fecha: F.hoy(), cuentaId: (c.config.cuentas[0] || {}).id, tipo: "gasto", importe: 0, concepto: "", categoriaId: "",
+      proyectoId: "", cuentaDestinoId: "", sentido: "salida", anticipoId: "", facturaId: "", cuotaIds: [], origen: "manual", conceptoBanco: "", notas: "" },
+    mov || {}, valores || {});
+    // Sugerencias de conciliación (solo si aún no está enlazado a nada).
+    var sugerencias = !nuevo && (m.tipo === "ingreso" || m.tipo === "gasto") && !m.facturaId && !(m.cuotaIds || []).length
+      ? WA.Extracto.sugerencias(m, c) : [];
+    var facturasPendientes = c.facturas.filter(function (f) {
+      if (f.estado === "borrador" || f.estado === "anulada") return false;
+      return f.id === m.facturaId || Fac.estadoPago(f, c.movimientos, c.anticipos).pendiente > 0;
+    });
+    var opcFactura = function (tipo) {
+      return [["", "—"]].concat(facturasPendientes.filter(function (f) { return f.tipo === tipo; }).map(function (f) {
+        return [f.id, (f.numero || "s/n") + " · " + (f.tercero || {}).nombre + " · " + D.formatear(Fac.totales(f).total)];
+      }));
+    };
+    var anticipos = [["", "—"]].concat(c.anticipos.map(function (a) { return [a.id, (a.tipo === "anticipo" ? "Anticipo" : "Reembolso") + " · " + a.persona + " · " + a.concepto]; }));
+    var enlazadas = (m.cuotaIds || []).map(function (id) { return buscar(c.cuotas, id); }).filter(Boolean);
+
+    var r = await UI.dialogo({
+      titulo: nuevo ? "Nuevo movimiento" : "Movimiento",
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "tipo", etiqueta: "Tipo", tipo: "select", valor: m.tipo, opciones: T.TIPOS }) +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha", tipo: "date", valor: m.fecha, requerido: true }) +
+        UI.campo({ nombre: "cuentaId", etiqueta: "Cuenta", tipo: "select", valor: m.cuentaId, opciones: opcionesCuentas(c) }) +
+        UI.campo({ nombre: "importe", etiqueta: "Importe (€)", valor: m.importe ? D.formatear(m.importe, { simbolo: false }) : "", requerido: true, atributos: 'inputmode="decimal"', ayuda: "Siempre en positivo." }) +
+        UI.campo({ nombre: "concepto", etiqueta: "Concepto", valor: m.concepto, ancho: "completo" }) +
+        (m.conceptoBanco ? '<p class="detalle campo-completo">Según el banco: «' + esc(m.conceptoBanco) + "»</p>" : "") +
+        '<div class="campo-completo" data-para="ingreso gasto"><div class="rejilla">' +
+        UI.campo({ nombre: "categoriaIngreso", etiqueta: "Categoría", tipo: "select", valor: m.tipo === "ingreso" ? m.categoriaId : "", opciones: opcionesCategorias(c, "ingreso"), clase: "solo-ingreso" }) +
+        UI.campo({ nombre: "categoriaGasto", etiqueta: "Categoría", tipo: "select", valor: m.tipo === "gasto" ? m.categoriaId : "", opciones: opcionesCategorias(c, "gasto"), clase: "solo-gasto" }) +
+        UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: m.proyectoId, opciones: opcionesProyectos(c) }) +
+        UI.campo({ nombre: "facturaEmitida", etiqueta: "Cobro de la factura", tipo: "select", valor: m.tipo === "ingreso" ? m.facturaId : "", opciones: opcFactura("emitida"), clase: "solo-ingreso" }) +
+        UI.campo({ nombre: "facturaRecibida", etiqueta: "Pago de la factura", tipo: "select", valor: m.tipo === "gasto" ? m.facturaId : "", opciones: opcFactura("recibida"), clase: "solo-gasto" }) +
+        "</div></div>" +
+        '<div class="campo-completo" data-para="traspaso">' +
+        UI.campo({ nombre: "cuentaDestinoId", etiqueta: "A la cuenta", tipo: "select", valor: m.cuentaDestinoId, opciones: opcionesCuentas(c) }) + "</div>" +
+        '<div class="campo-completo" data-para="anticipo"><div class="rejilla">' +
+        UI.campo({ nombre: "sentido", etiqueta: "Sentido", tipo: "select", valor: m.sentido, opciones: [["salida", "La asociación da dinero a la persona"], ["entrada", "La persona devuelve dinero"]] }) +
+        UI.campo({ nombre: "anticipoId", etiqueta: "Anticipo o reembolso", tipo: "select", valor: m.anticipoId, opciones: anticipos }) +
+        "</div>" + ayuda("Entregar un anticipo, pagar un reembolso o recibir la devolución del sobrante no es un gasto ni un ingreso: solo mueve dinero. El gasto son los tickets que se justifican en el anticipo o reembolso.") + "</div>" +
+        (enlazadas.length ? '<p class="campo-completo detalle">Corresponde a las cuotas: ' + esc(enlazadas.map(function (q) { return q.socioNombre + " (" + D.formatear(q.importe) + ")"; }).join(", ")) + "</p>" : "") +
+        (sugerencias.length ? '<fieldset class="campo-completo"><legend>¿Corresponde a…?</legend>' + sugerencias.slice(0, 6).map(function (s) {
+          return '<label class="casilla"><input type="checkbox" name="sug-' + esc(s.tipo) + "-" + esc(s.id) + '"><span>' + esc(s.texto) + "</span></label>";
+        }).join("") + "</fieldset>" : "") +
+        UI.campo({ nombre: "notas", etiqueta: "Notas", valor: m.notas, ancho: "completo" }) +
+        "</div></form>",
+      botones: (nuevo || m.virtual ? [] : [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }])
+        .concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+      alAbrir: function (d) {
+        var f = d.querySelector("form");
+        var ver = function () {
+          var tipo = f.elements.tipo.value;
+          d.querySelectorAll("[data-para]").forEach(function (x) { x.hidden = x.getAttribute("data-para").split(" ").indexOf(tipo) < 0; });
+          d.querySelectorAll(".solo-ingreso").forEach(function (x) { x.hidden = tipo !== "ingreso"; });
+          d.querySelectorAll(".solo-gasto").forEach(function (x) { x.hidden = tipo !== "gasto"; });
+        };
+        f.elements.tipo.addEventListener("change", ver);
+        ver();
+      },
+      validar: function (form) {
+        var d = UI.leerFormulario(form), ok = true;
+        var imp = D.desdeTexto(d.importe);
+        UI.marcarError(form, "importe", imp > 0 ? "" : "Escribe un importe mayor que cero."); if (!(imp > 0)) ok = false;
+        UI.marcarError(form, "fecha", F.esValida(d.fecha) ? "" : "Pon la fecha."); if (!F.esValida(d.fecha)) ok = false;
+        var mismo = d.tipo === "traspaso" && d.cuentaDestinoId === d.cuentaId;
+        UI.marcarError(form, "cuentaDestinoId", mismo ? "Elige otra cuenta distinta." : ""); if (mismo) ok = false;
+        return ok;
+      },
+    });
+
+    if (r.valor === "borrar") {
+      if (!(await UI.confirmar("Se borrará este movimiento. Las cuotas que tuviera enlazadas seguirán pagadas.", { titulo: "Borrar movimiento", aceptar: "Borrar", peligro: true }))) return false;
+      await datos.borrar("movimientos", m.id);
+      UI.aviso("Movimiento borrado.");
+      return true;
+    }
+    if (r.valor !== "enviar") return false;
+    var d = r.datos;
+    m.tipo = d.tipo; m.fecha = d.fecha; m.cuentaId = d.cuentaId; m.importe = D.desdeTexto(d.importe);
+    m.concepto = d.concepto; m.notas = d.notas; m.proyectoId = d.tipo === "ingreso" || d.tipo === "gasto" ? d.proyectoId : "";
+    m.categoriaId = d.tipo === "ingreso" ? d.categoriaIngreso : d.tipo === "gasto" ? d.categoriaGasto : "";
+    m.facturaId = d.tipo === "ingreso" ? d.facturaEmitida : d.tipo === "gasto" ? d.facturaRecibida : "";
+    m.cuentaDestinoId = d.tipo === "traspaso" ? d.cuentaDestinoId : "";
+    m.sentido = d.tipo === "anticipo" ? d.sentido : "";
+    m.anticipoId = d.tipo === "anticipo" ? d.anticipoId : "";
+    if (d.tipo !== "ingreso") m.cuotaIds = [];
+
+    // Sugerencias marcadas: cuotas (se marcan pagadas) o una factura.
+    var cuotasElegidas = [], facturaElegida = "";
+    Object.keys(d).forEach(function (k) {
+      if (!d[k] || k.indexOf("sug-") !== 0) return;
+      var partes = k.split("-"), tipo = partes[1], id = partes.slice(2).join("-");
+      if (tipo === "cuota") cuotasElegidas.push(buscar(c.cuotas, id));
+      if (tipo === "factura") facturaElegida = id;
+    });
+    if (facturaElegida) m.facturaId = facturaElegida;
+    if (m.facturaId && !m.categoriaId) m.categoriaId = (buscar(c.facturas, m.facturaId) || {}).categoriaId || "";
+    if (cuotasElegidas.length) {
+      var con = T.conciliarCuotas(m, cuotasElegidas.filter(Boolean));
+      m = con.movimiento;
+      await datos.guardarVarios("cuotas", con.cuotas);
+      if (con.diferencia) UI.aviso("Ojo: las cuotas suman " + D.formatear(m.importe - con.diferencia) + " y el movimiento es de " + D.formatear(m.importe) + ".", "info");
+    }
+    if (!m.concepto) m.concepto = m.conceptoBanco || "";
+    await datos.guardar("movimientos", m);
+    UI.aviso(nuevo ? "Movimiento apuntado." : "Movimiento guardado.");
+    return true;
+  }
+
+  // ── Excel ────────────────────────────────────────────────────────────────
+  var ESTADO_FACTURA = { borrador: "Borrador", pendiente: "Pendiente", parcial: "Pagada en parte", cobrada: "Cobrada", pagada: "Pagada", anulada: "Anulada" };
+  function exportarExcel(c, anio) {
+    var desde = anio + "-01-01", hasta = anio + "-12-31";
+    var enAnio = function (f) { return f >= desde && f <= hasta; };
+    var hojas = [];
+    var lib = T.libro(c.movimientos, c.cuotas).filter(function (m) { return enAnio(m.fecha); }).reverse();
+    hojas.push({ nombre: "Movimientos " + anio, columnas: [
+      { titulo: "Fecha", tipo: "fecha" }, { titulo: "Cuenta" }, { titulo: "Tipo", ancho: 14 }, { titulo: "Concepto", ancho: 40 }, { titulo: "Categoría" },
+      { titulo: "Proyecto" }, { titulo: "Importe", tipo: "dinero" }, { titulo: "Según el banco", ancho: 40 }],
+      filas: lib.map(function (m) {
+        return [m.fecha, nombreCuenta(c, m.cuentaId), (T.TIPOS.filter(function (t) { return t[0] === m.tipo; })[0] || [])[1] + (m.tipo === "traspaso" ? " → " + nombreCuenta(c, m.cuentaDestinoId) : ""),
+          m.concepto, m.tipo === "ingreso" || m.tipo === "gasto" ? nombreCategoria(c, m.categoriaId) : "", nombreProyecto(c, m.proyectoId), T.conSigno(m), m.conceptoBanco || ""];
+      }) });
+    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), desde, hasta);
+    var filasRes = [];
+    Object.keys(res.ingresos).forEach(function (k) { filasRes.push(["Ingreso", nombreCategoria(c, k), res.ingresos[k]]); });
+    Object.keys(res.gastos).forEach(function (k) { filasRes.push(["Gasto", nombreCategoria(c, k), res.gastos[k]]); });
+    filasRes.push(["", "Total ingresos", res.totalIngresos], ["", "Total gastos", res.totalGastos], ["", "Resultado", res.resultado]);
+    hojas.push({ nombre: "Ingresos y gastos " + anio, columnas: [{ titulo: "Tipo", ancho: 12 }, { titulo: "Categoría", ancho: 36 }, { titulo: "Importe", tipo: "dinero" }], filas: filasRes });
+    ["emitida", "recibida"].forEach(function (tipo) {
+      var lista = c.facturas.filter(function (f) { return f.tipo === tipo && f.estado !== "borrador" && enAnio(f.fecha); })
+        .sort(function (a, b) { return a.fecha.localeCompare(b.fecha); });
+      hojas.push({ nombre: "Facturas " + (tipo === "emitida" ? "emitidas" : "recibidas"), columnas: [
+        { titulo: "Fecha", tipo: "fecha" }, { titulo: "Número", ancho: 14 }, { titulo: tipo === "emitida" ? "Cliente" : "Proveedor" }, { titulo: "NIF", ancho: 12 },
+        { titulo: "Base 21 %", tipo: "dinero" }, { titulo: "IVA 21 %", tipo: "dinero" }, { titulo: "Base 10 %", tipo: "dinero" }, { titulo: "IVA 10 %", tipo: "dinero" },
+        { titulo: "Base 4 %", tipo: "dinero" }, { titulo: "IVA 4 %", tipo: "dinero" }, { titulo: "Base 0 %", tipo: "dinero" },
+        { titulo: "Exento", tipo: "dinero" }, { titulo: "No sujeto", tipo: "dinero" }, { titulo: "Retención", tipo: "dinero" }, { titulo: "Total", tipo: "dinero" },
+        { titulo: "Estado", ancho: 12 }],
+        filas: lista.map(function (f) {
+          var t = Fac.totales(f);
+          var g = function (tipoIva, campo) { var x = t.porTipo.filter(function (p) { return p.tratamiento === "sujeto" && p.tipoIva === tipoIva; })[0]; return x ? x[campo] : 0; };
+          return [f.fecha, f.numero, (f.tercero || {}).nombre, (f.tercero || {}).nif, g(21, "base"), g(21, "cuota"), g(10, "base"), g(10, "cuota"), g(4, "base"), g(4, "cuota"), g(0, "base"),
+            t.baseExenta, t.baseNoSujeta, t.retencion, t.total, ESTADO_FACTURA[f.estado === "anulada" ? "anulada" : Fac.estadoPago(f, c.movimientos, c.anticipos).estado]];
+        }) });
+    });
+    var iva = WA.IVA.resumenAnual(c.facturas, c.config, anio);
+    hojas.push({ nombre: "IVA " + anio, columnas: [{ titulo: "Trimestre", ancho: 12 }, { titulo: "IVA devengado", tipo: "dinero" }, { titulo: "IVA deducible", tipo: "dinero" },
+      { titulo: "Compensado de antes", tipo: "dinero" }, { titulo: "Resultado", tipo: "dinero" }, { titulo: "Situación", ancho: 14 }, { titulo: "Queda a compensar", tipo: "dinero" },
+      { titulo: "Retenciones IRPF", tipo: "dinero" }],
+      filas: iva.trimestres.map(function (t) {
+        return [t.clave, t.devengado, t.deducible, t.compensacionAplicada || 0, t.resultado || 0, t.situacion, t.quedaACompensar || 0, t.retenciones];
+      }) });
+    var prev = (c.config.presupuestos || {})[anio] || {};
+    var ej = T.ejecucion(prev, res, c.config.categorias);
+    hojas.push({ nombre: "Presupuesto " + anio, columnas: [{ titulo: "Tipo", ancho: 12 }, { titulo: "Categoría", ancho: 36 }, { titulo: "Previsto", tipo: "dinero" },
+      { titulo: "Realizado", tipo: "dinero" }, { titulo: "Diferencia", tipo: "dinero" }],
+      filas: ej.filas.map(function (f) { return [f.tipo === "ingreso" ? "Ingreso" : "Gasto", f.nombre, f.previsto, f.realizado, f.diferencia]; }) });
+    hojas.push({ nombre: "Anticipos y reembolsos", columnas: [{ titulo: "Tipo", ancho: 12 }, { titulo: "Persona" }, { titulo: "Fecha", tipo: "fecha" }, { titulo: "Concepto", ancho: 36 },
+      { titulo: "Entregado", tipo: "dinero" }, { titulo: "Justificado", tipo: "dinero" }, { titulo: "Devuelto", tipo: "dinero" }, { titulo: "Saldo", tipo: "dinero" }],
+      filas: c.anticipos.filter(function (a) { return enAnio(a.fecha); }).map(function (a) {
+        var s = T.situacionAnticipo(a, c.movimientos);
+        return [a.tipo === "anticipo" ? "Anticipo" : "Reembolso", a.persona, a.fecha, a.concepto, s.entregado, s.justificado, s.devuelto, s.saldo];
+      }) });
+    var bytes = WA.XLSX.escribir(hojas);
+    UI.descargar("tesoreria-" + anio + "-descargado-" + F.hoy() + ".xlsx", new Blob([bytes], { type: WA.XLSX.TIPO_MIME }));
+  }
+
+  WA.TesUI = {
+    cargar: cargar, nombreCategoria: nombreCategoria, nombreCuenta: nombreCuenta, nombreProyecto: nombreProyecto,
+    opcionesCategorias: opcionesCategorias, opcionesCuentas: opcionesCuentas, opcionesProyectos: opcionesProyectos,
+    editarMovimiento: editarMovimiento, exportarExcel: exportarExcel, ayuda: ayuda, importeHtml: importeHtml, buscar: buscar,
+  };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/tesoreria.js */
+/*
+ * webkit_asociaciones — Módulo «Tesorería».
+ *
+ *   #/tesoreria                      resumen: saldos, ingresos y gastos del año, pendientes
+ *   #/tesoreria/movimientos          libro de movimientos; apuntar a mano o importar el extracto
+ *   #/tesoreria/anticipos            anticipos y reembolsos
+ *   #/tesoreria/anticipo/<id>        ficha de un anticipo o reembolso
+ *   #/tesoreria/ajustes              cuentas, categorías, reglas, IVA y facturación
+ *
+ * La lógica está en logica/tesoreria.js y logica/extracto.js (con tests).
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, T = WA.Tesoreria, Fac = WA.Facturas, U = WA.TesUI;
+
+  var vista = { anio: null, cuenta: "", categoria: "*", texto: "" };
+  var anioActual = function () { return vista.anio || +F.hoy().slice(0, 4); };
+
+  function pestanas(actual) {
+    var p = [["", "Resumen"], ["movimientos", "Movimientos"], ["anticipos", "Anticipos y reembolsos"], ["ajustes", "Ajustes"]];
+    return '<nav class="pestanas" aria-label="Apartados de tesorería">' + p.map(function (x) {
+      return '<a href="#/tesoreria' + (x[0] ? "/" + x[0] : "") + '"' + (actual === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>";
+    }).join("") + "</nav>";
+  }
+  function selectorAnio(c, id) {
+    var anios = {};
+    anios[+F.hoy().slice(0, 4)] = true;
+    c.movimientos.concat(c.facturas).forEach(function (m) { if (m.fecha) anios[+m.fecha.slice(0, 4)] = true; });
+    c.cuotas.forEach(function (q) { if (q.pago) anios[+q.pago.fecha.slice(0, 4)] = true; });
+    return '<label>Año <select id="' + id + '">' + Object.keys(anios).sort().reverse().map(function (a) {
+      return '<option value="' + a + '"' + (+a === anioActual() ? " selected" : "") + ">" + a + "</option>";
+    }).join("") + "</select></label>";
+  }
+
+  // ── Resumen ─────────────────────────────────────────────────────────────
+  async function pintarResumen(cont, datos) {
+    var c = await U.cargar(datos);
+    var anio = anioActual();
+    var s = T.saldos(c.config.cuentas, c.movimientos, c.cuotas);
+    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), anio + "-01-01", anio + "-12-31");
+    var sinClasificar = c.movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
+    var pend = { emitida: 0, recibida: 0, nE: 0, nR: 0 };
+    c.facturas.forEach(function (f) {
+      if (f.estado === "borrador" || f.estado === "anulada") return;
+      var e = Fac.estadoPago(f, c.movimientos, c.anticipos);
+      if (e.pendiente > 0) { pend[f.tipo] += e.pendiente; if (f.tipo === "emitida") pend.nE++; else pend.nR++; }
+    });
+    var abiertos = c.anticipos.filter(function (a) { return !a.cerrado && T.situacionAnticipo(a, c.movimientos).saldo !== 0; });
+    var tabla = function (obj, total, titulo) {
+      var filas = Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; });
+      return '<section class="tarjeta"><h2>' + titulo + "</h2>" + (filas.length ? '<ul class="lista-cifras">' + filas.map(function (k) {
+        return "<li><span>" + esc(U.nombreCategoria(c, k)) + "</span><strong>" + esc(D.formatear(obj[k])) + "</strong></li>";
+      }).join("") + '<li class="total"><span>Total</span><strong>' + esc(D.formatear(total)) + "</strong></li></ul>" : '<p class="detalle">Nada en ' + anio + ".</p>") + "</section>";
+    };
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Tesorería</h1><button type="button" class="btn btn-secundario" id="t-excel">Descargar Excel del año</button></div>' + pestanas("") +
+      (sinClasificar ? '<div class="caja-aviso">Hay <strong>' + sinClasificar + ' movimientos sin clasificar</strong>. <a href="#/tesoreria/movimientos" id="t-ver-sin">Clasificarlos</a></div>' : "") +
+      '<div class="rejilla-tarjetas cifras">' + c.config.cuentas.map(function (cu) {
+        return '<section class="tarjeta"><h2>' + esc(cu.nombre) + '</h2><p class="cifra">' + esc(D.formatear(s.porCuenta[cu.id] || 0)) + "</p></section>";
+      }).join("") + '<section class="tarjeta tarjeta-destacada"><h2>Total disponible</h2><p class="cifra">' + esc(D.formatear(s.total)) + "</p></section></div>" +
+      '<div class="barra-filtros">' + selectorAnio(c, "t-anio") + "</div>" +
+      '<div class="rejilla-tarjetas">' + tabla(res.ingresos, res.totalIngresos, "Ingresos " + anio) + tabla(res.gastos, res.totalGastos, "Gastos " + anio) +
+      '<section class="tarjeta"><h2>Resultado ' + anio + '</h2><p class="cifra ' + (res.resultado < 0 ? "importe-negativo" : "") + '">' + esc(D.formatear(res.resultado)) + "</p>" +
+      '<ul class="lista-cifras"><li><span>Pendiente de cobrar (' + pend.nE + ' facturas)</span><strong><a href="#/facturas">' + esc(D.formatear(pend.emitida)) + "</a></strong></li>" +
+      '<li><span>Pendiente de pagar (' + pend.nR + ' facturas)</span><strong><a href="#/facturas/recibidas">' + esc(D.formatear(pend.recibida)) + "</a></strong></li>" +
+      '<li><span>Anticipos y reembolsos abiertos</span><strong><a href="#/tesoreria/anticipos">' + abiertos.length + "</a></strong></li></ul></section></div>" +
+      U.ayuda("Los importes son de dinero cobrado o pagado (criterio de caja), con el IVA incluido. Las cuentas anuales formales pueden necesitar otro criterio: verificar con asesoría.");
+    cont.querySelector("#t-anio").addEventListener("change", function (e) { vista.anio = +e.target.value; WA.App.repintar(); });
+    cont.querySelector("#t-excel").addEventListener("click", function () { U.exportarExcel(c, anio); });
+    var verSin = cont.querySelector("#t-ver-sin");
+    if (verSin) verSin.addEventListener("click", function () { vista.categoria = ""; vista.anio = null; });
+  }
+
+  // ── Movimientos ─────────────────────────────────────────────────────────
+  async function pintarMovimientos(cont, datos) {
+    var c = await U.cargar(datos);
+    var categorias = [["*", "Todas las categorías"], ["", "Sin clasificar"]].concat(U.opcionesCategorias(c, null, false));
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Tesorería</h1><div class="acciones-cabecera">' +
+      '<button type="button" class="btn btn-secundario" id="m-importar">Importar extracto del banco…</button>' +
+      '<button type="button" class="btn btn-primario" id="m-nuevo">Nuevo movimiento</button></div></div>' + pestanas("movimientos") +
+      '<div class="barra-filtros">' + selectorAnio(c, "m-anio") +
+      '<label><span class="sr">Cuenta</span><select id="m-cuenta"><option value="">Todas las cuentas</option>' + U.opcionesCuentas(c).map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (vista.cuenta === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>";
+      }).join("") + "</select></label>" +
+      '<label><span class="sr">Categoría</span><select id="m-categoria">' + categorias.map(function (o) {
+        return '<option value="' + esc(o[0]) + '"' + (vista.categoria === o[0] ? " selected" : "") + ">" + esc(o[1]) + "</option>";
+      }).join("") + "</select></label>" +
+      '<label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="m-buscar" placeholder="Buscar concepto…" value="' + esc(vista.texto) + '"></label></div>' +
+      '<p class="detalle" id="m-cuenta-n" aria-live="polite"></p><div id="m-tabla"></div>';
+
+    function visibles() {
+      var anio = String(anioActual()), t = vista.texto.trim().toLowerCase();
+      return T.libro(c.movimientos, c.cuotas).filter(function (m) {
+        if (m.fecha.slice(0, 4) !== anio) return false;
+        if (vista.cuenta && m.cuentaId !== vista.cuenta && m.cuentaDestinoId !== vista.cuenta) return false;
+        if (vista.categoria !== "*") {
+          if (m.tipo !== "ingreso" && m.tipo !== "gasto") return false;
+          if ((m.categoriaId || "") !== vista.categoria) return false;
+        }
+        return !t || (m.concepto + " " + (m.conceptoBanco || "")).toLowerCase().indexOf(t) >= 0;
+      });
+    }
+    function etiquetas(m) {
+      var e = [];
+      if (m.virtual) e.push('<span class="etiqueta">Cuota cobrada</span>');
+      if ((m.cuotaIds || []).length && !m.virtual) e.push('<span class="etiqueta">' + m.cuotaIds.length + (m.cuotaIds.length === 1 ? " cuota" : " cuotas") + "</span>");
+      if (m.facturaId) { var f = U.buscar(c.facturas, m.facturaId); if (f) e.push('<a class="etiqueta" href="#/facturas/ver/' + encodeURIComponent(f.id) + '">Factura ' + esc(f.numero) + "</a>"); }
+      if (m.anticipoId) e.push('<a class="etiqueta" href="#/tesoreria/anticipo/' + encodeURIComponent(m.anticipoId) + '">' + (m.sentido === "entrada" ? "Devolución" : "Anticipo/reembolso") + "</a>");
+      if (m.origen === "extracto") e.push('<span class="etiqueta">Banco</span>');
+      return e.join(" ");
+    }
+    function refrescar() {
+      var lista = visibles();
+      var suma = D.sumar(lista.map(function (m) { return vista.cuenta && m.tipo === "traspaso" && m.cuentaDestinoId === vista.cuenta ? m.importe : T.conSigno(m); }));
+      cont.querySelector("#m-cuenta-n").textContent = lista.length + (lista.length === 1 ? " movimiento" : " movimientos") + " · neto " + D.formatear(suma);
+      cont.querySelector("#m-tabla").innerHTML = !lista.length ? '<p class="vacio">No hay movimientos con estos filtros.</p>' :
+        '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Movimientos</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Concepto</th>' +
+        '<th scope="col">Categoría</th><th scope="col" class="solo-ancho">Cuenta</th><th scope="col" class="importe">Importe</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead><tbody>' +
+        lista.map(function (m) {
+          var cat = m.tipo === "ingreso" || m.tipo === "gasto"
+            ? (m.categoriaId ? esc(U.nombreCategoria(c, m.categoriaId)) : '<span class="estado estado-aviso">Sin clasificar</span>')
+            : '<span class="detalle">' + esc(m.tipo === "traspaso" ? "Traspaso → " + U.nombreCuenta(c, m.cuentaDestinoId) : "Anticipo o reembolso") + "</span>";
+          var importe = vista.cuenta && m.tipo === "traspaso" && m.cuentaDestinoId === vista.cuenta ? m.importe : T.conSigno(m);
+          return "<tr><td>" + esc(F.corta(m.fecha)) + "</td><td>" + esc(m.concepto || m.conceptoBanco || "—") +
+            (m.concepto && m.conceptoBanco && m.conceptoBanco !== m.concepto ? '<br><span class="detalle">' + esc(m.conceptoBanco) + "</span>" : "") +
+            (etiquetas(m) ? '<div class="etiquetas">' + etiquetas(m) + "</div>" : "") + "</td>" +
+            "<td>" + cat + (m.proyectoId ? '<br><span class="detalle">' + esc(U.nombreProyecto(c, m.proyectoId)) + "</span>" : "") + "</td>" +
+            '<td class="solo-ancho">' + esc(U.nombreCuenta(c, m.cuentaId)) + "</td>" +
+            '<td class="importe">' + U.importeHtml(importe) + "</td>" +
+            '<td class="celda-acciones">' + (m.virtual ? '<a class="btn btn-pequeno btn-secundario" href="#/cuotas">Ver</a>'
+              : '<button type="button" class="btn btn-pequeno btn-secundario" data-mov="' + esc(m.id) + '">' + (m.categoriaId || m.tipo === "traspaso" || m.tipo === "anticipo" ? "Editar" : "Clasificar") + "</button>") + "</td></tr>";
+        }).join("") + "</tbody></table></div>";
+    }
+    refrescar();
+    cont.querySelector("#m-anio").addEventListener("change", function (e) { vista.anio = +e.target.value; refrescar(); });
+    cont.querySelector("#m-cuenta").addEventListener("change", function (e) { vista.cuenta = e.target.value; refrescar(); });
+    cont.querySelector("#m-categoria").addEventListener("change", function (e) { vista.categoria = e.target.value; refrescar(); });
+    cont.querySelector("#m-buscar").addEventListener("input", function (e) { vista.texto = e.target.value; refrescar(); });
+    cont.querySelector("#m-nuevo").addEventListener("click", async function () { if (await U.editarMovimiento(datos, c, null)) WA.App.repintar(); });
+    cont.querySelector("#m-importar").addEventListener("click", function () { importarExtracto(datos, c); });
+    cont.querySelector("#m-tabla").addEventListener("click", async function (e) {
+      var b = e.target.closest("[data-mov]");
+      if (!b) return;
+      var m = U.buscar(c.movimientos, b.getAttribute("data-mov"));
+      if (m && await U.editarMovimiento(datos, c, m)) WA.App.repintar();
+    });
+  }
+
+  // ── Importar el extracto ────────────────────────────────────────────────
+  async function importarExtracto(datos, c) {
+    var archivo = await UI.elegirArchivo(".csv,.xlsx,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", true);
+    if (!archivo) return;
+    var filas;
+    try {
+      if (/\.xlsx$/i.test(archivo.nombre)) {
+        var hojas = await WA.XLSX.leer(archivo.bytes);
+        filas = hojas[Object.keys(hojas)[0]] || [];
+      } else {
+        var texto = new TextDecoder("utf-8").decode(archivo.bytes);
+        // Algunos bancos exportan en Latin-1: si sale el carácter de reemplazo, se relee así.
+        if (texto.indexOf("\ufffd") >= 0) texto = new TextDecoder("windows-1252").decode(archivo.bytes);
+        var l = WA.CSV.leer(texto);
+        filas = [l.cabecera].concat(l.filas);
+      }
+    } catch (err) { UI.aviso(err.message, "error"); return; }
+    var det = WA.Extracto.detectarColumnas(filas) || { fila: 0, columnas: {} };
+    var cab = filas[det.fila] || [];
+    var opcCol = [["", "—"]].concat(cab.map(function (t, i) { return [String(i), (t || "Columna " + (i + 1)) + ""]; }));
+    var campos = [["fecha", "Fecha"], ["concepto", "Concepto"], ["importe", "Importe (con signo)"], ["cargo", "Cargos (salidas)"], ["abono", "Abonos (entradas)"]];
+    var cuentaBanco = (c.config.cuentas.filter(function (x) { return x.tipo === "banco"; })[0] || c.config.cuentas[0] || {}).id;
+
+    var r = await UI.dialogo({
+      titulo: "Importar extracto",
+      contenido: "<p>«" + esc(archivo.nombre) + "»: " + (filas.length - det.fila - 1) + " filas.</p>" +
+        '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "cuentaId", etiqueta: "¿De qué cuenta es el extracto?", tipo: "select", valor: cuentaBanco, opciones: U.opcionesCuentas(c), ancho: "completo" }) +
+        UI.campo({ nombre: "filaCabecera", etiqueta: "Fila de los títulos", tipo: "number", valor: String(det.fila + 1), atributos: 'min="1"' }) +
+        campos.map(function (x) {
+          var v = det.columnas[x[0]];
+          return UI.campo({ nombre: "col-" + x[0], etiqueta: x[1], tipo: "select", valor: v === undefined ? "" : String(v), opciones: opcCol });
+        }).join("") + "</div>" +
+        '<div id="ex-previa" class="vista-previa-tabla" aria-live="polite"></div>' +
+        "</form>" + U.ayuda("Los movimientos que ya estaban importados (misma cuenta, fecha, importe y concepto) se saltan. Los nuevos entran sin categoría, salvo que una regla de Ajustes la ponga; luego se clasifican y se enlazan con cuotas o facturas."),
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Importar", valor: "enviar", estilo: "btn-primario" }],
+      alAbrir: function (d) {
+        var f = d.querySelector("form");
+        var calcular = function () {
+          var dd = UI.leerFormulario(f), cols = {};
+          campos.forEach(function (x) { if (dd["col-" + x[0]] !== "") cols[x[0]] = +dd["col-" + x[0]]; });
+          var res = WA.Extracto.convertir({ filas: filas, columnas: cols, filaCabecera: (+dd.filaCabecera || 1) - 1, cuentaId: dd.cuentaId,
+            existentes: c.movimientos, reglas: c.config.reglas });
+          f._resultado = res;
+          d.querySelector("#ex-previa").innerHTML = "<p><strong>" + res.nuevos.length + " nuevos</strong> · " + res.duplicados + " ya importados · " + res.problemas.length + " con problemas</p>" +
+            (res.nuevos.length ? '<table class="tabla"><tbody>' + res.nuevos.slice(0, 5).map(function (m) {
+              return "<tr><td>" + esc(F.corta(m.fecha)) + "</td><td>" + esc(m.concepto) + '</td><td class="importe">' + U.importeHtml(m.tipo === "ingreso" ? m.importe : -m.importe) + "</td></tr>";
+            }).join("") + "</tbody></table>" + (res.nuevos.length > 5 ? '<p class="detalle">…y ' + (res.nuevos.length - 5) + " más.</p>" : "") : "") +
+            (res.problemas.length ? '<p class="detalle">' + esc(res.problemas.slice(0, 5).map(function (p) { return "Fila " + p.fila + ": " + p.mensaje; }).join(" · ")) + "</p>" : "");
+        };
+        f.addEventListener("change", calcular);
+        calcular();
+      },
+      validar: function (form) {
+        var ok = form._resultado && form._resultado.nuevos.length > 0;
+        if (!ok) UI.aviso("No hay movimientos nuevos que importar. Revisa qué columna es cada cosa.", "error");
+        return ok;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    var nuevos = r.form._resultado.nuevos;
+    await datos.guardarVarios("movimientos", nuevos);
+    UI.aviso(nuevos.length + " movimientos importados. Ahora clasifícalos.");
+    vista.categoria = "";
+    vista.anio = +nuevos[nuevos.length - 1].fecha.slice(0, 4);
+    location.hash = "#/tesoreria/movimientos";
+    WA.App.repintar();
+  }
+
+  // ── Anticipos y reembolsos ──────────────────────────────────────────────
+  var ESTADO_ANT = { "debe la persona": ["estado-aviso", "Tiene dinero por justificar"], "se le debe": ["estado-error", "Hay que pagarle"],
+    "liquidado": ["estado-ok", "Liquidado"], "sin movimientos": ["estado-neutro", "Sin movimientos"] };
+
+  async function pintarAnticipos(cont, datos) {
+    var c = await U.cargar(datos);
+    var lista = c.anticipos.slice().sort(function (a, b) { return b.fecha.localeCompare(a.fecha); });
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Tesorería</h1><div class="acciones-cabecera">' +
+      '<button type="button" class="btn btn-secundario" data-nuevo="reembolso">Nuevo reembolso</button>' +
+      '<button type="button" class="btn btn-primario" data-nuevo="anticipo">Nuevo anticipo</button></div></div>' + pestanas("anticipos") +
+      '<div class="rejilla-tarjetas"><section class="tarjeta"><h2>Anticipo</h2>' + U.ayuda(T.EXPLICACION.anticipo) + "</section>" +
+      '<section class="tarjeta"><h2>Reembolso</h2>' + U.ayuda(T.EXPLICACION.reembolso) + "</section></div>" +
+      (lista.length ? '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Anticipos y reembolsos</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Tipo</th>' +
+        '<th scope="col">Persona y concepto</th><th scope="col" class="importe">Entregado</th><th scope="col" class="importe">Justificado</th><th scope="col">Situación</th><th scope="col"><span class="sr">Acciones</span></th></tr></thead><tbody>' +
+        lista.map(function (a) {
+          var s = T.situacionAnticipo(a, c.movimientos), e = ESTADO_ANT[s.estado];
+          return "<tr><td>" + esc(F.corta(a.fecha)) + "</td><td>" + (a.tipo === "anticipo" ? "Anticipo" : "Reembolso") + '</td><th scope="row">' + esc(a.persona) +
+            '<br><span class="detalle">' + esc(a.concepto) + '</span></th><td class="importe">' + esc(D.formatear(s.entregado)) + '</td><td class="importe">' + esc(D.formatear(s.justificado)) + "</td>" +
+            '<td><span class="estado ' + e[0] + '">' + e[1] + "</span>" + (s.saldo ? '<br><span class="detalle">' + esc(D.formatear(Math.abs(s.saldo))) + "</span>" : "") + "</td>" +
+            '<td class="celda-acciones"><a class="btn btn-pequeno btn-secundario" href="#/tesoreria/anticipo/' + encodeURIComponent(a.id) + '">Ver</a></td></tr>';
+        }).join("") + "</tbody></table></div>" : '<p class="vacio">Todavía no hay anticipos ni reembolsos.</p>');
+    cont.querySelectorAll("[data-nuevo]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        var tipo = b.getAttribute("data-nuevo");
+        var a = await editarDatosAnticipo(datos, c, { tipo: tipo, persona: "", socioId: "", fecha: F.hoy(), concepto: "", proyectoId: "", gastos: [], cerrado: false, notas: "" });
+        if (a) location.hash = "#/tesoreria/anticipo/" + encodeURIComponent(a.id);
+      });
+    });
+  }
+
+  function personas(c) {
+    var n = {};
+    c.junta.forEach(function (j) { if (!j.hasta) n[j.nombre] = true; });
+    c.socios.forEach(function (s) { if (!s.fechaBaja) n[[s.nombre, s.apellidos].filter(Boolean).join(" ")] = true; });
+    return Object.keys(n).sort(function (a, b) { return a.localeCompare(b, "es"); });
+  }
+
+  async function editarDatosAnticipo(datos, c, a) {
+    var r = await UI.dialogo({
+      titulo: (a.id ? "Editar " : "Nuevo ") + (a.tipo === "anticipo" ? "anticipo" : "reembolso"),
+      contenido: U.ayuda(T.EXPLICACION[a.tipo]) + '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "persona", etiqueta: "Persona", valor: a.persona, requerido: true, lista: personas(c), ancho: "completo" }) +
+        UI.campo({ nombre: "concepto", etiqueta: "Para qué", valor: a.concepto, requerido: true, ancho: "completo" }) +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha", tipo: "date", valor: a.fecha }) +
+        UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: a.proyectoId, opciones: U.opcionesProyectos(c) }) +
+        UI.campo({ nombre: "notas", etiqueta: "Notas", valor: a.notas, ancho: "completo" }) + "</div></form>",
+      botones: (a.id ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : []).concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+      validar: function (form) {
+        var d = UI.leerFormulario(form);
+        UI.marcarError(form, "persona", d.persona ? "" : "¿Quién?");
+        UI.marcarError(form, "concepto", d.concepto ? "" : "¿Para qué?");
+        return !!(d.persona && d.concepto);
+      },
+    });
+    if (r.valor === "borrar") {
+      var conMov = c.movimientos.some(function (m) { return m.anticipoId === a.id; });
+      if (conMov) { UI.aviso("Tiene movimientos de dinero enlazados: bórralos antes en Movimientos.", "error"); return null; }
+      if (!(await UI.confirmar("Se borrará con sus gastos.", { titulo: "Borrar", aceptar: "Borrar", peligro: true }))) return null;
+      await datos.borrar("anticipos", a.id);
+      location.hash = "#/tesoreria/anticipos";
+      return null;
+    }
+    if (r.valor !== "enviar") return null;
+    var g = await datos.guardar("anticipos", Object.assign(a, { persona: r.datos.persona, concepto: r.datos.concepto, fecha: r.datos.fecha, proyectoId: r.datos.proyectoId, notas: r.datos.notas }));
+    UI.aviso("Guardado.");
+    return g;
+  }
+
+  async function editarGasto(datos, c, a, gasto) {
+    var g = gasto || { id: WA.Esquema.nuevoId(), fecha: F.hoy(), concepto: "", importe: 0, categoriaId: "", proyectoId: a.proyectoId || "", justificante: "", facturaId: "" };
+    var facturas = [["", "—"]].concat(c.facturas.filter(function (f) { return f.tipo === "recibida"; }).map(function (f) { return [f.id, f.numero + " · " + (f.tercero || {}).nombre + " · " + D.formatear(Fac.totales(f).total)]; }));
+    var r = await UI.dialogo({
+      titulo: gasto ? "Editar gasto" : "Añadir gasto justificado",
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "concepto", etiqueta: "Concepto", valor: g.concepto, requerido: true, ancho: "completo" }) +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha del ticket", tipo: "date", valor: g.fecha }) +
+        UI.campo({ nombre: "importe", etiqueta: "Importe (€)", valor: g.importe ? D.formatear(g.importe, { simbolo: false }) : "", atributos: 'inputmode="decimal"' }) +
+        UI.campo({ nombre: "categoriaId", etiqueta: "Categoría", tipo: "select", valor: g.categoriaId, opciones: U.opcionesCategorias(c, "gasto") }) +
+        UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: g.proyectoId, opciones: U.opcionesProyectos(c) }) +
+        UI.campo({ nombre: "justificante", etiqueta: "Justificante", valor: g.justificante, ayuda: "Ticket, factura simplificada… y dónde está guardado." }) +
+        UI.campo({ nombre: "facturaId", etiqueta: "Factura recibida (si la hay)", tipo: "select", valor: g.facturaId, opciones: facturas, ayuda: "Para que conste como pagada y su IVA cuente." }) +
+        "</div></form>",
+      botones: (gasto ? [{ texto: "Quitar", valor: "quitar", estilo: "btn-peligro-suave" }] : []).concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+      validar: function (form) {
+        var d = UI.leerFormulario(form), imp = D.desdeTexto(d.importe);
+        UI.marcarError(form, "concepto", d.concepto ? "" : "Escribe el concepto.");
+        UI.marcarError(form, "importe", imp > 0 ? "" : "Escribe el importe.");
+        return !!d.concepto && imp > 0;
+      },
+    });
+    if (r.valor === "quitar") a.gastos = a.gastos.filter(function (x) { return x.id !== g.id; });
+    else if (r.valor === "enviar") {
+      var nuevo = Object.assign(g, r.datos, { importe: D.desdeTexto(r.datos.importe) });
+      var i = a.gastos.findIndex(function (x) { return x.id === nuevo.id; });
+      if (i >= 0) a.gastos[i] = nuevo; else a.gastos.push(nuevo);
+    } else return false;
+    await datos.guardar("anticipos", a);
+    return true;
+  }
+
+  async function pintarAnticipo(cont, datos, id) {
+    var c = await U.cargar(datos);
+    var a = U.buscar(c.anticipos, id);
+    if (!a) { cont.innerHTML = '<h1>No encontrado</h1><p><a href="#/tesoreria/anticipos">Volver</a></p>'; return; }
+    var s = T.situacionAnticipo(a, c.movimientos), e = ESTADO_ANT[s.estado];
+    var dinero = c.movimientos.filter(function (m) { return m.anticipoId === a.id; }).sort(function (x, y) { return x.fecha.localeCompare(y.fecha); });
+    var esAnticipo = a.tipo === "anticipo";
+    cont.innerHTML =
+      '<p class="miga"><a href="#/tesoreria/anticipos">Anticipos y reembolsos</a> › ' + (esAnticipo ? "Anticipo" : "Reembolso") + "</p>" +
+      '<div class="cabecera-pagina"><h1>' + esc(a.persona) + " · " + esc(a.concepto) + '</h1><span class="estado ' + e[0] + '">' + e[1] + "</span></div>" +
+      U.ayuda(T.EXPLICACION[a.tipo]) +
+      '<div class="rejilla-tarjetas cifras">' +
+      (esAnticipo ? '<section class="tarjeta"><h2>Entregado</h2><p class="cifra">' + esc(D.formatear(s.entregado)) + "</p></section>" : '<section class="tarjeta"><h2>Pagado a la persona</h2><p class="cifra">' + esc(D.formatear(s.entregado)) + "</p></section>") +
+      '<section class="tarjeta"><h2>Gastos justificados</h2><p class="cifra">' + esc(D.formatear(s.justificado)) + "</p></section>" +
+      (esAnticipo ? '<section class="tarjeta"><h2>Devuelto</h2><p class="cifra">' + esc(D.formatear(s.devuelto)) + "</p></section>" : "") +
+      '<section class="tarjeta tarjeta-destacada"><h2>' + (s.saldo > 0 ? "Le queda por justificar o devolver" : s.saldo < 0 ? "La asociación le debe" : "Saldo") + '</h2><p class="cifra">' + esc(D.formatear(Math.abs(s.saldo))) + "</p></section></div>" +
+      '<section class="tarjeta"><div class="tarjeta-cabecera"><h2>Gastos justificados</h2><button type="button" class="btn btn-secundario" id="a-gasto">Añadir gasto</button></div>' +
+      (a.gastos.length ? '<div class="tabla-envoltorio"><table class="tabla"><tbody>' + a.gastos.map(function (g) {
+        return "<tr><td>" + esc(F.corta(g.fecha)) + "</td><td>" + esc(g.concepto) + (g.justificante ? '<br><span class="detalle">' + esc(g.justificante) + "</span>" : "") + "</td><td>" +
+          esc(U.nombreCategoria(c, g.categoriaId)) + '</td><td class="importe">' + esc(D.formatear(g.importe)) + '</td><td class="celda-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-gasto="' + esc(g.id) + '">Editar</button></td></tr>';
+      }).join("") + "</tbody></table></div>" : '<p class="vacio">Aún no hay gastos justificados.</p>') + "</section>" +
+      '<section class="tarjeta"><div class="tarjeta-cabecera"><h2>Dinero</h2><div class="acciones-cabecera">' +
+      (esAnticipo ? '<button type="button" class="btn btn-secundario" data-dinero="salida">Registrar entrega</button><button type="button" class="btn btn-secundario" data-dinero="entrada">Registrar devolución</button>'
+        : '<button type="button" class="btn btn-secundario" data-dinero="salida">Registrar pago a la persona</button>') + "</div></div>" +
+      (dinero.length ? '<div class="tabla-envoltorio"><table class="tabla"><tbody>' + dinero.map(function (m) {
+        return "<tr><td>" + esc(F.corta(m.fecha)) + "</td><td>" + esc(m.concepto) + "</td><td>" + esc(U.nombreCuenta(c, m.cuentaId)) + '</td><td class="importe">' + U.importeHtml(T.conSigno(m)) + "</td></tr>";
+      }).join("") + "</tbody></table></div>" : '<p class="vacio">Sin movimientos de dinero todavía.</p>') + "</section>" +
+      '<div class="acciones"><button type="button" class="btn btn-secundario" id="a-editar">Editar datos</button>' +
+      '<label class="casilla"><input type="checkbox" id="a-cerrado"' + (a.cerrado ? " checked" : "") + "><span>Cerrado</span></label></div>";
+
+    cont.querySelector("#a-gasto").addEventListener("click", async function () { if (await editarGasto(datos, c, a)) WA.App.repintar(); });
+    cont.querySelectorAll("[data-gasto]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        var g = a.gastos.filter(function (x) { return x.id === b.getAttribute("data-gasto"); })[0];
+        if (await editarGasto(datos, c, a, g)) WA.App.repintar();
+      });
+    });
+    cont.querySelectorAll("[data-dinero]").forEach(function (b) {
+      b.addEventListener("click", async function () {
+        var sentido = b.getAttribute("data-dinero");
+        var propuesto = sentido === "entrada" ? Math.max(s.saldo, 0) : Math.max(-s.saldo, 0);
+        var concepto = sentido === "entrada" ? "Devolución de " + a.persona : (esAnticipo ? "Anticipo a " : "Reembolso a ") + a.persona;
+        if (await U.editarMovimiento(datos, c, null, { tipo: "anticipo", sentido: sentido, anticipoId: a.id, importe: propuesto, concepto: concepto,
+          cuentaId: (c.config.cuentas.filter(function (x) { return x.tipo === "caja"; })[0] || c.config.cuentas[0]).id })) WA.App.repintar();
+      });
+    });
+    cont.querySelector("#a-editar").addEventListener("click", async function () { if (await editarDatosAnticipo(datos, c, a)) WA.App.repintar(); });
+    cont.querySelector("#a-cerrado").addEventListener("change", async function (ev) { a.cerrado = ev.target.checked; await datos.guardar("anticipos", a); UI.aviso("Guardado."); });
+  }
+
+  // ── Ajustes ─────────────────────────────────────────────────────────────
+  async function pintarAjustes(cont, datos) {
+    var c = await U.cargar(datos);
+    var cfg = c.config;
+    var usoCategoria = function (id) {
+      return c.movimientos.some(function (m) { return m.categoriaId === id; }) || c.facturas.some(function (f) { return f.categoriaId === id; }) ||
+        c.anticipos.some(function (a) { return a.gastos.some(function (g) { return g.categoriaId === id; }); });
+    };
+    var IVA_TXT = { sujeto: "Sujeto", exento: "Exento", no_sujeto: "No sujeto" };
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Tesorería</h1></div>' + pestanas("ajustes") +
+      '<section class="tarjeta"><div class="tarjeta-cabecera"><h2>Cuentas</h2><button type="button" class="btn btn-secundario" id="aj-cuenta">Añadir cuenta</button></div>' +
+      '<div class="tabla-envoltorio"><table class="tabla"><tbody>' + cfg.cuentas.map(function (cu) {
+        return '<tr><th scope="row">' + esc(cu.nombre) + '<br><span class="detalle">' + (cu.tipo === "caja" ? "Caja (efectivo)" : "Banco") + (cu.iban ? " · " + esc(cu.iban) : "") + "</span></th>" +
+          "<td>Saldo inicial " + esc(D.formatear(cu.saldoInicial || 0)) + (cu.fechaSaldoInicial ? " el " + esc(F.corta(cu.fechaSaldoInicial)) : "") + "</td>" +
+          '<td class="celda-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-cuenta="' + esc(cu.id) + '">Editar</button></td></tr>';
+      }).join("") + "</tbody></table></div>" +
+      U.ayuda("El saldo inicial es el dinero que había en la cuenta antes del primer movimiento apuntado aquí.") + "</section>" +
+
+      '<section class="tarjeta"><div class="tarjeta-cabecera"><h2>Categorías de ingresos y gastos</h2><button type="button" class="btn btn-secundario" id="aj-categoria">Añadir categoría</button></div>' +
+      ["ingreso", "gasto"].map(function (tipo) {
+        return "<h3>" + (tipo === "ingreso" ? "Ingresos" : "Gastos") + '</h3><ul class="lista-editable">' + cfg.categorias.filter(function (x) { return x.tipo === tipo; }).map(function (x) {
+          return "<li><span>" + esc(x.nombre) + (x.activa === false ? ' <span class="etiqueta">Oculta</span>' : "") + (tipo === "ingreso" && x.iva ? ' <span class="detalle">· IVA: ' + IVA_TXT[x.iva] + "</span>" : "") +
+            '</span><button type="button" class="btn btn-pequeno btn-secundario" data-categoria="' + esc(x.id) + '">Editar</button></li>';
+        }).join("") + "</ul>";
+      }).join("") + U.ayuda("Las categorías son las partidas del presupuesto. En los ingresos, el «IVA habitual» se propone al hacer una factura con esa categoría.") + "</section>" +
+
+      '<section class="tarjeta"><div class="tarjeta-cabecera"><h2>Reglas para clasificar el extracto</h2><button type="button" class="btn btn-secundario" id="aj-regla">Añadir regla</button></div>' +
+      (cfg.reglas.length ? '<ul class="lista-editable">' + cfg.reglas.map(function (rg, i) {
+        return "<li><span>Si el concepto contiene «" + esc(rg.texto) + "» → " + esc(U.nombreCategoria(c, rg.categoriaId)) + '</span><button type="button" class="btn btn-pequeno btn-peligro-suave" data-quitar-regla="' + i + '">Quitar</button></li>';
+      }).join("") + "</ul>" : '<p class="vacio">Sin reglas.</p>') + U.ayuda("Al importar un extracto, cada movimiento cuyo concepto contenga ese texto entra ya con su categoría.") + "</section>" +
+
+      '<section class="tarjeta"><h2>IVA</h2><form id="aj-iva" class="formulario" novalidate>' +
+      '<label class="casilla"><input type="checkbox" name="presenta"' + (cfg.iva.presenta ? " checked" : "") + "><span>La asociación presenta declaraciones de IVA (modelo 303)</span></label>" +
+      '<div class="rejilla">' +
+      UI.campo({ nombre: "prorrata", etiqueta: "Porcentaje de IVA soportado que se deduce", tipo: "number", valor: String(cfg.iva.prorrata), atributos: 'min="0" max="100" step="1"',
+        ayuda: "100 si se deduce todo. Si hay que aplicar prorrata, el porcentaje lo calcula la asesoría." }) +
+      UI.campo({ nombre: "saldoACompensarInicial", etiqueta: "Saldo a compensar que venía de antes (€)", valor: D.formatear(cfg.iva.saldoACompensarInicial || 0, { simbolo: false }), atributos: 'inputmode="decimal"' }) +
+      UI.campo({ nombre: "periodoSaldoInicial", etiqueta: "Desde el trimestre", valor: cfg.iva.periodoSaldoInicial, atributos: 'placeholder="2026-T1"', ayuda: "Formato: 2026-T1." }) +
+      '</div><div class="acciones"><button type="submit" class="btn btn-primario">Guardar IVA</button></div></form></section>' +
+
+      '<section class="tarjeta"><h2>Facturas emitidas</h2><form id="aj-fac" class="formulario" novalidate><div class="rejilla">' +
+      UI.campo({ nombre: "serie", etiqueta: "Serie (opcional)", valor: cfg.facturacion.serie, ayuda: "Letras delante del número: A-2026-0001." }) +
+      UI.campo({ nombre: "motivoExencion", etiqueta: "Motivo de exención habitual", valor: cfg.facturacion.motivoExencion, ancho: "completo",
+        ayuda: "El texto que debe figurar en las facturas con operaciones exentas (el artículo de la ley). Verificar con asesoría." }) +
+      UI.campo({ nombre: "condicionesPago", etiqueta: "Forma de pago que aparece en la factura", valor: cfg.facturacion.condicionesPago, ancho: "completo" }) +
+      UI.campo({ nombre: "pie", etiqueta: "Pie de factura", valor: cfg.facturacion.pie, ancho: "completo" }) +
+      '</div><div class="acciones"><button type="submit" class="btn btn-primario">Guardar</button></div></form></section>';
+
+    var guardar = async function () { await datos.escribir("config", cfg); UI.aviso("Ajustes guardados."); WA.App.repintar(); };
+
+    async function editarCuenta(cu) {
+      var x = cu || { id: WA.Esquema.nuevoId(), nombre: "", tipo: "banco", iban: "", saldoInicial: 0, fechaSaldoInicial: "" };
+      var enUso = cu && (c.movimientos.some(function (m) { return m.cuentaId === cu.id || m.cuentaDestinoId === cu.id; }) || c.cuotas.some(function (q) { return q.pago && q.pago.cuentaId === cu.id; }));
+      var r = await UI.dialogo({
+        titulo: cu ? "Editar cuenta" : "Nueva cuenta",
+        contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+          UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: x.nombre, requerido: true, ancho: "completo" }) +
+          UI.campo({ nombre: "tipo", etiqueta: "Tipo", tipo: "select", valor: x.tipo, opciones: [["banco", "Banco"], ["caja", "Caja (efectivo)"]] }) +
+          UI.campo({ nombre: "iban", etiqueta: "IBAN", valor: x.iban }) +
+          UI.campo({ nombre: "saldoInicial", etiqueta: "Saldo inicial (€)", valor: D.formatear(x.saldoInicial || 0, { simbolo: false }), atributos: 'inputmode="decimal"' }) +
+          UI.campo({ nombre: "fechaSaldoInicial", etiqueta: "A fecha de", tipo: "date", valor: x.fechaSaldoInicial }) + "</div></form>",
+        botones: (cu && !enUso && cfg.cuentas.length > 1 ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : []).concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+        validar: function (form) {
+          var d = UI.leerFormulario(form), ok = !!d.nombre && D.desdeTexto(d.saldoInicial || "0") !== null;
+          UI.marcarError(form, "nombre", d.nombre ? "" : "Pon un nombre.");
+          return ok;
+        },
+      });
+      if (r.valor === "borrar") cfg.cuentas = cfg.cuentas.filter(function (y) { return y.id !== x.id; });
+      else if (r.valor === "enviar") {
+        Object.assign(x, { nombre: r.datos.nombre, tipo: r.datos.tipo, iban: WA.Validar.normalizar(r.datos.iban), saldoInicial: D.desdeTexto(r.datos.saldoInicial || "0"), fechaSaldoInicial: r.datos.fechaSaldoInicial });
+        if (!cu) cfg.cuentas.push(x);
+      } else return;
+      await guardar();
+    }
+    async function editarCategoria(cat) {
+      var x = cat || { id: WA.Esquema.nuevoId(), nombre: "", tipo: "gasto", iva: "", activa: true };
+      var enUso = cat && usoCategoria(cat.id);
+      var r = await UI.dialogo({
+        titulo: cat ? "Editar categoría" : "Nueva categoría",
+        contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+          UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: x.nombre, requerido: true, ancho: "completo" }) +
+          UI.campo({ nombre: "tipo", etiqueta: "Es de", tipo: "select", valor: x.tipo, opciones: [["ingreso", "Ingresos"], ["gasto", "Gastos"]] }) +
+          UI.campo({ nombre: "iva", etiqueta: "IVA habitual (ingresos)", tipo: "select", valor: x.iva, opciones: [["", "—"]].concat(Fac.TRATAMIENTOS) }) +
+          "</div>" + '<label class="casilla"><input type="checkbox" name="activa"' + (x.activa !== false ? " checked" : "") + "><span>Se puede usar (desmárcala para ocultarla sin borrarla)</span></label></form>" +
+          U.ayuda("Cuotas de socios y donaciones no están sujetas a IVA; algunas actividades pueden estar exentas. Qué tratamiento tiene cada ingreso: verificar con asesoría."),
+        botones: (cat && !enUso && cat.id !== T.CATEGORIA_CUOTAS ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : []).concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
+        validar: function (form) { var ok = !!form.elements.nombre.value.trim(); UI.marcarError(form, "nombre", ok ? "" : "Pon un nombre."); return ok; },
+      });
+      if (r.valor === "borrar") cfg.categorias = cfg.categorias.filter(function (y) { return y.id !== x.id; });
+      else if (r.valor === "enviar") {
+        Object.assign(x, { nombre: r.datos.nombre, tipo: r.datos.tipo, iva: r.datos.tipo === "ingreso" ? r.datos.iva : "", activa: !!r.datos.activa });
+        if (!cat) cfg.categorias.push(x);
+      } else return;
+      await guardar();
+    }
+    cont.querySelector("#aj-cuenta").addEventListener("click", function () { editarCuenta(null); });
+    cont.querySelectorAll("[data-cuenta]").forEach(function (b) { b.addEventListener("click", function () { editarCuenta(U.buscar(cfg.cuentas, b.getAttribute("data-cuenta"))); }); });
+    cont.querySelector("#aj-categoria").addEventListener("click", function () { editarCategoria(null); });
+    cont.querySelectorAll("[data-categoria]").forEach(function (b) { b.addEventListener("click", function () { editarCategoria(U.buscar(cfg.categorias, b.getAttribute("data-categoria"))); }); });
+    cont.querySelector("#aj-regla").addEventListener("click", async function () {
+      var r = await UI.dialogo({
+        titulo: "Nueva regla",
+        contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+          UI.campo({ nombre: "texto", etiqueta: "Si el concepto del banco contiene", valor: "", requerido: true, ayuda: "Por ejemplo: COMISION, SEGURO, DOMINIO" }) +
+          UI.campo({ nombre: "categoriaId", etiqueta: "Ponerle la categoría", tipo: "select", valor: "", opciones: U.opcionesCategorias(c, null, false) }) + "</div></form>",
+        botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Añadir", valor: "enviar", estilo: "btn-primario" }],
+        validar: function (form) { var ok = !!form.elements.texto.value.trim(); UI.marcarError(form, "texto", ok ? "" : "Escribe el texto."); return ok; },
+      });
+      if (r.valor !== "enviar") return;
+      cfg.reglas.push({ texto: r.datos.texto, categoriaId: r.datos.categoriaId });
+      await guardar();
+    });
+    cont.querySelectorAll("[data-quitar-regla]").forEach(function (b) {
+      b.addEventListener("click", async function () { cfg.reglas.splice(+b.getAttribute("data-quitar-regla"), 1); await guardar(); });
+    });
+    cont.querySelector("#aj-iva").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var d = UI.leerFormulario(e.target);
+      var p = Math.max(0, Math.min(100, Math.round(Number(d.prorrata))));
+      var periodoOk = !d.periodoSaldoInicial || /^\d{4}-T[1-4]$/.test(d.periodoSaldoInicial);
+      UI.marcarError(e.target, "periodoSaldoInicial", periodoOk ? "" : "Escríbelo así: 2026-T1.");
+      if (!periodoOk || !isFinite(p)) return;
+      Object.assign(cfg.iva, { presenta: !!d.presenta, prorrata: p, saldoACompensarInicial: D.desdeTexto(d.saldoACompensarInicial || "0") || 0, periodoSaldoInicial: d.periodoSaldoInicial });
+      await guardar();
+    });
+    cont.querySelector("#aj-fac").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var d = UI.leerFormulario(e.target);
+      Object.assign(cfg.facturacion, { serie: d.serie.toUpperCase().replace(/[^A-Z0-9]/g, ""), motivoExencion: d.motivoExencion, condicionesPago: d.condicionesPago, pie: d.pie });
+      await guardar();
+    });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "movimientos") return pintarMovimientos(cont, datos);
+    if (ruta[0] === "anticipos") return pintarAnticipos(cont, datos);
+    if (ruta[0] === "anticipo") return pintarAnticipo(cont, datos, ruta[1]);
+    if (ruta[0] === "ajustes") return pintarAjustes(cont, datos);
+    return pintarResumen(cont, datos);
+  }
+
+  WA.App.registrar({
+    id: "tesoreria", titulo: "Tesorería", orden: 30, pintar: pintar,
+    icono: '<path d="M3 10h18"/><path d="M5 10V20M9.5 10V20M14.5 10V20M19 10V20"/><path d="M2.5 20h19"/><path d="M12 3 21 8H3l9-5Z"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/facturas.js */
+/*
+ * webkit_asociaciones — Módulo «Facturas».
+ *
+ *   #/facturas                        emitidas (las que hace la asociación)
+ *   #/facturas/recibidas              recibidas (de proveedores)
+ *   #/facturas/nueva/<emitida|recibida>
+ *   #/facturas/ver/<id>               editar o consultar
+ *   #/facturas/imprimir/<id>          versión para imprimir o guardar en PDF
+ *
+ * Las emitidas nacen como BORRADOR (sin número) y al «Emitir» reciben el
+ * siguiente número correlativo y quedan bloqueadas. Corregir una factura ya
+ * emitida suele requerir una factura rectificativa: verificar con asesoría.
+ * La lógica está en logica/facturas.js (con tests).
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, Fac = WA.Facturas, U = WA.TesUI;
+
+  var vista = { anio: "", texto: "" };
+  var ESTADO = { borrador: ["estado-neutro", "Borrador"], pendiente: ["estado-aviso", "Pendiente"], parcial: ["estado-aviso", "Cobro parcial"],
+    cobrada: ["estado-ok", "Cobrada"], pagada: ["estado-ok", "Pagada"], anulada: ["estado-neutro", "Anulada"] };
+  var TRAT = {}; Fac.TRATAMIENTOS.forEach(function (t) { TRAT[t[0]] = t[1]; });
+
+  function pestanas(actual) {
+    return '<nav class="pestanas" aria-label="Tipo de facturas"><a href="#/facturas"' + (actual === "emitida" ? ' aria-current="page"' : "") + ">Emitidas</a>" +
+      '<a href="#/facturas/recibidas"' + (actual === "recibida" ? ' aria-current="page"' : "") + ">Recibidas</a></nav>";
+  }
+
+  // ── Listado ─────────────────────────────────────────────────────────────
+  async function pintarLista(cont, datos, tipo) {
+    var c = await U.cargar(datos);
+    var todas = c.facturas.filter(function (f) { return f.tipo === tipo; }).sort(function (a, b) {
+      return (b.fecha || "9999").localeCompare(a.fecha || "9999") || String(b.numero).localeCompare(String(a.numero));
+    });
+    var anios = {};
+    todas.forEach(function (f) { if (f.fecha) anios[f.fecha.slice(0, 4)] = true; });
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Facturas</h1><a class="btn btn-primario" href="#/facturas/nueva/' + tipo + '">' + (tipo === "emitida" ? "Nueva factura" : "Apuntar factura recibida") + "</a></div>" +
+      pestanas(tipo) +
+      '<p class="intro">' + (tipo === "emitida" ? "Las facturas que hace la asociación (talleres, servicios, ventas…)." : "Las facturas que recibe la asociación de sus proveedores.") + "</p>" +
+      '<div class="barra-filtros"><label>Año <select id="f-anio"><option value="">Todos</option>' + Object.keys(anios).sort().reverse().map(function (a) {
+        return '<option value="' + a + '"' + (vista.anio === a ? " selected" : "") + ">" + a + "</option>";
+      }).join("") + "</select></label>" +
+      '<label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="f-buscar" placeholder="Buscar por número o ' + (tipo === "emitida" ? "cliente" : "proveedor") + '…" value="' + esc(vista.texto) + '"></label></div>' +
+      '<div id="f-tabla"></div>';
+    function refrescar() {
+      var t = vista.texto.trim().toLowerCase();
+      var lista = todas.filter(function (f) {
+        if (vista.anio && (f.fecha || "").slice(0, 4) !== vista.anio) return false;
+        return !t || ((f.numero || "") + " " + (f.tercero || {}).nombre).toLowerCase().indexOf(t) >= 0;
+      });
+      var sumas = { base: 0, cuota: 0, total: 0, pendiente: 0 };
+      var filas = lista.map(function (f) {
+        var tot = Fac.totales(f), e = Fac.estadoPago(f, c.movimientos, c.anticipos);
+        if (f.estado !== "anulada" && f.estado !== "borrador") { sumas.base += tot.base; sumas.cuota += tot.cuota; sumas.total += tot.total; sumas.pendiente += Math.max(e.pendiente, 0); }
+        var est = ESTADO[e.estado];
+        return "<tr><td>" + esc(F.corta(f.fecha)) + '</td><th scope="row"><a href="#/facturas/ver/' + encodeURIComponent(f.id) + '">' + esc(f.numero || "(borrador)") + "</a></th>" +
+          "<td>" + esc((f.tercero || {}).nombre) + '</td><td class="importe solo-ancho">' + esc(D.formatear(tot.base)) + '</td><td class="importe solo-ancho">' + esc(D.formatear(tot.cuota)) + "</td>" +
+          '<td class="importe">' + esc(D.formatear(tot.total)) + '</td><td><span class="estado ' + est[0] + '">' + est[1] + "</span></td></tr>";
+      });
+      cont.querySelector("#f-tabla").innerHTML = !lista.length ? '<p class="vacio">No hay facturas.</p>' :
+        '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Facturas</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Número</th>' +
+        '<th scope="col">' + (tipo === "emitida" ? "Cliente" : "Proveedor") + '</th><th scope="col" class="importe solo-ancho">Base</th><th scope="col" class="importe solo-ancho">IVA</th>' +
+        '<th scope="col" class="importe">Total</th><th scope="col">Estado</th></tr></thead><tbody>' + filas.join("") + "</tbody>" +
+        '<tfoot><tr><th scope="row" colspan="3">Total (sin borradores ni anuladas)</th><td class="importe solo-ancho">' + esc(D.formatear(sumas.base)) + '</td><td class="importe solo-ancho">' +
+        esc(D.formatear(sumas.cuota)) + '</td><td class="importe">' + esc(D.formatear(sumas.total)) + '</td><td class="detalle">Pendiente ' + esc(D.formatear(sumas.pendiente)) + "</td></tr></tfoot></table></div>";
+    }
+    refrescar();
+    cont.querySelector("#f-anio").addEventListener("change", function (e) { vista.anio = e.target.value; refrescar(); });
+    cont.querySelector("#f-buscar").addEventListener("input", function (e) { vista.texto = e.target.value; refrescar(); });
+  }
+
+  // ── Editor ──────────────────────────────────────────────────────────────
+  function facturaNueva(tipo, c) {
+    // Se empieza sujeta al 21 %: la categoría (y con ella el IVA habitual) se elige después.
+    var trat = "sujeto";
+    return { tipo: tipo, estado: tipo === "emitida" ? "borrador" : "emitida", serie: c.config.facturacion.serie || "", numero: "", fecha: F.hoy(), fechaOperacion: "",
+      vencimiento: "", tercero: { nombre: "", nif: "", direccion: "", email: "" }, lineas: [Fac.lineaVacia(trat)], retencionPct: 0,
+      deducible: !!c.config.iva.presenta, motivoExencion: tipo === "emitida" ? c.config.facturacion.motivoExencion || "" : "",
+      categoriaId: tipo === "emitida" ? "" : "", proyectoId: "", notas: "" };
+  }
+
+  function filaLinea(l, i, bloqueada) {
+    var dis = bloqueada ? " disabled" : "";
+    return '<tr data-linea="' + i + '">' +
+      '<td><label class="sr" for="l-concepto-' + i + '">Concepto</label><input id="l-concepto-' + i + '" name="concepto-' + i + '" value="' + esc(l.concepto) + '"' + dis + "></td>" +
+      '<td class="col-cantidad"><label class="sr" for="l-cantidad-' + i + '">Cantidad</label><input id="l-cantidad-' + i + '" name="cantidad-' + i + '" inputmode="decimal" value="' + esc(String(l.cantidad).replace(".", ",")) + '"' + dis + "></td>" +
+      '<td class="col-precio"><label class="sr" for="l-precio-' + i + '">Precio unitario</label><input id="l-precio-' + i + '" name="precio-' + i + '" inputmode="decimal" value="' + esc(D.formatear(l.precio, { simbolo: false })) + '"' + dis + "></td>" +
+      '<td><label class="sr" for="l-trat-' + i + '">IVA</label><select id="l-trat-' + i + '" name="tratamiento-' + i + '"' + dis + ">" + Fac.TRATAMIENTOS.map(function (t) {
+        return '<option value="' + t[0] + '"' + (l.tratamiento === t[0] ? " selected" : "") + ">" + t[1] + "</option>";
+      }).join("") + "</select></td>" +
+      '<td class="col-tipo"><label class="sr" for="l-tipo-' + i + '">Tipo de IVA</label><select id="l-tipo-' + i + '" name="tipoIva-' + i + '"' + dis + (l.tratamiento !== "sujeto" ? " hidden" : "") + ">" + Fac.TIPOS_IVA.map(function (t) {
+        return '<option value="' + t + '"' + (Number(l.tipoIva) === t ? " selected" : "") + ">" + t + " %</option>";
+      }).join("") + "</select></td>" +
+      '<td class="importe" data-base-linea>' + esc(D.formatear(Fac.baseLinea(l))) + "</td>" +
+      (bloqueada ? "" : '<td><button type="button" class="btn-icono" data-quitar-linea="' + i + '" aria-label="Quitar la línea ' + (i + 1) + '">✕</button></td>') + "</tr>";
+  }
+
+  function totalesHtml(f) {
+    var t = Fac.totales(f);
+    return '<table class="tabla tabla-totales"><tbody>' + t.porTipo.map(function (g) {
+      return "<tr><th scope=\"row\">Base " + (g.tratamiento === "sujeto" ? g.tipoIva + " %" : TRAT[g.tratamiento].toLowerCase()) + '</th><td class="importe">' + esc(D.formatear(g.base)) + "</td></tr>" +
+        (g.tratamiento === "sujeto" ? "<tr><th scope=\"row\">IVA " + g.tipoIva + ' %</th><td class="importe">' + esc(D.formatear(g.cuota)) + "</td></tr>" : "");
+    }).join("") + (t.retencion ? '<tr><th scope="row">Retención IRPF ' + esc(f.retencionPct) + ' %</th><td class="importe">−' + esc(D.formatear(t.retencion)) + "</td></tr>" : "") +
+      '<tr class="total"><th scope="row">Total</th><td class="importe">' + esc(D.formatear(t.total)) + "</td></tr></tbody></table>";
+  }
+
+  /** Lee el formulario del editor y lo vuelca en la factura. */
+  function leerEditor(form, f) {
+    var d = UI.leerFormulario(form);
+    var lineas = [];
+    form.querySelectorAll("[data-linea]").forEach(function (tr) {
+      var i = tr.getAttribute("data-linea");
+      // «1,5» (coma decimal, con o sin puntos de miles) o «1.5»: las dos valen.
+      var textoCant = String(d["cantidad-" + i] || "0").trim();
+      var cant = Number(textoCant.indexOf(",") >= 0 ? textoCant.replace(/\./g, "").replace(",", ".") : textoCant);
+      lineas.push({ concepto: d["concepto-" + i] || "", cantidad: isFinite(cant) ? cant : 0, precio: D.desdeTexto(d["precio-" + i] || "0") || 0,
+        tratamiento: d["tratamiento-" + i] || "sujeto", tipoIva: Number(d["tipoIva-" + i] || 21) });
+    });
+    return Object.assign(f, {
+      fecha: d.fecha, vencimiento: d.vencimiento, numero: f.tipo === "recibida" ? d.numero : f.numero,
+      tercero: { nombre: d.terceroNombre, nif: WA.Validar.normalizar(d.terceroNif), direccion: d.terceroDireccion, email: d.terceroEmail },
+      lineas: lineas, retencionPct: Number(String(d.retencionPct || "0").replace(",", ".")) || 0, motivoExencion: d.motivoExencion || "",
+      categoriaId: d.categoriaId, proyectoId: d.proyectoId, notas: d.notas, deducible: f.tipo === "recibida" ? !!d.deducible : f.deducible,
+    });
+  }
+
+  async function pintarEditor(cont, datos, f, c) {
+    var nueva = !f.id;
+    var bloqueada = f.tipo === "emitida" && f.estado !== "borrador" && !f._desbloqueada;
+    var esEmitida = f.tipo === "emitida";
+    var terceros = {};
+    c.facturas.forEach(function (x) { if (x.tipo === f.tipo && x.tercero && x.tercero.nombre) terceros[x.tercero.nombre] = x.tercero; });
+    var e = f.id ? Fac.estadoPago(f, c.movimientos, c.anticipos) : null;
+    var pagos = f.id ? c.movimientos.filter(function (m) { return m.facturaId === f.id; }) : [];
+    var dis = bloqueada ? " disabled" : "";
+
+    cont.innerHTML =
+      '<p class="miga"><a href="#/facturas' + (esEmitida ? "" : "/recibidas") + '">Facturas ' + (esEmitida ? "emitidas" : "recibidas") + "</a> › " + esc(f.numero || (nueva ? "Nueva" : "Borrador")) + "</p>" +
+      '<div class="cabecera-pagina"><h1>' + (esEmitida ? "Factura " : "Factura recibida ") + esc(f.numero || (esEmitida ? "(borrador)" : "")) + "</h1>" +
+      (e ? '<span class="estado ' + ESTADO[e.estado][0] + '">' + ESTADO[e.estado][1] + "</span>" : "") + "</div>" +
+      (bloqueada && f.estado === "emitida" ? '<div class="caja-aviso">Factura emitida: está bloqueada. Para corregirla lo habitual es hacer una factura rectificativa (verificar con asesoría).</div>' : "") +
+      '<form id="f-editor" class="formulario" novalidate><fieldset' + dis + ">" +
+      '<section class="tarjeta"><h2>' + (esEmitida ? "Cliente" : "Proveedor") + '</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "terceroNombre", etiqueta: "Nombre o razón social", valor: f.tercero.nombre, requerido: true, clase: "col-7 col-movil-completo", lista: Object.keys(terceros) }) +
+      UI.campo({ nombre: "terceroNif", etiqueta: "NIF", valor: f.tercero.nif, clase: "col-5", atributos: 'autocapitalize="characters"' }) +
+      UI.campo({ nombre: "terceroDireccion", etiqueta: "Dirección", valor: f.tercero.direccion, clase: "col-7 col-movil-completo" }) +
+      UI.campo({ nombre: "terceroEmail", etiqueta: "Correo", tipo: "email", valor: f.tercero.email, clase: "col-5 col-movil-completo" }) +
+      "</div></section>" +
+      '<section class="tarjeta"><h2>Datos de la factura</h2><div class="rejilla-12">' +
+      (esEmitida ? '<p class="col-4 dato-numero"><span class="detalle">Número</span><strong>' + esc(f.numero || "Se pone al emitir") + "</strong></p>"
+        : UI.campo({ nombre: "numero", etiqueta: "Número de la factura", valor: f.numero, requerido: true, clase: "col-4" })) +
+      UI.campo({ nombre: "fecha", etiqueta: "Fecha", tipo: "date", valor: f.fecha, requerido: true, clase: "col-4" }) +
+      UI.campo({ nombre: "vencimiento", etiqueta: "Vencimiento", tipo: "date", valor: f.vencimiento, clase: "col-4" }) +
+      UI.campo({ nombre: "categoriaId", etiqueta: "Categoría", tipo: "select", valor: f.categoriaId, opciones: U.opcionesCategorias(c, esEmitida ? "ingreso" : "gasto"), clase: "col-5 col-movil-completo" }) +
+      UI.campo({ nombre: "proyectoId", etiqueta: "Proyecto", tipo: "select", valor: f.proyectoId, opciones: U.opcionesProyectos(c), clase: "col-4" }) +
+      UI.campo({ nombre: "retencionPct", etiqueta: "Retención IRPF (%)", valor: f.retencionPct ? String(f.retencionPct).replace(".", ",") : "", clase: "col-3", atributos: 'inputmode="decimal"',
+        ayuda: esEmitida ? "" : "Si el proveedor es profesional o autónomo." }) +
+      (!esEmitida ? '<div class="col-12">' + '<label class="casilla"><input type="checkbox" name="deducible"' + (f.deducible ? " checked" : "") +
+        "><span>Su IVA se deduce en la declaración (solo si la asociación presenta IVA y el gasto está relacionado con actividades sujetas; verificar con asesoría)</span></label></div>" : "") +
+      "</div></section>" +
+      '<section class="tarjeta"><h2>Líneas</h2><div class="tabla-envoltorio"><table class="tabla tabla-lineas"><thead><tr><th scope="col">Concepto</th><th scope="col">Cantidad</th>' +
+      '<th scope="col">Precio (€)</th><th scope="col">IVA</th><th scope="col">Tipo</th><th scope="col" class="importe">Base</th>' + (bloqueada ? "" : '<th scope="col"><span class="sr">Quitar</span></th>') +
+      '</tr></thead><tbody id="f-lineas">' + f.lineas.map(function (l, i) { return filaLinea(l, i, bloqueada); }).join("") + "</tbody></table></div>" +
+      (bloqueada ? "" : '<button type="button" class="btn btn-secundario btn-pequeno" id="f-linea">Añadir línea</button>') +
+      '<div id="f-exencion"' + (f.lineas.some(function (l) { return l.tratamiento === "exento"; }) && esEmitida ? "" : " hidden") + ">" +
+      UI.campo({ nombre: "motivoExencion", etiqueta: "Motivo de la exención (aparece en la factura)", valor: f.motivoExencion, ancho: "completo",
+        ayuda: "Por ejemplo, el artículo de la Ley del IVA que ampara la exención. Verificar con asesoría." }) + "</div>" +
+      U.ayuda("Sujeto: lleva IVA (21, 10, 4 o 0 %). Exento: la ley lo exime (p. ej. ciertas actividades educativas o culturales). No sujeto: queda fuera del IVA (cuotas de socios, donaciones). Qué corresponde a cada ingreso: verificar con asesoría.") +
+      '<div id="f-totales">' + totalesHtml(f) + "</div></section>" +
+      '<section class="tarjeta"><h2>Notas</h2>' + UI.campo({ nombre: "notas", etiqueta: "Notas internas (no salen en la factura)", tipo: "textarea", valor: f.notas, ancho: "completo" }) + "</section>" +
+      "</fieldset>" +
+      '<div class="acciones barra-guardar">' +
+      (bloqueada ? "" : esEmitida && f.estado === "borrador"
+        ? '<button type="submit" class="btn btn-secundario" data-accion="guardar">Guardar borrador</button><button type="submit" class="btn btn-primario" data-accion="emitir">Emitir factura</button>'
+        : '<button type="submit" class="btn btn-primario" data-accion="guardar">Guardar' + (esEmitida ? " cambios" : "") + "</button>") +
+      (f.id && f.estado !== "borrador" && f.estado !== "anulada" && e && e.pendiente > 0 ? '<button type="button" class="btn btn-secundario" id="f-pago">' + (esEmitida ? "Registrar cobro" : "Registrar pago") + "</button>" : "") +
+      (f.id && esEmitida && f.estado !== "borrador" ? '<a class="btn btn-secundario" href="#/facturas/imprimir/' + encodeURIComponent(f.id) + '">Imprimir o PDF</a>' : "") +
+      (f.id ? '<button type="button" class="btn btn-peligro-suave" id="f-mas">Más…</button>' : "") +
+      "</div></form>" +
+      (pagos.length ? '<section class="tarjeta"><h2>' + (esEmitida ? "Cobros" : "Pagos") + '</h2><ul class="lista-cifras">' + pagos.map(function (m) {
+        return "<li><span>" + esc(F.corta(m.fecha)) + " · " + esc(U.nombreCuenta(c, m.cuentaId)) + "</span><strong>" + esc(D.formatear(m.importe)) + "</strong></li>";
+      }).join("") + "</ul></section>" : "");
+
+    var form = cont.querySelector("#f-editor");
+    var tbody = cont.querySelector("#f-lineas");
+    function recalcular() {
+      leerEditor(form, f);
+      cont.querySelector("#f-totales").innerHTML = totalesHtml(f);
+      tbody.querySelectorAll("[data-linea]").forEach(function (tr) {
+        var l = f.lineas[+tr.getAttribute("data-linea")];
+        tr.querySelector("[data-base-linea]").textContent = D.formatear(Fac.baseLinea(l));
+        var sel = tr.querySelector("select[name^=tipoIva]");
+        if (sel) sel.hidden = l.tratamiento !== "sujeto";
+      });
+      cont.querySelector("#f-exencion").hidden = !(esEmitida && f.lineas.some(function (l) { return l.tratamiento === "exento"; }));
+    }
+    form.addEventListener("input", recalcular);
+    form.addEventListener("change", function (ev) {
+      // Al elegir un cliente o proveedor ya conocido, se rellenan sus datos.
+      if (ev.target.name === "terceroNombre" && terceros[ev.target.value]) {
+        var t = terceros[ev.target.value];
+        form.elements.terceroNif.value = t.nif || ""; form.elements.terceroDireccion.value = t.direccion || ""; form.elements.terceroEmail.value = t.email || "";
+      }
+      // En las emitidas, al cambiar la categoría se propone el IVA habitual de esa categoría para las líneas vacías.
+      if (ev.target.name === "categoriaId" && esEmitida) {
+        var cat = U.buscar(c.config.categorias, ev.target.value);
+        if (cat && cat.iva) tbody.querySelectorAll("[data-linea]").forEach(function (tr) {
+          var i = tr.getAttribute("data-linea");
+          if (!form.elements["concepto-" + i].value) form.elements["tratamiento-" + i].value = cat.iva;
+        });
+      }
+      recalcular();
+    });
+    var bLinea = cont.querySelector("#f-linea");
+    if (bLinea) bLinea.addEventListener("click", function () {
+      leerEditor(form, f);
+      var ultima = f.lineas[f.lineas.length - 1] || {};
+      f.lineas.push(Object.assign(Fac.lineaVacia(ultima.tratamiento), { tipoIva: ultima.tipoIva || 21 }));
+      tbody.innerHTML = f.lineas.map(function (l, i) { return filaLinea(l, i, false); }).join("");
+      recalcular();
+      form.elements["concepto-" + (f.lineas.length - 1)].focus();
+    });
+    tbody.addEventListener("click", function (ev) {
+      var b = ev.target.closest("[data-quitar-linea]");
+      if (!b) return;
+      leerEditor(form, f);
+      f.lineas.splice(+b.getAttribute("data-quitar-linea"), 1);
+      if (!f.lineas.length) f.lineas.push(Fac.lineaVacia());
+      tbody.innerHTML = f.lineas.map(function (l, i) { return filaLinea(l, i, false); }).join("");
+      recalcular();
+    });
+
+    form.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      var accion = (ev.submitter && ev.submitter.getAttribute("data-accion")) || "guardar";
+      leerEditor(form, f);
+      f.lineas = f.lineas.filter(function (l) { return l.concepto.trim() || l.precio; });
+      if (!f.lineas.length) f.lineas.push(Fac.lineaVacia());
+      if (accion === "emitir" || f.tipo === "recibida" || f.estado === "emitida") {
+        var problemas = Fac.revisar(f);
+        if (problemas.length) {
+          await UI.dialogo({ titulo: "Falta algo", contenido: '<ul class="lista">' + problemas.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>",
+            botones: [{ texto: "Entendido", valor: "cancelar", estilo: "btn-primario" }] });
+          return;
+        }
+      }
+      if (accion === "emitir") {
+        var numero = Fac.siguienteNumero(c.facturas, f.fecha.slice(0, 4), c.config.facturacion.serie);
+        var ok = await UI.confirmar("Se emitirá con el número " + numero + " y fecha " + F.corta(f.fecha) + ". Después no se podrá editar.",
+          { titulo: "Emitir factura", aceptar: "Emitir" });
+        if (!ok) return;
+        f.numero = numero; f.estado = "emitida";
+      }
+      delete f._desbloqueada;
+      var g = await datos.guardar("facturas", f);
+      UI.aviso(accion === "emitir" ? "Factura " + g.numero + " emitida." : "Factura guardada.");
+      if (nueva || accion === "emitir") location.hash = "#/facturas/ver/" + encodeURIComponent(g.id); else WA.App.repintar();
+    });
+
+    var bPago = cont.querySelector("#f-pago");
+    if (bPago) bPago.addEventListener("click", async function () {
+      if (await U.editarMovimiento(datos, c, null, { tipo: esEmitida ? "ingreso" : "gasto", importe: e.pendiente, facturaId: f.id, categoriaId: f.categoriaId,
+        proyectoId: f.proyectoId, concepto: (esEmitida ? "Cobro factura " : "Pago factura ") + f.numero + " · " + f.tercero.nombre })) WA.App.repintar();
+    });
+    var bMas = cont.querySelector("#f-mas");
+    if (bMas) bMas.addEventListener("click", async function () {
+      var botones = [{ texto: "Cerrar", valor: "cancelar" }];
+      if (f.estado === "borrador" || f.tipo === "recibida") botones.unshift({ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" });
+      if (esEmitida && f.estado === "emitida") botones.unshift({ texto: "Anular", valor: "anular", estilo: "btn-peligro-suave" }, { texto: "Desbloquear para corregir", valor: "desbloquear" });
+      if (esEmitida && f.estado === "emitida") botones.unshift({ texto: "Duplicar como borrador", valor: "duplicar" });
+      var r = await UI.dialogo({ titulo: "Factura " + (f.numero || ""), contenido: "<p>¿Qué quieres hacer?</p>", botones: botones });
+      if (r.valor === "borrar") {
+        if (pagos.length) { UI.aviso("Tiene cobros o pagos enlazados: bórralos antes en Tesorería.", "error"); return; }
+        if (!(await UI.confirmar("Se borrará la factura.", { titulo: "Borrar factura", aceptar: "Borrar", peligro: true }))) return;
+        await datos.borrar("facturas", f.id);
+        location.hash = esEmitida ? "#/facturas" : "#/facturas/recibidas";
+      } else if (r.valor === "anular") {
+        if (!(await UI.confirmar("La factura quedará anulada: conserva su número (no se reutiliza) y deja de contar para el IVA. Lo habitual es emitir además una factura rectificativa; verificar con asesoría.",
+          { titulo: "Anular factura", aceptar: "Anular", peligro: true }))) return;
+        f.estado = "anulada";
+        await datos.guardar("facturas", f);
+        WA.App.repintar();
+      } else if (r.valor === "desbloquear") {
+        if (!(await UI.confirmar("Cambiar una factura ya emitida (y quizá enviada) puede no ser correcto: lo habitual es una rectificativa. Úsalo solo para corregir un error antes de enviarla.",
+          { titulo: "Desbloquear factura", aceptar: "Desbloquear" }))) return;
+        f._desbloqueada = true;
+        pintarEditor(cont, datos, f, c);
+      } else if (r.valor === "duplicar") {
+        var copia = JSON.parse(JSON.stringify(f));
+        delete copia.id; delete copia.creado; delete copia.modificado;
+        Object.assign(copia, { estado: "borrador", numero: "", fecha: F.hoy() });
+        var g = await datos.guardar("facturas", copia);
+        location.hash = "#/facturas/ver/" + encodeURIComponent(g.id);
+      }
+    });
+  }
+
+  // ── Versión para imprimir ───────────────────────────────────────────────
+  async function pintarImprimir(cont, datos, id) {
+    var c = await U.cargar(datos);
+    var f = U.buscar(c.facturas, id);
+    if (!f) { cont.innerHTML = "<h1>No encontrada</h1>"; return; }
+    var a = c.asociacion, t = Fac.totales(f), dom = WA.Direccion.formatear(a.domicilio);
+    cont.innerHTML =
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="i-imprimir">Imprimir o guardar en PDF</button>' +
+      '<a class="btn btn-secundario" href="#/facturas/ver/' + encodeURIComponent(f.id) + '">Volver</a></div>' +
+      '<article class="factura-impresa">' +
+      '<header class="fi-cabecera"><div><h1>' + esc(a.nombre || "Asociación") + "</h1><p>NIF " + esc(a.nif) + "<br>" + esc(dom.linea1) + "<br>" + esc(dom.linea2) +
+      (a.email ? "<br>" + esc(a.email) : "") + (a.telefono ? " · " + esc(a.telefono) : "") + "</p></div>" +
+      '<div class="fi-datos"><h2>' + (f.estado === "anulada" ? "FACTURA ANULADA" : "FACTURA") + "</h2><p>Número <strong>" + esc(f.numero) + "</strong><br>Fecha " + esc(F.corta(f.fecha)) +
+      (f.vencimiento ? "<br>Vencimiento " + esc(F.corta(f.vencimiento)) : "") + "</p></div></header>" +
+      '<section class="fi-cliente"><h3>Cliente</h3><p><strong>' + esc(f.tercero.nombre) + "</strong>" + (f.tercero.nif ? "<br>NIF " + esc(f.tercero.nif) : "") +
+      (f.tercero.direccion ? "<br>" + esc(f.tercero.direccion) : "") + "</p></section>" +
+      '<div class="tabla-envoltorio"><table class="tabla fi-lineas"><thead><tr><th scope="col">Concepto</th><th scope="col" class="importe">Cantidad</th><th scope="col" class="importe">Precio</th><th scope="col">IVA</th><th scope="col" class="importe">Importe</th></tr></thead><tbody>' +
+      f.lineas.map(function (l) {
+        return "<tr><td>" + esc(l.concepto) + '</td><td class="importe">' + esc(String(l.cantidad).replace(".", ",")) + '</td><td class="importe">' + esc(D.formatear(l.precio)) + "</td><td>" +
+          (l.tratamiento === "sujeto" ? l.tipoIva + " %" : esc(TRAT[l.tratamiento])) + '</td><td class="importe">' + esc(D.formatear(Fac.baseLinea(l))) + "</td></tr>";
+      }).join("") + "</tbody></table></div>" +
+      '<div class="fi-totales">' + totalesHtml(f) + "</div>" +
+      (t.baseExenta && f.motivoExencion ? '<p class="fi-nota">' + esc(f.motivoExencion) + "</p>" : "") +
+      (t.baseNoSujeta ? '<p class="fi-nota">Operación no sujeta a IVA.</p>' : "") +
+      (c.config.facturacion.condicionesPago ? '<p class="fi-nota"><strong>Forma de pago:</strong> ' + esc(c.config.facturacion.condicionesPago) + "</p>" : "") +
+      (c.config.facturacion.pie ? '<footer class="fi-pie">' + esc(c.config.facturacion.pie) + "</footer>" : "") +
+      "</article>" +
+      '<p class="detalle no-imprimir">Revisa que la factura incluye todas las menciones obligatorias para vuestro caso (verificar con asesoría).</p>';
+    cont.querySelector("#i-imprimir").addEventListener("click", function () { window.print(); });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "recibidas") return pintarLista(cont, datos, "recibida");
+    if (ruta[0] === "imprimir") return pintarImprimir(cont, datos, ruta[1]);
+    if (ruta[0] === "nueva" || ruta[0] === "ver") {
+      var c = await U.cargar(datos);
+      var f = ruta[0] === "nueva" ? facturaNueva(ruta[1] === "recibida" ? "recibida" : "emitida", c) : U.buscar(c.facturas, ruta[1]);
+      if (!f) { cont.innerHTML = '<h1>Factura no encontrada</h1><p><a href="#/facturas">Volver</a></p>'; return; }
+      return pintarEditor(cont, datos, f, c);
+    }
+    return pintarLista(cont, datos, "emitida");
+  }
+
+  WA.App.registrar({
+    id: "facturas", titulo: "Facturas", orden: 32, pintar: pintar,
+    icono: '<path d="M6 2.5h9l4 4V21.5H6z"/><path d="M15 2.5v4h4"/><path d="M9 11h7M9 14.5h7M9 18h4"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/iva.js */
+/*
+ * webkit_asociaciones — Módulo «IVA»: ayuda para el modelo 303 (trimestral) y el resumen anual.
+ *
+ * ⚠️ Orientativo: suma lo que hay en las facturas. Quien presenta los modelos
+ * debe revisarlo (verificar con asesoría). La lógica está en logica/iva.js, con tests.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, D = WA.Dinero, IVA = WA.IVA, U = WA.TesUI;
+
+  var anioVista = null;
+  var SITUACION = {
+    ingresar: ["estado-aviso", "A ingresar"], compensar: ["estado-neutro", "A compensar"],
+    devolver: ["estado-ok", "A devolver"], cero: ["estado-neutro", "Sin actividad / cero"],
+  };
+  var NOMBRE_T = ["1.er trimestre", "2.º trimestre", "3.er trimestre", "4.º trimestre"];
+
+  function detalleTipos(lista) {
+    if (!lista.length) return '<p class="detalle">—</p>';
+    return '<ul class="lista-cifras">' + lista.map(function (g) {
+      return "<li><span>Al " + g.tipoIva + " %: base " + esc(D.formatear(g.base)) + "</span><strong>" + esc(D.formatear(g.cuota)) + "</strong></li>";
+    }).join("") + "</ul>";
+  }
+
+  async function pintar(cont, datos) {
+    var c = await U.cargar(datos);
+    var anio = anioVista || +WA.Fechas.hoy().slice(0, 4);
+    var r = IVA.resumenAnual(c.facturas, c.config, anio);
+    var avisos = IVA.avisos(c.facturas, c.config);
+    var anios = {};
+    anios[anio] = true; anios[+WA.Fechas.hoy().slice(0, 4)] = true;
+    c.facturas.forEach(function (f) { if (f.fecha) anios[+f.fecha.slice(0, 4)] = true; });
+    var devoluciones = c.config.iva.devolucionesSolicitadas || [];
+
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>IVA</h1><button type="button" class="btn btn-secundario" id="v-excel">Descargar Excel (libros de facturas)</button></div>' +
+      '<div class="caja-aviso">Ayuda orientativa para rellenar el modelo 303 y el resumen anual a partir de las facturas apuntadas. <strong>No es asesoramiento fiscal</strong>: revisadlo con la asesoría antes de presentar.</div>' +
+      (!c.config.iva.presenta ? '<p class="intro">Ahora mismo está configurado que la asociación <strong>no presenta IVA</strong> (Tesorería → Ajustes). Estas cifras son solo informativas.</p>' : "") +
+      avisos.map(function (a) { return '<div class="caja-aviso">' + esc(a) + "</div>"; }).join("") +
+      '<div class="barra-filtros"><label>Año <select id="v-anio">' + Object.keys(anios).sort().reverse().map(function (a) {
+        return '<option value="' + a + '"' + (+a === anio ? " selected" : "") + ">" + a + "</option>";
+      }).join("") + "</select></label></div>" +
+      '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Trimestres</caption><thead><tr><th scope="col">Trimestre</th>' +
+      '<th scope="col" class="importe">IVA devengado</th><th scope="col" class="importe">IVA deducible</th><th scope="col" class="importe">Compensado de antes</th>' +
+      '<th scope="col" class="importe">Resultado</th><th scope="col">Cómo queda</th></tr></thead><tbody>' +
+      r.trimestres.map(function (t, i) {
+        var s = SITUACION[t.situacion] || SITUACION.cero;
+        return '<tr><th scope="row">' + NOMBRE_T[i] + '</th><td class="importe">' + esc(D.formatear(t.devengado)) + '</td><td class="importe">' + esc(D.formatear(t.deducible)) + "</td>" +
+          '<td class="importe">' + esc(D.formatear(t.compensacionAplicada || 0)) + '</td><td class="importe"><strong>' + esc(D.formatear(t.resultado || 0)) + "</strong></td>" +
+          '<td><span class="estado ' + s[0] + '">' + s[1] + "</span>" + (t.quedaACompensar ? '<br><span class="detalle">Queda a compensar: ' + esc(D.formatear(t.quedaACompensar)) + "</span>" : "") + "</td></tr>" +
+          (t.aviso ? '<tr class="fila-aviso"><td colspan="6"><span class="aviso-iva">⚠️ ' + esc(t.aviso) + "</span>" +
+            (i === 3 && (t.situacion === "compensar" || t.situacion === "devolver") ? ' <label class="casilla en-linea"><input type="checkbox" data-devolucion="' + esc(t.clave) + '"' +
+              (devoluciones.indexOf(t.clave) >= 0 ? " checked" : "") + "><span>Pedir la devolución en este trimestre</span></label>" : "") + "</td></tr>" : "");
+      }).join("") + "</tbody></table></div>" +
+
+      '<h2 class="titulo-seccion">Detalle por trimestre</h2><div class="rejilla-tarjetas">' + r.trimestres.map(function (t, i) {
+        return '<section class="tarjeta"><h3>' + NOMBRE_T[i] + "</h3>" +
+          "<h4>IVA devengado (facturas emitidas: " + t.nEmitidas + ")</h4>" + detalleTipos(t.devengadoPorTipo) +
+          "<h4>IVA soportado deducible (facturas recibidas: " + t.nRecibidas + ")</h4>" + detalleTipos(t.soportadoPorTipo) +
+          (t.prorrata < 100 ? '<p class="detalle">Se deduce el ' + t.prorrata + " %: " + esc(D.formatear(t.deducible)) + "</p>" : "") +
+          '<ul class="lista-cifras"><li><span>Operaciones exentas</span><strong>' + esc(D.formatear(t.baseExenta)) + "</strong></li>" +
+          "<li><span>Operaciones no sujetas</span><strong>" + esc(D.formatear(t.baseNoSujeta)) + "</strong></li>" +
+          "<li><span>Retenciones IRPF practicadas (modelo 111)</span><strong>" + esc(D.formatear(t.retenciones)) + "</strong></li></ul></section>";
+      }).join("") + "</div>" +
+
+      '<section class="tarjeta"><h2>Resumen anual ' + anio + "</h2>" +
+      '<div class="rejilla-tarjetas"><div><h4>IVA devengado</h4>' + detalleTipos(r.devengadoPorTipo) + '<p><strong>Total ' + esc(D.formatear(r.devengado)) + "</strong></p></div>" +
+      "<div><h4>IVA soportado deducible</h4>" + detalleTipos(r.soportadoPorTipo) + "<p><strong>Total deducido " + esc(D.formatear(r.deducible)) + "</strong></p></div>" +
+      '<div><h4>Resultado del año</h4><ul class="lista-cifras"><li><span>Ingresado en los trimestres</span><strong>' + esc(D.formatear(r.ingresado)) + "</strong></li>" +
+      "<li><span>Queda a compensar al acabar el año</span><strong>" + esc(D.formatear(r.quedaACompensar)) + "</strong></li>" +
+      "<li><span>Operaciones exentas</span><strong>" + esc(D.formatear(r.baseExenta)) + "</strong></li>" +
+      "<li><span>Retenciones IRPF del año</span><strong>" + esc(D.formatear(r.retenciones)) + "</strong></li></ul></div></div></section>" +
+      U.ayuda("Cómo se calcula: IVA devengado = el de las facturas emitidas del trimestre (por su fecha). IVA deducible = el de las facturas recibidas marcadas como deducibles, por el porcentaje de deducción indicado en Ajustes. Si el resultado es negativo, en los tres primeros trimestres queda a compensar; en el cuarto se puede pedir la devolución. Las cuotas de socios y las donaciones no llevan IVA y no aparecen aquí.");
+
+    cont.querySelector("#v-anio").addEventListener("change", function (e) { anioVista = +e.target.value; WA.App.repintar(); });
+    cont.querySelector("#v-excel").addEventListener("click", function () { U.exportarExcel(c, anio); });
+    cont.querySelectorAll("[data-devolucion]").forEach(function (cb) {
+      cb.addEventListener("change", async function () {
+        var k = cb.getAttribute("data-devolucion");
+        var lista = (c.config.iva.devolucionesSolicitadas || []).filter(function (x) { return x !== k; });
+        if (cb.checked) lista.push(k);
+        c.config.iva.devolucionesSolicitadas = lista;
+        await datos.escribir("config", c.config);
+        UI.aviso(cb.checked ? "Marcado: se pide la devolución." : "Marcado: queda a compensar.");
+        WA.App.repintar();
+      });
+    });
+  }
+
+  WA.App.registrar({
+    id: "iva", titulo: "IVA", orden: 34, pintar: pintar,
+    icono: '<path d="M19 5 5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/proyectos.js */
+/*
+ * webkit_asociaciones — Módulo «Presupuestos»: presupuesto anual y proyectos o subvenciones.
+ *
+ *   #/proyectos                presupuesto anual (lo aprobado en asamblea) frente a lo realizado
+ *   #/proyectos/lista          proyectos y subvenciones con su ejecución
+ *   #/proyectos/ficha/<id>     un proyecto: datos, presupuesto por partidas y ejecución
+ *
+ * Lo realizado sale de Tesorería (dinero cobrado y pagado, por categoría). Cómo
+ * se aprueba el presupuesto lo dicen vuestros estatutos; cómo se justifica una
+ * subvención, sus bases: verificar con asesoría.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, T = WA.Tesoreria, U = WA.TesUI;
+
+  var anioVista = null;
+  function pestanas(actual) {
+    return '<nav class="pestanas" aria-label="Apartados de presupuestos"><a href="#/proyectos"' + (actual === "anual" ? ' aria-current="page"' : "") + ">Presupuesto anual</a>" +
+      '<a href="#/proyectos/lista"' + (actual === "lista" ? ' aria-current="page"' : "") + ">Proyectos y subvenciones</a></nav>";
+  }
+  function barra(pct) {
+    if (pct === null || pct === undefined) return "";
+    var ancho = Math.max(0, Math.min(pct, 100));
+    return '<div class="barra-progreso' + (pct > 100 ? " pasada" : "") + '" role="img" aria-label="' + pct + ' %"><span style="width:' + ancho + '%"></span></div>';
+  }
+
+  /** Tabla editable de previsto por categoría frente a lo realizado. */
+  function tablaEjecucion(ej, editable) {
+    var bloque = function (tipo, titulo, totales) {
+      var filas = ej.filas.filter(function (f) { return f.tipo === tipo; });
+      return '<tbody><tr class="fila-grupo"><th scope="rowgroup" colspan="5">' + titulo + "</th></tr>" + filas.map(function (f) {
+        return '<tr><th scope="row">' + esc(f.nombre) + "</th>" +
+          '<td class="importe">' + (editable ? '<label class="sr" for="p-' + esc(f.categoriaId) + '">Previsto para ' + esc(f.nombre) + '</label><input class="input-importe" id="p-' + esc(f.categoriaId) +
+            '" name="p-' + esc(f.categoriaId) + '" inputmode="decimal" value="' + (f.previsto ? esc(D.formatear(f.previsto, { simbolo: false })) : "") + '">' : esc(D.formatear(f.previsto))) + "</td>" +
+          '<td class="importe">' + esc(D.formatear(f.realizado)) + "</td>" +
+          "<td>" + (f.pct === null ? '<span class="detalle">—</span>' : f.pct + " %" + barra(f.pct)) + "</td>" +
+          '<td class="importe">' + esc(D.formatear(f.diferencia)) + "</td></tr>";
+      }).join("") + '<tr class="total"><th scope="row">Total ' + titulo.toLowerCase() + '</th><td class="importe">' + esc(D.formatear(totales.previsto)) + '</td><td class="importe">' +
+        esc(D.formatear(totales.realizado)) + "</td><td></td><td class=\"importe\">" + esc(D.formatear(totales.previsto - totales.realizado)) + "</td></tr></tbody>";
+    };
+    return '<div class="tabla-envoltorio"><table class="tabla tabla-presupuesto"><thead><tr><th scope="col">Partida</th><th scope="col" class="importe">Previsto</th>' +
+      '<th scope="col" class="importe">Realizado</th><th scope="col">Ejecución</th><th scope="col" class="importe">Diferencia</th></tr></thead>' +
+      bloque("ingreso", "Ingresos", ej.ingresos) + bloque("gasto", "Gastos", ej.gastos) + "</table></div>";
+  }
+
+  /** Todas las categorías activas aparecen, aunque no tengan nada previsto ni realizado. */
+  function conTodas(previsto, categorias) {
+    var p = Object.assign({}, previsto || {});
+    (categorias || []).forEach(function (c) { if (c.activa !== false && !(c.id in p)) p[c.id] = 0; });
+    return p;
+  }
+
+  function leerPrevisto(form) {
+    var d = UI.leerFormulario(form), p = {};
+    Object.keys(d).forEach(function (k) {
+      if (k.indexOf("p-") !== 0) return;
+      var v = D.desdeTexto(d[k] || "0");
+      if (v) p[k.slice(2)] = v;
+    });
+    return p;
+  }
+
+  // ── Presupuesto anual ───────────────────────────────────────────────────
+  async function pintarAnual(cont, datos) {
+    var c = await U.cargar(datos);
+    var anio = anioVista || +F.hoy().slice(0, 4);
+    var previsto = (c.config.presupuestos || {})[anio] || {};
+    var res = T.resultados(T.partidas(c.movimientos, c.cuotas, c.anticipos), anio + "-01-01", anio + "-12-31");
+    var ej = T.ejecucion(conTodas(previsto, c.config.categorias), res, c.config.categorias);
+    var anios = {};
+    [anio, +F.hoy().slice(0, 4), +F.hoy().slice(0, 4) + 1].forEach(function (a) { anios[a] = true; });
+    Object.keys(c.config.presupuestos || {}).forEach(function (a) { anios[a] = true; });
+    var hayAnterior = !!(c.config.presupuestos || {})[anio - 1];
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Presupuestos</h1></div>' + pestanas("anual") +
+      '<p class="intro">Lo previsto para el año (normalmente, lo que aprueba la asamblea) frente a lo cobrado y pagado de verdad.</p>' +
+      '<div class="barra-filtros"><label>Año <select id="p-anio">' + Object.keys(anios).sort().reverse().map(function (a) {
+        return '<option value="' + a + '"' + (+a === anio ? " selected" : "") + ">" + a + "</option>";
+      }).join("") + "</select></label>" +
+      (hayAnterior && !Object.keys(previsto).length ? '<button type="button" class="btn btn-secundario" id="p-copiar">Copiar el presupuesto de ' + (anio - 1) + "</button>" : "") + "</div>" +
+      '<form id="p-form" novalidate>' + tablaEjecucion(ej, true) +
+      '<div class="acciones barra-guardar"><button type="submit" class="btn btn-primario">Guardar presupuesto ' + anio + "</button></div></form>" +
+      '<p class="detalle">Resultado previsto: ' + esc(D.formatear(ej.ingresos.previsto - ej.gastos.previsto)) + " · Resultado real: " + esc(D.formatear(res.resultado)) + "</p>" +
+      U.ayuda("Lo realizado es el dinero cobrado y pagado en el año en cada categoría (incluidas las cuotas y los gastos de anticipos y reembolsos). Las partidas son las categorías de Tesorería → Ajustes.");
+    cont.querySelector("#p-anio").addEventListener("change", function (e) { anioVista = +e.target.value; WA.App.repintar(); });
+    var bCopiar = cont.querySelector("#p-copiar");
+    if (bCopiar) bCopiar.addEventListener("click", async function () {
+      c.config.presupuestos[anio] = Object.assign({}, c.config.presupuestos[anio - 1]);
+      await datos.escribir("config", c.config);
+      UI.aviso("Copiado. Ajusta lo que cambie y guarda.");
+      WA.App.repintar();
+    });
+    cont.querySelector("#p-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      c.config.presupuestos = c.config.presupuestos || {};
+      c.config.presupuestos[anio] = leerPrevisto(e.target);
+      await datos.escribir("config", c.config);
+      UI.aviso("Presupuesto " + anio + " guardado.");
+      WA.App.repintar();
+    });
+  }
+
+  // ── Proyectos y subvenciones ───────────────────────────────────────────
+  function ejecucionProyecto(c, p) {
+    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos).filter(function (x) { return x.proyectoId === p.id; });
+    var res = T.resultados(partidas);
+    return { res: res, ej: T.ejecucion(p.presupuesto || {}, res, c.config.categorias) };
+  }
+
+  async function pintarLista(cont, datos) {
+    var c = await U.cargar(datos);
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Presupuestos</h1><button type="button" class="btn btn-primario" id="p-nuevo">Nuevo proyecto o subvención</button></div>' + pestanas("lista") +
+      '<p class="intro">Cada proyecto tiene su propio presupuesto por partidas. Al apuntar un gasto o ingreso en Tesorería, elige el proyecto para que cuente aquí.</p>' +
+      (c.proyectos.length ? '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Proyectos</caption><thead><tr><th scope="col">Proyecto</th><th scope="col">Fechas</th>' +
+        '<th scope="col" class="importe">Concedido</th><th scope="col" class="importe">Gasto previsto</th><th scope="col" class="importe">Gastado</th><th scope="col">Ejecución</th></tr></thead><tbody>' +
+        c.proyectos.map(function (p) {
+          var x = ejecucionProyecto(c, p);
+          var pct = x.ej.gastos.previsto > 0 ? Math.round(x.ej.gastos.realizado / x.ej.gastos.previsto * 1000) / 10 : null;
+          return '<tr><th scope="row"><a href="#/proyectos/ficha/' + encodeURIComponent(p.id) + '">' + esc(p.nombre) + "</a><br><span class=\"detalle\">" +
+            (p.tipo === "subvencion" ? "Subvención" : "Proyecto") + (p.financiador ? " · " + esc(p.financiador) : "") + (p.estado === "cerrado" ? " · Cerrado" : "") + "</span></th>" +
+            "<td>" + esc(F.corta(p.fechaInicio)) + (p.fechaFin ? " – " + esc(F.corta(p.fechaFin)) : "") + "</td>" +
+            '<td class="importe">' + (p.importeConcedido ? esc(D.formatear(p.importeConcedido)) : "—") + '</td><td class="importe">' + esc(D.formatear(x.ej.gastos.previsto)) + "</td>" +
+            '<td class="importe">' + esc(D.formatear(x.ej.gastos.realizado)) + "</td><td>" + (pct === null ? "—" : pct + " %" + barra(pct)) + "</td></tr>";
+        }).join("") + "</tbody></table></div>" : '<p class="vacio">Todavía no hay proyectos.</p>');
+    cont.querySelector("#p-nuevo").addEventListener("click", async function () {
+      var g = await datos.guardar("proyectos", { nombre: "Nuevo proyecto", tipo: "proyecto", financiador: "", referencia: "", importeConcedido: 0,
+        fechaInicio: F.hoy(), fechaFin: "", estado: "en curso", presupuesto: {}, notas: "" });
+      location.hash = "#/proyectos/ficha/" + encodeURIComponent(g.id);
+    });
+  }
+
+  async function pintarFicha(cont, datos, id) {
+    var c = await U.cargar(datos);
+    var p = U.buscar(c.proyectos, id);
+    if (!p) { cont.innerHTML = '<h1>No encontrado</h1><p><a href="#/proyectos/lista">Volver</a></p>'; return; }
+    var x = ejecucionProyecto(c, p);
+    var ej = T.ejecucion(conTodas(p.presupuesto, c.config.categorias), x.res, c.config.categorias);
+    var lineas = T.libro(c.movimientos, c.cuotas).filter(function (m) { return m.proyectoId === p.id; });
+    var gastosAnt = [];
+    c.anticipos.forEach(function (a) { a.gastos.forEach(function (g) { if ((g.proyectoId || a.proyectoId) === p.id) gastosAnt.push({ a: a, g: g }); }); });
+    cont.innerHTML =
+      '<p class="miga"><a href="#/proyectos/lista">Proyectos y subvenciones</a> › ' + esc(p.nombre) + "</p>" +
+      "<h1>" + esc(p.nombre) + "</h1>" +
+      '<form id="pr-datos" class="formulario tarjeta" novalidate><h2>Datos</h2><div class="rejilla">' +
+      UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: p.nombre, requerido: true, ancho: "completo" }) +
+      UI.campo({ nombre: "tipo", etiqueta: "Tipo", tipo: "select", valor: p.tipo, opciones: [["proyecto", "Proyecto propio"], ["subvencion", "Subvención"]] }) +
+      UI.campo({ nombre: "financiador", etiqueta: "Quién lo financia", valor: p.financiador }) +
+      UI.campo({ nombre: "referencia", etiqueta: "Convocatoria o referencia", valor: p.referencia }) +
+      UI.campo({ nombre: "importeConcedido", etiqueta: "Importe concedido (€)", valor: p.importeConcedido ? D.formatear(p.importeConcedido, { simbolo: false }) : "", atributos: 'inputmode="decimal"' }) +
+      UI.campo({ nombre: "fechaInicio", etiqueta: "Empieza", tipo: "date", valor: p.fechaInicio }) +
+      UI.campo({ nombre: "fechaFin", etiqueta: "Termina", tipo: "date", valor: p.fechaFin }) +
+      UI.campo({ nombre: "estado", etiqueta: "Estado", tipo: "select", valor: p.estado, opciones: [["en curso", "En curso"], ["cerrado", "Cerrado"]] }) +
+      UI.campo({ nombre: "notas", etiqueta: "Notas", tipo: "textarea", valor: p.notas, ancho: "completo" }) +
+      '</div><div class="acciones"><button type="submit" class="btn btn-primario">Guardar datos</button><button type="button" class="btn btn-peligro-suave" id="pr-borrar">Borrar proyecto</button></div></form>' +
+      '<section class="tarjeta"><h2>Presupuesto y ejecución</h2><form id="pr-presu" novalidate>' + tablaEjecucion(ej, true) +
+      '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar presupuesto</button></div></form>' +
+      (p.importeConcedido ? '<p class="detalle">Concedido ' + esc(D.formatear(p.importeConcedido)) + " · cobrado de la subvención: " + esc(D.formatear(x.res.ingresos.subvenciones || 0)) + "</p>" : "") +
+      U.ayuda("Qué gastos son justificables y cómo se justifican lo dicen las bases de cada subvención: verificar con la entidad que la concede.") + "</section>" +
+      '<section class="tarjeta"><h2>Movimientos del proyecto</h2>' + (lineas.length || gastosAnt.length ? '<div class="tabla-envoltorio"><table class="tabla"><tbody>' +
+        lineas.map(function (m) {
+          return "<tr><td>" + esc(F.corta(m.fecha)) + "</td><td>" + esc(m.concepto || m.conceptoBanco) + "</td><td>" + esc(U.nombreCategoria(c, m.categoriaId)) + '</td><td class="importe">' + U.importeHtml(T.conSigno(m)) + "</td></tr>";
+        }).join("") + gastosAnt.map(function (x2) {
+          return "<tr><td>" + esc(F.corta(x2.g.fecha)) + "</td><td>" + esc(x2.g.concepto) + ' <a class="etiqueta" href="#/tesoreria/anticipo/' + encodeURIComponent(x2.a.id) + '">' + (x2.a.tipo === "anticipo" ? "Anticipo" : "Reembolso") +
+            "</a></td><td>" + esc(U.nombreCategoria(c, x2.g.categoriaId)) + '</td><td class="importe">' + U.importeHtml(-x2.g.importe) + "</td></tr>";
+        }).join("") + "</tbody></table></div>" : '<p class="vacio">Todavía no hay movimientos con este proyecto.</p>') + "</section>";
+
+    cont.querySelector("#pr-datos").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var d = UI.leerFormulario(e.target);
+      if (!d.nombre) { UI.marcarError(e.target, "nombre", "Pon un nombre."); return; }
+      await datos.guardar("proyectos", Object.assign(p, { nombre: d.nombre, tipo: d.tipo, financiador: d.financiador, referencia: d.referencia,
+        importeConcedido: D.desdeTexto(d.importeConcedido || "0") || 0, fechaInicio: d.fechaInicio, fechaFin: d.fechaFin, estado: d.estado, notas: d.notas }));
+      UI.aviso("Proyecto guardado.");
+      WA.App.repintar();
+    });
+    cont.querySelector("#pr-presu").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      p.presupuesto = leerPrevisto(e.target);
+      await datos.guardar("proyectos", p);
+      UI.aviso("Presupuesto del proyecto guardado.");
+      WA.App.repintar();
+    });
+    cont.querySelector("#pr-borrar").addEventListener("click", async function () {
+      if (lineas.length || gastosAnt.length) { UI.aviso("Tiene movimientos enlazados: quítales el proyecto antes de borrarlo (o márcalo como cerrado).", "error"); return; }
+      if (!(await UI.confirmar("Se borrará el proyecto.", { titulo: "Borrar proyecto", aceptar: "Borrar", peligro: true }))) return;
+      await datos.borrar("proyectos", p.id);
+      location.hash = "#/proyectos/lista";
+    });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "lista") return pintarLista(cont, datos);
+    if (ruta[0] === "ficha") return pintarFicha(cont, datos, ruta[1]);
+    return pintarAnual(cont, datos);
+  }
+
+  WA.App.registrar({
+    id: "proyectos", titulo: "Presupuestos", orden: 36, pintar: pintar,
+    icono: '<path d="M4 20V10"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M2.5 20h19"/>',
   });
 })(typeof self !== "undefined" ? self : this);
 </script>

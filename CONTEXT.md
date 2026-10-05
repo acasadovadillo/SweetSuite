@@ -11,10 +11,10 @@ Nace de **Solvento** (`../../Solvento`, app de finanzas personales del mismo aut
 ```
 src/index.html            se abre directamente para desarrollar (scripts clásicos, funciona con file://)
 src/css/                  tokens (colores) · base (estructura) · componentes · impresión
-src/js/nucleo/            dinero · fechas · validar · direccion · csv · cripto · tema · preferencias · ui · form-direccion · app
-src/js/logica/            socios · cuotas   (lógica de negocio pura, sin DOM, con tests)
+src/js/nucleo/            dinero · fechas · validar · direccion · csv · xlsx · cripto · tema · preferencias · ui · form-direccion · app
+src/js/logica/            socios · cuotas · facturas · iva · tesoreria · extracto   (lógica de negocio pura, sin DOM, con tests)
 src/js/datos/             esquema · repositorio · copia · demo · boveda · sesion
-src/js/modulos/           acceso · inicio · asociacion · socios · cuotas · copias · ajustes   (cada fase añade los suyos)
+src/js/modulos/           acceso · inicio · asociacion · socios · cuotas · tesoreria-comun · tesoreria · facturas · iva · proyectos · copias · ajustes
 src/js/arranque.js        siempre el último
 tools/build.mjs           empaqueta todo en dist/webkit_asociaciones.html (sin dependencias)
 tests/*.test.js           node --test (incluido en Node, sin instalar nada)
@@ -43,6 +43,14 @@ tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium 
 | La cuota copia número y nombre del socio | Si se elimina un socio (derecho de supresión), las cuotas pagadas siguen teniendo sentido en la contabilidad |
 | Sin prorrateo automático ni remesas SEPA en XML | El usuario cobra sobre todo por transferencia. El importe de una cuota se puede cambiar a mano; el fichero SEPA (pain.008) queda para más adelante |
 | Ruta con subrutas (`#/socios/ficha/<id>`) | Las páginas de detalle tienen dirección propia (se pueden recargar) |
+| Tesorería por **criterio de caja**, con IVA incluido | Lo práctico para una asociación pequeña. Las facturas no cuentan por sí mismas: cuenta su cobro o pago (movimiento enlazado con `facturaId`). Las cuentas formales pueden pedir otro criterio (verificar con asesoría) |
+| Movimientos: ingreso, gasto, traspaso y «anticipo» (entregas y devoluciones a personas) | Traspasos y anticipos mueven dinero pero no son ingresos ni gastos. El gasto de un anticipo o reembolso son sus tickets justificados (`anticipos[].gastos`) |
+| Cuotas cobradas = ingresos «virtuales» del libro, salvo que un movimiento del banco las enlace (`cuotaIds`) | Así una cuota cobrada en efectivo cuenta sola y una transferencia importada del banco no se cuenta dos veces (`Tesoreria.libro`) |
+| IVA: tratamiento por línea (sujeto con tipo, exento, no sujeto); cuota sobre la suma de bases de cada tipo; liquidación encadenada con arrastre de lo que queda a compensar | Ayuda para el 303 y el resumen anual. Negativo en T1–T3 → «a compensar»; en T4 se puede marcar «a devolver» (regla general, salvo REDEME; verificar con asesoría). La prorrata no se calcula: se indica el porcentaje |
+| Facturas emitidas: borrador → emitida (número correlativo por año y serie, bloqueada) → anulada | No se reutilizan números. Corregir una emitida suele requerir rectificativa (verificar); hay «desbloquear» con aviso |
+| Importar extracto: detección de columnas, duplicados por (cuenta, fecha, importe, concepto), reglas de categoría y sugerencias de conciliación | Los bancos exportan cada uno a su manera; la persona puede corregir qué columna es cada cosa |
+| Excel (.xlsx) escrito y leído sin librerías (`nucleo/xlsx.js`, portado de Solvento y sin DOMParser para poder probarlo en Node) | Funciona sin conexión y sin dependencias |
+| Presupuestos: anual en `config.presupuestos[año]` y por proyecto en `proyectos[].presupuesto`, por categoría | Las categorías son las partidas. Lo realizado sale de `Tesoreria.partidas` |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
 | Navegación por `#/modulo` | Funciona con `file://` sin servidor |
 | Capa de datos (`Repositorio`) asíncrona y como única puerta a los datos | **Preparada para la versión con servidor**: bastará con otro repositorio con las mismas funciones que use `fetch` contra una API |

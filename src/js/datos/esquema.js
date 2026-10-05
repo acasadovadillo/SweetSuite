@@ -5,12 +5,13 @@
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 3,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 4,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
- *     config: { tiposSocio, cuentas, siguienteNumeroSocio },  ← ajustes de la asociación
+ *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
  *     junta: [ { id, cargo, nombre, ... } ],      ← colecciones: listas de registros
  *     socios: [...], cuotas: [...], remesas: [...]  (ver logica/socios.js y logica/cuotas.js)
+ *     movimientos, facturas, anticipos, proyectos   (ver logica/tesoreria.js y logica/facturas.js)
  *     ... (cada fase añade sus colecciones: socios, cuotas, facturas…)
  *   }
  *
@@ -26,21 +27,23 @@
  *   3. añade un test en tests/esquema.test.js.
  * Así, una copia de seguridad antigua siempre se puede abrir con la versión nueva.
  *
- * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2).
+ * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
+ *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
-  var modulo = fabrica(Direccion);
+  var Tesoreria = typeof require === "function" ? require("../logica/tesoreria.js") : raiz.WA.Tesoreria;
+  var modulo = fabrica(Direccion, Tesoreria);
   if (typeof module === "object" && module.exports) module.exports = modulo;
   else (raiz.WA = raiz.WA || {}).Esquema = modulo;
-})(typeof self !== "undefined" ? self : this, function (Direccion) {
+})(typeof self !== "undefined" ? self : this, function (Direccion, Tesoreria) {
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 3;
+  var VERSION = 4;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -61,28 +64,40 @@
   /*
    * Configuración de la asociación (no de este ordenador):
    *   tiposSocio  tipos de socio con su cuota y periodicidad (ver logica/cuotas.js)
-   *   cuentas     dónde entra el dinero: { id, nombre, tipo: "banco" | "caja" }.
-   *               La Fase 3 (tesorería) las ampliará.
+   *   cuentas     dónde está el dinero: { id, nombre, tipo: "banco" | "caja", iban, saldoInicial (céntimos), fechaSaldoInicial }
    *   siguienteNumeroSocio  contador: un número de socio nunca se reutiliza
+   *   categorias  de ingreso y gasto: { id, nombre, tipo: "ingreso" | "gasto", iva (tratamiento habitual), activa }
+   *   iva         { presenta, prorrata (% de deducción, 100 = todo), saldoACompensarInicial,
+   *                 periodoSaldoInicial ("2026-T1"), devolucionesSolicitadas: ["2026-T4"] }
+   *   facturacion { serie, motivoExencion, condicionesPago, pie }   (para las facturas emitidas)
+   *   reglas      para clasificar el extracto del banco: [{ texto, categoriaId }]
+   *   presupuestos  presupuesto anual aprobado: { "2026": { categoriaId: céntimos } }
    */
   function configVacia() {
     return {
       tiposSocio: [{ id: "socio", nombre: "Socio", cuota: 0, periodicidad: "anual", activo: true }],
-      cuentas: [{ id: "banco", nombre: "Cuenta bancaria", tipo: "banco" }, { id: "caja", nombre: "Caja (efectivo)", tipo: "caja" }],
+      cuentas: [{ id: "banco", nombre: "Cuenta bancaria", tipo: "banco", iban: "", saldoInicial: 0, fechaSaldoInicial: "" },
+        { id: "caja", nombre: "Caja (efectivo)", tipo: "caja", iban: "", saldoInicial: 0, fechaSaldoInicial: "" }],
       siguienteNumeroSocio: 1,
+      categorias: Tesoreria.categoriasPorDefecto(),
+      iva: { presenta: false, prorrata: 100, saldoACompensarInicial: 0, periodoSaldoInicial: "", devolucionesSolicitadas: [] },
+      facturacion: { serie: "", motivoExencion: "", condicionesPago: "", pie: "" },
+      reglas: [],
+      presupuestos: {},
     };
   }
 
   function documentoVacio(ahora) {
     var t = (ahora || new Date()).toISOString();
-    return {
+    var doc = {
       app: APP,
       esquema: VERSION,
       meta: { creado: t, modificado: t, ultimaCopia: null, cambiosDesdeCopia: 0 },
       asociacion: asociacionVacia(),
       config: configVacia(),
-      junta: [], socios: [], cuotas: [], remesas: [],
     };
+    COLECCIONES.forEach(function (c) { doc[c] = []; });
+    return doc;
   }
 
   /*
@@ -127,6 +142,18 @@
       doc.esquema = 3;
       return doc;
     },
+
+    // 3 → 4: tesorería (Fase 3). Las cuentas que ya había ganan saldo inicial e IBAN.
+    3: function (doc) {
+      var base = configVacia();
+      doc.config = Object.assign(base, doc.config || {});
+      doc.config.cuentas = (doc.config.cuentas || []).map(function (c) {
+        return Object.assign({ iban: "", saldoInicial: 0, fechaSaldoInicial: "" }, c);
+      });
+      ["movimientos", "facturas", "anticipos", "proyectos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
+      doc.esquema = 4;
+      return doc;
+    },
   };
 
   /**
@@ -163,6 +190,11 @@
     doc.config = Object.assign(configVacia(), doc.config || {});
     if (!Array.isArray(doc.config.tiposSocio) || !doc.config.tiposSocio.length) doc.config.tiposSocio = configVacia().tiposSocio;
     if (!Array.isArray(doc.config.cuentas) || !doc.config.cuentas.length) doc.config.cuentas = configVacia().cuentas;
+    if (!Array.isArray(doc.config.categorias) || !doc.config.categorias.length) doc.config.categorias = configVacia().categorias;
+    doc.config.iva = Object.assign(configVacia().iva, doc.config.iva || {});
+    doc.config.facturacion = Object.assign(configVacia().facturacion, doc.config.facturacion || {});
+    if (!Array.isArray(doc.config.reglas)) doc.config.reglas = [];
+    if (!doc.config.presupuestos || typeof doc.config.presupuestos !== "object") doc.config.presupuestos = {};
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }
