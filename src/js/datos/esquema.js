@@ -5,7 +5,7 @@
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 6,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 7,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
  *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
@@ -33,7 +33,8 @@
  * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
  *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3)
  *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4)
- *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5).
+ *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5)
+ *            · v7 textos de la memoria anual; partida del modelo ESFL en cada categoría (fase 6).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -46,7 +47,7 @@
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 6;
+  var VERSION = 7;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
   var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos"];
@@ -82,6 +83,8 @@
    *   organos       órganos que levantan actas: [{ id, nombre, prefijo, tipo }]
    *   actas         { numeracion: "anual" | "correlativa" }
    *   limiteArchivoMB  tamaño máximo de un adjunto
+   *   memorias      textos libres de la memoria anual: { "2026": { presentacion, fines, valoracion } }
+   *   (cada categoría puede llevar «partida»: la del modelo de cuentas ESFL; ver logica/informes.js)
    */
   function configVacia() {
     return {
@@ -98,6 +101,7 @@
       organos: Actas.organosPorDefecto(),
       actas: { numeracion: "anual" },
       limiteArchivoMB: 10,
+      memorias: {},
     };
   }
 
@@ -169,6 +173,14 @@
       return doc;
     },
 
+    // 6 → 7: informes (Fase 6).
+    6: function (doc) {
+      doc.config = doc.config || {};
+      if (!doc.config.memorias || typeof doc.config.memorias !== "object") doc.config.memorias = {};
+      doc.esquema = 7;
+      return doc;
+    },
+
     // 5 → 6: actas, obligaciones y documentos (Fase 5).
     5: function (doc) {
       ["actas", "obligaciones", "documentos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
@@ -232,6 +244,7 @@
     if (!Array.isArray(doc.config.organos) || !doc.config.organos.length) doc.config.organos = Actas.organosPorDefecto();
     doc.config.actas = Object.assign({ numeracion: "anual" }, doc.config.actas || {});
     if (!(doc.config.limiteArchivoMB > 0)) doc.config.limiteArchivoMB = 10;
+    if (!doc.config.memorias || typeof doc.config.memorias !== "object") doc.config.memorias = {};
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }

@@ -62,6 +62,10 @@ tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium 
 | Actas por órgano configurable (`config.organos`: junta, coordinación, asamblea, departamento, otro), numeración por año o correlativa (`config.actas.numeracion`) | Decisión del usuario: actas de Junta Directiva, Coordinación, Asambleas y Departamentos. La app anota el resultado de cada acuerdo, no lo decide (mayorías según estatutos) |
 | Obligaciones: plantillas habituales (fiscales, asociativas, renovaciones) que se eligen, no se añaden solas; `desde` para no arrastrar plazos anteriores a cuando se empezó a llevarla | Fechas orientativas y editables («verificar con asesoría») |
 | Subvenciones = proyectos con `tipo: "subvencion"` ampliados (estado, plazos, requisitos); sus plazos se suman al calendario de obligaciones según el estado | No se duplica con «proyectos» (que ya tiene presupuesto y ejecución) |
+| Informes calculados en `logica/informes.js` (memoria, cuentas, pendientes a una fecha, panel) y pintados en `modulos/informes.js` e `inicio.js` | La lógica se prueba en Node; la vista solo enseña. Los textos que no se calculan (presentación, fines, valoración) se guardan por año en `config.memorias[año]` (esquema v7) |
+| Cuentas del ejercicio por criterio de caja, con «pendiente a 31/12» calculado con los cobros y pagos hasta esa fecha | Así se ve lo que se debía al cerrar el año aunque se cobrara después. Estado de situación simplificado = tesorería + pendientes de cobro − pendientes de pago (no es el balance oficial) |
+| Modelo de entidades sin fines lucrativos: cada categoría lleva una `partida` (por defecto según `PARTIDA_POR_DEFECTO`; editable en Tesorería → Ajustes) | Aproximación orientativa al modelo abreviado; las que no tienen partida van a «otros ingresos/gastos» y se avisa. Verificar con asesoría |
+| Gráficas en SVG propio (`nucleo/graficas.js`), colores del tema, con texto alternativo y tabla oculta con los datos | Sin librerías y accesibles. Los recuentos (socios) empiezan en cero para no exagerar cambios pequeños |
 | Convocatorias de asamblea | Pendientes: el usuario aún no ha definido cómo convocan |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
 | Navegación por `#/modulo` | Funciona con `file://` sin servidor |
@@ -83,7 +87,7 @@ Ver el comentario de cabecera de `src/js/nucleo/app.js`. En resumen: crear `src/
 
 ## Normativa
 
-No se presenta nada como asesoramiento legal. Lo que depende de una ley lleva el comentario «verificar con asesoría» en el código y una nota en la interfaz. Puntos ya marcados: cargos de la junta (según estatutos), algoritmo de control del NIF de entidades y RGPD/LOPDGDD (buenas prácticas orientativas).
+No se presenta nada como asesoramiento legal. Lo que depende de una ley lleva el comentario «verificar con asesoría» en el código y una nota en la interfaz. Puntos ya marcados: cargos de la junta (según estatutos), algoritmo de control del NIF de entidades, RGPD/LOPDGDD (buenas prácticas orientativas), tratamiento del IVA, plazos de obligaciones y criterio y modelo de las cuentas anuales de entidades sin fines lucrativos.
 
 ## Entorno de desarrollo (en este Mac)
 

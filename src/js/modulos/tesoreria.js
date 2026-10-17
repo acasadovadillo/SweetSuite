@@ -455,6 +455,9 @@
           UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: x.nombre, requerido: true, ancho: "completo" }) +
           UI.campo({ nombre: "tipo", etiqueta: "Es de", tipo: "select", valor: x.tipo, opciones: [["ingreso", "Ingresos"], ["gasto", "Gastos"]] }) +
           UI.campo({ nombre: "iva", etiqueta: "IVA habitual (ingresos)", tipo: "select", valor: x.iva, opciones: [["", "—"]].concat(Fac.TRATAMIENTOS) }) +
+          UI.campo({ nombre: "partida", etiqueta: "Partida en el informe de cuentas", tipo: "select", valor: x.partida || "", ancho: "completo",
+            opciones: [["", "Automática" + (WA.Informes.PARTIDA_POR_DEFECTO[x.id] ? "" : " (otros ingresos u otros gastos)")]].concat(WA.Informes.PARTIDAS.map(function (q) { return [q.id, q.texto]; })),
+            ayuda: "Dónde se suma en la cuenta de resultados con el modelo de entidades sin fines lucrativos (Informes → Cuentas). Orientativo: verificar con asesoría." }) +
           "</div>" + '<label class="casilla"><input type="checkbox" name="activa"' + (x.activa !== false ? " checked" : "") + "><span>Se puede usar (desmárcala para ocultarla sin borrarla)</span></label></form>" +
           U.ayuda("Cuotas de socios y donaciones no están sujetas a IVA; algunas actividades pueden estar exentas. Qué tratamiento tiene cada ingreso: verificar con asesoría."),
         botones: (cat && !enUso && cat.id !== T.CATEGORIA_CUOTAS ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : []).concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
@@ -462,7 +465,7 @@
       });
       if (r.valor === "borrar") cfg.categorias = cfg.categorias.filter(function (y) { return y.id !== x.id; });
       else if (r.valor === "enviar") {
-        Object.assign(x, { nombre: r.datos.nombre, tipo: r.datos.tipo, iva: r.datos.tipo === "ingreso" ? r.datos.iva : "", activa: !!r.datos.activa });
+        Object.assign(x, { nombre: r.datos.nombre, tipo: r.datos.tipo, iva: r.datos.tipo === "ingreso" ? r.datos.iva : "", activa: !!r.datos.activa, partida: r.datos.partida || "" });
         if (!cat) cfg.categorias.push(x);
       } else return;
       await guardar();

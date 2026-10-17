@@ -25,3 +25,12 @@
   .factura-impresa { border: none; padding: 0; margin: 0; max-width: none; }
   .importe-positivo, .importe-negativo { color: #000; }
 }
+
+/* Informes (Fase 6): que no se partan las tablas cortas ni las cifras. */
+@media print {
+  .informe { max-width: none; }
+  .rejilla-informe .tabla-informe, .cifras-informe { break-inside: avoid; }
+  .documento-impreso h3 { break-after: avoid; }
+  .aviso-informe { background: none; }
+  .grafica svg { max-height: 200px; }
+}

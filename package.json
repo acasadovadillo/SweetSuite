@@ -1,6 +1,6 @@
 {
   "name": "webkit_asociaciones",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Gestión integral para asociaciones sin ánimo de lucro en un único archivo HTML, sin servidores.",
   "private": true,
   "license": "UNLICENSED",

@@ -248,7 +248,7 @@ test("migrar de la versión 5 añade actas, obligaciones, documentos y órganos"
   ["actas", "obligaciones", "documentos"].forEach((c) => delete v5[c]);
   delete v5.config.organos; delete v5.config.actas; delete v5.config.limiteArchivoMB; v5.esquema = 5;
   const doc = Esquema.migrar(v5);
-  assert.equal(doc.esquema, 6);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.deepEqual([doc.actas, doc.obligaciones, doc.documentos], [[], [], []]);
   assert.deepEqual(doc.config.organos.map((o) => o.prefijo), ["JD", "CO", "AG"]);
   assert.equal(doc.config.actas.numeracion, "anual");
@@ -288,4 +288,12 @@ test("la copia de seguridad lleva los adjuntos", async () => {
   const leida = Copia.leer(JSON.stringify(sobre));
   assert.deepEqual(leida.archivos, { "doc-1": { datos: "AAEC" } });
   assert.deepEqual(Copia.leer(JSON.stringify(Copia.sobreAbierto(doc))).archivos, {});
+});
+
+test("migrar de la versión 6 añade los textos de la memoria", () => {
+  const v6 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  delete v6.config.memorias; v6.esquema = 6;
+  const doc = Esquema.migrar(v6);
+  assert.equal(doc.esquema, 7);
+  assert.deepEqual(doc.config.memorias, {});
 });

@@ -222,6 +222,11 @@
     cfg.reglas = [{ texto: "comision", categoriaId: "banco" }, { texto: "seguro", categoriaId: "seguros" }];
     cfg.presupuestos = { "2026": { cuotas: 105000, donaciones: 30000, subvenciones: 150000, inscripciones: 40000, servicios: 60000,
       actividades: 120000, material: 40000, seguros: 18000, banco: 3000, web: 6000, difusion: 15000, profesionales: 30000 } };
+    cfg.memorias = { "2026": {
+      presentacion: "Este año hemos acercado la ciencia al barrio con el taller financiado por el Ayuntamiento y hemos recuperado las salidas de campo.\n\nGracias a todas las personas socias y voluntarias que lo han hecho posible. (Texto de ejemplo.)",
+      fines: "a) Promover el conocimiento de la naturaleza del entorno.\nb) Organizar actividades culturales y de divulgación abiertas a todo el barrio.\n(Fines inventados para la demostración: copia los de tus estatutos.)",
+      valoracion: "Buena participación en las actividades gratuitas. Para el año que viene queremos sumar personas jóvenes a la junta y pedir una segunda subvención. (Texto de ejemplo.)",
+    } };
     var reg = function (o) { return Object.assign({ creado: t, modificado: t }, o); };
     var mov = function (id, fecha, cuentaId, tipo, importe, concepto, categoriaId, extra) {
       return reg(Object.assign({ id: "demo-mov-" + id, fecha: fecha, cuentaId: cuentaId, tipo: tipo, importe: importe, concepto: concepto,

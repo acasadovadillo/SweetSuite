@@ -1,5 +1,5 @@
 <!--
-  webkit_asociaciones 0.5.0
+  webkit_asociaciones 0.6.0
   Archivo generado por tools/build.mjs a partir de src/. No lo edites a mano.
 -->
 <!doctype html>
@@ -12,7 +12,7 @@
   <meta name="description" content="Gestión de asociaciones en un solo archivo: datos, socios, tesorería, actas. Sin servidores: todo se queda en tu navegador.">
   <title>webkit_asociaciones</title>
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 48'%3E%3Crect width='48' height='48' rx='12' fill='%232f6f4f'/%3E%3Cpath d='M14 33V19l10-6 10 6v14' fill='none' stroke='white' stroke-width='3' stroke-linejoin='round'/%3E%3C/svg%3E">
-  <script>window.WA_VERSION = "0.5.0";</script>
+  <script>window.WA_VERSION = "0.6.0";</script>
   <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
   <script>/* js/nucleo/tema.js */
 /*
@@ -533,6 +533,45 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 .di-firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2.5rem; text-align: center; }
 .di-firma { height: 4rem; border-bottom: 1px solid #111; margin: 0.5rem 1rem; }
 @media (max-width: 760px) { .documento-impreso { padding: 1.25rem; } }
+
+/* ── Panel de Inicio (Fase 6) ─────────────────────────────────────────── */
+.titulo-bloque { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin: 1.75rem 0 0.75rem; }
+.rejilla-tarjetas .tarjeta h3 { font-size: 1rem; margin: 0 0 0.5rem; }
+.rejilla-tarjetas .tarjeta-ancha { grid-column: 1 / -1; }
+.lista-cifras { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+.lista-cifras li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--borde); }
+.lista-cifras li:last-child { border-bottom: none; }
+.lista-cifras li.total { font-weight: 700; border-top: 2px solid var(--borde-fuerte); }
+.lista-cifras .importe { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.barra-progreso.grande { height: 12px; border-radius: 6px; margin: 0.25rem 0 0.2rem; }
+.barra-progreso.grande + .detalle { margin-top: 0; }
+
+/* Gráficas en SVG: los colores salen del tema. */
+.grafica { margin: 0; }
+.grafica svg { display: block; width: 100%; height: auto; max-height: 260px; overflow: visible; }
+.g-rejilla { stroke: var(--borde); stroke-width: 1; }
+.g-eje { fill: var(--texto-3); font-size: 12px; font-family: var(--fuente); }
+.g-area { fill: var(--acento-suave); stroke: none; }
+.g-linea { fill: none; stroke: var(--acento); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.g-punto { fill: var(--acento); stroke: var(--superficie); stroke-width: 2; }
+
+/* ── Informes: memoria y cuentas ──────────────────────────────────────── */
+.informe { max-width: 900px; }
+.documento-impreso .detalle { color: #555; }
+.documento-impreso .tabla th, .documento-impreso .tabla td { border-bottom-color: #ccc; color: #111; }
+.documento-impreso .tabla thead th { color: #444; }
+.documento-impreso .tabla .total th, .documento-impreso .tabla .total td { border-top-color: #111; }
+.tabla-informe { margin: 0.5rem 0 1rem; font-size: 0.92rem; }
+.tabla-informe th, .tabla-informe td { padding: 0.35rem 0.5rem; }
+.tabla-informe caption { text-align: left; font-weight: 700; padding: 0.25rem 0.5rem; }
+.tabla-informe tbody th { font-weight: 500; }
+.cifras-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem; margin: 0.5rem 0 1rem; }
+.cifras-informe > div { border: 1px solid #ccc; border-radius: var(--radio-pequeno); padding: 0.5rem 0.75rem; }
+.cifras-informe .cifra { display: block; font-size: 1.5rem; }
+.cifras-informe span:not(.cifra) { font-size: 0.85rem; color: #555; }
+.rejilla-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 1.5rem; align-items: start; }
+.aviso-informe { font-size: 0.85rem; background: #f4f4f4; border-left: 3px solid #888; padding: 0.4rem 0.75rem; color: #333; }
+.di-pie { margin-top: 2rem; font-size: 0.8rem; color: #555; }
 </style>
   <style>/* css/impresion.css */
 /*
@@ -561,6 +600,15 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   .documento-impreso { border: none; padding: 0; margin: 0; max-width: none; }
   .factura-impresa { border: none; padding: 0; margin: 0; max-width: none; }
   .importe-positivo, .importe-negativo { color: #000; }
+}
+
+/* Informes (Fase 6): que no se partan las tablas cortas ni las cifras. */
+@media print {
+  .informe { max-width: none; }
+  .rejilla-informe .tabla-informe, .cifras-informe { break-inside: avoid; }
+  .documento-impreso h3 { break-after: avoid; }
+  .aviso-informe { background: none; }
+  .grafica svg { max-height: 200px; }
 }
 </style>
 </head>
@@ -1913,6 +1961,70 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     esc: esc, campo: campo, leerFormulario: leerFormulario, marcarError: marcarError,
     aviso: aviso, dialogo: dialogo, confirmar: confirmar, descargar: descargar, elegirArchivo: elegirArchivo,
   };
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/nucleo/graficas.js */
+/*
+ * webkit_asociaciones — Gráficas sencillas en SVG, sin librerías.
+ *
+ *   lineas(serie, opciones)  evolución en el tiempo. serie: [{ fecha, valor }]
+ *     opciones: { titulo, formato(valor) → texto, alto, desdeCero (para recuentos) }
+ *   barra(parte, total, opciones)  barra de progreso con su porcentaje
+ *
+ * Los colores salen de las variables del tema (claro u oscuro). Cada gráfica
+ * lleva un texto alternativo y una tabla oculta con los datos, para que se pueda
+ * leer con lector de pantalla.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, esc = WA.UI.esc;
+  var MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+
+  function lineas(serie, opciones) {
+    var o = opciones || {};
+    var fmt = o.formato || function (v) { return String(v); };
+    if (!serie || !serie.length) return '<p class="vacio">Sin datos.</p>';
+    var an = 600, al = o.alto || 180, mi = 56, md = 12, ms = 14, mb = 26;
+    var valores = serie.map(function (p) { return p.valor; });
+    var min = Math.min.apply(null, valores), max = Math.max.apply(null, valores);
+    if (min === max) { min = min - 1; max = max + 1; }
+    // Un poco de aire arriba y abajo, y el cero dentro si los datos están cerca.
+    var margen = (max - min) * 0.1, todoPositivo = min >= 0;
+    min -= margen; max += margen;
+    if (todoPositivo && min < 0) min = 0; // sin valores negativos en el eje si no hay datos negativos
+    if (o.desdeCero || (min > 0 && min < (max - min))) min = Math.min(min, 0);
+    var x = function (i) { return mi + (serie.length === 1 ? 0 : i * (an - mi - md) / (serie.length - 1)); };
+    var y = function (v) { return ms + (al - ms - mb) * (1 - (v - min) / (max - min)); };
+    var puntos = serie.map(function (p, i) { return x(i).toFixed(1) + "," + y(p.valor).toFixed(1); });
+    var area = "M" + x(0).toFixed(1) + "," + (al - mb) + " L" + puntos.join(" L") + " L" + x(serie.length - 1).toFixed(1) + "," + (al - mb) + " Z";
+    var rejilla = [0, 0.5, 1].map(function (t) {
+      var v = min + (max - min) * t, yy = y(v).toFixed(1);
+      return '<line x1="' + mi + '" x2="' + (an - md) + '" y1="' + yy + '" y2="' + yy + '" class="g-rejilla"/>' +
+        '<text x="' + (mi - 6) + '" y="' + yy + '" class="g-eje" text-anchor="end" dominant-baseline="middle">' + esc(fmt(Math.round(v))) + "</text>";
+    }).join("");
+    var etiquetas = serie.map(function (p, i) {
+      if (serie.length > 6 && i % 2 === 1 && i !== serie.length - 1) return "";
+      var m = +String(p.fecha).slice(5, 7) - 1;
+      return '<text x="' + x(i).toFixed(1) + '" y="' + (al - 8) + '" class="g-eje" text-anchor="middle">' + (MESES_CORTOS[m] || "") + "</text>";
+    }).join("");
+    var ultimo = serie[serie.length - 1];
+    var resumen = (o.titulo ? o.titulo + ": " : "") + "de " + fmt(serie[0].valor) + " a " + fmt(ultimo.valor);
+    return '<figure class="grafica"><svg viewBox="0 0 ' + an + " " + al + '" role="img" aria-label="' + esc(resumen) + '">' +
+      rejilla + '<path d="' + area + '" class="g-area"/><polyline points="' + puntos.join(" ") + '" class="g-linea"/>' +
+      '<circle cx="' + x(serie.length - 1).toFixed(1) + '" cy="' + y(ultimo.valor).toFixed(1) + '" r="4" class="g-punto"/>' + etiquetas + "</svg>" +
+      '<table class="sr"><caption>' + esc(o.titulo || "Datos") + "</caption><tbody>" + serie.map(function (p) {
+        return "<tr><th>" + esc(p.fecha) + "</th><td>" + esc(fmt(p.valor)) + "</td></tr>";
+      }).join("") + "</tbody></table></figure>";
+  }
+
+  function barra(parte, total, opciones) {
+    var o = opciones || {};
+    var pct = total > 0 ? Math.round(parte / total * 100) : 0;
+    return '<div class="barra-progreso grande' + (pct > 100 ? " pasada" : "") + '" role="img" aria-label="' + esc((o.titulo || "") + " " + pct + " %") + '"><span style="width:' + Math.min(pct, 100) + '%"></span></div>' +
+      '<p class="detalle">' + (o.texto ? esc(o.texto) + " · " : "") + pct + " %</p>";
+  }
+
+  WA.Graficas = { lineas: lineas, barra: barra };
 })(typeof self !== "undefined" ? self : this);
 </script>
   <script>/* js/nucleo/form-direccion.js */
@@ -4020,6 +4132,274 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   return { CAMPOS: CAMPOS, detectarColumnas: detectarColumnas, leerFecha: leerFecha, leerImporte: leerImporte, convertir: convertir, sugerencias: sugerencias };
 });
 </script>
+  <script>/* js/logica/informes.js */
+/*
+ * webkit_asociaciones — Informes: memoria anual, cuentas y panel (sin interfaz:
+ * tests/informes.test.js).
+ *
+ * Todas las funciones reciben «c», un objeto con lo que hay en los datos:
+ *   { asociacion, config, junta, socios, cuotas, movimientos, facturas, anticipos,
+ *     proyectos, actividades, actas, obligaciones, documentos }
+ *
+ * ⚠️ Las cuentas salen de la tesorería, que va por CRITERIO DE CAJA (cuenta el
+ * dinero cuando entra o sale, con IVA). Sirven para informar a la asamblea, pero
+ * las cuentas anuales formales de una entidad sin fines lucrativos se llevan por
+ * devengo y con partida doble: verificar con asesoría.
+ */
+(function (raiz, fabrica) {
+  var dep = typeof require === "function"
+    ? { F: require("../nucleo/fechas.js"), D: require("../nucleo/dinero.js"), S: require("./socios.js"), C: require("./cuotas.js"),
+        A: require("./actividades.js"), T: require("./tesoreria.js"), Fac: require("./facturas.js"), IVA: require("./iva.js"), Ac: require("./actas.js") }
+    : { F: raiz.WA.Fechas, D: raiz.WA.Dinero, S: raiz.WA.Socios, C: raiz.WA.Cuotas, A: raiz.WA.Actividades, T: raiz.WA.Tesoreria,
+        Fac: raiz.WA.Facturas, IVA: raiz.WA.IVA, Ac: raiz.WA.Actas };
+  var modulo = fabrica(dep);
+  if (typeof module === "object" && module.exports) module.exports = modulo;
+  else (raiz.WA = raiz.WA || {}).Informes = modulo;
+})(typeof self !== "undefined" ? self : this, function (x) {
+  "use strict";
+  var F = x.F, D = x.D, S = x.S, C = x.C, A = x.A, T = x.T, Fac = x.Fac, IVA = x.IVA, Ac = x.Ac;
+
+  // ── Modelo de cuenta de resultados de entidades sin fines lucrativos ─────
+  /*
+   * Partidas (resumidas) del modelo abreviado de cuenta de resultados del plan de
+   * contabilidad de entidades sin fines lucrativos, para agrupar las categorías.
+   * Es una APROXIMACIÓN para orientarse: la asignación de cada categoría y el
+   * modelo exacto aplicable hay que verificarlos con asesoría.
+   */
+  var PARTIDAS = [
+    { id: "1a", grupo: "explotacion", signo: 1, texto: "1. a) Cuotas de asociados y afiliados" },
+    { id: "1b", grupo: "explotacion", signo: 1, texto: "1. b) Aportaciones de usuarios" },
+    { id: "1c", grupo: "explotacion", signo: 1, texto: "1. c) Ingresos de promociones, patrocinadores y colaboraciones" },
+    { id: "1d", grupo: "explotacion", signo: 1, texto: "1. d) Subvenciones, donaciones y legados imputados al excedente del ejercicio" },
+    { id: "2", grupo: "explotacion", signo: 1, texto: "2. Ventas y otros ingresos ordinarios de la actividad mercantil" },
+    { id: "7", grupo: "explotacion", signo: 1, texto: "7. Otros ingresos de la actividad" },
+    { id: "3", grupo: "explotacion", signo: -1, texto: "3. Gastos por ayudas y otros" },
+    { id: "6", grupo: "explotacion", signo: -1, texto: "6. Aprovisionamientos" },
+    { id: "8", grupo: "explotacion", signo: -1, texto: "8. Gastos de personal" },
+    { id: "9", grupo: "explotacion", signo: -1, texto: "9. Otros gastos de la actividad" },
+    { id: "14", grupo: "financiero", signo: 1, texto: "14. Ingresos financieros" },
+    { id: "15", grupo: "financiero", signo: -1, texto: "15. Gastos financieros" },
+    { id: "19", grupo: "impuestos", signo: -1, texto: "19. Impuestos sobre beneficios" },
+  ];
+  /** Partida por defecto de las categorías con las que empieza la aplicación. */
+  var PARTIDA_POR_DEFECTO = {
+    cuotas: "1a", inscripciones: "1b", donaciones: "1d", subvenciones: "1d", ventas: "2", servicios: "2", "otros-ingresos": "7",
+    actividades: "9", material: "6", seguros: "9", banco: "9", web: "9", administracion: "9", difusion: "9", desplazamientos: "9",
+    profesionales: "9", impuestos: "9", "otros-gastos": "9",
+  };
+
+  // ── Utilidades ──────────────────────────────────────────────────────────
+  var limites = function (anio) { return { desde: anio + "-01-01", hasta: anio + "-12-31" }; };
+  var suma = function (l) { return D.sumar(l); };
+
+  /** Junta vigente en una fecha. */
+  function juntaEn(junta, fecha) {
+    return (junta || []).filter(function (j) { return j.desde && j.desde <= fecha && (!j.hasta || j.hasta > fecha); });
+  }
+
+  // ── Socios ──────────────────────────────────────────────────────────────
+  /** Cifras de socios de un año: a 31/12, altas, bajas, por tipo, sexo y edad. */
+  function socios(c, anio) {
+    var l = limites(anio);
+    var tipos = {};
+    (c.config.tiposSocio || []).forEach(function (t) { tipos[t.id] = t.nombre; });
+    var activos = (c.socios || []).filter(function (s) { return S.activoEn(s, l.hasta); });
+    var contar = function (lista, clave) {
+      var o = {};
+      lista.forEach(function (s) { var k = clave(s) || "Sin indicar"; o[k] = (o[k] || 0) + 1; });
+      return o;
+    };
+    var tramo = function (s) {
+      var e = S.edad(s.fechaNacimiento, l.hasta);
+      if (e === null) return "Sin indicar";
+      return e < 18 ? "Menores de 18" : e < 30 ? "18 a 29" : e < 65 ? "30 a 64" : "65 o más";
+    };
+    return {
+      activos: activos.length,
+      inicio: (c.socios || []).filter(function (s) { return S.activoEn(s, F.sumarDias(l.desde, -1)); }).length,
+      altas: (c.socios || []).filter(function (s) { return s.fechaAlta >= l.desde && s.fechaAlta <= l.hasta; }).length,
+      bajas: (c.socios || []).filter(function (s) { return s.fechaBaja && s.fechaBaja >= l.desde && s.fechaBaja <= l.hasta; }).length,
+      porTipo: contar(activos, function (s) { return tipos[s.tipoSocioId]; }),
+      porSexo: contar(activos, function (s) { return s.sexo; }),
+      porEdad: contar(activos, tramo),
+    };
+  }
+
+  // ── Memoria anual ───────────────────────────────────────────────────────
+  function memoria(c, anio) {
+    var l = limites(anio);
+    var porId = {};
+    (c.socios || []).forEach(function (s) { porId[s.id] = s; });
+    var acts = A.ordenar(c.actividades).filter(function (a) { var f = A.fechaDe(a); return f >= l.desde && f <= l.hasta && a.estado !== "cancelada"; });
+    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades);
+    var filasAct = acts.map(function (a) {
+      var r = A.resumen(a, c.socios);
+      return { id: a.id, titulo: a.titulo, tipo: a.tipo, fecha: A.fechaDe(a), lugar: a.lugar, estado: a.estado, inscritas: r.inscritas,
+        asistentes: r.asistentes, menores: r.menores, proyecto: ((c.proyectos || []).filter(function (p) { return p.id === a.proyectoId; })[0] || {}).nombre || "",
+        balance: A.balance(a.id, partidas) };
+    });
+    // Personas distintas que han participado (socios por su id; los demás, por nombre y contacto).
+    var personas = {};
+    acts.forEach(function (a) {
+      (a.inscripciones || []).forEach(function (i) { if (i.estado === "inscrita") personas[i.socioId || (i.nombre + "|" + i.contacto).toLowerCase()] = true; });
+    });
+    var proys = (c.proyectos || []).filter(function (p) {
+      var ini = p.fechaInicio || "0000", fin = p.fechaFin || "9999";
+      return ini <= l.hasta && fin >= l.desde;
+    }).map(function (p) {
+      var parts = partidas.filter(function (q) { return q.proyectoId === p.id && q.fecha >= l.desde && q.fecha <= l.hasta; });
+      var res = T.resultados(parts);
+      var ej = T.ejecucion(p.presupuesto || {}, res, c.config.categorias);
+      return { id: p.id, nombre: p.nombre, tipo: p.tipo, financiador: p.financiador, estadoSubvencion: p.estadoSubvencion || "", concedido: p.importeConcedido || 0,
+        gastoPrevisto: ej.gastos.previsto, gastoRealizado: res.totalGastos, ingresos: res.totalIngresos };
+    });
+    var organos = {};
+    (c.config.organos || []).forEach(function (o) { organos[o.id] = o.nombre; });
+    var actas = (c.actas || []).filter(function (a) { return a.fecha >= l.desde && a.fecha <= l.hasta; }).sort(function (a, b) { return a.fecha.localeCompare(b.fecha); });
+    var reuniones = {};
+    actas.forEach(function (a) { var n = organos[a.organoId] || "Otros"; reuniones[n] = (reuniones[n] || 0) + 1; });
+    // En orden cronológico, y dentro de cada acta, en el orden de sus puntos.
+    var acuerdos = Ac.acuerdos(actas, c.config.organos).sort(function (x, y) {
+      return String(x.fecha).localeCompare(String(y.fecha)) || String(x.numero).localeCompare(String(y.numero)) || x.punto - y.punto;
+    });
+    var textos = ((c.config.memorias || {})[anio]) || {};
+    return {
+      anio: anio, asociacion: c.asociacion, textos: { presentacion: textos.presentacion || "", fines: textos.fines || "", valoracion: textos.valoracion || "" },
+      junta: juntaEn(c.junta, l.hasta), cambiosJunta: (c.junta || []).filter(function (j) { return (j.desde >= l.desde && j.desde <= l.hasta) || (j.hasta && j.hasta >= l.desde && j.hasta <= l.hasta); }),
+      socios: socios(c, anio),
+      actividades: filasAct,
+      totalesActividades: {
+        n: filasAct.length, inscripciones: suma(filasAct.map(function (a) { return a.inscritas; })), asistentes: suma(filasAct.map(function (a) { return a.asistentes; })),
+        menores: suma(filasAct.map(function (a) { return a.menores; })), personasDistintas: Object.keys(personas).length,
+      },
+      proyectos: proys, reuniones: reuniones, nActas: actas.length, acuerdos: acuerdos,
+    };
+  }
+
+  // ── Cuentas ─────────────────────────────────────────────────────────────
+  /** ¿Cuánto quedaba por cobrar o pagar en una fecha? (situación a 31/12, aunque se cobrara después) */
+  function pendientesEn(c, fecha) {
+    var cuotas = (c.cuotas || []).filter(function (q) {
+      if (q.estado === "anulada" || q.fechaEmision > fecha) return false;
+      return !q.pago || q.pago.fecha > fecha;
+    });
+    var inscripciones = [];
+    (c.actividades || []).forEach(function (a) {
+      if (A.fechaDe(a) > fecha) return;
+      (a.inscripciones || []).forEach(function (i) {
+        if (i.estado !== "inscrita" || !(i.importe > 0)) return;
+        if (!i.pago || i.pago.fecha > fecha) inscripciones.push({ actividad: a.titulo, nombre: i.nombre, importe: i.importe });
+      });
+    });
+    var movsHasta = (c.movimientos || []).filter(function (m) { return m.fecha <= fecha; });
+    var antHasta = (c.anticipos || []).map(function (a) { return Object.assign({}, a, { gastos: (a.gastos || []).filter(function (g) { return g.fecha <= fecha; }) }); });
+    var fact = { emitidas: [], recibidas: [] };
+    (c.facturas || []).forEach(function (f) {
+      if (f.estado === "borrador" || f.estado === "anulada" || f.fecha > fecha) return;
+      var e = Fac.estadoPago(f, movsHasta, antHasta);
+      if (e.pendiente > 0) fact[f.tipo === "emitida" ? "emitidas" : "recibidas"].push({ numero: f.numero, tercero: (f.tercero || {}).nombre, pendiente: e.pendiente });
+    });
+    var anticipos = { personasDeben: [], seLesDebe: [] };
+    (c.anticipos || []).forEach(function (a) {
+      if (a.fecha > fecha) return;
+      var s = T.situacionAnticipo(antHasta.filter(function (y) { return y.id === a.id; })[0], movsHasta);
+      if (s.saldo > 0) anticipos.personasDeben.push({ persona: a.persona, concepto: a.concepto, importe: s.saldo });
+      if (s.saldo < 0) anticipos.seLesDebe.push({ persona: a.persona, concepto: a.concepto, importe: -s.saldo });
+    });
+    var anio = +fecha.slice(0, 4);
+    var iva = IVA.resumenAnual(c.facturas, c.config, anio);
+    return {
+      cuotas: { n: cuotas.length, importe: suma(cuotas.map(function (q) { return q.importe; })) },
+      inscripciones: { n: inscripciones.length, importe: suma(inscripciones.map(function (i) { return i.importe; })) },
+      facturasEmitidas: { lista: fact.emitidas, importe: suma(fact.emitidas.map(function (f) { return f.pendiente; })) },
+      facturasRecibidas: { lista: fact.recibidas, importe: suma(fact.recibidas.map(function (f) { return f.pendiente; })) },
+      anticipos: { personasDeben: anticipos.personasDeben, seLesDebe: anticipos.seLesDebe,
+        importeDeben: suma(anticipos.personasDeben.map(function (a) { return a.importe; })), importeSeLesDebe: suma(anticipos.seLesDebe.map(function (a) { return a.importe; })) },
+      ivaACompensar: c.config.iva && c.config.iva.presenta ? iva.quedaACompensar : 0,
+    };
+  }
+
+  /** Agrupa ingresos y gastos (por categoría) en las partidas del modelo ESFL. */
+  function cuentaEsfl(res, categorias) {
+    var porCat = {};
+    (categorias || []).forEach(function (k) { porCat[k.id] = k; });
+    var importes = {}, sinPartida = [];
+    var poner = function (catId, importe, tipo) {
+      var cat = porCat[catId] || {};
+      var partida = cat.partida || PARTIDA_POR_DEFECTO[catId];
+      if (!partida) { sinPartida.push({ categoria: cat.nombre || (catId || "Sin clasificar"), tipo: tipo, importe: importe }); partida = tipo === "ingreso" ? "7" : "9"; }
+      importes[partida] = (importes[partida] || 0) + importe;
+    };
+    Object.keys(res.ingresos).forEach(function (k) { poner(k, res.ingresos[k], "ingreso"); });
+    Object.keys(res.gastos).forEach(function (k) { poner(k, res.gastos[k], "gasto"); });
+    var lineas = PARTIDAS.map(function (p) { return { id: p.id, texto: p.texto, grupo: p.grupo, importe: p.signo * (importes[p.id] || 0) }; });
+    var total = function (grupo) { return suma(lineas.filter(function (l) { return l.grupo === grupo; }).map(function (l) { return l.importe; })); };
+    var actividad = total("explotacion"), financiero = total("financiero"), impuestos = total("impuestos");
+    return { lineas: lineas, excedenteActividad: actividad, excedenteFinanciero: financiero, antesImpuestos: actividad + financiero,
+      excedente: actividad + financiero + impuestos, sinPartida: sinPartida };
+  }
+
+  function cuentas(c, anio) {
+    var l = limites(anio), la = limites(anio - 1);
+    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades);
+    var res = T.resultados(partidas, l.desde, l.hasta);
+    var resAnterior = T.resultados(partidas, la.desde, la.hasta);
+    var inicio = T.saldos(c.config.cuentas, c.movimientos, c.cuotas, F.sumarDias(l.desde, -1), c.actividades);
+    var fin = T.saldos(c.config.cuentas, c.movimientos, c.cuotas, l.hasta, c.actividades);
+    var presupuesto = T.ejecucion(((c.config.presupuestos || {})[anio]) || {}, res, c.config.categorias);
+    var pend = pendientesEn(c, l.hasta);
+    // Estado de situación simplificado a 31/12 (no es el balance oficial).
+    var activo = { tesoreria: fin.total, cuotas: pend.cuotas.importe, inscripciones: pend.inscripciones.importe, clientes: pend.facturasEmitidas.importe,
+      anticipos: pend.anticipos.importeDeben, iva: pend.ivaACompensar };
+    var pasivo = { proveedores: pend.facturasRecibidas.importe, personas: pend.anticipos.importeSeLesDebe };
+    var totalActivo = suma(Object.keys(activo).map(function (k) { return activo[k]; }));
+    var totalPasivo = suma(Object.keys(pasivo).map(function (k) { return pasivo[k]; }));
+    return {
+      anio: anio, resultados: res, anterior: resAnterior, saldosInicio: inicio, saldosFin: fin, presupuesto: presupuesto, pendientes: pend,
+      esfl: cuentaEsfl(res, c.config.categorias),
+      situacion: { activo: activo, pasivo: pasivo, totalActivo: totalActivo, totalPasivo: totalPasivo, neto: totalActivo - totalPasivo },
+    };
+  }
+
+  // ── Panel y series para gráficas ────────────────────────────────────────
+  /** Últimos días de los n meses que acaban en el mes de «hoy» (incluido). */
+  function finesDeMes(hoy, n) {
+    var a = +hoy.slice(0, 4), m = +hoy.slice(5, 7), out = [];
+    for (var k = n - 1; k >= 0; k--) {
+      var d = new Date(a, m - 1 - k + 1, 0);
+      var iso = F.aISO(d);
+      out.push(iso > hoy ? hoy : iso);
+    }
+    return out;
+  }
+
+  function panel(c, hoy) {
+    var h = hoy || F.hoy(), anio = +h.slice(0, 4), l = limites(anio);
+    var partidas = T.partidas(c.movimientos, c.cuotas, c.anticipos, c.actividades);
+    var res = T.resultados(partidas, l.desde, l.hasta);
+    var s = T.saldos(c.config.cuentas, c.movimientos, c.cuotas, h, c.actividades);
+    var prev = ((c.config.presupuestos || {})[anio]) || {};
+    var ej = T.ejecucion(prev, res, c.config.categorias);
+    var cuotasAnio = (c.cuotas || []).filter(function (q) { return String(q.periodo).slice(0, 4) === String(anio); });
+    var rc = C.resumen(cuotasAnio);
+    var meses = finesDeMes(h, 12);
+    return {
+      saldo: s, ingresos: res.totalIngresos, gastos: res.totalGastos, resultado: res.resultado,
+      presupuestoGastos: ej.gastos, presupuestoIngresos: ej.ingresos,
+      socios: { activos: (c.socios || []).filter(function (x) { return S.activoEn(x, h); }).length,
+        altas: (c.socios || []).filter(function (x) { return x.fechaAlta >= l.desde && x.fechaAlta <= h; }).length,
+        bajas: (c.socios || []).filter(function (x) { return x.fechaBaja && x.fechaBaja >= l.desde && x.fechaBaja <= h; }).length },
+      cuotas: { cobrado: rc.cobrado, pendiente: rc.pendiente, emitido: rc.emitido, deudaTotal: suma(C.deudores(c.cuotas).map(function (d) { return d.total; })) },
+      subvencionesEnMarcha: (c.proyectos || []).filter(function (p) { return p.tipo === "subvencion" && ["preparando", "solicitada", "concedida", "justificando"].indexOf(p.estadoSubvencion || "idea") >= 0; }),
+      serieSaldo: meses.map(function (f) { return { fecha: f, valor: T.saldos(c.config.cuentas, c.movimientos, c.cuotas, f, c.actividades).total }; }),
+      serieSocios: meses.map(function (f) { return { fecha: f, valor: (c.socios || []).filter(function (x) { return S.activoEn(x, f); }).length }; }),
+    };
+  }
+
+  return { PARTIDAS: PARTIDAS, PARTIDA_POR_DEFECTO: PARTIDA_POR_DEFECTO, juntaEn: juntaEn, socios: socios, memoria: memoria,
+    pendientesEn: pendientesEn, cuentaEsfl: cuentaEsfl, cuentas: cuentas, finesDeMes: finesDeMes, panel: panel };
+});
+</script>
   <!-- Datos -->
   <script>/* js/datos/esquema.js */
 /*
@@ -4029,7 +4409,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  *
  *   {
  *     app: "webkit_asociaciones",
- *     esquema: 6,                 ← versión de esta forma; sube cuando cambia
+ *     esquema: 7,                 ← versión de esta forma; sube cuando cambia
  *     meta: { creado, modificado, ultimaCopia, cambiosDesdeCopia },
  *     asociacion: { nombre, siglas, nif, domicilio: {…por partes…}, ... },   ← un objeto suelto
  *     config: { tiposSocio, cuentas, categorias, iva, facturacion, reglas, presupuestos, ... },
@@ -4057,7 +4437,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
  * Historial: v1 (fase 1) · v2 domicilio por partes y sin «fines» · v3 socios, cuotas y remesas (fase 2)
  *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3)
  *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4)
- *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5).
+ *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5)
+ *            · v7 textos de la memoria anual; partida del modelo ESFL en cada categoría (fase 6).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -4070,7 +4451,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 6;
+  var VERSION = 7;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
   var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos"];
@@ -4106,6 +4487,8 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
    *   organos       órganos que levantan actas: [{ id, nombre, prefijo, tipo }]
    *   actas         { numeracion: "anual" | "correlativa" }
    *   limiteArchivoMB  tamaño máximo de un adjunto
+   *   memorias      textos libres de la memoria anual: { "2026": { presentacion, fines, valoracion } }
+   *   (cada categoría puede llevar «partida»: la del modelo de cuentas ESFL; ver logica/informes.js)
    */
   function configVacia() {
     return {
@@ -4122,6 +4505,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       organos: Actas.organosPorDefecto(),
       actas: { numeracion: "anual" },
       limiteArchivoMB: 10,
+      memorias: {},
     };
   }
 
@@ -4193,6 +4577,14 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       return doc;
     },
 
+    // 6 → 7: informes (Fase 6).
+    6: function (doc) {
+      doc.config = doc.config || {};
+      if (!doc.config.memorias || typeof doc.config.memorias !== "object") doc.config.memorias = {};
+      doc.esquema = 7;
+      return doc;
+    },
+
     // 5 → 6: actas, obligaciones y documentos (Fase 5).
     5: function (doc) {
       ["actas", "obligaciones", "documentos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
@@ -4256,6 +4648,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     if (!Array.isArray(doc.config.organos) || !doc.config.organos.length) doc.config.organos = Actas.organosPorDefecto();
     doc.config.actas = Object.assign({ numeracion: "anual" }, doc.config.actas || {});
     if (!(doc.config.limiteArchivoMB > 0)) doc.config.limiteArchivoMB = 10;
+    if (!doc.config.memorias || typeof doc.config.memorias !== "object") doc.config.memorias = {};
     COLECCIONES.forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
     return doc;
   }
@@ -4748,6 +5141,11 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
     cfg.reglas = [{ texto: "comision", categoriaId: "banco" }, { texto: "seguro", categoriaId: "seguros" }];
     cfg.presupuestos = { "2026": { cuotas: 105000, donaciones: 30000, subvenciones: 150000, inscripciones: 40000, servicios: 60000,
       actividades: 120000, material: 40000, seguros: 18000, banco: 3000, web: 6000, difusion: 15000, profesionales: 30000 } };
+    cfg.memorias = { "2026": {
+      presentacion: "Este año hemos acercado la ciencia al barrio con el taller financiado por el Ayuntamiento y hemos recuperado las salidas de campo.\n\nGracias a todas las personas socias y voluntarias que lo han hecho posible. (Texto de ejemplo.)",
+      fines: "a) Promover el conocimiento de la naturaleza del entorno.\nb) Organizar actividades culturales y de divulgación abiertas a todo el barrio.\n(Fines inventados para la demostración: copia los de tus estatutos.)",
+      valoracion: "Buena participación en las actividades gratuitas. Para el año que viene queremos sumar personas jóvenes a la junta y pedir una segunda subvención. (Texto de ejemplo.)",
+    } };
     var reg = function (o) { return Object.assign({ creado: t, modificado: t }, o); };
     var mov = function (id, fecha, cuentaId, tipo, importe, concepto, categoriaId, extra) {
       return reg(Object.assign({ id: "demo-mov-" + id, fecha: fecha, cuentaId: cuentaId, tipo: tipo, importe: importe, concepto: concepto,
@@ -5596,82 +5994,126 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 </script>
   <script>/* js/modulos/inicio.js */
 /*
- * webkit_asociaciones — Módulo «Inicio».
+ * webkit_asociaciones — Módulo «Inicio»: el panel de resumen.
  *
- * En la Fase 1 es una portada sencilla: qué asociación es, cómo está la copia
- * de seguridad y qué falta por rellenar. En la Fase 6 se convertirá en el panel
- * de resumen (socios, cuotas, saldo, próximas fechas).
+ * Arriba, lo que falta por rellenar (solo mientras falte). Después, en bloques:
+ *   · Agenda: plazos que vencen, próximas actividades y subvenciones en marcha.
+ *   · Dinero: saldo por cuenta, ingresos y gastos del año, presupuesto y su evolución.
+ *   · Socios y cuotas: socios activos, altas y bajas, cuotas cobradas y deuda.
+ *   · Copia de seguridad y junta.
+ * Las cifras las calcula logica/informes.js (panel), que tiene tests.
  */
 (function (raiz) {
   "use strict";
-  var WA = raiz.WA, esc = WA.UI.esc;
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero;
+  var euros = function (c) { return esc(D.formatear(c)); };
+  var eurosRedondos = function (c) { return D.formatear(Math.round(c / 100) * 100).replace(/,00(?=\s*€)/, ""); };
+
+  function tarjeta(id, titulo, cuerpo, enlace, clase) {
+    return '<section class="tarjeta' + (clase ? " " + clase : "") + '" aria-labelledby="t-' + id + '"><h3 id="t-' + id + '">' + titulo + "</h3>" + cuerpo +
+      (enlace ? '<a class="enlace-flecha" href="' + enlace[0] + '">' + enlace[1] + "</a>" : "") + "</section>";
+  }
 
   async function pintar(cont, datos) {
-    var a = await datos.leer("asociacion");
-    var junta = (await datos.listar("junta")).filter(function (m) { return !m.hasta || m.hasta >= WA.Fechas.hoy(); });
-    var copia = await datos.estadoCopia();
-    var socios = await datos.listar("socios");
-    var cuotas = await datos.listar("cuotas");
-    var config = await datos.leer("config");
-    var activos = socios.filter(function (x) { return WA.Socios.estado(x) === "activo"; }).length;
-    var deud = WA.Cuotas.deudores(cuotas);
-    var deuda = WA.Dinero.sumar(deud.map(function (d) { return d.total; }));
-    var demo = WA.Sesion.modo === "demostración";
-    var movimientos = await datos.listar("movimientos");
-    var actividades = await datos.listar("actividades");
-    var documentos = await datos.listar("documentos");
+    var hoy = F.hoy(), anio = +hoy.slice(0, 4);
+    var c = await WA.TesUI.cargar(datos);
     var obligaciones = await datos.listar("obligaciones");
-    var hoyIso = WA.Fechas.hoy();
-    var venc = (await WA.ObligacionesUI.vencimientos(datos, (+hoyIso.slice(0, 4) - 1) + "-01-01", WA.Fechas.sumarDias(hoyIso, 60)))
-      .filter(function (v) { return v.estado === "vencida" || v.estado === "proxima"; }).slice(0, 6);
-    var vencHtml = venc.length ? '<section class="tarjeta' + (venc.some(function (v) { return v.estado === "vencida"; }) ? " tarjeta-alerta" : "") + '" aria-labelledby="t-venc"><h2 id="t-venc">Plazos que vencen</h2><ul class="lista-actividades">' +
-      venc.map(function (v) {
-        return '<li><a href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '"><strong>' + esc(v.titulo) + "</strong></a>" +
-          '<span class="detalle">' + esc(WA.Fechas.corta(v.fecha)) + (v.etiqueta ? " · " + esc(v.etiqueta) : "") + " · " +
-          (v.faltan < 0 ? '<span class="importe-negativo">venció hace ' + (-v.faltan) + " días</span>" : v.faltan === 0 ? "hoy" : "en " + v.faltan + " días") + "</span></li>";
-      }).join("") + '</ul><a class="enlace-flecha" href="#/obligaciones">Ver obligaciones</a></section>' : "";
-    var saldo = WA.Tesoreria.saldos(config.cuentas, movimientos, cuotas, undefined, actividades).total;
-    var proximas = WA.Actividades.ordenar(actividades).filter(function (x) { return WA.Actividades.fechaDe(x) >= WA.Fechas.hoy() && x.estado !== "cancelada"; }).slice(0, 3);
-    var proximasHtml = '<section class="tarjeta" aria-labelledby="t-act"><h2 id="t-act">Próximas actividades</h2>' + (proximas.length ? '<ul class="lista-actividades">' + proximas.map(function (x) {
-      var n = WA.Actividades.ocupadas(x);
-      return '<li><a href="#/actividades/ficha/' + encodeURIComponent(x.id) + '"><strong>' + esc(x.titulo) + '</strong></a><span class="detalle">' +
-        esc(WA.Fechas.corta(WA.Actividades.fechaDe(x))) + (x.todoElDia ? "" : " · " + esc(String(x.inicio).slice(11, 16))) + " · " + (x.aforo > 0 ? n + "/" + x.aforo + " plazas" : n + " inscritas") + "</span></li>";
-    }).join("") + "</ul>" : '<p class="detalle">No hay ninguna prevista.</p>') + '<a class="enlace-flecha" href="#/actividades">Ver calendario</a></section>';
-    var sinClasificar = movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
+    var copia = await datos.estadoCopia();
+    var a = c.asociacion, config = c.config;
+    var p = WA.Informes.panel(c, hoy);
+    var junta = WA.Informes.juntaEn(c.junta, hoy);
+    var demo = WA.Sesion.modo === "demostración";
 
+    // ── Para empezar ──
     var pendientes = [];
     if (!a.nombre) pendientes.push('<a href="#/asociacion">Escribe el nombre y los datos de la asociación</a>');
     if (!a.nif) pendientes.push('<a href="#/asociacion">Añade el NIF de la asociación</a>');
     if (!junta.length) pendientes.push('<a href="#/asociacion">Añade la junta directiva</a>');
     if (!(config.tiposSocio || []).some(function (t) { return t.cuota > 0; })) pendientes.push('<a href="#/cuotas/tipos">Pon el importe de la cuota de socio</a>');
-    if (!socios.length) pendientes.push('<a href="#/socios">Da de alta a los socios (o impórtalos desde una hoja de cálculo)</a>');
-    if (!documentos.some(function (d) { return d.categoria === "Estatutos"; })) pendientes.push('<a href="#/documentos">Adjunta los estatutos</a>');
+    if (!c.socios.length) pendientes.push('<a href="#/socios">Da de alta a los socios (o impórtalos desde una hoja de cálculo)</a>');
+    if (!c.documentos.some(function (d) { return d.categoria === "Estatutos"; })) pendientes.push('<a href="#/documentos">Adjunta los estatutos</a>');
     if (!obligaciones.length) pendientes.push('<a href="#/obligaciones">Elige las obligaciones (fiscales, asociativas, renovaciones) que queréis tener con aviso</a>');
     if (!demo && !copia.ultimaCopia) pendientes.push('<a href="#/copias">Descarga tu primera copia de seguridad</a>');
 
+    // ── Agenda ──
+    var venc = (await WA.ObligacionesUI.vencimientos(datos, (anio - 1) + "-01-01", F.sumarDias(hoy, 60)))
+      .filter(function (v) { return v.estado === "vencida" || v.estado === "proxima"; }).slice(0, 6);
+    var vencHtml = tarjeta("venc", "Plazos que vencen", venc.length ? '<ul class="lista-actividades">' + venc.map(function (v) {
+      return '<li><a href="' + (v.origen === "subvencion" ? "#/proyectos/ficha/" + encodeURIComponent(v.proyectoId) : "#/obligaciones") + '"><strong>' + esc(v.titulo) + "</strong></a>" +
+        '<span class="detalle">' + esc(F.corta(v.fecha)) + (v.etiqueta ? " · " + esc(v.etiqueta) : "") + " · " +
+        (v.faltan < 0 ? '<span class="importe-negativo">venció hace ' + (-v.faltan) + " días</span>" : v.faltan === 0 ? "hoy" : "en " + v.faltan + " días") + "</span></li>";
+    }).join("") + "</ul>" : '<p class="detalle">Nada en los próximos 60 días.</p>', ["#/obligaciones", "Ver obligaciones"],
+      venc.some(function (v) { return v.estado === "vencida"; }) ? "tarjeta-alerta" : "");
+
+    var A = WA.Actividades;
+    var proximas = A.ordenar(c.actividades).filter(function (x) { return A.fechaDe(x) >= hoy && x.estado !== "cancelada"; }).slice(0, 4);
+    var proximasHtml = tarjeta("act", "Próximas actividades", proximas.length ? '<ul class="lista-actividades">' + proximas.map(function (x) {
+      var n = A.ocupadas(x);
+      return '<li><a href="#/actividades/ficha/' + encodeURIComponent(x.id) + '"><strong>' + esc(x.titulo) + '</strong></a><span class="detalle">' +
+        esc(F.corta(A.fechaDe(x))) + (x.todoElDia ? "" : " · " + esc(String(x.inicio).slice(11, 16))) + " · " + (x.aforo > 0 ? n + "/" + x.aforo + " plazas" : n + " inscritas") + "</span></li>";
+    }).join("") + "</ul>" : '<p class="detalle">No hay ninguna prevista.</p>', ["#/actividades", "Ver calendario"]);
+
+    var estados = {};
+    WA.Obligaciones.ESTADOS_SUBVENCION.forEach(function (e) { estados[e[0]] = e[1]; });
+    var subvHtml = p.subvencionesEnMarcha.length ? tarjeta("subv", "Subvenciones en marcha", '<ul class="lista-actividades">' + p.subvencionesEnMarcha.slice(0, 5).map(function (s) {
+      return '<li><a href="#/proyectos/ficha/' + encodeURIComponent(s.id) + '"><strong>' + esc(s.nombre) + '</strong></a><span class="detalle">' + esc(estados[s.estadoSubvencion] || "") +
+        (s.importeConcedido ? " · " + euros(s.importeConcedido) : s.importeSolicitado ? " · pedidos " + euros(s.importeSolicitado) : "") + "</span></li>";
+    }).join("") + "</ul>", ["#/proyectos", "Ver presupuestos y subvenciones"]) : "";
+
+    // ── Dinero ──
+    var cuentasUsadas = config.cuentas.filter(function (k) { return k.activa !== false || p.saldo.porCuenta[k.id]; });
+    var saldoHtml = tarjeta("saldo", "Saldo hoy", '<p><span class="cifra">' + euros(p.saldo.total) + "</span></p>" +
+      (cuentasUsadas.length > 1 ? '<ul class="lista-cifras">' + cuentasUsadas.map(function (k) {
+        return "<li><span>" + esc(k.nombre) + '</span><span class="importe">' + euros(p.saldo.porCuenta[k.id] || 0) + "</span></li>";
+      }).join("") + "</ul>" : ""), ["#/tesoreria", "Ver tesorería"]);
+    var sinClasificar = c.movimientos.filter(function (m) { return (m.tipo === "ingreso" || m.tipo === "gasto") && !m.categoriaId; }).length;
+    var pg = p.presupuestoGastos, pi = p.presupuestoIngresos;
+    var anioHtml = tarjeta("anio", "En " + anio,
+      '<ul class="lista-cifras"><li><span>Ingresos</span><span class="importe">' + euros(p.ingresos) + "</span></li>" +
+      "<li><span>Gastos</span><span class=\"importe\">−" + euros(p.gastos) + "</span></li>" +
+      '<li class="total"><span>Resultado</span><span class="importe ' + (p.resultado < 0 ? "importe-negativo" : "") + '">' + euros(p.resultado) + "</span></li></ul>" +
+      (sinClasificar ? '<p class="detalle"><a href="#/tesoreria/movimientos">' + sinClasificar + (sinClasificar === 1 ? " movimiento sin clasificar" : " movimientos sin clasificar") + "</a></p>" : ""),
+      ["#/informes/cuentas", "Ver cuentas del año"]);
+    var presHtml = tarjeta("pres", "Presupuesto " + anio, pg.previsto || pi.previsto
+      ? (pg.previsto ? "<p>Gastado</p>" + WA.Graficas.barra(pg.realizado, pg.previsto, { titulo: "Gasto sobre lo previsto", texto: D.formatear(pg.realizado) + " de " + D.formatear(pg.previsto) }) : "") +
+        (pi.previsto ? "<p>Ingresado</p>" + WA.Graficas.barra(pi.realizado, pi.previsto, { titulo: "Ingreso sobre lo previsto", texto: D.formatear(pi.realizado) + " de " + D.formatear(pi.previsto) }) : "")
+      : '<p class="detalle">No hay presupuesto de ' + anio + " todavía.</p>", ["#/proyectos", "Ver presupuesto"]);
+    var graficaSaldo = '<section class="tarjeta tarjeta-ancha" aria-labelledby="t-gsaldo"><h3 id="t-gsaldo">Saldo a fin de mes (últimos 12 meses)</h3>' +
+      WA.Graficas.lineas(p.serieSaldo, { titulo: "Saldo a fin de mes", formato: eurosRedondos }) + "</section>";
+
+    // ── Socios y cuotas ──
+    var sociosHtml = tarjeta("socios", "Socios", '<p><span class="cifra">' + p.socios.activos + "</span> " + (p.socios.activos === 1 ? "activo" : "activos") + "</p>" +
+      '<p class="detalle">En ' + anio + ": " + p.socios.altas + (p.socios.altas === 1 ? " alta" : " altas") + " y " + p.socios.bajas + (p.socios.bajas === 1 ? " baja" : " bajas") + "</p>",
+      ["#/socios", "Ver socios"]);
+    var q = p.cuotas;
+    var cuotasHtml = tarjeta("cuotas", "Cuotas de " + anio, q.emitido
+      ? "<p>Cobrado</p>" + WA.Graficas.barra(q.cobrado, q.emitido, { titulo: "Cuotas cobradas", texto: D.formatear(q.cobrado) + " de " + D.formatear(q.emitido) }) +
+        (q.pendiente ? '<p class="detalle">Faltan ' + euros(q.pendiente) + "</p>" : "")
+      : '<p class="detalle">Aún no se han generado las cuotas de ' + anio + ".</p>", ["#/cuotas", "Ver cuotas"]);
+    var deudaHtml = tarjeta("deuda", "Deuda de cuotas", '<p><span class="cifra">' + euros(q.deudaTotal) + "</span></p>" +
+      '<p class="detalle">Todo lo pendiente, de cualquier año.</p>', ["#/cuotas/impagados", "Ver impagados"], q.deudaTotal ? "" : "");
+    var graficaSocios = '<section class="tarjeta tarjeta-ancha" aria-labelledby="t-gsocios"><h3 id="t-gsocios">Socios activos (últimos 12 meses)</h3>' +
+      WA.Graficas.lineas(p.serieSocios, { titulo: "Socios activos a fin de mes", desdeCero: true }) + "</section>";
+
+    // ── Copia y junta ──
     var estadoCopia = demo ? "No aplica en la demostración."
       : !copia.ultimaCopia ? '<span class="estado estado-aviso">Sin copias todavía</span>'
-      : copia.cambiosDesdeCopia ? '<span class="estado estado-aviso">Cambios sin copia</span> Última: ' + esc(WA.Fechas.corta(copia.ultimaCopia.slice(0, 10)))
-      : '<span class="estado estado-ok">Al día</span> Última: ' + esc(WA.Fechas.corta(copia.ultimaCopia.slice(0, 10)));
+      : copia.cambiosDesdeCopia ? '<span class="estado estado-aviso">Cambios sin copia</span> Última: ' + esc(F.corta(copia.ultimaCopia.slice(0, 10)))
+      : '<span class="estado estado-ok">Al día</span> Última: ' + esc(F.corta(copia.ultimaCopia.slice(0, 10)));
+    var copiaHtml = tarjeta("copia", "Copia de seguridad", "<p>" + estadoCopia + "</p>", ["#/copias", "Ir a copias"]);
+    var juntaHtml = tarjeta("junta", "Junta directiva", '<p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") + "</p>",
+      ["#/asociacion", "Ver junta"]);
 
     cont.innerHTML =
       "<h1>" + esc(a.nombre || "Tu asociación") + "</h1>" +
       '<p class="intro">' + (a.domicilio && a.domicilio.municipio ? esc(WA.Direccion.formatear(a.domicilio).completa) : "Desde aquí llevarás la gestión de la asociación.") + "</p>" +
       (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
-        pendientes.map(function (p) { return "<li>" + p + "</li>"; }).join("") + "</ul></section>" : "") +
-      '<div class="rejilla-tarjetas">' +
-      vencHtml + proximasHtml +
-      '<section class="tarjeta" aria-labelledby="t-saldo"><h2 id="t-saldo">Saldo</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(saldo)) + "</span></p>" +
-      (sinClasificar ? '<p class="detalle">' + sinClasificar + " movimientos sin clasificar</p>" : "") + '<a class="enlace-flecha" href="#/tesoreria">Ver tesorería</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-copia"><h2 id="t-copia">Copia de seguridad</h2><p>' + estadoCopia + '</p><a class="enlace-flecha" href="#/copias">Ir a copias</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-socios"><h2 id="t-socios">Socios</h2><p><span class="cifra">' + activos + "</span> " + (activos === 1 ? "activo" : "activos") +
-      '</p><a class="enlace-flecha" href="#/socios">Ver socios</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-cuotas"><h2 id="t-cuotas">Cuotas sin cobrar</h2><p><span class="cifra">' + esc(WA.Dinero.formatear(deuda)) + "</span></p>" +
-      '<p class="detalle">' + (deud.length ? deud.length + (deud.length === 1 ? " socio" : " socios") : "Nadie debe nada") + '</p><a class="enlace-flecha" href="#/cuotas/impagados">Ver impagados</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-junta"><h2 id="t-junta">Junta directiva</h2><p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") +
-      '</p><a class="enlace-flecha" href="#/asociacion">Ver junta</a></section>' +
-      '<section class="tarjeta" aria-labelledby="t-prox"><h2 id="t-prox">Próximamente</h2><p class="detalle">Convocatorias de asamblea, memoria anual e informes.</p></section>' +
-      "</div>";
+        pendientes.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul></section>" : "") +
+      '<h2 class="titulo-bloque">Agenda</h2><div class="rejilla-tarjetas">' + vencHtml + proximasHtml + subvHtml + "</div>" +
+      '<h2 class="titulo-bloque">Dinero</h2><div class="rejilla-tarjetas">' + saldoHtml + anioHtml + presHtml + graficaSaldo + "</div>" +
+      '<h2 class="titulo-bloque">Socios y cuotas</h2><div class="rejilla-tarjetas">' + sociosHtml + cuotasHtml + deudaHtml + graficaSocios + "</div>" +
+      '<h2 class="titulo-bloque">La asociación</h2><div class="rejilla-tarjetas">' + copiaHtml + juntaHtml +
+      tarjeta("informes", "Informes", '<p class="detalle">Memoria anual y cuentas del ejercicio, listas para imprimir.</p>', ["#/informes", "Ver informes"]) + "</div>";
   }
 
   WA.App.registrar({
@@ -7968,6 +8410,9 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
           UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: x.nombre, requerido: true, ancho: "completo" }) +
           UI.campo({ nombre: "tipo", etiqueta: "Es de", tipo: "select", valor: x.tipo, opciones: [["ingreso", "Ingresos"], ["gasto", "Gastos"]] }) +
           UI.campo({ nombre: "iva", etiqueta: "IVA habitual (ingresos)", tipo: "select", valor: x.iva, opciones: [["", "—"]].concat(Fac.TRATAMIENTOS) }) +
+          UI.campo({ nombre: "partida", etiqueta: "Partida en el informe de cuentas", tipo: "select", valor: x.partida || "", ancho: "completo",
+            opciones: [["", "Automática" + (WA.Informes.PARTIDA_POR_DEFECTO[x.id] ? "" : " (otros ingresos u otros gastos)")]].concat(WA.Informes.PARTIDAS.map(function (q) { return [q.id, q.texto]; })),
+            ayuda: "Dónde se suma en la cuenta de resultados con el modelo de entidades sin fines lucrativos (Informes → Cuentas). Orientativo: verificar con asesoría." }) +
           "</div>" + '<label class="casilla"><input type="checkbox" name="activa"' + (x.activa !== false ? " checked" : "") + "><span>Se puede usar (desmárcala para ocultarla sin borrarla)</span></label></form>" +
           U.ayuda("Cuotas de socios y donaciones no están sujetas a IVA; algunas actividades pueden estar exentas. Qué tratamiento tiene cada ingreso: verificar con asesoría."),
         botones: (cat && !enUso && cat.id !== T.CATEGORIA_CUOTAS ? [{ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" }] : []).concat([{ texto: "Cancelar", valor: "cancelar" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }]),
@@ -7975,7 +8420,7 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
       });
       if (r.valor === "borrar") cfg.categorias = cfg.categorias.filter(function (y) { return y.id !== x.id; });
       else if (r.valor === "enviar") {
-        Object.assign(x, { nombre: r.datos.nombre, tipo: r.datos.tipo, iva: r.datos.tipo === "ingreso" ? r.datos.iva : "", activa: !!r.datos.activa });
+        Object.assign(x, { nombre: r.datos.nombre, tipo: r.datos.tipo, iva: r.datos.tipo === "ingreso" ? r.datos.iva : "", activa: !!r.datos.activa, partida: r.datos.partida || "" });
         if (!cat) cfg.categorias.push(x);
       } else return;
       await guardar();
@@ -9557,6 +10002,274 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   WA.App.registrar({
     id: "documentos", titulo: "Documentos", orden: 48, pintar: pintar,
     icono: '<path d="M3.5 6.5a2 2 0 0 1 2-2h4l2 2h7a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-13a2 2 0 0 1-2-2z"/>',
+  });
+})(typeof self !== "undefined" ? self : this);
+</script>
+  <script>/* js/modulos/informes.js */
+/*
+ * webkit_asociaciones — Módulo «Informes»: memoria anual y cuentas del ejercicio,
+ * listas para imprimir o guardar en PDF desde el navegador.
+ *
+ *   #/informes            memoria anual de actividades
+ *   #/informes/cuentas    cuentas del ejercicio (caja, pendientes, presupuesto,
+ *                         modelo ESFL orientativo y situación simplificada)
+ *
+ * Los datos los calcula logica/informes.js (con tests). Lo que no se puede
+ * calcular (presentación, fines, valoración) se escribe aquí y se guarda por año.
+ */
+(function (raiz) {
+  "use strict";
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, D = WA.Dinero, I = WA.Informes, U = WA.TesUI;
+
+  var anioVista = null;
+  var euros = function (c) { return esc(D.formatear(c)); };
+
+  function pestanas(actual) {
+    return '<nav class="pestanas no-imprimir" aria-label="Informes"><a href="#/informes"' + (actual === "memoria" ? ' aria-current="page"' : "") + ">Memoria anual</a>" +
+      '<a href="#/informes/cuentas"' + (actual === "cuentas" ? ' aria-current="page"' : "") + ">Cuentas</a></nav>";
+  }
+  async function cargar(datos) {
+    var c = await U.cargar(datos);
+    var r = await Promise.all([datos.listar("actas"), datos.listar("obligaciones")]);
+    c.actas = r[0]; c.obligaciones = r[1];
+    c.socios = c.socios.map(WA.Socios.completar);
+    return c;
+  }
+  function selectorAnio(c, anio) {
+    // Desde el primer año con datos (movimientos, cuotas, facturas, actividades, actas, saldos iniciales) hasta hoy.
+    var actual = +F.hoy().slice(0, 4), fechas = [];
+    c.movimientos.forEach(function (m) { fechas.push(m.fecha); });
+    c.cuotas.forEach(function (q) { fechas.push(q.fechaEmision, q.pago && q.pago.fecha); });
+    c.facturas.forEach(function (f) { fechas.push(f.fecha); });
+    c.actividades.forEach(function (a) { fechas.push(String(a.inicio).slice(0, 10)); });
+    c.actas.forEach(function (a) { fechas.push(a.fecha); });
+    c.config.cuentas.forEach(function (k) { fechas.push(k.fechaSaldoInicial); });
+    var primero = Math.min.apply(null, fechas.filter(function (f) { return /^\d{4}-/.test(f || ""); }).map(function (f) { return +f.slice(0, 4); }).concat([actual, anio]));
+    var anios = [];
+    for (var y = Math.max(actual, anio); y >= Math.max(primero, actual - 30); y--) anios.push(y);
+    return '<label>Ejercicio <select id="i-anio">' + anios.map(function (a) {
+      return '<option value="' + a + '"' + (+a === anio ? " selected" : "") + ">" + a + "</option>";
+    }).join("") + "</select></label>";
+  }
+  function barraHerramientas(c, anio, extra) {
+    return '<div class="barra-filtros no-imprimir">' + selectorAnio(c, anio) +
+      '<button type="button" class="btn btn-primario" id="i-imprimir">Imprimir o guardar en PDF</button>' + (extra || "") + "</div>";
+  }
+  function conectarHerramientas(cont) {
+    cont.querySelector("#i-anio").addEventListener("change", function (e) { anioVista = +e.target.value; WA.App.repintar(); });
+    cont.querySelector("#i-imprimir").addEventListener("click", function () { window.print(); });
+  }
+  var enCurso = function (anio) {
+    return anio >= +F.hoy().slice(0, 4) ? '<p class="aviso-informe">Ejercicio en curso: datos registrados hasta hoy, ' + esc(F.corta(F.hoy())) + ".</p>" : "";
+  };
+  var parrafos = function (t) { return esc(t).split(/\n{2,}/).map(function (p) { return "<p>" + p.replace(/\n/g, "<br>") + "</p>"; }).join(""); };
+  function tablaConteo(obj, titulo) {
+    var ks = Object.keys(obj).sort(function (a, b) { return obj[b] - obj[a]; });
+    if (!ks.length) return "";
+    return '<table class="tabla tabla-informe"><caption>' + esc(titulo) + "</caption><tbody>" + ks.map(function (k) {
+      return "<tr><th scope=\"row\">" + esc(k) + '</th><td class="num">' + obj[k] + "</td></tr>";
+    }).join("") + "</tbody></table>";
+  }
+
+  // ── Memoria anual ───────────────────────────────────────────────────────
+  async function pintarMemoria(cont, datos) {
+    var c = await cargar(datos);
+    var anio = anioVista || +F.hoy().slice(0, 4);
+    var m = I.memoria(c, anio);
+    var a = c.asociacion, dom = WA.Direccion.formatear(a.domicilio);
+    var t = m.textos;
+    var estadoSub = function (e) { return (WA.Obligaciones.ESTADOS_SUBVENCION.filter(function (x) { return x[0] === e; })[0] || ["", ""])[1]; };
+    var cargo = function (j) { return j.cargo === "Otro" && j.cargoOtro ? j.cargoOtro : j.cargo; };
+
+    cont.innerHTML =
+      '<div class="cabecera-pagina no-imprimir"><h1>Informes</h1></div>' + pestanas("memoria") + barraHerramientas(c, anio) +
+      '<details class="tarjeta no-imprimir"' + (!t.presentacion && !t.fines ? " open" : "") + "><summary><strong>Textos de la memoria " + anio + "</strong> (lo que no se calcula solo)</summary>" +
+      '<form id="i-textos" class="formulario" novalidate>' +
+      UI.campo({ nombre: "presentacion", etiqueta: "Presentación", tipo: "textarea", valor: t.presentacion, ancho: "completo", filas: 4, ayuda: "Unas líneas de la presidencia sobre el año." }) +
+      UI.campo({ nombre: "fines", etiqueta: "Fines de la asociación", tipo: "textarea", valor: t.fines, ancho: "completo", filas: 3, ayuda: "Cópialos de los estatutos." }) +
+      UI.campo({ nombre: "valoracion", etiqueta: "Valoración y retos para el año siguiente", tipo: "textarea", valor: t.valoracion, ancho: "completo", filas: 4 }) +
+      '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar textos</button></div></form></details>' +
+
+      '<article class="documento-impreso informe">' +
+      '<p class="di-entidad">' + esc(a.nombre || "") + (a.nif ? " · NIF " + esc(a.nif) : "") + "</p>" +
+      "<h1>Memoria de actividades " + anio + "</h1>" + enCurso(anio) +
+      (t.presentacion ? "<h3>Presentación</h3>" + parrafos(t.presentacion) : "") +
+      "<h3>1. La asociación</h3>" +
+      '<table class="tabla tabla-informe"><tbody>' +
+      "<tr><th scope=\"row\">Nombre</th><td>" + esc(a.nombre) + (a.siglas ? " (" + esc(a.siglas) + ")" : "") + "</td></tr>" +
+      (a.nif ? "<tr><th scope=\"row\">NIF</th><td>" + esc(a.nif) + "</td></tr>" : "") +
+      (a.registro || a.numeroRegistro ? "<tr><th scope=\"row\">Inscripción</th><td>" + esc([a.registro, a.numeroRegistro].filter(Boolean).join(", n.º ")) + "</td></tr>" : "") +
+      (a.fechaConstitucion ? "<tr><th scope=\"row\">Constitución</th><td>" + esc(F.larga(a.fechaConstitucion)) + "</td></tr>" : "") +
+      (dom.completa ? "<tr><th scope=\"row\">Domicilio social</th><td>" + esc(dom.completa) + "</td></tr>" : "") +
+      (a.email || a.web ? "<tr><th scope=\"row\">Contacto</th><td>" + esc([a.email, a.telefono, a.web].filter(Boolean).join(" · ")) + "</td></tr>" : "") +
+      "</tbody></table>" +
+      (t.fines ? "<h4>Fines</h4>" + parrafos(t.fines) : "") +
+      "<h4>Junta directiva a 31 de diciembre</h4>" + (m.junta.length ? '<table class="tabla tabla-informe"><tbody>' + m.junta.map(function (j) {
+        return "<tr><th scope=\"row\">" + esc(cargo(j)) + "</th><td>" + esc(j.nombre) + "</td></tr>";
+      }).join("") + "</tbody></table>" : '<p class="detalle">Sin datos de la junta.</p>') +
+      (m.cambiosJunta.length ? '<p class="detalle">Cambios en el año: ' + esc(m.cambiosJunta.map(function (j) {
+        return j.nombre + " (" + cargo(j) + (j.desde >= anio + "-01-01" ? ", entra el " + F.corta(j.desde) : "") + (j.hasta && j.hasta <= anio + "-12-31" ? ", sale el " + F.corta(j.hasta) : "") + ")";
+      }).join("; ")) + "</p>" : "") +
+
+      "<h3>2. Socios</h3>" +
+      '<div class="cifras-informe"><div><span class="cifra">' + m.socios.activos + "</span><span>socios a 31/12</span></div>" +
+      '<div><span class="cifra">' + m.socios.altas + "</span><span>altas</span></div>" +
+      '<div><span class="cifra">' + m.socios.bajas + "</span><span>bajas</span></div>" +
+      '<div><span class="cifra">' + m.socios.inicio + "</span><span>a 1 de enero</span></div></div>" +
+      '<div class="rejilla-informe">' + tablaConteo(m.socios.porTipo, "Por tipo") + tablaConteo(m.socios.porSexo, "Por sexo") + tablaConteo(m.socios.porEdad, "Por edad") + "</div>" +
+
+      "<h3>3. Actividades</h3>" +
+      '<div class="cifras-informe"><div><span class="cifra">' + m.totalesActividades.n + "</span><span>actividades</span></div>" +
+      '<div><span class="cifra">' + m.totalesActividades.inscripciones + "</span><span>inscripciones</span></div>" +
+      '<div><span class="cifra">' + m.totalesActividades.asistentes + "</span><span>asistencias registradas</span></div>" +
+      '<div><span class="cifra">' + m.totalesActividades.personasDistintas + "</span><span>personas distintas</span></div>" +
+      '<div><span class="cifra">' + m.totalesActividades.menores + "</span><span>de ellas, menores</span></div></div>" +
+      (m.actividades.length ? '<div class="tabla-envoltorio"><table class="tabla tabla-informe"><thead><tr><th scope="col">Fecha</th><th scope="col">Actividad</th><th scope="col">Lugar</th>' +
+        '<th scope="col" class="num">Inscritos</th><th scope="col" class="num">Asistentes</th></tr></thead><tbody>' + m.actividades.map(function (x) {
+          return "<tr><td>" + esc(F.corta(x.fecha)) + "</td><td>" + esc(x.titulo) + (x.tipo ? '<br><span class="detalle">' + esc(x.tipo) + (x.proyecto ? " · " + esc(x.proyecto) : "") + "</span>" : "") +
+            "</td><td>" + esc(x.lugar) + '</td><td class="num">' + x.inscritas + '</td><td class="num">' + (x.asistentes || (x.estado === "realizada" ? 0 : "—")) + "</td></tr>";
+        }).join("") + "</tbody></table></div>" : '<p class="detalle">No hay actividades registradas en ' + anio + ".</p>") +
+
+      "<h3>4. Proyectos y subvenciones</h3>" +
+      (m.proyectos.length ? '<div class="tabla-envoltorio"><table class="tabla tabla-informe"><thead><tr><th scope="col">Proyecto</th><th scope="col" class="importe">Concedido</th>' +
+        '<th scope="col" class="importe">Gasto previsto</th><th scope="col" class="importe">Gasto realizado</th></tr></thead><tbody>' + m.proyectos.map(function (p) {
+          return "<tr><td>" + esc(p.nombre) + '<br><span class="detalle">' + (p.tipo === "subvencion" ? "Subvención" + (p.financiador ? " de " + esc(p.financiador) : "") + (p.estadoSubvencion ? " · " + esc(estadoSub(p.estadoSubvencion)) : "") : "Proyecto propio") +
+            '</span></td><td class="importe">' + (p.concedido ? euros(p.concedido) : "—") + '</td><td class="importe">' + euros(p.gastoPrevisto) + '</td><td class="importe">' + euros(p.gastoRealizado) + "</td></tr>";
+        }).join("") + "</tbody></table></div>" : '<p class="detalle">Sin proyectos en ' + anio + ".</p>") +
+
+      "<h3>5. Órganos de gobierno</h3>" +
+      (m.nActas ? "<p>Se celebraron " + m.nActas + (m.nActas === 1 ? " reunión" : " reuniones") + " con acta: " + esc(Object.keys(m.reuniones).map(function (k) { return k + " (" + m.reuniones[k] + ")"; }).join(", ")) + ".</p>" +
+        (m.acuerdos.length ? "<h4>Acuerdos adoptados</h4><ul>" + m.acuerdos.map(function (x) {
+          return "<li>" + esc(F.corta(x.fecha)) + " · " + esc(x.organo) + ": " + esc(x.texto) + (x.votacion ? ' <span class="detalle">(' + esc(x.votacion) + ")</span>" : "") + "</li>";
+        }).join("") + "</ul>" : "") : '<p class="detalle">No hay actas registradas en ' + anio + ".</p>") +
+
+      "<h3>6. Resumen económico</h3>" + resumenEconomico(I.cuentas(c, anio)) +
+      '<p class="detalle">Detalle completo en «Cuentas del ejercicio». Importes por criterio de caja (cobros y pagos del año).</p>' +
+      (t.valoracion ? "<h3>7. Valoración y retos</h3>" + parrafos(t.valoracion) : "") +
+      '<p class="di-pie">Memoria elaborada con datos a ' + esc(F.larga(F.hoy())) + ".</p>" +
+      "</article>";
+    conectarHerramientas(cont);
+    cont.querySelector("#i-textos").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      var d = UI.leerFormulario(e.target);
+      c.config.memorias = c.config.memorias || {};
+      c.config.memorias[anio] = { presentacion: d.presentacion, fines: d.fines, valoracion: d.valoracion };
+      await datos.escribir("config", c.config);
+      UI.aviso("Textos guardados.");
+      WA.App.repintar();
+    });
+  }
+
+  function resumenEconomico(k) {
+    return '<table class="tabla tabla-informe"><tbody>' +
+      "<tr><th scope=\"row\">Saldo a 1 de enero</th><td class=\"importe\">" + euros(k.saldosInicio.total) + "</td></tr>" +
+      "<tr><th scope=\"row\">Ingresos del año</th><td class=\"importe\">" + euros(k.resultados.totalIngresos) + "</td></tr>" +
+      "<tr><th scope=\"row\">Gastos del año</th><td class=\"importe\">−" + euros(k.resultados.totalGastos) + "</td></tr>" +
+      '<tr class="total"><th scope="row">Resultado</th><td class="importe">' + euros(k.resultados.resultado) + "</td></tr>" +
+      "<tr><th scope=\"row\">Saldo a 31 de diciembre</th><td class=\"importe\">" + euros(k.saldosFin.total) + "</td></tr></tbody></table>" + notaSaldo(k);
+  }
+  /** Por qué el saldo no ha cambiado exactamente lo mismo que el resultado (anticipos y reembolsos). */
+  function notaSaldo(k) {
+    var dif = (k.saldosFin.total - k.saldosInicio.total) - k.resultados.resultado;
+    if (!dif) return "";
+    return '<p class="detalle">El saldo ha variado ' + euros(k.saldosFin.total - k.saldosInicio.total) + ", no exactamente el resultado: la diferencia (" + euros(dif) +
+      ") son anticipos y reembolsos. Un gasto pagado por una persona cuenta como gasto cuando se justifica, pero el dinero sale de la cuenta cuando se le devuelve; y un anticipo sale de la cuenta antes de convertirse en gasto.</p>";
+  }
+
+  // ── Cuentas ─────────────────────────────────────────────────────────────
+  async function pintarCuentas(cont, datos) {
+    var c = await cargar(datos);
+    var anio = anioVista || +F.hoy().slice(0, 4);
+    var k = I.cuentas(c, anio);
+    var a = c.asociacion;
+    var nombreCat = function (id) { return U.nombreCategoria(c, id); };
+    var filasCat = function (tipo) {
+      var actual = tipo === "ingreso" ? k.resultados.ingresos : k.resultados.gastos;
+      var antes = tipo === "ingreso" ? k.anterior.ingresos : k.anterior.gastos;
+      var ids = Object.keys(Object.assign({}, actual, antes)).sort(function (x, y) { return (actual[y] || 0) - (actual[x] || 0); });
+      return ids.map(function (id) {
+        return "<tr><th scope=\"row\">" + esc(nombreCat(id)) + '</th><td class="importe">' + euros(actual[id] || 0) + '</td><td class="importe detalle">' + euros(antes[id] || 0) + "</td></tr>";
+      }).join("");
+    };
+    var p = k.pendientes, s = k.situacion;
+    var fila = function (t, v, clase) { return "<tr" + (clase ? ' class="' + clase + '"' : "") + "><th scope=\"row\">" + esc(t) + '</th><td class="importe">' + euros(v) + "</td></tr>"; };
+
+    cont.innerHTML =
+      '<div class="cabecera-pagina no-imprimir"><h1>Informes</h1></div>' + pestanas("cuentas") +
+      barraHerramientas(c, anio, '<button type="button" class="btn btn-secundario" id="i-excel">Descargar Excel</button>') +
+      '<article class="documento-impreso informe">' +
+      '<p class="di-entidad">' + esc(a.nombre || "") + (a.nif ? " · NIF " + esc(a.nif) : "") + "</p>" +
+      "<h1>Cuentas del ejercicio " + anio + "</h1>" + enCurso(anio) +
+      '<p class="aviso-informe">Elaboradas con los cobros y pagos registrados (criterio de caja). Sirven para informar a la asamblea; las cuentas anuales formales de una entidad sin fines lucrativos se llevan por devengo y con partida doble: verificar con asesoría.</p>' +
+
+      "<h3>1. Ingresos y gastos</h3>" +
+      '<table class="tabla tabla-informe"><thead><tr><th scope="col">Ingresos</th><th scope="col" class="importe">' + anio + '</th><th scope="col" class="importe">' + (anio - 1) + "</th></tr></thead><tbody>" +
+      filasCat("ingreso") + '<tr class="total"><th scope="row">Total ingresos</th><td class="importe">' + euros(k.resultados.totalIngresos) + '</td><td class="importe">' + euros(k.anterior.totalIngresos) + "</td></tr></tbody></table>" +
+      '<table class="tabla tabla-informe"><thead><tr><th scope="col">Gastos</th><th scope="col" class="importe">' + anio + '</th><th scope="col" class="importe">' + (anio - 1) + "</th></tr></thead><tbody>" +
+      filasCat("gasto") + '<tr class="total"><th scope="row">Total gastos</th><td class="importe">' + euros(k.resultados.totalGastos) + '</td><td class="importe">' + euros(k.anterior.totalGastos) + "</td></tr>" +
+      '<tr class="total"><th scope="row">Resultado</th><td class="importe">' + euros(k.resultados.resultado) + '</td><td class="importe">' + euros(k.anterior.resultado) + "</td></tr></tbody></table>" +
+
+      "<h3>2. Saldos de tesorería</h3>" +
+      '<table class="tabla tabla-informe"><thead><tr><th scope="col">Cuenta</th><th scope="col" class="importe">1 de enero</th><th scope="col" class="importe">31 de diciembre</th></tr></thead><tbody>' +
+      c.config.cuentas.map(function (cu) {
+        return "<tr><th scope=\"row\">" + esc(cu.nombre) + '</th><td class="importe">' + euros(k.saldosInicio.porCuenta[cu.id] || 0) + '</td><td class="importe">' + euros(k.saldosFin.porCuenta[cu.id] || 0) + "</td></tr>";
+      }).join("") + '<tr class="total"><th scope="row">Total</th><td class="importe">' + euros(k.saldosInicio.total) + '</td><td class="importe">' + euros(k.saldosFin.total) + "</td></tr></tbody></table>" + notaSaldo(k) +
+
+      "<h3>3. Presupuesto y realizado</h3>" +
+      (k.presupuesto.ingresos.previsto || k.presupuesto.gastos.previsto ? '<div class="tabla-envoltorio"><table class="tabla tabla-informe"><thead><tr><th scope="col">Partida</th><th scope="col" class="importe">Previsto</th><th scope="col" class="importe">Realizado</th><th scope="col" class="importe">Diferencia</th></tr></thead><tbody>' +
+        ["ingreso", "gasto"].map(function (tipo) {
+          var tot = tipo === "ingreso" ? k.presupuesto.ingresos : k.presupuesto.gastos;
+          return k.presupuesto.filas.filter(function (f) { return f.tipo === tipo && (f.previsto || f.realizado); }).map(function (f) {
+            return "<tr><th scope=\"row\">" + (tipo === "ingreso" ? "Ingreso · " : "Gasto · ") + esc(f.nombre) + '</th><td class="importe">' + euros(f.previsto) + '</td><td class="importe">' + euros(f.realizado) + '</td><td class="importe">' + euros(f.diferencia) + "</td></tr>";
+          }).join("") + '<tr class="total"><th scope="row">Total ' + (tipo === "ingreso" ? "ingresos" : "gastos") + '</th><td class="importe">' + euros(tot.previsto) + '</td><td class="importe">' + euros(tot.realizado) +
+            '</td><td class="importe">' + euros(tot.previsto - tot.realizado) + "</td></tr>";
+        }).join("") + "</tbody></table></div>" + '<p class="detalle">Diferencia = previsto menos realizado.</p>' : '<p class="detalle">No hay presupuesto aprobado registrado para ' + anio + ' (Presupuestos → Presupuesto anual).</p>') +
+
+      "<h3>4. Pendiente a 31 de diciembre</h3>" +
+      '<table class="tabla tabla-informe"><tbody>' +
+      fila("Cuotas de socios sin cobrar (" + p.cuotas.n + ")", p.cuotas.importe) +
+      fila("Inscripciones a actividades sin cobrar (" + p.inscripciones.n + ")", p.inscripciones.importe) +
+      fila("Facturas emitidas pendientes de cobro (" + p.facturasEmitidas.lista.length + ")", p.facturasEmitidas.importe) +
+      fila("Facturas recibidas pendientes de pago (" + p.facturasRecibidas.lista.length + ")", p.facturasRecibidas.importe) +
+      fila("Anticipos por justificar o devolver (" + p.anticipos.personasDeben.length + ")", p.anticipos.importeDeben) +
+      fila("Reembolsos o anticipos pendientes de pagar a personas (" + p.anticipos.seLesDebe.length + ")", p.anticipos.importeSeLesDebe) +
+      (c.config.iva.presenta ? fila("IVA a compensar en ejercicios siguientes", p.ivaACompensar) : "") +
+      "</tbody></table>" +
+
+      "<h3>5. Estado de situación simplificado a 31 de diciembre</h3>" +
+      '<p class="aviso-informe">No es el balance oficial: no incluye inmovilizado, existencias ni amortizaciones.</p>' +
+      '<div class="rejilla-informe"><table class="tabla tabla-informe"><caption>Lo que se tiene y se debe a la asociación</caption><tbody>' +
+      fila("Tesorería (bancos y caja)", s.activo.tesoreria) + fila("Cuotas pendientes", s.activo.cuotas) + fila("Inscripciones pendientes", s.activo.inscripciones) +
+      fila("Facturas pendientes de cobro", s.activo.clientes) + fila("Anticipos por justificar", s.activo.anticipos) + (s.activo.iva ? fila("IVA a compensar", s.activo.iva) : "") +
+      fila("Total", s.totalActivo, "total") + "</tbody></table>" +
+      '<table class="tabla tabla-informe"><caption>Lo que debe la asociación</caption><tbody>' +
+      fila("Facturas pendientes de pago", s.pasivo.proveedores) + fila("Pendiente de pagar a personas", s.pasivo.personas) + fila("Total", s.totalPasivo, "total") +
+      fila("Diferencia (fondos propios aproximados)", s.neto, "total") + "</tbody></table></div>" +
+
+      "<h3>6. Cuenta de resultados con la estructura del modelo para entidades sin fines lucrativos</h3>" +
+      '<p class="aviso-informe">Aproximación orientativa: agrupa las categorías de la tesorería en las partidas del modelo abreviado (la partida de cada categoría se cambia en Tesorería → Ajustes). Usa criterio de caja; el modelo oficial va por devengo. Verificar con asesoría.</p>' +
+      '<table class="tabla tabla-informe"><tbody>' + k.esfl.lineas.filter(function (l) { return l.importe || ["1a", "1d", "9"].indexOf(l.id) >= 0; }).map(function (l) {
+        return "<tr><th scope=\"row\">" + esc(l.texto) + '</th><td class="importe">' + euros(l.importe) + "</td></tr>";
+      }).join("") +
+      fila("A.1) Excedente de la actividad", k.esfl.excedenteActividad, "total") +
+      fila("A.2) Excedente de las operaciones financieras", k.esfl.excedenteFinanciero, "total") +
+      fila("A.4) Excedente del ejercicio", k.esfl.excedente, "total") + "</tbody></table>" +
+      (k.esfl.sinPartida.length ? '<p class="detalle">Sin partida asignada (se han sumado a «otros ingresos» u «otros gastos»): ' + esc(k.esfl.sinPartida.map(function (x) { return x.categoria + " (" + (x.tipo === "ingreso" ? "ingresos" : "gastos") + ") " + D.formatear(x.importe); }).join(", ")) + ".</p>" : "") +
+      '<p class="di-pie">Datos a ' + esc(F.larga(F.hoy())) + ".</p>" +
+      '<div class="di-firmas"><div><p>Vº Bº La Presidencia</p><div class="di-firma"></div></div><div><p>La Tesorería</p><div class="di-firma"></div></div></div>' +
+      "</article>";
+    conectarHerramientas(cont);
+    cont.querySelector("#i-excel").addEventListener("click", function () { U.exportarExcel(c, anio); });
+  }
+
+  async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "cuentas") return pintarCuentas(cont, datos);
+    return pintarMemoria(cont, datos);
+  }
+
+  WA.App.registrar({
+    id: "informes", titulo: "Informes", orden: 50, pintar: pintar,
+    icono: '<path d="M5 3.5h10l4 4v13H5z"/><path d="M8.5 16v-3M12 16v-6M15.5 16v-4"/>',
   });
 })(typeof self !== "undefined" ? self : this);
 </script>

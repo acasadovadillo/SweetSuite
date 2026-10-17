@@ -311,3 +311,42 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 .di-firmas { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2.5rem; text-align: center; }
 .di-firma { height: 4rem; border-bottom: 1px solid #111; margin: 0.5rem 1rem; }
 @media (max-width: 760px) { .documento-impreso { padding: 1.25rem; } }
+
+/* ── Panel de Inicio (Fase 6) ─────────────────────────────────────────── */
+.titulo-bloque { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin: 1.75rem 0 0.75rem; }
+.rejilla-tarjetas .tarjeta h3 { font-size: 1rem; margin: 0 0 0.5rem; }
+.rejilla-tarjetas .tarjeta-ancha { grid-column: 1 / -1; }
+.lista-cifras { list-style: none; padding: 0; margin: 0 0 0.75rem; }
+.lista-cifras li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--borde); }
+.lista-cifras li:last-child { border-bottom: none; }
+.lista-cifras li.total { font-weight: 700; border-top: 2px solid var(--borde-fuerte); }
+.lista-cifras .importe { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.barra-progreso.grande { height: 12px; border-radius: 6px; margin: 0.25rem 0 0.2rem; }
+.barra-progreso.grande + .detalle { margin-top: 0; }
+
+/* Gráficas en SVG: los colores salen del tema. */
+.grafica { margin: 0; }
+.grafica svg { display: block; width: 100%; height: auto; max-height: 260px; overflow: visible; }
+.g-rejilla { stroke: var(--borde); stroke-width: 1; }
+.g-eje { fill: var(--texto-3); font-size: 12px; font-family: var(--fuente); }
+.g-area { fill: var(--acento-suave); stroke: none; }
+.g-linea { fill: none; stroke: var(--acento); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
+.g-punto { fill: var(--acento); stroke: var(--superficie); stroke-width: 2; }
+
+/* ── Informes: memoria y cuentas ──────────────────────────────────────── */
+.informe { max-width: 900px; }
+.documento-impreso .detalle { color: #555; }
+.documento-impreso .tabla th, .documento-impreso .tabla td { border-bottom-color: #ccc; color: #111; }
+.documento-impreso .tabla thead th { color: #444; }
+.documento-impreso .tabla .total th, .documento-impreso .tabla .total td { border-top-color: #111; }
+.tabla-informe { margin: 0.5rem 0 1rem; font-size: 0.92rem; }
+.tabla-informe th, .tabla-informe td { padding: 0.35rem 0.5rem; }
+.tabla-informe caption { text-align: left; font-weight: 700; padding: 0.25rem 0.5rem; }
+.tabla-informe tbody th { font-weight: 500; }
+.cifras-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem; margin: 0.5rem 0 1rem; }
+.cifras-informe > div { border: 1px solid #ccc; border-radius: var(--radio-pequeno); padding: 0.5rem 0.75rem; }
+.cifras-informe .cifra { display: block; font-size: 1.5rem; }
+.cifras-informe span:not(.cifra) { font-size: 0.85rem; color: #555; }
+.rejilla-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 1.5rem; align-items: start; }
+.aviso-informe { font-size: 0.85rem; background: #f4f4f4; border-left: 3px solid #888; padding: 0.4rem 0.75rem; color: #333; }
+.di-pie { margin-top: 2rem; font-size: 0.8rem; color: #555; }

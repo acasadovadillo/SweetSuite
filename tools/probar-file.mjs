@@ -102,6 +102,18 @@ try {
       error: !!document.querySelector('.tarjeta-error') }`);
   comprobar("lo guardado sobrevive a recargar y la página de socios se pinta", tras.socios === 1 && tras.titulo === "Socios" && !tras.error, tras);
 
+  const paginas = await evaluar(`
+    const out = {};
+    for (const r of ['#/inicio', '#/informes', '#/informes/cuentas']) {
+      location.hash = r;
+      await new Promise((ok) => setTimeout(ok, 600));
+      out[r] = { titulo: (document.querySelector('#principal h1') || {}).textContent, error: !!document.querySelector('.tarjeta-error'),
+        documento: !!document.querySelector('#principal .documento-impreso'), grafica: !!document.querySelector('#principal .grafica svg') };
+    }
+    return out`);
+  comprobar("el panel de inicio y los informes se pintan (con gráficas y documento imprimible)",
+    !paginas["#/inicio"].error && paginas["#/inicio"].grafica && ["#/informes", "#/informes/cuentas"].every((r) => !paginas[r].error && paginas[r].documento), paginas);
+
   // Base de datos de la versión 1 (antes de los adjuntos) con datos dentro: al abrir, se actualiza sin perderlos.
   await evaluar(`
     const llave = await WA.Cripto.crearLlave('frase v1');
