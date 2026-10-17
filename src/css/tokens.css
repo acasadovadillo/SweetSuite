@@ -1,69 +1,112 @@
 /*
  * webkit_asociaciones — Colores y medidas (tokens).
  *
- * Todo el CSS usa estas variables, nunca colores sueltos: así el tema oscuro
- * es solo redefinirlas. tema.js pone data-tema="claro" u "oscuro" en <html>.
- * Los pares texto/fondo cumplen contraste AA (4,5:1) en los dos temas.
+ * Todo el CSS usa estas variables, nunca colores sueltos: así cada tema es solo
+ * redefinirlas. tema.js pone data-tema="claro" u "oscuro" en <html>.
+ *
+ * La estética es la de Solvento: oscuro de grises azulados por defecto, paneles
+ * muy redondeados sin sombra (los separa el borde), botón principal blanco y
+ * etiquetas pequeñas en mayúsculas. El nombre de cada variable dice para qué
+ * sirve, no de qué color es.
+ *
+ * Contraste: los textos cumplen AA (4,5:1) sobre los fondos en los dos temas.
+ * Por eso --texto-3 es un punto más claro que el gris secundario de Solvento
+ * (#6b7280 se queda en 3,5:1 sobre los paneles).
  */
 :root {
-  --fondo: #f5f6f3;
-  --superficie: #ffffff;
-  --superficie-2: #eef0ec;
-  --borde: #d5d9d2;
-  --borde-fuerte: #9aa39a;
-  --texto: #1b211d;
-  --texto-2: #4a544c;          /* secundario: 7:1 sobre blanco */
-  --texto-3: #5f6a62;          /* detalles: 5,4:1 sobre blanco */
-  --acento: #2f6f4f;           /* verde: botones principales, enlaces */
-  --acento-hover: #255a40;
+  /* Fondos, de la página a lo que flota encima (en Solvento, f0…f4) */
+  --fondo: #0f1117;
+  --hundido: #12141d;          /* campos de formulario, pistas de barras */
+  --superficie-flotante: #171a24; /* diálogos, menú lateral */
+  --superficie: #1a1d27;       /* paneles y tarjetas */
+  --superficie-2: #1e2130;     /* al pasar el ratón, celdas secundarias */
+  /* Bordes */
+  --borde-suave: #232733;
+  --borde: #2a2d3a;
+  --borde-fuerte: #3b4257;
+  /* Texto */
+  --titulo: #ffffff;
+  --texto: #e5e7eb;
+  --texto-2: #9ca3af;
+  --texto-3: #8a91a0;
+  /* Acción principal: blanca, como en Solvento */
+  --primario: #ffffff;
+  --primario-texto: #000000;
+  /* Acento (selección, foco, gráficas, enlaces) */
+  --acento: #3b82f6;
+  --acento-hover: #60a5fa;
   --acento-texto: #ffffff;
-  --acento-suave: #e3efe8;
-  --enlace: #23613f;
-  --foco: #1f5fbf;
-  --peligro: #b3261e;
-  --peligro-suave: #fbe9e7;
-  --aviso: #8a5a00;
-  --aviso-fondo: #fff4d6;
-  --aviso-borde: #e7c56b;
-  --info-fondo: #e6effa;
-  --info-borde: #9dbbe6;
-  --ok: #1e6b3d;
-  --ok-fondo: #e1f2e7;
-  --sombra: 0 1px 2px rgba(20, 30, 20, 0.06), 0 4px 16px rgba(20, 30, 20, 0.06);
+  --acento-suave: rgba(59, 130, 246, 0.14);
+  --enlace: #60a5fa;
+  --foco: #60a5fa;
+  /* Con significado */
+  --peligro: #f87171;
+  --peligro-fuerte: #ef4444;
+  --peligro-suave: #2b1414;
+  --aviso: #fbbf24;
+  --aviso-fondo: #2a2109;
+  --aviso-borde: #5c4712;
+  --info-fondo: #171a24;
+  --info-borde: #2a2d3a;
+  --ok: #34d399;
+  --ok-fondo: #0f2a1c;
+  /* Globos y avisos flotantes */
+  --globo: #000000;
+  --globo-texto: #ffffff;
+  /* Logotipo */
+  --marca-fondo: #ffffff;
+  --marca-trazo: #0f1117;
+  --sombra: none;
+  --sombra-flotante: 0 10px 30px rgba(0, 0, 0, 0.55);
+  --velo: rgba(0, 0, 0, 0.7);
 
-  --radio: 10px;
-  --radio-pequeno: 6px;
-  --ancho-menu: 232px;
-  --alto-cabecera: 56px;
-  --fuente: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --radio: 20px;               /* paneles */
+  --radio-grande: 24px;        /* tarjeta destacada */
+  --radio-medio: 14px;         /* diálogos, elementos dentro de un panel */
+  --radio-pequeno: 10px;       /* campos, botones, elementos del menú */
+  --ancho-menu: 248px;
+  --alto-cabecera: 64px;
+  --fuente: "Segoe UI", system-ui, -apple-system, Roboto, "Helvetica Neue", Arial, sans-serif;
   --fuente-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-  color-scheme: light;
+  color-scheme: dark;
 }
 
-:root[data-tema="oscuro"] {
-  --fondo: #121614;
-  --superficie: #1a201c;
-  --superficie-2: #232a25;
-  --borde: #323b35;
-  --borde-fuerte: #5d6a61;
-  --texto: #e8ece9;
-  --texto-2: #b8c2bb;
-  --texto-3: #9aa59d;
-  --acento: #6fbf91;
-  --acento-hover: #8ad0a7;
-  --acento-texto: #0d1a12;
-  --acento-suave: #1f3328;
-  --enlace: #8ad0a7;
-  --foco: #8ab4f8;
-  --peligro: #f28b82;
-  --peligro-suave: #3a1d1b;
-  --aviso: #f3c969;
-  --aviso-fondo: #2e2610;
-  --aviso-borde: #6b5520;
-  --info-fondo: #172436;
-  --info-borde: #35507a;
-  --ok: #8ad0a7;
-  --ok-fondo: #183224;
-  --sombra: 0 1px 2px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3);
-  color-scheme: dark;
+:root[data-tema="claro"] {
+  --fondo: #eef0f4;
+  --hundido: #ffffff;
+  --superficie-flotante: #ffffff;
+  --superficie: #ffffff;
+  --superficie-2: #f3f4f7;
+  --borde-suave: #e5e7eb;
+  --borde: #d3d6de;
+  --borde-fuerte: #b0b5c0;
+  --titulo: #0b0f19;
+  --texto: #1f2430;
+  --texto-2: #3d4452;
+  --texto-3: #5b6170;
+  --primario: #0b0f19;
+  --primario-texto: #ffffff;
+  --acento: #2563eb;
+  --acento-hover: #1d4ed8;
+  --acento-texto: #ffffff;
+  --acento-suave: #dbeafe;
+  --enlace: #1d4ed8;
+  --foco: #2563eb;
+  --peligro: #b91c1c;
+  --peligro-fuerte: #dc2626;
+  --peligro-suave: #fee2e2;
+  --aviso: #92400e;
+  --aviso-fondo: #fef3c7;
+  --aviso-borde: #f2c96b;
+  --info-fondo: #ffffff;
+  --info-borde: #d3d6de;
+  --ok: #047857;
+  --ok-fondo: #d1fae5;
+  --globo: #111827;
+  --globo-texto: #ffffff;
+  --marca-fondo: #0b0f19;
+  --marca-trazo: #ffffff;
+  --sombra-flotante: 0 10px 30px rgba(15, 20, 35, 0.18);
+  --velo: rgba(15, 20, 35, 0.45);
+  color-scheme: light;
 }

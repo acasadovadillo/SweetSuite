@@ -13,6 +13,7 @@
   "use strict";
   var WA = raiz.WA, esc = WA.UI.esc;
   var MESES_CORTOS = ["ene", "feb", "mar", "abr", "may", "jun", "jul", "ago", "sep", "oct", "nov", "dic"];
+  var contador = 0; // ids únicos para el degradado de cada gráfica
 
   function lineas(serie, opciones) {
     var o = opciones || {};
@@ -44,7 +45,8 @@
     var ultimo = serie[serie.length - 1];
     var resumen = (o.titulo ? o.titulo + ": " : "") + "de " + fmt(serie[0].valor) + " a " + fmt(ultimo.valor);
     return '<figure class="grafica"><svg viewBox="0 0 ' + an + " " + al + '" role="img" aria-label="' + esc(resumen) + '">' +
-      rejilla + '<path d="' + area + '" class="g-area"/><polyline points="' + puntos.join(" ") + '" class="g-linea"/>' +
+      '<defs><linearGradient id="g-deg-' + (++contador) + '" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" class="g-degradado-ini"/><stop offset="100%" class="g-degradado-fin"/></linearGradient></defs>' +
+      rejilla + '<path d="' + area + '" class="g-area" fill="url(#g-deg-' + contador + ')"/><polyline points="' + puntos.join(" ") + '" class="g-linea"/>' +
       '<circle cx="' + x(serie.length - 1).toFixed(1) + '" cy="' + y(ultimo.valor).toFixed(1) + '" r="4" class="g-punto"/>' + etiquetas + "</svg>" +
       '<table class="sr"><caption>' + esc(o.titulo || "Datos") + "</caption><tbody>" + serie.map(function (p) {
         return "<tr><th>" + esc(p.fecha) + "</th><td>" + esc(fmt(p.valor)) + "</td></tr>";

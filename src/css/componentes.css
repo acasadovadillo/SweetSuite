@@ -1,6 +1,6 @@
 /*
  * webkit_asociaciones — Componentes: botones, tarjetas, formularios, tablas,
- * diálogos, avisos y pantalla de acceso.
+ * diálogos, avisos y pantalla de acceso. Estética de Solvento.
  */
 
 /* ── Botones ─────────────────────────────────────────────────────────── */
@@ -8,67 +8,78 @@
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
   min-height: 44px;                 /* objetivo táctil cómodo */
   padding: 0.55rem 1.1rem; border-radius: var(--radio-pequeno);
-  font: inherit; font-weight: 600; cursor: pointer; text-decoration: none;
-  border: 1px solid transparent; transition: background 0.15s, border-color 0.15s;
+  font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none;
+  border: 1px solid transparent; transition: background 0.15s, border-color 0.15s, opacity 0.15s, color 0.15s;
 }
 .btn:disabled { opacity: 0.6; cursor: progress; }
-.btn-primario { background: var(--acento); color: var(--acento-texto); }
-.btn-primario:hover:not(:disabled) { background: var(--acento-hover); }
-.btn-secundario { background: var(--superficie); color: var(--texto); border-color: var(--borde-fuerte); }
-.btn-secundario:hover:not(:disabled) { background: var(--superficie-2); }
-.btn-peligro { background: var(--peligro); color: #fff; }
-:root[data-tema="oscuro"] .btn-peligro { color: #1a0d0c; }
+/* La acción principal es blanca sobre oscuro (negra sobre claro), como en Solvento. */
+.btn-primario { background: var(--primario); color: var(--primario-texto); }
+.btn-primario:hover:not(:disabled) { opacity: 0.85; }
+.btn-secundario { background: var(--superficie-2); color: var(--texto); border-color: var(--borde); }
+.btn-secundario:hover:not(:disabled) { border-color: var(--borde-fuerte); color: var(--titulo); }
+.btn-peligro { background: var(--peligro-fuerte); color: #fff; }
+.btn-peligro:hover:not(:disabled) { opacity: 0.88; }
 .btn-peligro-suave { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
-.btn-enlace { background: none; border: none; color: var(--enlace); text-decoration: underline; padding-inline: 0.25rem; font-weight: 500; }
-.btn-pequeno { min-height: 36px; padding: 0.3rem 0.75rem; font-size: 0.9rem; }
+.btn-peligro-suave:hover:not(:disabled) { border-color: var(--peligro); }
+.btn-enlace { background: none; border: none; color: var(--enlace); text-decoration: underline; text-underline-offset: 2px; padding-inline: 0.25rem; font-weight: 600; }
+.btn-pequeno { min-height: 36px; padding: 0.35rem 0.85rem; font-size: 0.82rem; border-radius: 8px; }
 .btn-icono {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; border-radius: var(--radio-pequeno);
-  background: none; border: none; color: var(--texto); cursor: pointer; font-size: 1.1rem;
+  width: 40px; height: 40px; border-radius: 8px;
+  background: none; border: none; color: var(--texto-2); cursor: pointer; font-size: 1.05rem;
+  transition: background 0.15s, color 0.15s;
 }
-.btn-icono:hover { background: var(--superficie-2); }
+.btn-icono:hover { background: var(--superficie-2); color: var(--titulo); }
 .acciones { display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 1rem; }
 
-/* ── Tarjetas ────────────────────────────────────────────────────────── */
+/* ── Tarjetas (los «paneles» de Solvento) ────────────────────────────── */
 .tarjeta {
   background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
-  padding: 1.25rem 1.5rem; margin-bottom: 1.25rem; box-shadow: var(--sombra);
+  padding: 1.75rem 2rem; margin-bottom: 1.5rem;
 }
 .tarjeta > :last-child { margin-bottom: 0; }
-.tarjeta-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
+/* El título de un panel es una etiqueta pequeña en mayúsculas. */
+.tarjeta h2, .rejilla-tarjetas .tarjeta h3 {
+  font-size: 0.82rem; font-weight: 700; color: var(--texto-3);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem;
+}
+.tarjeta-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .tarjeta-cabecera h2 { margin: 0; }
-.tarjeta-destacada { border-color: var(--acento); background: var(--acento-suave); box-shadow: none; }
-.tarjeta-error { border-color: var(--peligro); }
-.rejilla-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1.25rem; }
-.rejilla-tarjetas .tarjeta { margin: 0; }
-.cifra { font-size: 1.8rem; font-weight: 700; font-variant-numeric: tabular-nums; }
-.enlace-flecha { font-weight: 600; }
+/* La destacada es la «hero» de Solvento: degradado suave y más redondeo. */
+.tarjeta-destacada { background: linear-gradient(135deg, var(--superficie) 0%, var(--superficie-2) 100%); border-radius: var(--radio-grande); }
+.tarjeta-error { border-left: 3px solid var(--peligro-fuerte); }
+.rejilla-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
+.rejilla-tarjetas .tarjeta { margin: 0; padding: 1.5rem 1.75rem; }
+.cifra { font-size: 1.7rem; font-weight: 800; color: var(--titulo); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.enlace-flecha { display: inline-block; margin-top: 0.5rem; font-size: 0.88rem; font-weight: 700; text-decoration: none; }
+.enlace-flecha:hover { text-decoration: underline; }
 .enlace-flecha::after { content: " →"; }
 .lista { padding-left: 1.2rem; margin: 0 0 0.75rem; }
 .lista li { margin-bottom: 0.35rem; }
 .lista-pasos { margin: 0; padding-left: 1.2rem; }
-.lista-pasos li { margin-bottom: 0.4rem; }
+.lista-pasos li { margin-bottom: 0.45rem; }
 .vacio { color: var(--texto-3); font-style: italic; }
 
-.estado { display: inline-block; white-space: nowrap; padding: 0.1rem 0.55rem; border-radius: 999px; font-size: 0.85rem; font-weight: 600; margin-right: 0.35rem; }
+/* Insignias: fondo traslúcido del mismo color, como las de Solvento. */
+.estado { display: inline-block; white-space: nowrap; padding: 0.15rem 0.55rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; margin-right: 0.35rem; }
 .estado-ok { background: var(--ok-fondo); color: var(--ok); }
 .estado-aviso { background: var(--aviso-fondo); color: var(--aviso); }
 
 .caja-aviso {
   background: var(--aviso-fondo); border: 1px solid var(--aviso-borde); color: var(--texto);
-  border-radius: var(--radio-pequeno); padding: 0.75rem 1rem; margin: 0 0 1rem;
+  border-radius: var(--radio-pequeno); padding: 0.8rem 1rem; margin: 0 0 1rem; font-size: 0.92rem;
 }
 
 /* ── Franjas bajo la cabecera ───────────────────────────────────────── */
-.franja { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.5rem 1rem; font-size: 0.95rem; border-bottom: 1px solid; }
+.franja { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.55rem 1rem; font-size: 0.88rem; border-bottom: 1px solid; }
 .franja-aviso { background: var(--aviso-fondo); border-color: var(--aviso-borde); }
-.franja-info { background: var(--info-fondo); border-color: var(--info-borde); }
+.franja-info { background: var(--info-fondo); border-color: var(--info-borde); color: var(--texto-2); }
 
 /* ── Formularios ─────────────────────────────────────────────────────── */
 .formulario fieldset { border: none; padding: 0; margin: 0 0 1.25rem; }
-.formulario legend { font-weight: 700; font-size: 0.95rem; color: var(--texto-2); margin-bottom: 0.5rem; padding: 0; }
+.formulario legend { font-weight: 700; font-size: 1rem; color: var(--titulo); margin-bottom: 0.6rem; padding: 0; }
 .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.25rem 1rem; }
-.campo { display: flex; flex-direction: column; margin-bottom: 0.5rem; }
+.campo { display: flex; flex-direction: column; margin-bottom: 0.6rem; }
 .campo-completo { grid-column: 1 / -1; }
 /* Rejilla de 12 columnas para formularios con campos de anchos distintos (p. ej. la
    dirección). En el móvil pasa a 2 columnas; .col-movil-completo ocupa las dos. */
@@ -80,85 +91,108 @@
   .rejilla-12 > .campo { grid-column: span 1; }
   .rejilla-12 > .col-movil-completo, .rejilla-12 > .col-12 { grid-column: 1 / -1; }
 }
-.vista-previa { grid-column: 1 / -1; background: var(--superficie-2); border-radius: var(--radio-pequeno); padding: 0.6rem 0.9rem; margin-top: 0.25rem; }
-.vista-previa strong { display: block; font-size: 0.82rem; color: var(--texto-3); font-weight: 600; }
+.vista-previa { grid-column: 1 / -1; background: var(--hundido); border: 1px solid var(--borde-suave); border-radius: var(--radio-pequeno); padding: 0.65rem 0.9rem; margin-top: 0.25rem; }
+.vista-previa strong { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-3); font-weight: 700; }
 .vista-previa span { display: block; }
-.campo label, .acceso-form label { font-weight: 600; font-size: 0.92rem; margin-bottom: 0.25rem; }
+/* Etiquetas de campo: pequeñas, en mayúsculas y espaciadas (Solvento). */
+.campo label, .acceso-form label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); margin: 0.35rem 0 0.35rem; }
 .obligatorio { color: var(--peligro); }
 input:not([type]), input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
 input[type="password"], input[type="number"], input[type="search"], input[type="time"], input[type="datetime-local"], select, textarea {
-  width: 100%; min-height: 44px; padding: 0.55rem 0.7rem;
-  font: inherit; color: var(--texto); background: var(--superficie);
-  border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno);
+  width: 100%; min-height: 44px; padding: 0.6rem 0.85rem;
+  font: inherit; font-size: 0.95rem; color: var(--texto); background: var(--hundido);
+  border: 1px solid var(--borde); border-radius: var(--radio-pequeno);
+  transition: border-color 0.15s;
 }
+input::placeholder, textarea::placeholder { color: var(--texto-3); opacity: 0.8; }
 textarea { resize: vertical; }
-input:focus, select:focus, textarea:focus { border-color: var(--foco); }
-.campo-ayuda { color: var(--texto-3); font-size: 0.85rem; margin: 0.2rem 0 0; }
-.campo-error { color: var(--peligro); font-size: 0.85rem; font-weight: 600; margin: 0.2rem 0 0; min-height: 0; }
+input:hover, select:hover, textarea:hover { border-color: var(--borde-fuerte); }
+input:focus, select:focus, textarea:focus { border-color: var(--texto-3); outline: none; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
+.campo-ayuda { color: var(--texto-3); font-size: 0.8rem; margin: 0.3rem 0 0; }
+.campo-error { color: var(--peligro); font-size: 0.82rem; font-weight: 600; margin: 0.3rem 0 0; min-height: 0; }
 .campo-error:empty { display: none; }
 .con-error input, .con-error select, .con-error textarea { border-color: var(--peligro); }
 
 .grupo-opciones { border: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.grupo-opciones legend { font-weight: 600; margin-bottom: 0.5rem; padding: 0; }
+.grupo-opciones legend { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); margin-bottom: 0.6rem; padding: 0; }
+/* Opciones como botones que se marcan (las del tema en Solvento). */
+.opcion { position: relative; }
 .opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.opcion span { display: inline-block; padding: 0.5rem 1rem; border: 1px solid var(--borde-fuerte); border-radius: var(--radio-pequeno); cursor: pointer; }
-.opcion input:checked + span { border-color: var(--acento); background: var(--acento-suave); font-weight: 700; box-shadow: inset 0 0 0 1px var(--acento); }
-.opcion input:focus-visible + span { outline: 3px solid var(--foco); outline-offset: 2px; }
+.opcion span { display: inline-block; padding: 0.55rem 1rem; background: var(--superficie-2); color: var(--texto); border: 1px solid var(--borde); border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; }
+.opcion input:checked + span { border-color: var(--acento); color: var(--titulo); box-shadow: inset 0 0 0 1px var(--acento); }
+.opcion input:focus-visible + span { outline: 2px solid var(--foco); outline-offset: 2px; }
 .casilla { display: flex; gap: 0.7rem; align-items: flex-start; margin: 0.75rem 0; cursor: pointer; }
-.casilla input { width: 20px; height: 20px; margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--acento); }
+.casilla input { width: 18px; height: 18px; margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--acento); }
 
-/* ── Tablas ──────────────────────────────────────────────────────────── */
+/* ── Tablas (las «minimal-table» de Solvento) ────────────────────────── */
 /* position: relative para que los textos solo para lectores de pantalla (.sr, con
    posición absoluta) queden dentro del recorte y no ensanchen la página en el móvil. */
 .tabla-envoltorio { overflow-x: auto; position: relative; }
-.tabla { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
-.tabla th, .tabla td { text-align: left; padding: 0.6rem 0.6rem; border-bottom: 1px solid var(--borde); vertical-align: top; }
-.tabla thead th { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); font-weight: 700; }
-.tabla tbody th { font-weight: 600; }
+.tabla { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+.tabla th, .tabla td { text-align: left; padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--borde-suave); vertical-align: top; }
+.tabla thead th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-3); font-weight: 700; border-bottom-color: var(--borde); }
+.tabla tbody th { font-weight: 600; color: var(--titulo); }
+.tabla tbody tr { transition: background 0.15s; }
+.tabla tbody tr:hover { background: var(--borde-suave); }
+.tabla tbody tr:last-child td, .tabla tbody tr:last-child th { border-bottom: none; }
+/* Los enlaces de una fila (el nombre que abre la ficha) se leen como texto, sin
+   subrayado: la fila entera ya dice que se puede abrir. */
+.tabla tbody th a { color: var(--titulo); text-decoration: none; }
+.tabla td a { text-decoration: none; }
+.tabla tbody th a:hover, .tabla td a:hover { text-decoration: underline; }
 .celda-acciones { text-align: right; white-space: nowrap; width: 1%; }
 .historico { margin-top: 1rem; }
 .historico summary { cursor: pointer; font-weight: 600; color: var(--texto-2); padding: 0.4rem 0; }
+@media (max-width: 640px) {
+  .tabla th, .tabla td { padding: 0.65rem 0.5rem; }
+  .tabla thead th { font-size: 0.68rem; }
+}
 
 /* ── Diálogos ────────────────────────────────────────────────────────── */
 .dialogo {
   width: min(560px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem);
-  padding: 0; border: 1px solid var(--borde); border-radius: var(--radio);
-  background: var(--superficie); color: var(--texto); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 0; border: 1px solid var(--borde-suave); border-radius: var(--radio-medio);
+  background: var(--superficie-flotante); color: var(--texto); box-shadow: var(--sombra-flotante);
 }
-.dialogo::backdrop { background: rgba(10, 15, 12, 0.5); }
-.dialogo-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 1rem 1.25rem 0.5rem; }
-.dialogo-cabecera h2 { margin: 0; }
-.dialogo-cuerpo { padding: 0.5rem 1.25rem; overflow-y: auto; }
+.dialogo::backdrop { background: var(--velo); }
+.dialogo-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 1.4rem 1.5rem 0.5rem; }
+.dialogo-cabecera h2 { margin: 0; font-size: 1.1rem; font-weight: 800; }
+.dialogo-cuerpo { padding: 0.5rem 1.5rem; overflow-y: auto; }
 .dialogo-cuerpo .rejilla { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-.dialogo-botones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; padding: 0.75rem 1.25rem 1.25rem; }
+.dialogo-botones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.5rem 1.5rem; }
 .dialogo-botones .btn-peligro-suave { margin-right: auto; }
 
 /* ── Avisos flotantes ────────────────────────────────────────────────── */
 .avisos { position: fixed; right: 1rem; bottom: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(420px, calc(100vw - 2rem)); }
-.aviso { padding: 0.75rem 1rem; border-radius: var(--radio-pequeno); background: var(--texto); color: var(--superficie); box-shadow: var(--sombra); font-weight: 500; transition: opacity 0.5s; }
-.aviso-error { background: var(--peligro); color: #fff; }
-:root[data-tema="oscuro"] .aviso-error { color: #1a0d0c; }
+.aviso { padding: 0.75rem 1rem; border-radius: var(--radio-pequeno); background: var(--globo); color: var(--globo-texto); border: 1px solid var(--borde); box-shadow: var(--sombra-flotante); font-size: 0.9rem; font-weight: 600; transition: opacity 0.5s; }
+.aviso-error { background: var(--peligro-fuerte); border-color: transparent; color: #fff; }
 .aviso.saliendo { opacity: 0; }
 
-/* ── Pantalla de acceso ──────────────────────────────────────────────── */
+/* ── Pantalla de acceso (el «arranque» de Solvento: sin caja, centrado) ── */
 .acceso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
-.acceso-panel { width: 100%; max-width: 420px; background: var(--superficie); border: 1px solid var(--borde); border-radius: 16px; padding: 2rem 1.75rem; box-shadow: var(--sombra); }
-.acceso-logo { width: 48px; height: 48px; margin-bottom: 1rem; }
-.acceso-sub { color: var(--texto-2); }
+.acceso-panel { width: 100%; max-width: 380px; }
+.acceso-panel > h1, .acceso-panel > .acceso-sub, .acceso-logo { text-align: center; }
+.acceso-panel > h1 { font-size: 1.4rem; margin: 1rem 0 0.35rem; }
+.acceso-logo { display: block; width: 56px; height: 56px; margin: 0 auto; }
+.acceso-sub { color: var(--texto-3); font-size: 0.88rem; margin-bottom: 1.5rem; }
 .acceso-opciones { display: flex; flex-direction: column; gap: 0.6rem; margin: 1.25rem 0 0.5rem; }
+.acceso-opciones .btn, .acceso-form .btn { width: 100%; }
 .acceso-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 1rem; }
 .acceso-form .btn { margin-top: 0.6rem; }
-.acceso-error { color: var(--peligro); font-weight: 600; margin: 0.4rem 0 0; }
-.acceso-nota { color: var(--texto-3); font-size: 0.88rem; text-align: center; margin-top: 0.75rem; }
-.acceso-olvido { margin-top: 1.25rem; border-top: 1px solid var(--borde); padding-top: 0.75rem; }
+.acceso-error { color: var(--peligro); font-weight: 600; font-size: 0.85rem; margin: 0.4rem 0 0; text-align: center; }
+.acceso-nota { color: var(--texto-3); font-size: 0.82rem; text-align: center; margin-top: 0.75rem; }
+.acceso-olvido { margin-top: 1.5rem; border-top: 1px solid var(--borde); padding-top: 0.85rem; font-size: 0.9rem; }
 .acceso-olvido summary { cursor: pointer; color: var(--texto-2); font-weight: 600; }
 
 /* ── Páginas de listado (socios, cuotas) ───────────────────────────────── */
-.cabecera-pagina { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.25rem; }
+.cabecera-pagina { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.5rem; }
 .cabecera-pagina h1 { margin: 0; }
-.miga { font-size: 0.9rem; color: var(--texto-3); margin-bottom: 0.5rem; }
-.barra-filtros { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1rem 0; }
-.barra-filtros label { display: flex; align-items: center; gap: 0.5rem; font-weight: 600; font-size: 0.92rem; }
+.miga { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin-bottom: 0.4rem; }
+.miga a { color: var(--texto-2); text-decoration: none; }
+.miga a:hover { color: var(--titulo); }
+.barra-filtros { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 1.25rem 0; }
+.barra-filtros label { display: flex; align-items: center; gap: 0.5rem; font-weight: 700; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); }
 .barra-filtros select, .barra-filtros input { width: auto; }
 .filtro-texto { flex: 1 1 260px; }
 .filtro-texto input { width: 100%; }
@@ -166,65 +200,74 @@ input:focus, select:focus, textarea:focus { border-color: var(--foco); }
 .tabla .importe { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
 .celda-casilla { width: 2rem; }
 .celda-casilla input { width: 18px; height: 18px; accent-color: var(--acento); }
-.etiqueta { display: inline-block; font-size: 0.75rem; font-weight: 700; padding: 0.05rem 0.45rem; border-radius: 4px; background: var(--superficie-2); color: var(--texto-2); vertical-align: middle; }
+.etiqueta { display: inline-block; font-size: 0.72rem; font-weight: 700; padding: 0.1rem 0.45rem; border-radius: 6px; background: var(--superficie-2); color: var(--texto-2); border: 1px solid var(--borde); vertical-align: middle; }
 .estado-neutro { background: var(--superficie-2); color: var(--texto-2); }
 .estado-error { background: var(--peligro-suave); color: var(--peligro); }
-.pestanas { display: flex; gap: 0.25rem; border-bottom: 1px solid var(--borde); margin: 0.75rem 0 1.25rem; overflow-x: auto; position: relative; }
-.pestanas a { padding: 0.6rem 1rem; text-decoration: none; color: var(--texto-2); font-weight: 600; border-bottom: 3px solid transparent; white-space: nowrap; }
-.pestanas a:hover { color: var(--texto); }
-.pestanas a[aria-current="page"] { color: var(--texto); border-bottom-color: var(--acento); }
+/* Pestañas como el selector segmentado de Solvento. */
+.pestanas {
+  display: flex; gap: 0.25rem; width: fit-content; max-width: 100%;
+  background: var(--hundido); border: 1px solid var(--borde); border-radius: var(--radio-pequeno);
+  padding: 0.25rem; margin: 1rem 0 1.5rem; overflow-x: auto; position: relative;
+}
+.pestanas a {
+  padding: 0.45rem 0.9rem; text-decoration: none; color: var(--texto-3);
+  font-size: 0.8rem; font-weight: 700; border-radius: 7px; border: 1px solid transparent;
+  white-space: nowrap; transition: background 0.15s, color 0.15s;
+}
+.pestanas a:hover { color: var(--titulo); background: var(--borde-suave); }
+.pestanas a[aria-current="page"] { color: var(--titulo); background: var(--borde); border-color: var(--borde-fuerte); }
 .cifras .cifra { font-size: 1.5rem; margin: 0; }
-.lista-cifras { list-style: none; padding: 0; margin: 0; }
-.lista-cifras li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.2rem 0; border-bottom: 1px dashed var(--borde); }
-.lista-cifras li:last-child { border-bottom: none; }
-.zona-peligro { border-color: var(--peligro-suave); }
+.zona-peligro { border-left: 3px solid var(--peligro-fuerte); }
 .dato-edad { align-self: center; margin: 0.9rem 0 0; color: var(--texto-2); font-weight: 600; }
 .dato-numero { margin: 0; display: flex; flex-direction: column; justify-content: center; }
-.dato-numero strong { font-size: 1.3rem; }
-.barra-guardar { position: sticky; bottom: 0; background: var(--fondo); padding: 0.75rem 0; margin-top: 0; z-index: 5; }
+.dato-numero strong { font-size: 1.3rem; font-weight: 800; }
+.barra-guardar { position: sticky; bottom: 0; background: var(--fondo); padding: 0.85rem 0; margin-top: 0; z-index: 5; border-top: 1px solid var(--borde-suave); }
 .formulario .tarjeta fieldset { margin-top: 0.75rem; }
 
 /* ── Tesorería, facturas, IVA y presupuestos ───────────────────────────── */
 .acciones-cabecera { display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.letra-pequena { font-size: 0.82rem; color: var(--texto-3); line-height: 1.45; margin: 0.4rem 0 0.75rem; }
-.importe-positivo { color: var(--ok); font-weight: 600; }
-.importe-negativo { color: var(--peligro); font-weight: 600; }
+.letra-pequena { font-size: 0.8rem; color: var(--texto-3); line-height: 1.5; margin: 0.4rem 0 0.75rem; }
+.importe-positivo { color: var(--ok); font-weight: 700; }
+.importe-negativo { color: var(--peligro); font-weight: 700; }
 .etiquetas { display: flex; flex-wrap: wrap; gap: 0.25rem; margin-top: 0.25rem; }
 a.etiqueta { text-decoration: none; color: var(--enlace); }
-.lista-cifras li.total { border-top: 2px solid var(--borde-fuerte); border-bottom: none; font-weight: 700; margin-top: 0.25rem; padding-top: 0.4rem; }
 .lista-editable { list-style: none; padding: 0; margin: 0 0 0.75rem; }
-.lista-editable li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.35rem 0; border-bottom: 1px solid var(--borde); }
-.tarjeta h3 { font-size: 1rem; margin: 0.75rem 0 0.4rem; }
-.tarjeta h4 { font-size: 0.9rem; color: var(--texto-2); margin: 0.75rem 0 0.3rem; }
-.titulo-seccion { margin-top: 2rem; }
-.tabla tfoot th, .tabla tfoot td { font-weight: 700; border-top: 2px solid var(--borde-fuerte); border-bottom: none; }
-.tabla .total th, .tabla .total td { font-weight: 700; border-top: 2px solid var(--borde-fuerte); }
-.fila-grupo th { background: var(--superficie-2); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-2); }
-.fila-aviso td { border-bottom: 1px solid var(--borde); padding-top: 0; }
-.aviso-iva { display: inline-block; color: var(--aviso); font-weight: 600; font-size: 0.9rem; margin-right: 1rem; }
+.lista-editable li { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 0.6rem 0; border-bottom: 1px solid var(--borde-suave); }
+.lista-editable li:last-child { border-bottom: none; }
+.tarjeta h3 { font-size: 0.95rem; margin: 1rem 0 0.5rem; }
+.tarjeta h4 { font-size: 0.82rem; color: var(--texto-2); margin: 0.85rem 0 0.35rem; }
+.titulo-seccion { margin-top: 2.25rem; }
+.tabla tfoot th, .tabla tfoot td { font-weight: 800; color: var(--titulo); border-top: 1px solid var(--borde-fuerte); border-bottom: none; }
+.tabla .total th, .tabla .total td { font-weight: 800; color: var(--titulo); border-top: 1px solid var(--borde-fuerte); }
+.fila-grupo th { background: var(--hundido); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-3); }
+.fila-aviso td { border-bottom: 1px solid var(--borde-suave); padding-top: 0; }
+.aviso-iva { display: inline-block; color: var(--aviso); font-weight: 600; font-size: 0.88rem; margin-right: 1rem; }
 .casilla.en-linea { display: inline-flex; margin: 0.25rem 0; }
 .vista-previa-tabla { margin-top: 0.75rem; }
 .vista-previa-tabla .tabla { font-size: 0.85rem; }
 .input-importe { max-width: 9rem; text-align: right; min-height: 38px !important; }
-.barra-progreso { height: 6px; border-radius: 3px; background: var(--superficie-2); overflow: hidden; margin-top: 0.25rem; min-width: 60px; }
-.barra-progreso span { display: block; height: 100%; background: var(--acento); }
-.barra-progreso.pasada span { background: var(--peligro); }
-.tabla-lineas input, .tabla-lineas select { min-height: 38px; padding: 0.35rem 0.5rem; }
+.barra-progreso { height: 6px; border-radius: 4px; background: var(--hundido); border: 1px solid var(--borde-suave); overflow: hidden; margin-top: 0.3rem; min-width: 60px; }
+.barra-progreso span { display: block; height: 100%; background: var(--acento); border-radius: 4px; }
+.barra-progreso.pasada span { background: var(--peligro-fuerte); }
+.tabla-lineas input, .tabla-lineas select { min-height: 38px; padding: 0.35rem 0.55rem; }
 .tabla-lineas .col-cantidad { width: 6rem; }
 .tabla-lineas .col-precio { width: 8rem; }
 .tabla-lineas .col-tipo { width: 6.5rem; }
 .tabla-lineas td { vertical-align: middle; }
+.tabla-lineas tbody tr:hover { background: none; }
 .tabla-totales { max-width: 22rem; margin: 1rem 0 0 auto; }
 .tabla-totales .total th, .tabla-totales .total td { font-size: 1.1rem; }
 fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea { background: var(--superficie-2); color: var(--texto); opacity: 1; }
 .formulario > fieldset { border: none; padding: 0; margin: 0; min-width: 0; }
 
 /* Factura para imprimir: siempre en blanco y negro, también con el tema oscuro. */
-.factura-impresa { background: #fff; color: #111; max-width: 800px; padding: 2.5rem; border: 1px solid var(--borde); border-radius: var(--radio); margin: 1rem 0; }
+.factura-impresa { background: #fff; color: #111; max-width: 800px; padding: 2.5rem; border: 1px solid var(--borde); border-radius: var(--radio-medio); margin: 1rem 0; }
+.factura-impresa h1, .factura-impresa h2, .factura-impresa h3, .factura-impresa strong { color: #111; }
 .factura-impresa .tabla th, .factura-impresa .tabla td { border-color: #ccc; color: #111; }
 .factura-impresa .tabla thead th { color: #555; }
+.factura-impresa .tabla tbody tr:hover { background: none; }
 .fi-cabecera { display: flex; justify-content: space-between; gap: 2rem; flex-wrap: wrap; border-bottom: 2px solid #111; padding-bottom: 1rem; margin-bottom: 1.5rem; }
-.fi-cabecera h1 { font-size: 1.3rem; }
+.fi-cabecera h1 { font-size: 1.3rem; letter-spacing: 0; }
 .fi-cabecera p, .fi-cliente p { margin: 0; line-height: 1.5; }
 .fi-datos { text-align: right; }
 .fi-datos h2 { font-size: 1.5rem; letter-spacing: 0.08em; }
@@ -239,25 +282,29 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 }
 
 /* ── Actividades y calendario ──────────────────────────────────────────── */
-.select-pequeno { width: auto !important; min-height: 36px !important; padding: 0.3rem 0.5rem !important; font-size: 0.9rem; }
+.select-pequeno { width: auto !important; min-height: 36px !important; padding: 0.3rem 0.6rem !important; font-size: 0.85rem; }
 .calendario-barra { display: flex; align-items: center; gap: 0.5rem; margin: 0.5rem 0 1rem; }
-.calendario-titulo { margin: 0 0.5rem; min-width: 11rem; text-align: center; }
-.calendario { border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; margin-bottom: 1.25rem; background: var(--superficie); }
+.calendario-titulo { margin: 0 0.5rem; min-width: 11rem; text-align: center; font-size: 1.15rem; font-weight: 800; }
+.calendario { border: 1px solid var(--borde); border-radius: var(--radio); overflow: hidden; margin-bottom: 1.5rem; background: var(--superficie); }
 .cal-fila { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); }
-.cal-cabecera div { padding: 0.4rem; font-size: 0.8rem; font-weight: 700; text-transform: uppercase; color: var(--texto-3); text-align: center; border-bottom: 1px solid var(--borde); }
-.cal-dia { min-height: 6.5rem; padding: 0.3rem; border-right: 1px solid var(--borde); border-bottom: 1px solid var(--borde); display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
+.cal-cabecera div { padding: 0.6rem 0.4rem; font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--texto-3); text-align: center; border-bottom: 1px solid var(--borde); }
+.cal-dia { min-height: 6.5rem; padding: 0.35rem; border-right: 1px solid var(--borde-suave); border-bottom: 1px solid var(--borde-suave); display: flex; flex-direction: column; gap: 0.2rem; min-width: 0; }
 .cal-fila .cal-dia:last-child { border-right: none; }
-.cal-dia.fuera { background: var(--superficie-2); }
-.cal-dia.fuera .cal-num { color: var(--texto-3); }
-.cal-num { font-size: 0.85rem; font-weight: 600; }
-.cal-dia.hoy .cal-num { background: var(--acento); color: var(--acento-texto); border-radius: 999px; padding: 0 0.45rem; align-self: flex-start; }
-.cal-act { display: block; font-size: 0.78rem; line-height: 1.25; padding: 0.15rem 0.3rem; border-radius: 4px; background: var(--acento-suave); color: var(--texto);
+.cal-dia.fuera { background: var(--hundido); }
+.cal-dia.fuera .cal-num { color: var(--texto-3); opacity: 0.7; }
+.cal-num { font-size: 0.82rem; font-weight: 700; color: var(--texto-2); }
+.cal-dia.hoy .cal-num { background: var(--primario); color: var(--primario-texto); border-radius: 999px; padding: 0 0.45rem; align-self: flex-start; }
+.cal-act { display: block; font-size: 0.75rem; font-weight: 600; line-height: 1.25; padding: 0.2rem 0.35rem; border-radius: 6px; background: var(--acento-suave); color: var(--texto);
   text-decoration: none; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; border-left: 3px solid var(--acento); }
-.cal-act.cancelada { text-decoration: line-through; opacity: 0.7; border-left-color: var(--peligro); }
+.cal-act:hover { color: var(--titulo); }
+.cal-act.cancelada { text-decoration: line-through; opacity: 0.7; border-left-color: var(--peligro-fuerte); }
 .cal-act.realizada { opacity: 0.75; border-left-color: var(--borde-fuerte); background: var(--superficie-2); }
 .lista-actividades { list-style: none; padding: 0; margin: 0 0 0.75rem; }
-.lista-actividades li { padding: 0.45rem 0; border-bottom: 1px solid var(--borde); }
+.lista-actividades li { padding: 0.6rem 0; border-bottom: 1px solid var(--borde-suave); }
 .lista-actividades li:last-child { border-bottom: none; }
+.lista-actividades li > a { text-decoration: none; }
+.lista-actividades li > a strong { color: var(--titulo); }
+.lista-actividades li > a:hover strong { text-decoration: underline; }
 .lista-actividades .detalle { display: block; }
 .tabla-asistencia .col-firma { width: 40%; }
 .tabla-asistencia td { height: 2.4rem; }
@@ -267,42 +314,44 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 }
 
 /* ── Actas, obligaciones y documentos ──────────────────────────────────── */
-.tarjeta-alerta { border-color: var(--peligro); }
+/* Como las tarjetas de Solvento: el color de alerta va en el borde izquierdo. */
+.tarjeta-alerta { border-left: 3px solid var(--peligro-fuerte); }
 .chips { list-style: none; padding: 0; margin: 0 0 0.75rem; display: flex; flex-wrap: wrap; gap: 0.35rem; }
-.chip { display: inline-flex; align-items: center; gap: 0.25rem; background: var(--superficie-2); border-radius: 999px; padding: 0.15rem 0.2rem 0.15rem 0.75rem; font-size: 0.9rem; }
+.chip { display: inline-flex; align-items: center; gap: 0.25rem; background: var(--superficie-2); border: 1px solid var(--borde); border-radius: 999px; padding: 0.15rem 0.2rem 0.15rem 0.75rem; font-size: 0.85rem; }
 .chip .btn-icono { width: 28px; height: 28px; font-size: 0.8rem; }
 .puntos { list-style: none; padding: 0; margin: 0 0 1rem; counter-reset: none; }
-.punto { border: 1px solid var(--borde); border-radius: var(--radio-pequeno); padding: 0.75rem; margin-bottom: 0.75rem; }
+.punto { background: var(--hundido); border: 1px solid var(--borde); border-radius: var(--radio-medio); padding: 1rem; margin-bottom: 0.85rem; }
 .punto-cabecera { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; }
 .punto-cabecera input { flex: 1; font-weight: 600; }
-.punto-num { font-weight: 700; color: var(--texto-2); }
+.punto-num { font-weight: 800; color: var(--texto-2); }
 .punto-botones { display: flex; }
 .acuerdos { list-style: none; padding: 0; margin: 0.75rem 0; }
-.acuerdo { background: var(--acento-suave); border-radius: var(--radio-pequeno); padding: 0.6rem; margin-bottom: 0.5rem; }
-.acuerdo > label { font-weight: 700; font-size: 0.88rem; }
-.acuerdo-votacion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.4rem; font-size: 0.88rem; }
+.acuerdo { background: var(--superficie); border: 1px solid var(--borde); border-left: 3px solid var(--acento); border-radius: var(--radio-pequeno); padding: 0.75rem; margin-bottom: 0.5rem; }
+.acuerdo > label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); }
+.acuerdo-votacion { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-top: 0.5rem; font-size: 0.88rem; }
 .acuerdo-votacion label { display: inline-flex; align-items: center; gap: 0.35rem; }
 .acuerdo-votacion .votos { display: inline-flex; flex-wrap: wrap; gap: 0.5rem; }
 .input-corto { width: 4.5rem !important; min-height: 34px !important; padding: 0.25rem 0.4rem !important; }
-.lista-marcable { max-height: 16rem; overflow-y: auto; border: 1px solid var(--borde); border-radius: var(--radio-pequeno); padding: 0.25rem 0.75rem; margin: 0.5rem 0 1rem; }
-.lista-marcable .casilla { margin: 0.35rem 0; }
+.lista-marcable { max-height: 16rem; overflow-y: auto; background: var(--hundido); border: 1px solid var(--borde); border-radius: var(--radio-pequeno); padding: 0.25rem 0.85rem; margin: 0.5rem 0 1rem; }
+.lista-marcable .casilla { margin: 0.4rem 0; }
 .fila-anadir { display: flex; gap: 0.5rem; margin: 0.5rem 0; }
 .fila-anadir input { flex: 1; }
 .lista-documentos, .lista-vencimientos { list-style: none; padding: 0; margin: 0; }
-.lista-documentos li, .lista-vencimientos li { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.55rem 0; border-bottom: 1px solid var(--borde); }
+.lista-documentos li, .lista-vencimientos li { display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem 0.75rem; padding: 0.7rem 0; border-bottom: 1px solid var(--borde-suave); }
 .lista-documentos li:last-child, .lista-vencimientos li:last-child { border-bottom: none; }
-.doc-icono { flex-shrink: 0; width: 2.6rem; text-align: center; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.05em; padding: 0.45rem 0; border-radius: 4px; background: var(--superficie-2); color: var(--texto-2); }
+.doc-icono { flex-shrink: 0; width: 2.6rem; text-align: center; font-size: 0.66rem; font-weight: 800; letter-spacing: 0.05em; padding: 0.5rem 0; border-radius: 8px; background: var(--superficie-2); border: 1px solid var(--borde); color: var(--texto-2); }
 .doc-texto, .venc-texto { flex: 1 1 14rem; min-width: 0; }
 .doc-texto .detalle, .venc-texto .detalle { display: block; }
 .doc-nombre { padding: 0; text-align: left; font-weight: 600; }
 .doc-acciones, .venc-acciones { display: flex; gap: 0.35rem; }
-.venc-fecha { font-variant-numeric: tabular-nums; font-weight: 700; width: 6rem; }
+.venc-fecha { font-variant-numeric: tabular-nums; font-weight: 800; color: var(--titulo); width: 6rem; }
 .cal-oblig { background: var(--aviso-fondo); border-left-color: var(--aviso); }
-.cal-oblig.vencida { background: var(--peligro-suave); border-left-color: var(--peligro); }
+.cal-oblig.vencida { background: var(--peligro-suave); border-left-color: var(--peligro-fuerte); }
 .cal-oblig.hecha { opacity: 0.6; text-decoration: line-through; }
-/* Documentos impresos (actas): blanco y negro, como la factura. */
-.documento-impreso { background: #fff; color: #111; max-width: 800px; padding: 2.5rem; border: 1px solid var(--borde); border-radius: var(--radio); margin: 1rem 0; line-height: 1.6; }
-.documento-impreso h1 { font-size: 1.4rem; margin-bottom: 0.2rem; }
+/* Documentos impresos (actas, memoria, cuentas): papel blanco, como la factura. */
+.documento-impreso { background: #fff; color: #111; max-width: 800px; padding: 2.5rem; border: 1px solid var(--borde); border-radius: var(--radio-medio); margin: 1rem 0; line-height: 1.6; }
+.documento-impreso h1, .documento-impreso h2, .documento-impreso h3, .documento-impreso h4, .documento-impreso strong { color: #111; }
+.documento-impreso h1 { font-size: 1.4rem; letter-spacing: 0; margin-bottom: 0.2rem; }
 .documento-impreso h2 { font-size: 1.05rem; font-weight: 600; color: #333; margin-bottom: 1rem; }
 .documento-impreso h3 { font-size: 1rem; margin: 1.25rem 0 0.5rem; text-transform: uppercase; letter-spacing: 0.04em; }
 .documento-impreso h4 { font-size: 0.98rem; margin: 1rem 0 0.25rem; }
@@ -312,24 +361,27 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 .di-firma { height: 4rem; border-bottom: 1px solid #111; margin: 0.5rem 1rem; }
 @media (max-width: 760px) { .documento-impreso { padding: 1.25rem; } }
 
-/* ── Panel de Inicio (Fase 6) ─────────────────────────────────────────── */
-.titulo-bloque { font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin: 1.75rem 0 0.75rem; }
-.rejilla-tarjetas .tarjeta h3 { font-size: 1rem; margin: 0 0 0.5rem; }
+/* ── Panel de Inicio ──────────────────────────────────────────────────── */
+/* Los rótulos de bloque son el «section-title» de Solvento. */
+.titulo-bloque { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--titulo); opacity: 0.9; margin: 2.5rem 0 1rem; }
 .rejilla-tarjetas .tarjeta-ancha { grid-column: 1 / -1; }
 .lista-cifras { list-style: none; padding: 0; margin: 0 0 0.75rem; }
-.lista-cifras li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.3rem 0; border-bottom: 1px solid var(--borde); }
+.lista-cifras li { display: flex; justify-content: space-between; gap: 1rem; padding: 0.45rem 0; border-bottom: 1px solid var(--borde-suave); font-size: 0.92rem; }
 .lista-cifras li:last-child { border-bottom: none; }
-.lista-cifras li.total { font-weight: 700; border-top: 2px solid var(--borde-fuerte); }
+.lista-cifras li.total { font-weight: 800; color: var(--titulo); border-top: 1px solid var(--borde-fuerte); border-bottom: none; margin-top: 0.25rem; }
 .lista-cifras .importe { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.barra-progreso.grande { height: 12px; border-radius: 6px; margin: 0.25rem 0 0.2rem; }
+.barra-progreso.grande { height: 10px; border-radius: 6px; margin: 0.35rem 0 0.3rem; }
 .barra-progreso.grande + .detalle { margin-top: 0; }
 
-/* Gráficas en SVG: los colores salen del tema. */
+/* Gráficas en SVG: los colores salen del tema. Línea con degradado debajo y
+   rejilla discontinua, como las de Solvento. */
 .grafica { margin: 0; }
 .grafica svg { display: block; width: 100%; height: auto; max-height: 260px; overflow: visible; }
-.g-rejilla { stroke: var(--borde); stroke-width: 1; }
-.g-eje { fill: var(--texto-3); font-size: 12px; font-family: var(--fuente); }
-.g-area { fill: var(--acento-suave); stroke: none; }
+.g-rejilla { stroke: var(--borde); stroke-width: 1; stroke-dasharray: 3 3; }
+.g-eje { fill: var(--texto-3); font-size: 12px; font-weight: 600; font-family: var(--fuente); }
+.g-area { stroke: none; }
+.g-degradado-ini { stop-color: var(--acento); stop-opacity: 0.25; }
+.g-degradado-fin { stop-color: var(--acento); stop-opacity: 0; }
 .g-linea { fill: none; stroke: var(--acento); stroke-width: 2.5; stroke-linejoin: round; stroke-linecap: round; }
 .g-punto { fill: var(--acento); stroke: var(--superficie); stroke-width: 2; }
 
@@ -338,15 +390,23 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 .documento-impreso .detalle { color: #555; }
 .documento-impreso .tabla th, .documento-impreso .tabla td { border-bottom-color: #ccc; color: #111; }
 .documento-impreso .tabla thead th { color: #444; }
+.documento-impreso .tabla tbody tr:hover { background: none; }
 .documento-impreso .tabla .total th, .documento-impreso .tabla .total td { border-top-color: #111; }
 .tabla-informe { margin: 0.5rem 0 1rem; font-size: 0.92rem; }
 .tabla-informe th, .tabla-informe td { padding: 0.35rem 0.5rem; }
 .tabla-informe caption { text-align: left; font-weight: 700; padding: 0.25rem 0.5rem; }
 .tabla-informe tbody th { font-weight: 500; }
 .cifras-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); gap: 0.75rem; margin: 0.5rem 0 1rem; }
-.cifras-informe > div { border: 1px solid #ccc; border-radius: var(--radio-pequeno); padding: 0.5rem 0.75rem; }
-.cifras-informe .cifra { display: block; font-size: 1.5rem; }
+.cifras-informe > div { border: 1px solid #ccc; border-radius: 8px; padding: 0.5rem 0.75rem; }
+.cifras-informe .cifra { display: block; font-size: 1.5rem; color: #111; }
 .cifras-informe span:not(.cifra) { font-size: 0.85rem; color: #555; }
 .rejilla-informe { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 0 1.5rem; align-items: start; }
 .aviso-informe { font-size: 0.85rem; background: #f4f4f4; border-left: 3px solid #888; padding: 0.4rem 0.75rem; color: #333; }
 .di-pie { margin-top: 2rem; font-size: 0.8rem; color: #555; }
+
+/* ── Móvil: menos aire dentro de los paneles ─────────────────────────── */
+@media (max-width: 640px) {
+  .tarjeta, .rejilla-tarjetas .tarjeta { padding: 1.25rem; border-radius: 16px; }
+  .tarjeta-destacada { border-radius: 18px; }
+  .cifra { font-size: 1.5rem; }
+}

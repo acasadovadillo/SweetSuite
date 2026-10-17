@@ -15,9 +15,9 @@
   var MINIMO = 8;
   var $ = function (id) { return document.getElementById(id); };
 
-  var LOGO = '<svg class="acceso-logo" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="var(--acento)"/>' +
-    '<path d="M14 33V19l10-6 10 6v14" fill="none" stroke="var(--acento-texto)" stroke-width="3" stroke-linejoin="round"/>' +
-    '<path d="M20 33v-8h8v8" fill="none" stroke="var(--acento-texto)" stroke-width="3" stroke-linejoin="round"/></svg>';
+  var LOGO = '<svg class="acceso-logo" viewBox="0 0 48 48" aria-hidden="true"><rect width="48" height="48" rx="12" fill="var(--marca-fondo)"/>' +
+    '<path d="M14 33V19l10-6 10 6v14" fill="none" stroke="var(--marca-trazo)" stroke-width="3" stroke-linejoin="round"/>' +
+    '<path d="M20 33v-8h8v8" fill="none" stroke="var(--marca-trazo)" stroke-width="3" stroke-linejoin="round"/></svg>';
 
   function pintar(html) {
     $("acceso").innerHTML = '<main class="acceso-panel" id="acceso-principal">' + LOGO + html + "</main>";

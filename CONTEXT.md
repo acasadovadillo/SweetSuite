@@ -68,6 +68,7 @@ tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium 
 | Gráficas en SVG propio (`nucleo/graficas.js`), colores del tema, con texto alternativo y tabla oculta con los datos | Sin librerías y accesibles. Los recuentos (socios) empiezan en cero para no exagerar cambios pequeños |
 | Convocatorias de asamblea | Pendientes: el usuario aún no ha definido cómo convocan |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
+| Estética de Solvento (oscuro de grises azulados por defecto y claro opcional, paneles de 20px sin sombra, botón principal blanco, etiquetas en mayúsculas pequeñas, pestañas como selector segmentado, gráficas con degradado) | Decisión del usuario: mismo aspecto que su otra aplicación. Todo sale de `css/tokens.css` (nombres por función, no por color); `--texto-3` es un punto más claro que el gris de Solvento para cumplir contraste AA. El menú lateral sigue fijo en escritorio (son 15 secciones) y plegable en el móvil |
 | Navegación por `#/modulo` | Funciona con `file://` sin servidor |
 | Capa de datos (`Repositorio`) asíncrona y como única puerta a los datos | **Preparada para la versión con servidor**: bastará con otro repositorio con las mismas funciones que use `fetch` contra una API |
 | `dist/` se versiona y la integración continua comprueba que está al día | Quien no programa puede descargar el HTML directamente desde el repositorio |

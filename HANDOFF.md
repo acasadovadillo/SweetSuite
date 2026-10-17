@@ -48,6 +48,28 @@ El usuario pidió «todo» en las tres preguntas (memoria, cuentas y panel).
 - **`nucleo/graficas.js`:** líneas y barras en SVG, sin librerías, con texto alternativo y tabla oculta para lectores de pantalla.
 - **Demostración:** textos de la memoria de 2026.
 
+## Estética de Solvento (pedido después de la Fase 6, sin commit)
+
+- `tokens.css`: paleta de Solvento con los nombres de webkit (más `--titulo`, `--hundido`, `--primario`, `--marca-*`…); oscuro por defecto, claro con `data-tema="claro"`.
+- `base.css` y `componentes.css`:
+  - cabecera de 64px con logotipo monocromo;
+  - menú lateral con sus elementos redondeados;
+  - paneles de 20px sin sombra, con tarjeta destacada en degradado;
+  - botón principal blanco;
+  - campos hundidos;
+  - etiquetas, cabeceras de tabla y títulos de panel en mayúsculas pequeñas;
+  - pestañas como selector segmentado;
+  - insignias traslúcidas;
+  - alertas como borde izquierdo de color.
+- Gráficas con degradado bajo la línea y rejilla discontinua (`graficas.js`).
+- Logotipo de la cabecera, del acceso y del icono de la pestaña: monocromo, sin copiar el de Solvento.
+- Nada de Solvento se ha copiado salvo estilos: ni imágenes ni datos.
+- Verificado:
+  - todas las pantallas en oscuro y claro;
+  - diálogo, calendario, formularios e informes (siguen en papel blanco);
+  - 20 rutas en móvil sin desbordar (se corrigió la tabla de presupuesto de Cuentas, que se salía);
+  - tests, `comprobar` y `probar-file` en verde.
+
 ## Verificado
 
 - `npm test`: 113 tests en verde (nuevo `tests/informes.test.js`):

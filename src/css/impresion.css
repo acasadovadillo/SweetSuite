@@ -4,7 +4,8 @@
  * Los informes de la Fase 6 se apoyan en esto.
  */
 @media print {
-  :root { --fondo: #fff; --superficie: #fff; --texto: #000; --texto-2: #222; --texto-3: #444; --borde: #bbb; }
+  :root, :root[data-tema] { --fondo: #fff; --superficie: #fff; --superficie-2: #fff; --hundido: #fff; --titulo: #000; --texto: #000; --texto-2: #222; --texto-3: #444; --borde: #bbb; --borde-suave: #ccc; --borde-fuerte: #888; color-scheme: light; }
+  .tabla tbody tr:hover { background: none; }
   body { background: #fff; color: #000; font-size: 11pt; }
   .cabecera, .menu, .velo, .franja, .avisos, .saltar, .acciones, .btn, .celda-acciones, .no-imprimir { display: none !important; }
   .cuerpo { display: block; min-height: 0; }
