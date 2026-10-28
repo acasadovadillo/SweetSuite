@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Ironrack</title>
+  <meta name="description" content="Registro de entrenos de gimnasio: ejercicios, series, repeticiones y kilos.">
+  <meta name="theme-color" content="#0e0f11">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Ironrack">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="img/icono.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="img/icono-180.png">
+  <link rel="stylesheet" href="src/css/app.css">
+</head>
+<body>
+  <div id="login" hidden></div>
+
+  <div id="app" hidden>
+    <header class="barra">
+      <a href="#entrenar" class="marca" id="marca"><span>IRONRACK</span></a>
+      <button id="estado" class="estado" data-a="irAjustes"></button>
+      <a href="#ajustes" class="icono" aria-label="Ajustes">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
+      </a>
+    </header>
+
+    <main id="vista"></main>
+
+    <div id="descanso" class="descanso" hidden></div>
+
+    <nav class="tabs">
+      <a href="#entrenar" data-tab="entrenar"><svg viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></svg>Entrenar</a>
+      <a href="#historial" data-tab="historial"><svg viewBox="0 0 24 24"><rect x="3.5" y="5" width="17" height="15" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/></svg>Historial</a>
+      <a href="#progreso" data-tab="progreso"><svg viewBox="0 0 24 24"><path d="M4 20h16M5 16l4.5-4.5 3.5 3.5L19 8"/><path d="M15 8h4v4"/></svg>Progreso</a>
+      <a href="#rutinas" data-tab="rutinas"><svg viewBox="0 0 24 24"><path d="M9 6h11M9 12h11M9 18h11"/><circle cx="4.5" cy="6" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="18" r="1"/></svg>Rutinas</a>
+      <a href="#ejercicios" data-tab="ejercicios"><svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.3-4.3"/></svg>Ejercicios</a>
+    </nav>
+  </div>
+
+  <div id="velo" class="velo" hidden data-a="_cerrarVelo"></div>
+  <div id="hoja" class="hoja" role="dialog" aria-modal="true" hidden></div>
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="src/js/util.js"></script>
+  <script src="src/js/cripto.js"></script>
+  <script src="src/js/github.js"></script>
+  <script src="src/js/almacen.js"></script>
+  <script src="src/js/biblioteca.js"></script>
+  <script src="src/js/analisis.js"></script>
+  <script src="src/js/ui.js"></script>
+  <script src="src/js/descanso.js"></script>
+  <script src="src/js/entrenar.js"></script>
+  <script src="src/js/rutinas.js"></script>
+  <script src="src/js/historial.js"></script>
+  <script src="src/js/progreso.js"></script>
+  <script src="src/js/ejercicios.js"></script>
+  <script src="src/js/app.js"></script>
+</body>
+</html>

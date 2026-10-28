@@ -1,0 +1,17 @@
+{
+  "name": "Ironrack",
+  "short_name": "Ironrack",
+  "description": "Registro de entrenos de gimnasio: ejercicios, series, repeticiones y kilos.",
+  "lang": "es",
+  "start_url": "./#entrenar",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e0f11",
+  "theme_color": "#0e0f11",
+  "icons": [
+    { "src": "img/icono-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "img/icono-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "img/icono.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
