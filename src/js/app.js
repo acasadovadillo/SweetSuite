@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.4.0";
+  const VERSION = "1.4.1";
 
   // ── Pintar ──
   // Si estás escribiendo en una casilla, no se repinta debajo de ti (te
@@ -238,8 +238,7 @@
     $("#login").hidden = false;
     $("#login").innerHTML = `<div class="login-caja">
       <div class="logo-grande">${LOGO}<span>Ironrack</span></div>
-      <section class="cabeza"><h1>Entrar</h1>
-        <p>Tus entrenos se cifran en este dispositivo antes de guardarse. Sin tu contraseña nadie puede leerlos, tampoco GitHub.</p></section>
+      <section class="cabeza"><h1>Entrar</h1></section>
       <form class="form tarjeta" id="f-login" autocomplete="on" novalidate>
         <label>Usuario <input name="usuario" value="${esc(A.ultimoUsuario())}" placeholder="alberto" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required></label>
         <label><span id="txt-password">Contraseña</span> <input type="password" name="password" autocomplete="current-password" required></label>
