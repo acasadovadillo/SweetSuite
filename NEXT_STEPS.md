@@ -2,30 +2,34 @@
 
 ## Ahora (esperando al usuario)
 
-1. Que el usuario revise la Fase 6 y dé el OK. Hacer el commit «Fase 6: memoria anual, cuentas y panel».
-2. Pendiente de decidir: **convocatorias de asamblea**:
-   - antelación mínima según estatutos;
-   - primera y segunda convocatoria;
-   - texto para correo con los correos en CCO;
-   - versión imprimible.
+1. Que el usuario revise la Fase 7a y dé el OK. Commit «Fase 7a: ABIES — marca, usuarios por cargo, permisos y registro».
+2. Para la 7b, el usuario tiene que:
+   - crear un **repositorio privado** para los datos (por ejemplo `abies-datos`); lo puedo crear con `gh` si me da permiso;
+   - crear un **token de GitHub de grano fino** con permiso de lectura y escritura sobre el contenido, solo para ese repositorio, e introducirlo él.
 
-   Cuando se decida: colección `convocatorias` enlazada con el acta que la sigue.
-3. Probar lo que falta de todas las fases: Safari y Firefox, impresión real (sobre todo memoria y cuentas), .ics y Excel en sus programas.
+## Fase 7b — Sincronización con GitHub y cola
 
-## Después: versión con servidor (solo diseño)
-
-Documento de diseño, sin código:
-- `RepositorioAPI` con el mismo contrato que `Repositorio` (ver CONTEXT.md);
-- modelo de API REST y autenticación;
-- acceso de socios a su ficha;
-- pagos en línea con pasarela (enlaces generados en servidor);
-- qué se queda en local.
+- **Adaptador remoto** `{ leer() → { contenido, sha }, escribir(contenido, sha) }`:
+  - para GitHub, la API de contenidos con `Accept: application/vnd.github.raw` para leer sin el límite de 1 MB;
+  - uno falso, en memoria, para los tests, que simule varias personas escribiendo a la vez.
+- **Archivos en el repositorio:**
+  - `datos.enc` (la bóveda);
+  - `adjuntos/<id>.enc` (cada adjunto cifrado con la clave de datos).
+- **Token:** se guarda en el dispositivo, cifrado con la contraseña del archivo. Se pide una vez por dispositivo.
+- **Cola de operaciones persistente** (IndexedDB), con cada `guardar` / `borrar` / `escribir` / `anotar`:
+  1. Al subir: bajar la última versión, descifrarla, aplicar la cola en orden y subir con el `sha`.
+  2. Si GitHub responde 409, repetir.
+  3. Si otra persona cambió el mismo registro desde que se leyó (comparar `modificado`), se queda la versión propia y se avisa a los dos.
+- **Traer los cambios de los demás:** al abrir, al volver a la pestaña y cada pocos minutos.
+- **Sin conexión:** la cola espera.
+- **Al terminar:** comprobar lo subido descargándolo y descifrándolo, como hace Solvento.
 
 ## Mejoras anotadas (no urgentes)
 
 - Remesa SEPA en XML (pain.008); prorrateo de cuotas; facturas rectificativas.
 - Actividades: avisar a quien pasa de la lista de espera; ver en la ficha del socio sus actividades.
 - Varios archivos a la vez al adjuntar; vista previa de imágenes.
-- Enlazar la junta directiva con las fichas de socio.
+- Enlazar la junta directiva con los usuarios y con las fichas de socio.
+- Usuarios en el móvil: tarjetas en vez de tabla.
 - Informes: memoria con fotos o anexos; comparar varios años en el panel.
-- Capturas nuevas para el README (Tesorería, Actas, Inicio, Informes).
+- Capturas nuevas para el README.

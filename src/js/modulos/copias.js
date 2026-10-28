@@ -1,5 +1,9 @@
 /*
- * webkit_asociaciones — Módulo «Copia de seguridad».
+ * ABIES · Gestión — Módulo «Copia de seguridad».
+ *
+ * La copia cifrada es la bóveda tal cual: se abre con nombre, cargo y las dos
+ * contraseñas, así que la puede descargar cualquier usuario. La copia sin
+ * cifrar y recuperar copias son solo de la cuenta de administración.
  *
  * La copia de seguridad es lo más importante de la aplicación: los datos viven
  * en un navegador, y un navegador se puede borrar, cambiar o estropear. Una
@@ -14,7 +18,7 @@
     var sesion = WA.Sesion;
     if (sesion.modo === "demostración" && cifrada) cifrada = false;
     var sobre = await sesion.contenidoCopia(cifrada);
-    var nombre = WA.Copia.nombreArchivo(sobre.asociacion, WA.Fechas.hoy(), cifrada);
+    var nombre = WA.Copia.nombreArchivo("ABIES", WA.Fechas.hoy(), cifrada);
     WA.UI.descargar(nombre, JSON.stringify(sobre, null, cifrada ? 0 : 2), "application/json");
     if (cifrada && sesion.modo === "abierta") await sesion.datos.marcarCopiaHecha();
     WA.UI.aviso("Copia descargada: " + nombre + ". Guárdala fuera de este ordenador.");
@@ -35,40 +39,37 @@
     var lectura;
     try { lectura = WA.Copia.leer(archivo.texto); }
     catch (e) { WA.UI.aviso(e.message, "error"); return; }
-    var demo = WA.Sesion.modo === "demostración";
-    var r = await WA.UI.dialogo({
+    var UI = WA.UI, fecha = lectura.creada ? " del " + esc(WA.Fechas.corta(lectura.creada.slice(0, 10))) : "";
+    var campos, texto;
+    if (lectura.boveda) {
+      texto = "<p>Copia de ABIES" + fecha + ". Sustituye <strong>todo</strong>, también los usuarios: se abre con el nombre, el cargo y las contraseñas de cuando se hizo.</p>";
+      campos = '<div class="rejilla">' + UI.campo({ nombre: "nombre", etiqueta: "Nombre", requerido: true }) +
+        UI.campo({ nombre: "cargo", etiqueta: "Cargo", requerido: true }) + "</div>" +
+        UI.campo({ nombre: "contrasena", etiqueta: "Contraseña personal", tipo: "password", requerido: true, atributos: 'autocomplete="off"' }) +
+        UI.campo({ nombre: "contrasenaArchivo", etiqueta: "Contraseña del archivo", tipo: "password", requerido: true, atributos: 'autocomplete="off"' });
+    } else {
+      texto = "<p>Copia " + (lectura.cifrada ? "antigua" : "<strong>sin cifrar</strong>") + fecha + ". Sustituye los datos; los usuarios y las contraseñas de ahora se mantienen.</p>";
+      campos = lectura.cifrada ? UI.campo({ nombre: "contrasenaCopia", etiqueta: "Contraseña de la copia", tipo: "password", requerido: true, atributos: 'autocomplete="off"' }) : "";
+    }
+    var r = await UI.dialogo({
       titulo: "Recuperar copia",
-      contenido: "<p>Copia" + (lectura.asociacion ? " de <strong>" + esc(lectura.asociacion) + "</strong>" : "") +
-        (lectura.creada ? " del " + esc(WA.Fechas.corta(lectura.creada.slice(0, 10))) : "") + ".</p>" +
-        (demo ? "" : '<div class="caja-aviso"><strong>Sustituirá todos los datos actuales.</strong> Si no estás seguro, descarga antes una copia de lo que tienes ahora.</div>') +
-        "<form>" +
-        (lectura.cifrada ? WA.UI.campo({ nombre: "pass", etiqueta: "Contraseña de la copia", tipo: "password", requerido: true,
-          ayuda: demo ? "" : "A partir de ahora será también la contraseña de este navegador.", atributos: 'autocomplete="current-password"' }) : "") +
-        (demo || !lectura.cifrada ? WA.UI.campo({ nombre: "nueva", etiqueta: "Contraseña para proteger los datos en este navegador", tipo: "password", requerido: true,
-          ayuda: "Mínimo 8 caracteres.", atributos: 'autocomplete="new-password" minlength="8"' }) : "") +
-        "</form>",
+      contenido: texto + '<div class="caja-aviso"><strong>Sustituirá los datos actuales.</strong> Si no estás seguro, descarga antes una copia de lo que tienes ahora.</div>' +
+        '<form class="formulario" novalidate>' + campos + "</form>",
       botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Recuperar", valor: "enviar", estilo: "btn-primario" }],
-      validar: function (form) {
-        var n = form.elements.nueva;
-        if (n && n.value.length < 8) { WA.UI.marcarError(form, "nueva", "Mínimo 8 caracteres."); return false; }
-        return true;
-      },
     });
     if (r.valor !== "enviar") return;
     try {
-      var passCopia = r.datos.pass || "";
-      // Si la copia va cifrada y no se pidió otra, la contraseña de la copia pasa a ser la de la sesión.
-      await WA.Sesion.restaurar(lectura, passCopia, r.datos.nueva || passCopia);
-      WA.UI.aviso("Copia recuperada.");
+      var res = await WA.Sesion.restaurar(lectura, r.datos);
+      WA.UI.aviso("Copia recuperada" + (res && res.faltan ? ". Faltan " + res.faltan + " adjuntos que no venían en la copia." : "."));
       location.hash = "#/inicio";
       WA.App.repintar();
     } catch (e) {
-      WA.UI.aviso(e.message, "error");
+      WA.UI.aviso(e.codigo === "CONTRASENA" ? "La contraseña de la copia no es correcta." : e.message, "error");
     }
   }
 
   async function pintar(cont, datos) {
-    var demo = WA.Sesion.modo === "demostración";
+    var demo = WA.Sesion.modo === "demostración", admin = WA.Sesion.esAdmin;
     var e = await datos.estadoCopia();
     var tipo = await WA.Boveda.tipo();
     var docs = await datos.listar("documentos");
@@ -83,22 +84,24 @@
       (demo ? '<div class="caja-aviso">Estás en la demostración: la copia sale sin cifrar y con datos inventados.</div>' : "") +
       '<section class="tarjeta" aria-labelledby="t-descargar"><h2 id="t-descargar">Descargar copia</h2>' +
       (demo ? "" : "<p>" + ultima + "</p>") +
-      "<p>La copia va <strong>cifrada con tu contraseña</strong>: sin ella no se puede abrir.</p>" +
+      "<p>La copia va <strong>cifrada</strong>: se abre con un nombre, un cargo y las dos contraseñas (la personal y la del archivo). Sin ellas no sirve de nada.</p>" +
       (docs.length ? '<p class="detalle">Incluye ' + docs.length + (docs.length === 1 ? " documento adjunto" : " documentos adjuntos") + " (" + esc(WA.DocsUI.tamanoTexto(pesoDocs)) + "): el archivo de copia ocupará algo más.</p>" : "") +
       '<div class="acciones"><button type="button" class="btn btn-primario" id="c-descargar">Descargar copia cifrada</button>' +
-      '<button type="button" class="btn btn-secundario" id="c-claro">Descargar sin cifrar…</button></div></section>' +
-      '<section class="tarjeta" aria-labelledby="t-recuperar"><h2 id="t-recuperar">Recuperar una copia</h2>' +
-      "<p>Abre un archivo de copia para seguir trabajando con él en este navegador.</p>" +
-      '<div class="acciones"><button type="button" class="btn btn-secundario" id="c-recuperar">Elegir archivo de copia…</button></div></section>' +
+      (admin || demo ? '<button type="button" class="btn btn-secundario" id="c-claro">Descargar sin cifrar…</button>' : "") + "</div></section>" +
+      (admin ? '<section class="tarjeta" aria-labelledby="t-recuperar"><h2 id="t-recuperar">Recuperar una copia</h2>' +
+        "<p>Abre un archivo de copia para seguir trabajando con él en este navegador.</p>" +
+        '<div class="acciones"><button type="button" class="btn btn-secundario" id="c-recuperar">Elegir archivo de copia…</button></div></section>'
+        : '<p class="detalle">La copia sin cifrar y recuperar copias son cosa de la cuenta ' + esc(WA.Permisos.NOMBRE_ADMIN) + ".</p>") +
       '<section class="tarjeta" aria-labelledby="t-buenas"><h2 id="t-buenas">Buenas prácticas</h2><ul class="lista">' +
       "<li>Guarda al menos dos copias en sitios distintos, y alguna fuera de este ordenador.</li>" +
-      "<li>Guarda la contraseña aparte de las copias (por ejemplo, en un gestor de contraseñas). Sin ella, la copia no sirve.</li>" +
+      "<li>Guarda las contraseñas aparte de las copias (por ejemplo, en un gestor de contraseñas). Sin ellas, la copia no sirve.</li>" +
       "<li>Las copias contienen datos personales de socios: compártelas solo con quien lleve la gestión.</li>" +
       "<li>Las copias sin cifrar, bórralas en cuanto termines de usarlas.</li>" +
       "</ul><p class=\"detalle\">Se guarda en este navegador con " + esc(tipo) + ".</p></section>";
     cont.querySelector("#c-descargar").addEventListener("click", function () { descargar(true).then(function () { WA.App.repintar(); }); });
-    cont.querySelector("#c-claro").addEventListener("click", descargarSinCifrar);
-    cont.querySelector("#c-recuperar").addEventListener("click", restaurar);
+    var claro = cont.querySelector("#c-claro"), rec = cont.querySelector("#c-recuperar");
+    if (claro) claro.addEventListener("click", descargarSinCifrar);
+    if (rec) rec.addEventListener("click", restaurar);
     if (demo) cont.querySelector("#c-descargar").hidden = true;
   }
 

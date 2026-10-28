@@ -1,10 +1,10 @@
-# webkit_asociaciones
+# ABIES · Gestión
 
-**Gestión de una asociación sin ánimo de lucro en un solo archivo HTML.** Sin instalar nada, sin crear cuentas, sin pagar plataformas y sin que los datos de los socios salgan de tu ordenador.
+**La gestión interna de ABIES en un solo archivo HTML** (el repositorio se sigue llamando `webkit_asociaciones`). Sin instalar nada, sin pagar plataformas y sin que los datos de los socios salgan de los ordenadores de la junta.
 
-Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a 150 socios y unos pocos miles de euros al año) que hoy se apañan con hojas de cálculo.
+Desde la versión 0.7 es una herramienta **solo para ABIES**: lleva su marca y cada miembro de la junta entra con su propio usuario (nombre, cargo y contraseña) **más** la contraseña del archivo. La cuenta **ABIES · Administración** gestiona los usuarios.
 
-> ⚠️ **Estado: en desarrollo (versión 0.6, las 6 fases hechas).** Incluye datos de la asociación, junta directiva, socios y cuotas, tesorería, facturas, ayuda para el IVA, presupuestos, actividades con calendario, libro de actas, calendario de obligaciones, seguimiento de subvenciones, documentos adjuntos cifrados, **memoria anual, cuentas del ejercicio y panel de resumen con gráficas**, copias de seguridad cifradas y ajustes. Faltan las convocatorias de asamblea (pendientes de definir). Ver la [hoja de ruta](#hoja-de-ruta).
+> ⚠️ **Estado: en desarrollo (versión 0.7: fases 1–6 y 7a).** Incluye datos de la asociación, junta directiva, socios y cuotas, tesorería, facturas, ayuda para el IVA, presupuestos, actividades con calendario, libro de actas, calendario de obligaciones, seguimiento de subvenciones, documentos adjuntos cifrados, memoria anual, cuentas del ejercicio y panel de resumen, **usuarios por cargo con doble contraseña, permisos por cargo y registro de cambios**. Faltan la sincronización entre ordenadores (fase 7b) y las convocatorias de asamblea. Ver la [hoja de ruta](#hoja-de-ruta).
 
 | Inicio | Socios | Actividades | Móvil (tema oscuro) |
 |---|---|---|---|
@@ -14,20 +14,36 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 
 ## Cómo se usa
 
-1. Descarga el archivo [`dist/webkit_asociaciones.html`](dist/webkit_asociaciones.html).
-2. Ábrelo con doble clic. Funciona sin conexión a internet.
-3. Elige una de estas opciones:
-   - **Empezar con datos nuevos**: eliges una contraseña, que cifrará los datos.
-   - **Recuperar una copia de seguridad**: si ya la usabas en otro ordenador.
-   - **Probar con datos de demostración**: datos inventados que no se guardan.
-4. Descarga una **copia de seguridad** a menudo, desde «Copia de seguridad», y guárdala fuera del ordenador.
+1. Descarga el archivo [`dist/webkit_asociaciones.html`](dist/webkit_asociaciones.html) y ábrelo con doble clic. Funciona sin conexión.
+2. **La primera vez**, «Configurar por primera vez»: se eligen dos contraseñas.
+   - La **contraseña del archivo**, que compartirá toda la junta.
+   - La de la cuenta **ABIES · Administración**, que da de alta a los usuarios.
+3. Con la cuenta ABIES, en **Usuarios**, da de alta a cada cargo (por ejemplo «Alberto · Tesorería») con una contraseña provisional. Cada uno elige la suya al entrar por primera vez.
+4. **Para entrar**: nombre, cargo, contraseña personal y contraseña del archivo. Si algo no coincide, no se dice qué.
+5. Descarga a menudo una **copia de seguridad** (Copia de seguridad) y guárdala fuera del ordenador.
 
-### Dónde están tus datos
+También hay una **demostración** con datos inventados en la que se elige con qué cargo entrar.
 
-- Se guardan **en el navegador** con el que abres el archivo, **cifrados con tu contraseña** (AES-256). Ningún dato sale de tu ordenador: la aplicación no se conecta a ningún servidor.
-- Si **olvidas la contraseña**, nadie puede recuperar los datos. Apúntala en un lugar seguro.
-- Si abres el archivo con **otro navegador**, en **otro ordenador** o después de **moverlo de carpeta**, puede aparecer vacío. Los datos no se han perdido: recupéralos con tu copia de seguridad.
-- La copia de seguridad es un archivo `.json` **cifrado con la misma contraseña**.
+### Usuarios, permisos y seguridad
+
+- **Doble llave:** los datos se cifran (AES-256) con una clave interna. Cada usuario tiene su copia de esa clave, cerrada con su contraseña personal y la del archivo. Sin las dos, no se abre nada.
+- **La cuenta ABIES no conoce las contraseñas de nadie:** solo puede poner una provisional a quien la olvide. Si se pierde la contraseña del archivo, no hay forma de recuperar los datos.
+- **Al desactivar a alguien cambia la clave interna:** aunque conserve una copia del archivo, no puede leer nada guardado después. Los demás no notan nada.
+- **Todos ven todo y cada cargo modifica lo suyo:**
+  - Tesorería: cuotas, tesorería, facturas, IVA y presupuestos.
+  - Secretaría: asociación, socios, actas, obligaciones, documentos y textos de la memoria.
+  - Vocalía: actividades.
+  - Presidencia y vicepresidencia: todo.
+
+  La cuenta ABIES puede cambiarlo para cada usuario.
+- **Registro de cambios:** cada cambio queda firmado («Alberto · Tesorería, 17/10/2026 11:08») en la página **Actividad** y en cada ficha.
+- **Límite honesto:** sin servidor, los permisos los hace cumplir la aplicación, no el cifrado. Alguien con conocimientos técnicos y credenciales válidas podría saltárselos. Para una junta de confianza es suficiente.
+
+### Dónde están los datos
+
+- **En el navegador** con el que se abre el archivo, cifrados. La aplicación no se conecta a ningún servidor (la sincronización entre ordenadores por un repositorio privado de GitHub llegará en la fase 7b).
+- Si se abre en **otro navegador** u **otro ordenador**, aparece vacío: se recupera con la copia de seguridad.
+- La **copia cifrada** se abre con las mismas credenciales (nombre, cargo y las dos contraseñas) y no lleva nada en claro. La copia **sin cifrar** solo la puede descargar la cuenta ABIES.
 
 ## Qué hace (y qué hará)
 
@@ -41,13 +57,16 @@ Pensada para asociaciones pequeñas de España (sin personal contratado, de 50 a
 | 4. Actividades | Calendario mensual; actividades abiertas o solo para socios; inscripciones con aforo, lista de espera (sube sola), cobro (entra en tesorería sin duplicarse), asistencia, menores y autorizaciones; hoja de asistencia imprimible; exportar a .ics; balance económico por actividad | ✅ Hecha |
 | 5. Gobierno | Libro de actas por órgano (junta, coordinación, asamblea, departamentos) con orden del día, asistentes, acuerdos y votaciones, versión para firmar y libro de acuerdos; calendario de obligaciones (fiscales, asociativas, renovaciones) con aviso; seguimiento de subvenciones (estado, plazos, requisitos); documentos adjuntos cifrados. *Convocatorias: pendientes de definir* | ✅ Hecha (salvo convocatorias) |
 | 6. Informes | Memoria anual (entidad y junta, socios por tipo, sexo y edad, actividades y participación, proyectos y subvenciones, actas y acuerdos, resumen económico, textos propios) y cuentas del ejercicio (ingresos y gastos frente al año anterior, saldos, presupuesto, pendientes a 31/12, estado de situación simplificado y aproximación al modelo de entidades sin fines lucrativos), imprimibles en PDF; panel de Inicio con agenda, dinero, socios y cuotas y gráficas de 12 meses | ✅ Hecha |
+| 7a. ABIES | Marca de ABIES, usuarios por cargo con doble contraseña (personal + archivo), cuenta de administración, permisos por cargo, registro de cambios | ✅ Hecha |
+| 7b. Sincronización | El archivo cifrado en un repositorio privado de GitHub; varias personas a la vez con una cola de cambios | Pendiente |
 | Futuro | Versión con servidor (acceso de socios, pagos en línea). Solo diseñada | — |
 
 ## Limitaciones (léelas)
 
 - **No es asesoramiento legal ni fiscal.** Donde la aplicación toca normativa (Ley Orgánica 1/2002 de asociaciones, RGPD, obligaciones contables y fiscales), lo hace de forma orientativa. Verifica siempre con una asesoría.
-- **Un solo navegador y un solo ordenador a la vez.** No hay sincronización: para pasar los datos de un ordenador a otro, usa la copia de seguridad. Si dos personas editan en sitios distintos, sus cambios no se juntan.
-- **Varias copias del archivo en el mismo navegador comparten los datos.** El navegador guarda los datos por «sitio», y todos los archivos locales cuentan como el mismo sitio. Si llevas dos asociaciones, usa un navegador (o un perfil de navegador) distinto para cada una.
+- **Un solo navegador y un solo ordenador a la vez (hasta la fase 7b).** Todavía no hay sincronización: para pasar los datos de un ordenador a otro, usa la copia de seguridad. Si dos personas editan en sitios distintos, sus cambios no se juntan.
+- **Permisos por cargo sin servidor:** los hace cumplir la aplicación, no el cifrado (ver «Usuarios, permisos y seguridad»).
+- **Varias copias del archivo en el mismo navegador comparten los datos.** El navegador guarda los datos por «sitio», y todos los archivos locales cuentan como el mismo sitio.
 - **El navegador puede borrar los datos** si se borra el historial o los datos de navegación, o si falta espacio. Por eso son imprescindibles las copias de seguridad.
 - **Documentos adjuntos:** se guardan cifrados en el navegador y van dentro de la copia de seguridad, que crece con ellos. Máximo 10 MB por archivo (configurable). Necesitan IndexedDB.
 - **Calendario de obligaciones:** fechas orientativas, editables; verificad con la asesoría qué os afecta.

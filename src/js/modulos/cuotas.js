@@ -217,7 +217,7 @@
         return '<option value="' + o[0] + '"' + (estadoVista.estado === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
       }).join("") + "</select></label>" +
       '<button type="button" class="btn btn-secundario" id="q-cobrar-sel" disabled>Cobrar seleccionadas</button>' +
-      '<button type="button" class="btn btn-secundario" id="q-exportar">Exportar (CSV)</button></div>' +
+      '<button type="button" class="btn btn-secundario lectura-ok" id="q-exportar">Exportar (CSV)</button></div>' +
       '<div id="q-tabla"></div>';
 
     function visibles() {
@@ -336,8 +336,8 @@
             '<td class="solo-ancho">' + (s.email ? '<a href="mailto:' + esc(s.email) + '">' + esc(s.email) + "</a>" : "") +
             (s.telefono ? '<br><span class="detalle">' + esc(s.telefono) + "</span>" : "") + "</td></tr>";
         }).join("") + "</tbody></table></div>" +
-        '<div class="acciones"><button type="button" class="btn btn-secundario" id="i-correos">Copiar sus correos</button>' +
-        '<button type="button" class="btn btn-secundario" id="i-exportar">Exportar (CSV)</button></div>' +
+        '<div class="acciones"><button type="button" class="btn btn-secundario lectura-ok" id="i-correos">Copiar sus correos</button>' +
+        '<button type="button" class="btn btn-secundario lectura-ok" id="i-exportar">Exportar (CSV)</button></div>' +
         '<p class="detalle">Para avisar a varios a la vez, pega los correos en «CCO» (copia oculta): así nadie ve las direcciones de los demás.</p>' : "");
     if (!deud.length) return;
     cont.querySelector("#i-correos").addEventListener("click", async function () {

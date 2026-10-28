@@ -41,7 +41,7 @@ h1:focus { outline: none; }
   background: var(--superficie); border-bottom: 1px solid var(--borde);
 }
 .marca { display: inline-flex; align-items: center; gap: 0.6rem; font-weight: 800; color: var(--titulo); text-decoration: none; letter-spacing: -0.01em; }
-.marca-logo { width: 26px; height: 26px; flex-shrink: 0; }
+.marca-logo { flex-shrink: 0; }
 .cabecera-acciones { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; }
 /* El botón del menú, cuadrado y con borde, como el de Solvento. */
 .cabecera .btn-icono { width: 32px; height: 32px; border: 1px solid var(--borde); border-radius: 8px; color: var(--texto-2); }

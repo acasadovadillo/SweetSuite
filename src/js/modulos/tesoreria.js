@@ -53,7 +53,7 @@
       }).join("") + '<li class="total"><span>Total</span><strong>' + esc(D.formatear(total)) + "</strong></li></ul>" : '<p class="detalle">Nada en ' + anio + ".</p>") + "</section>";
     };
     cont.innerHTML =
-      '<div class="cabecera-pagina"><h1>Tesorería</h1><button type="button" class="btn btn-secundario" id="t-excel">Descargar Excel del año</button></div>' + pestanas("") +
+      '<div class="cabecera-pagina"><h1>Tesorería</h1><button type="button" class="btn btn-secundario lectura-ok" id="t-excel">Descargar Excel del año</button></div>' + pestanas("") +
       (sinClasificar ? '<div class="caja-aviso">Hay <strong>' + sinClasificar + ' movimientos sin clasificar</strong>. <a href="#/tesoreria/movimientos" id="t-ver-sin">Clasificarlos</a></div>' : "") +
       '<div class="rejilla-tarjetas cifras">' + c.config.cuentas.map(function (cu) {
         return '<section class="tarjeta"><h2>' + esc(cu.nombre) + '</h2><p class="cifra">' + esc(D.formatear(s.porCuenta[cu.id] || 0)) + "</p></section>";

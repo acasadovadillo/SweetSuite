@@ -76,48 +76,85 @@ try {
   comprobar("se abre como file://", entorno.origen === "file://", entorno);
   comprobar("contexto seguro y cifrado disponibles", entorno.seguro && entorno.cifrado, entorno);
 
+  // Credenciales de prueba (solo existen en este perfil temporal del navegador).
+  const ADMIN = "{ nombre: 'ABIES', cargo: 'Administración', contrasena: 'admin de prueba file', contrasenaArchivo: 'archivo de prueba file' }";
+  const entrarAdmin = `await WA.Sesion.entrar(${ADMIN});`;
+
+  // 1. Datos de antes de los usuarios (una sola contraseña y un esquema viejo): se convierten.
   await evaluar(`
-    const llave = await WA.Cripto.crearLlave('frase de prueba file');
+    const llave = await WA.Cripto.crearLlave('frase antigua');
     const v2 = WA.Esquema.migrar({ app: 'webkit_asociaciones', esquema: 1, asociacion: { nombre: 'Prueba file',
       domicilio: { via: 'C/ Mayor, 3', codigoPostal: '28013', municipio: 'Madrid', provincia: 'Madrid' } }, junta: [] });
     delete v2.socios; delete v2.cuotas; delete v2.remesas; delete v2.config; v2.esquema = 2;
     await WA.Boveda.escribir(await WA.Cripto.cifrar(v2, llave));`);
   await cargar();
   const migrado = await evaluar(`
-    await WA.Sesion.desbloquear('frase de prueba file');
-    const g = (await WA.Cripto.descifrar(await WA.Boveda.leer(), 'frase de prueba file')).objeto;
-    return { esquema: g.esquema, actual: WA.Esquema.VERSION, tipos: g.config.tiposSocio.length,
-      colecciones: WA.Esquema.COLECCIONES.every((c) => Array.isArray(g[c])), donde: await WA.Boveda.tipo() }`);
-  comprobar("datos de una versión anterior migrados y guardados al día", migrado.esquema === migrado.actual && migrado.tipos === 1 && migrado.colecciones, migrado);
+    const antes = await WA.Sesion.tipoBoveda();
+    await WA.Sesion.actualizarAntigua({ contrasenaAntigua: 'frase antigua', contrasenaArchivo: 'archivo de prueba file', contrasenaAdmin: 'admin de prueba file' });
+    const b = await WA.Boveda.leer();
+    const doc = await WA.Sesion.datos.documento();
+    return { antes, despues: await WA.Sesion.tipoBoveda(), legible: /Prueba file|ABIES/.test(JSON.stringify(b)), esquema: doc.esquema, actual: WA.Esquema.VERSION,
+      nombre: doc.asociacion.nombre, tipos: doc.config.tiposSocio.length, colecciones: WA.Esquema.COLECCIONES.every((c) => Array.isArray(doc[c])),
+      firma: WA.Sesion.firma, donde: await WA.Boveda.tipo() }`);
+  comprobar("los datos de una sola contraseña se convierten al acceso por usuarios (y se migran)",
+    migrado.antes === "antigua" && migrado.despues === "abies" && migrado.esquema === migrado.actual && migrado.nombre === "Prueba file" && migrado.tipos === 1 && migrado.colecciones, migrado);
+  comprobar("en la bóveda no queda nada legible", !migrado.legible, migrado);
   comprobar("se guarda en IndexedDB", migrado.donde === "IndexedDB", migrado);
 
-  await evaluar(`await WA.Sesion.datos.guardar('socios', WA.Socios.completar({ numero: 1, nombre: 'Uno', fechaAlta: '2026-01-01', tipoSocioId: 'socio' }));
+  // 2. Usuarios: alta de dos cargos, un socio, recargar y volver a entrar.
+  await evaluar(`
+    await WA.Sesion.anadirUsuario({ nombre: 'Alberto', cargo: 'Tesorería', contrasena: 'provisional tesoreria' });
+    await WA.Sesion.anadirUsuario({ nombre: 'Lucía', cargo: 'Secretaría', contrasena: 'provisional secretaria' });
+    location.hash = '#/socios'; await new Promise((r) => setTimeout(r, 300));
+    await WA.Sesion.datos.guardar('socios', WA.Socios.completar({ numero: 1, nombre: 'Uno', fechaAlta: '2026-01-01', tipoSocioId: 'socio' }));
     await new Promise((r) => setTimeout(r, 400));`);
   await cargar();
   const tras = await evaluar(`
-    await WA.Sesion.desbloquear('frase de prueba file');
+    ${entrarAdmin}
     location.hash = '#/socios';
     await new Promise((r) => setTimeout(r, 600));
     return { socios: (await WA.Sesion.datos.listar('socios')).length, titulo: document.querySelector('#principal h1').textContent,
+      usuarios: WA.Sesion.usuarios().length, registro: (await WA.Sesion.datos.listar('registro')).map((r) => r.autor + ':' + r.accion + ':' + r.donde),
       error: !!document.querySelector('.tarjeta-error') }`);
-  comprobar("lo guardado sobrevive a recargar y la página de socios se pinta", tras.socios === 1 && tras.titulo === "Socios" && !tras.error, tras);
+  comprobar("lo guardado (usuarios y datos) sobrevive a recargar y la página de socios se pinta", tras.socios === 1 && tras.usuarios === 3 && tras.titulo === "Socios" && !tras.error, tras);
+  comprobar("el registro firma quién hizo cada cambio", tras.registro.includes("ABIES · Administración:alta:socios") && tras.registro.includes("ABIES · Administración:alta:usuarios"), tras.registro);
 
   const paginas = await evaluar(`
     const out = {};
-    for (const r of ['#/inicio', '#/informes', '#/informes/cuentas']) {
+    for (const r of ['#/inicio', '#/informes', '#/informes/cuentas', '#/usuarios', '#/registro']) {
       location.hash = r;
       await new Promise((ok) => setTimeout(ok, 600));
       out[r] = { titulo: (document.querySelector('#principal h1') || {}).textContent, error: !!document.querySelector('.tarjeta-error'),
         documento: !!document.querySelector('#principal .documento-impreso'), grafica: !!document.querySelector('#principal .grafica svg') };
     }
     return out`);
-  comprobar("el panel de inicio y los informes se pintan (con gráficas y documento imprimible)",
-    !paginas["#/inicio"].error && paginas["#/inicio"].grafica && ["#/informes", "#/informes/cuentas"].every((r) => !paginas[r].error && paginas[r].documento), paginas);
+  comprobar("el panel de inicio, los informes, usuarios y actividad se pintan",
+    !paginas["#/inicio"].error && paginas["#/inicio"].grafica && ["#/informes", "#/informes/cuentas"].every((r) => !paginas[r].error && paginas[r].documento) &&
+    paginas["#/usuarios"].titulo === "Usuarios" && paginas["#/registro"].titulo === "Actividad", paginas);
 
-  // Base de datos de la versión 1 (antes de los adjuntos) con datos dentro: al abrir, se actualiza sin perderlos.
+  // 3. Un cargo entra con su contraseña provisional y solo modifica lo suyo.
+  const tes = await evaluar(`
+    await WA.Sesion.bloquear();
+    try { await WA.Sesion.entrar({ nombre: 'alberto', cargo: 'tesoreria', contrasena: 'provisional tesoreria', contrasenaArchivo: 'otra' }); return { mal: 'entró con la contraseña del archivo equivocada' }; } catch (e) { if (e.codigo !== 'ACCESO') throw e; }
+    await WA.Sesion.entrar({ nombre: 'alberto', cargo: 'tesoreria', contrasena: 'provisional tesoreria', contrasenaArchivo: 'archivo de prueba file' });
+    const provisional = WA.Sesion.usuario.debeCambiar;
+    await WA.Sesion.cambiarMiContrasena('provisional tesoreria', 'la de alberto 2026');
+    location.hash = '#/actas'; await new Promise((r) => setTimeout(r, 500));
+    let actas = 'permitido';
+    try { await WA.Sesion.datos.guardar('actas', { titulo: 'x' }); } catch (e) { actas = e.codigo; }
+    const lectura = document.body.classList.contains('solo-lectura');
+    location.hash = '#/tesoreria'; await new Promise((r) => setTimeout(r, 500));
+    await WA.Sesion.datos.guardar('movimientos', { fecha: '2026-10-17', cuentaId: 'banco', tipo: 'gasto', importe: 500, concepto: 'Sellos', categoriaId: 'material' });
+    const usuariosVisible = [...document.querySelectorAll('#menu-lista a')].some((a) => a.dataset.modulo === 'usuarios');
+    return { provisional, actas, lectura, usuariosVisible, firma: WA.Sesion.firma }`);
+  comprobar("un cargo entra con las dos contraseñas, cambia la provisional y solo modifica lo suyo",
+    !tes.mal && tes.provisional === true && tes.actas === "PERMISO" && tes.lectura && !tes.usuariosVisible, tes);
+
+  // 4. Base de datos de la versión 1 (antes de los adjuntos) con datos dentro: se actualiza sin perderlos.
   await evaluar(`
     const llave = await WA.Cripto.crearLlave('frase v1');
     const bloque = await WA.Cripto.cifrar(WA.Esquema.documentoVacio(), llave);
+    await WA.Sesion.bloquear();
     await new Promise((ok, mal) => { const r = indexedDB.deleteDatabase('webkit_asociaciones'); r.onsuccess = ok; r.onerror = mal; r.onblocked = ok; });
     await new Promise((ok, mal) => {
       const r = indexedDB.open('webkit_asociaciones', 1);
@@ -127,43 +164,55 @@ try {
     });`);
   await cargar();
   const v1 = await evaluar(`
-    await WA.Sesion.desbloquear('frase v1');
+    await WA.Sesion.actualizarAntigua({ contrasenaAntigua: 'frase v1', contrasenaArchivo: 'archivo de prueba file', contrasenaAdmin: 'admin de prueba file' });
     const f = await WA.Sesion.datos.guardarArchivo({ nombre: "x.txt", tipoMime: "text/plain", categoria: "Otros" }, new TextEncoder().encode("hola"));
     const leido = new TextDecoder().decode(await WA.Sesion.datos.leerArchivo(f.id));
     await WA.Sesion.datos.borrarArchivo(f.id);
     return { modo: WA.Sesion.modo, leido }`);
   comprobar("una base de datos de la versión 1 se actualiza conservando los datos y admite adjuntos", v1.modo === "abierta" && v1.leido === "hola", v1);
-  await evaluar(`await WA.Sesion.cambiarContrasena('frase v1', 'frase de prueba file'); return 1`);
 
-  // Adjuntos cifrados: guardar, cambiar la contraseña, recargar, copia de seguridad y restaurar.
+  // 5. Adjuntos cifrados: guardar, desactivar a alguien (cambia la clave), recargar, copia y restaurar.
   const adj = await evaluar(`
+    await WA.Sesion.anadirUsuario({ nombre: 'Lucía', cargo: 'Secretaría', contrasena: 'provisional secretaria' });
     const bytes = new Uint8Array(300000).map((_, i) => (i * 7) % 256);
+    location.hash = '#/documentos'; await new Promise((r) => setTimeout(r, 300));
     const ficha = await WA.Sesion.datos.guardarArchivo({ nombre: "prueba.bin", tipoMime: "application/octet-stream", categoria: "Otros" }, bytes);
     await new Promise((r) => setTimeout(r, 300));
     const crudo = await WA.Boveda.leerArchivo(ficha.id);
-    await WA.Sesion.cambiarContrasena('frase de prueba file', 'frase nueva de prueba');
-    return { id: ficha.id, cifrado: crudo && crudo.ct.length >= 300000 && crudo.ct[1] !== 7 }`);
+    const antes = JSON.stringify(Array.from(crudo.ct.slice(0, 16)));
+    const lucia = WA.Sesion.usuarios().find((u) => u.nombre === 'Lucía');
+    await WA.Sesion.desactivarUsuario(lucia.id);
+    const despues = JSON.stringify(Array.from((await WA.Boveda.leerArchivo(ficha.id)).ct.slice(0, 16)));
+    return { id: ficha.id, cifrado: crudo && crudo.ct.length >= 300000 && crudo.ct[1] !== 7, recifrado: antes !== despues }`);
   comprobar("el adjunto se guarda cifrado", adj.cifrado, adj);
+  comprobar("al desactivar a alguien los adjuntos se vuelven a cifrar con la clave nueva", adj.recifrado, adj);
   await cargar();
   const tras2 = await evaluar(`
-    await WA.Sesion.desbloquear('frase nueva de prueba');
+    let lucia = 'entró';
+    try { await WA.Sesion.entrar({ nombre: 'Lucía', cargo: 'Secretaría', contrasena: 'provisional secretaria', contrasenaArchivo: 'archivo de prueba file' }); } catch (e) { lucia = e.codigo; }
+    ${entrarAdmin}
     const b = await WA.Sesion.datos.leerArchivo(${JSON.stringify(adj.id)});
     const ok = b && b.length === 300000 && b[1] === 7 && b[299999] === (299999 * 7) % 256;
     const sobre = await WA.Sesion.contenidoCopia(true);
     window.__copia = JSON.stringify(sobre);
-    return { ok, enCopia: !!(sobre.archivos && sobre.archivos[${JSON.stringify(adj.id)}]) }`);
-  comprobar("tras cambiar la contraseña y recargar, el adjunto se lee bien", tras2.ok, tras2);
-  comprobar("la copia de seguridad lleva el adjunto", tras2.enCopia, tras2);
+    return { lucia, ok, enCopia: !!(sobre.archivos && sobre.archivos[${JSON.stringify(adj.id)}]), legible: /Lucía|Tesorer|Prueba/.test(window.__copia) }`);
+  comprobar("quien está desactivado ya no entra", tras2.lucia === "ACCESO", tras2);
+  comprobar("tras cambiar la clave y recargar, el adjunto se lee bien", tras2.ok, tras2);
+  comprobar("la copia de seguridad lleva el adjunto y no tiene nada legible", tras2.enCopia && !tras2.legible, tras2);
   const rest = await evaluar(`
     const texto = window.__copia;
     await WA.Sesion.borrarDelNavegador();
     await WA.Sesion.bloquear();
     const vacio = !(await WA.Boveda.hayDatos()) && !(await WA.Boveda.leerArchivo(${JSON.stringify(adj.id)}));
-    const r = await WA.Sesion.restaurar(WA.Copia.leer(texto), 'frase nueva de prueba', 'otra frase distinta');
+    let mal = '';
+    try { await WA.Sesion.restaurar(WA.Copia.leer(texto), { nombre: 'ABIES', cargo: 'Administración', contrasena: 'mala', contrasenaArchivo: 'archivo de prueba file' }); } catch (e) { mal = e.codigo; }
+    const nadaTocado = !(await WA.Boveda.hayDatos());
+    const r = await WA.Sesion.restaurar(WA.Copia.leer(texto), ${ADMIN});
     const b = await WA.Sesion.datos.leerArchivo(${JSON.stringify(adj.id)});
-    return { vacio, r, ok: b && b.length === 300000 && b[299999] === (299999 * 7) % 256 }`);
+    return { vacio, mal, nadaTocado, r, ok: b && b.length === 300000 && b[299999] === (299999 * 7) % 256 }`);
   comprobar("borrar del navegador quita también los adjuntos", rest.vacio, rest);
-  comprobar("restaurar la copia (con otra contraseña nueva) recupera el adjunto", rest.ok && rest.r.archivos === 1 && rest.r.faltan === 0, rest);
+  comprobar("una copia no se recupera sin sus credenciales (y no toca nada)", rest.mal === "ACCESO" && rest.nadaTocado, rest);
+  comprobar("recuperar la copia con sus credenciales devuelve el adjunto", rest.ok && rest.r.archivos === 1 && rest.r.faltan === 0, rest);
   ws.close();
 } catch (e) {
   comprobar("la prueba se ha podido ejecutar", false, e.message);

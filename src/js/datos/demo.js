@@ -24,6 +24,21 @@
 })(typeof self !== "undefined" ? self : this, function (Esquema) {
   "use strict";
 
+  /** Unos cambios de ejemplo en el registro, firmados por los usuarios de la demostración. */
+  function rellenarRegistro(doc) {
+    var c = function (fecha, autor, accion, donde, resumen) {
+      return { id: "demo-reg-" + fecha.replace(/\D/g, ""), fecha: fecha, usuarioId: "", autor: autor, accion: accion, donde: donde, registroId: "", resumen: resumen };
+    };
+    doc.registro = [
+      c("2026-09-02T18:20:00.000Z", "ABIES · Administración", "alta", "usuarios", "Javier Supuesto · Tesorería"),
+      c("2026-09-02T18:22:00.000Z", "ABIES · Administración", "alta", "usuarios", "Carmen Demo · Secretaría"),
+      c("2026-09-15T10:05:00.000Z", "Javier Supuesto · Tesorería", "alta", "movimientos", "Póliza de responsabilidad civil"),
+      c("2026-09-20T19:40:00.000Z", "Carmen Demo · Secretaría", "cambio", "actas", "Junta Directiva"),
+      c("2026-10-01T09:12:00.000Z", "Nora Imaginaria · Vocalía", "alta", "actividades", "Salida de campo: el encinar en otoño"),
+      c("2026-10-03T17:30:00.000Z", "Javier Supuesto · Tesorería", "varios", "cuotas", "22 registros"),
+    ];
+  }
+
   function documentoDemo(ahora) {
     var doc = Esquema.documentoVacio(ahora);
     var t = doc.meta.creado;
@@ -61,6 +76,7 @@
     rellenarTesoreria(doc, t);
     rellenarActividades(doc, t);
     rellenarGobierno(doc, t);
+    rellenarRegistro(doc);
     return doc;
   }
 

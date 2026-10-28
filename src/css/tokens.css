@@ -6,8 +6,9 @@
  *
  * La estética es la de Solvento: oscuro de grises azulados por defecto, paneles
  * muy redondeados sin sombra (los separa el borde), botón principal blanco y
- * etiquetas pequeñas en mayúsculas. El nombre de cada variable dice para qué
- * sirve, no de qué color es.
+ * etiquetas pequeñas en mayúsculas. Los acentos son los de ABIES: el naranja
+ * del logotipo (#e6431f) y su verde (#004b49; aclarado en el tema oscuro para
+ * que se lea). El nombre de cada variable dice para qué sirve, no de qué color es.
  *
  * Contraste: los textos cumplen AA (4,5:1) sobre los fondos en los dos temas.
  * Por eso --texto-3 es un punto más claro que el gris secundario de Solvento
@@ -33,12 +34,13 @@
   --primario: #ffffff;
   --primario-texto: #000000;
   /* Acento (selección, foco, gráficas, enlaces) */
-  --acento: #3b82f6;
-  --acento-hover: #60a5fa;
-  --acento-texto: #ffffff;
-  --acento-suave: rgba(59, 130, 246, 0.14);
-  --enlace: #60a5fa;
-  --foco: #60a5fa;
+  --acento: #3fb0a0;            /* verde ABIES aclarado (6,3:1 sobre los paneles) */
+  --acento-hover: #5cc2b4;
+  --acento-texto: #0f1117;
+  --acento-suave: rgba(63, 176, 160, 0.14);
+  --enlace: #5cc2b4;
+  --foco: #5cc2b4;
+  --naranja: #e6431f;           /* el del logotipo de ABIES */
   /* Con significado */
   --peligro: #f87171;
   --peligro-fuerte: #ef4444;
@@ -54,8 +56,8 @@
   --globo: #000000;
   --globo-texto: #ffffff;
   /* Logotipo */
-  --marca-fondo: #ffffff;
-  --marca-trazo: #0f1117;
+  --marca-fondo: #004b49;
+  --marca-trazo: #ffffff;
   --sombra: none;
   --sombra-flotante: 0 10px 30px rgba(0, 0, 0, 0.55);
   --velo: rgba(0, 0, 0, 0.7);
@@ -86,12 +88,13 @@
   --texto-3: #5b6170;
   --primario: #0b0f19;
   --primario-texto: #ffffff;
-  --acento: #2563eb;
-  --acento-hover: #1d4ed8;
+  --acento: #004b49;            /* verde ABIES */
+  --acento-hover: #0b6b67;
   --acento-texto: #ffffff;
-  --acento-suave: #dbeafe;
-  --enlace: #1d4ed8;
-  --foco: #2563eb;
+  --acento-suave: #dcefec;
+  --enlace: #004b49;
+  --foco: #0b6b67;
+  --naranja: #e6431f;
   --peligro: #b91c1c;
   --peligro-fuerte: #dc2626;
   --peligro-suave: #fee2e2;
@@ -104,7 +107,7 @@
   --ok-fondo: #d1fae5;
   --globo: #111827;
   --globo-texto: #ffffff;
-  --marca-fondo: #0b0f19;
+  --marca-fondo: #004b49;
   --marca-trazo: #ffffff;
   --sombra-flotante: 0 10px 30px rgba(15, 20, 35, 0.18);
   --velo: rgba(15, 20, 35, 0.45);

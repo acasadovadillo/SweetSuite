@@ -2,7 +2,7 @@
 
 ## Qué es
 
-Aplicación de gestión integral para asociaciones pequeñas en España, que se distribuye como **un único archivo HTML** (HTML + CSS + JavaScript sin dependencias), funciona **sin conexión** abriendo el archivo y guarda los datos **cifrados en el navegador**. **Software privativo, todos los derechos reservados** (decisión del 2026-10-01; podría abrirse más adelante). Código, comentarios e interfaz en español.
+**ABIES · Gestión** (desde la Fase 7a, solo para la asociación ABIES; antes era un «webkit» genérico, y el repositorio conserva el nombre `webkit_asociaciones`). Aplicación de gestión integral, que se distribuye como **un único archivo HTML** (HTML + CSS + JavaScript sin dependencias), funciona **sin conexión** abriendo el archivo y guarda los datos **cifrados en el navegador**. **Software privativo, todos los derechos reservados** (decisión del 2026-10-01; podría abrirse más adelante). Código, comentarios e interfaz en español.
 
 Nace de **Solvento** (`../../Solvento`, app de finanzas personales del mismo autor), del que se reutilizan ideas y piezas: el cifrado (`crypto.js`), el tema sin fogonazo (`tema.js`), las variables de color, y más adelante el escritor de .xlsx (`exportar.js`), el lector de .xlsx (`plan.js`), la lógica de presupuesto anual y centros de coste (`model.js`) y la gráfica SVG (`charts.js`). Solvento **no** tenía facturas, IVA ni socios: se construyen desde cero.
 
@@ -69,13 +69,19 @@ tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium 
 | Convocatorias de asamblea | Pendientes: el usuario aún no ha definido cómo convocan |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
 | Estética de Solvento (oscuro de grises azulados por defecto y claro opcional, paneles de 20px sin sombra, botón principal blanco, etiquetas en mayúsculas pequeñas, pestañas como selector segmentado, gráficas con degradado) | Decisión del usuario: mismo aspecto que su otra aplicación. Todo sale de `css/tokens.css` (nombres por función, no por color); `--texto-3` es un punto más claro que el gris de Solvento para cumplir contraste AA. El menú lateral sigue fijo en escritorio (son 15 secciones) y plegable en el móvil |
+| Solo para ABIES (Fase 7a): marca (logotipo vectorial de su identidad visual en `nucleo/marca.js`, naranja #e6431f; acentos en su verde #004b49) | Decisión del usuario: «no es un software para todas las asociaciones, es solo para ABIES» |
+| Bóveda con doble llave (`datos/cuentas.js`): clave de datos AES aleatoria; cada usuario con un par ECDH P-256 (privada cifrada con su contraseña, PBKDF2 310.000); la clave de datos envuelta para cada pública; la cabecera (usuarios) cifrada con la contraseña del archivo | Entrar exige nombre + cargo + contraseña personal + contraseña del archivo (decisión del usuario). Con claves públicas la cuenta ABIES da acceso, restablece y cambia la clave de datos sin conocer contraseñas ajenas. El error de acceso no dice qué falla |
+| Desactivar a un usuario cambia la clave de datos (`generacion` + 1) y vuelve a cifrar los adjuntos | Quien se va no lee nada guardado después aunque conserve el archivo |
+| Permisos por cargo (`logica/permisos.js`): todos ven todo; cada usuario edita las secciones de su lista (por defecto según el cargo; editable por la cuenta ABIES). El repositorio rechaza escrituras (código `PERMISO`) según el módulo abierto; la interfaz esconde los botones de modificar (`body.solo-lectura`, salvo `.lectura-ok`) y pone una franja y candados | Decisión del usuario («ve todo, edita lo suyo»). Sin servidor lo hace cumplir la aplicación, no el cifrado: está dicho en la interfaz y en el README |
+| Registro de cambios en la colección `registro` (esquema v8) y firma `creadoPor` / `modificadoPor` en cada registro; la gestión de usuarios también se apunta (`repo.anotar`) | Saber quién hizo cada cambio; base para la sincronización con cola de la 7b |
+| Copia cifrada = la bóveda tal cual + adjuntos cifrados (`abies-copia` v2); se abre con las mismas credenciales. Sin cifrar y recuperar copias: solo la cuenta ABIES. Las copias v1 y los datos de una sola contraseña se convierten | Nada en claro en la copia; compatibilidad con lo anterior |
 | Navegación por `#/modulo` | Funciona con `file://` sin servidor |
 | Capa de datos (`Repositorio`) asíncrona y como única puerta a los datos | **Preparada para la versión con servidor**: bastará con otro repositorio con las mismas funciones que use `fetch` contra una API |
 | `dist/` se versiona y la integración continua comprueba que está al día | Quien no programa puede descargar el HTML directamente desde el repositorio |
 
 ### Capa de datos (contrato que debe respetar una futura API)
 
-`leer(clave)`, `escribir(clave, valor)`, `listar(coleccion)`, `obtener(coleccion, id)`, `guardar(coleccion, registro)`, `borrar(coleccion, id)`, `documento()`, `estadoCopia()` y `marcarCopiaHecha()`. Todas devuelven promesas y **copias** de los datos.
+`leer(clave)`, `escribir(clave, valor)`, `listar(coleccion)`, `obtener(coleccion, id)`, `guardar(coleccion, registro)`, `guardarVarios`, `borrar(coleccion, id)`, `documento()`, `anotar(accion, donde, resumen)`, `estadoCopia()` y `marcarCopiaHecha()`, más los adjuntos (`guardarArchivo`, `leerArchivo`, `borrarArchivo`). Todas devuelven promesas y **copias** de los datos. Las escrituras pueden fallar con el código `PERMISO`.
 
 Para la versión con servidor (no implementada) bastaría con:
 - un `RepositorioAPI` con esas funciones, contra una API REST (`GET/PUT /asociacion`, `GET/POST/PUT/DELETE /junta/:id`…);

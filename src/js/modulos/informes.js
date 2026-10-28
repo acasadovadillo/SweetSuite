@@ -45,7 +45,7 @@
   }
   function barraHerramientas(c, anio, extra) {
     return '<div class="barra-filtros no-imprimir">' + selectorAnio(c, anio) +
-      '<button type="button" class="btn btn-primario" id="i-imprimir">Imprimir o guardar en PDF</button>' + (extra || "") + "</div>";
+      '<button type="button" class="btn btn-primario lectura-ok" id="i-imprimir">Imprimir o guardar en PDF</button>' + (extra || "") + "</div>";
   }
   function conectarHerramientas(cont) {
     cont.querySelector("#i-anio").addEventListener("change", function (e) { anioVista = +e.target.value; WA.App.repintar(); });
@@ -188,7 +188,7 @@
 
     cont.innerHTML =
       '<div class="cabecera-pagina no-imprimir"><h1>Informes</h1></div>' + pestanas("cuentas") +
-      barraHerramientas(c, anio, '<button type="button" class="btn btn-secundario" id="i-excel">Descargar Excel</button>') +
+      barraHerramientas(c, anio, '<button type="button" class="btn btn-secundario lectura-ok" id="i-excel">Descargar Excel</button>') +
       '<article class="documento-impreso informe">' +
       '<p class="di-entidad">' + esc(a.nombre || "") + (a.nif ? " · NIF " + esc(a.nif) : "") + "</p>" +
       "<h1>Cuentas del ejercicio " + anio + "</h1>" + enCurso(anio) +

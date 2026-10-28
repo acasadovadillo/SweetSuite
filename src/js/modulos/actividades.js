@@ -61,10 +61,10 @@
     cont.innerHTML =
       '<div class="cabecera-pagina"><h1>Actividades</h1><div class="acciones-cabecera">' + botonIcs(c) +
       '<a class="btn btn-primario" href="#/actividades/nueva">Nueva actividad</a></div></div>' + pestanas("calendario") +
-      '<div class="calendario-barra"><button type="button" class="btn btn-secundario btn-pequeno" data-mes="-1" aria-label="Mes anterior">‹</button>' +
+      '<div class="calendario-barra"><button type="button" class="btn btn-secundario btn-pequeno lectura-ok" data-mes="-1" aria-label="Mes anterior">‹</button>' +
       '<h2 class="calendario-titulo">' + esc(F.MESES[mes - 1].charAt(0).toUpperCase() + F.MESES[mes - 1].slice(1)) + " " + anio + "</h2>" +
-      '<button type="button" class="btn btn-secundario btn-pequeno" data-mes="1" aria-label="Mes siguiente">›</button>' +
-      '<button type="button" class="btn btn-secundario btn-pequeno" data-mes="0">Hoy</button></div>' +
+      '<button type="button" class="btn btn-secundario btn-pequeno lectura-ok" data-mes="1" aria-label="Mes siguiente">›</button>' +
+      '<button type="button" class="btn btn-secundario btn-pequeno lectura-ok" data-mes="0">Hoy</button></div>' +
       '<div class="calendario" role="grid" aria-label="Calendario de ' + esc(F.MESES[mes - 1]) + '">' +
       '<div class="cal-fila cal-cabecera" role="row">' + DIAS.map(function (d) { return '<div role="columnheader">' + d + "</div>"; }).join("") + "</div>" +
       semanas.map(function (sem) {
@@ -109,7 +109,7 @@
       [["Europe/Madrid", "Horario peninsular"], ["Atlantic/Canary", "Horario canario"]].map(function (o) {
         return '<option value="' + o[0] + '"' + (c.config.zonaHoraria === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
       }).join("") + "</select>" +
-      '<button type="button" class="btn btn-secundario" id="a-ics">Descargar calendario (.ics)</button>';
+      '<button type="button" class="btn btn-secundario lectura-ok" id="a-ics">Descargar calendario (.ics)</button>';
   }
   function conectarIcs(cont, datos, c) {
     cont.querySelector("#a-zona").addEventListener("change", async function (e) {
@@ -238,7 +238,7 @@
     cont.innerHTML =
       '<p class="miga"><a href="#/actividades">Actividades</a> › ' + esc(nueva ? "Nueva" : a.titulo) + "</p>" +
       '<div class="cabecera-pagina"><h1>' + esc(nueva ? "Nueva actividad" : a.titulo) + "</h1>" +
-      (nueva ? "" : '<span class="estado ' + ESTADO_CLASE[a.estado] + '">' + A.ESTADOS[a.estado] + "</span>") + "</div>" +
+      (nueva ? "" : '<span class="estado ' + ESTADO_CLASE[a.estado] + '">' + A.ESTADOS[a.estado] + "</span>") + "</div>" + WA.UI.firma(a) +
       (nueva ? "" : '<p class="intro">' + esc(cuando(a)) + (a.lugar ? " · " + esc(a.lugar) : "") + "</p>") +
       (nueva ? "" :
         '<div class="rejilla-tarjetas cifras">' +
@@ -254,8 +254,8 @@
         '<label class="casilla"><input type="checkbox" id="i-canceladas"' + (vista.canceladas ? " checked" : "") + "><span>Ver también las canceladas</span></label>" +
         '<div id="i-tabla">' + tablaInscripciones(a, porId, enlazadas) + "</div>" +
         '<div class="acciones"><a class="btn btn-secundario" href="#/actividades/asistencia/' + encodeURIComponent(a.id) + '">Hoja de asistencia para imprimir</a>' +
-        '<button type="button" class="btn btn-secundario" id="i-csv">Exportar inscritos (CSV)</button>' +
-        '<button type="button" class="btn btn-secundario" id="i-correos">Copiar correos</button></div></section>' +
+        '<button type="button" class="btn btn-secundario lectura-ok" id="i-csv">Exportar inscritos (CSV)</button>' +
+        '<button type="button" class="btn btn-secundario lectura-ok" id="i-correos">Copiar correos</button></div></section>' +
 
         '<section class="tarjeta" aria-labelledby="t-bal"><div class="tarjeta-cabecera"><h2 id="t-bal">Balance económico</h2>' +
         '<button type="button" class="btn btn-secundario" id="b-gasto">Apuntar un gasto</button></div>' +
@@ -265,7 +265,7 @@
         U.ayuda("Cuenta lo cobrado de las inscripciones y los movimientos o gastos de anticipos que tengan esta actividad elegida.") + "</section>") +
       formularioDatos(a, c) +
       (nueva ? "" : '<div class="acciones"><button type="button" class="btn btn-secundario" id="a-duplicar">Duplicar</button>' +
-        '<button type="button" class="btn btn-secundario" id="a-ics1">Añadir a mi calendario (.ics)</button>' +
+        '<button type="button" class="btn btn-secundario lectura-ok" id="a-ics1">Añadir a mi calendario (.ics)</button>' +
         '<button type="button" class="btn btn-peligro-suave" id="a-borrar">Borrar actividad</button></div>');
 
     var form = cont.querySelector("#a-datos");
@@ -500,7 +500,7 @@
     var lista = a.inscripciones.filter(function (i) { return i.estado === "inscrita"; }).sort(function (x, y) { return x.nombre.localeCompare(y.nombre, "es"); });
     cont.innerHTML =
       '<p class="miga no-imprimir"><a href="#/actividades/ficha/' + encodeURIComponent(a.id) + '">' + esc(a.titulo) + "</a> › Hoja de asistencia</p>" +
-      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="h-imprimir">Imprimir o guardar en PDF</button></div>' +
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario lectura-ok" id="h-imprimir">Imprimir o guardar en PDF</button></div>' +
       "<h1>" + esc(a.titulo) + "</h1>" +
       '<p class="intro">' + esc(c.asociacion.nombre || "") + " · " + esc(cuando(a)) + (a.lugar ? " · " + esc(a.lugar) : "") + "</p>" +
       '<div class="tabla-envoltorio"><table class="tabla tabla-asistencia"><thead><tr><th scope="col" class="num">#</th><th scope="col">Nombre</th><th scope="col">Menor</th>' +

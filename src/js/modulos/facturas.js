@@ -138,7 +138,7 @@
     cont.innerHTML =
       '<p class="miga"><a href="#/facturas' + (esEmitida ? "" : "/recibidas") + '">Facturas ' + (esEmitida ? "emitidas" : "recibidas") + "</a> › " + esc(f.numero || (nueva ? "Nueva" : "Borrador")) + "</p>" +
       '<div class="cabecera-pagina"><h1>' + (esEmitida ? "Factura " : "Factura recibida ") + esc(f.numero || (esEmitida ? "(borrador)" : "")) + "</h1>" +
-      (e ? '<span class="estado ' + ESTADO[e.estado][0] + '">' + ESTADO[e.estado][1] + "</span>" : "") + "</div>" +
+      (e ? '<span class="estado ' + ESTADO[e.estado][0] + '">' + ESTADO[e.estado][1] + "</span>" : "") + "</div>" + WA.UI.firma(f) +
       (bloqueada && f.estado === "emitida" ? '<div class="caja-aviso">Factura emitida: está bloqueada. Para corregirla lo habitual es hacer una factura rectificativa (verificar con asesoría).</div>' : "") +
       '<form id="f-editor" class="formulario" novalidate><fieldset' + dis + ">" +
       '<section class="tarjeta"><h2>' + (esEmitida ? "Cliente" : "Proveedor") + '</h2><div class="rejilla-12">' +
@@ -303,7 +303,7 @@
     if (!f) { cont.innerHTML = "<h1>No encontrada</h1>"; return; }
     var a = c.asociacion, t = Fac.totales(f), dom = WA.Direccion.formatear(a.domicilio);
     cont.innerHTML =
-      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="i-imprimir">Imprimir o guardar en PDF</button>' +
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario lectura-ok" id="i-imprimir">Imprimir o guardar en PDF</button>' +
       '<a class="btn btn-secundario" href="#/facturas/ver/' + encodeURIComponent(f.id) + '">Volver</a></div>' +
       '<article class="factura-impresa">' +
       '<header class="fi-cabecera"><div><h1>' + esc(a.nombre || "Asociación") + "</h1><p>NIF " + esc(a.nif) + "<br>" + esc(dom.linea1) + "<br>" + esc(dom.linea2) +

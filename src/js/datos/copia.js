@@ -18,6 +18,14 @@
  * llave que los datos (copia cifrada) o { id: { datos } } en claro (copia sin
  * cifrar), siempre en base64.
  *
+ * DESDE LA FASE 7a (usuarios de ABIES) la copia cifrada es la BÓVEDA entera:
+ *     { formato: "abies-copia", version: 2, creada, cifrada: true,
+ *       boveda: { formato: "abies-boveda", cabecera, datos }, archivos: { id: { iv, ct } } }
+ *   Se abre con lo mismo que la aplicación: nombre, cargo y las dos contraseñas.
+ *   Nada va en claro, ni siquiera el nombre de la asociación.
+ *   La copia sin cifrar es { formato: "abies-copia", version: 2, cifrada: false, documento, archivos }.
+ * Las copias antiguas (webkit_asociaciones-copia v1) se siguen leyendo.
+ *
  * Este archivo solo arma y lee sobres (sin DOM): se puede probar en Node.
  */
 (function (raiz, fabrica) {
@@ -29,6 +37,21 @@
 
   var FORMATO = "webkit_asociaciones-copia";
   var VERSION = 1;
+  var FORMATO_ABIES = "abies-copia";
+  var VERSION_ABIES = 2;
+
+  /** Copia cifrada de ABIES: la bóveda y los adjuntos tal cual (ya van cifrados). */
+  function sobreBoveda(boveda, archivos, ahora) {
+    var s = { formato: FORMATO_ABIES, version: VERSION_ABIES, creada: (ahora || new Date()).toISOString(), cifrada: true, boveda: boveda };
+    if (archivos && Object.keys(archivos).length) s.archivos = archivos;
+    return s;
+  }
+  /** Copia SIN cifrar de ABIES (solo la cuenta de administración). */
+  function sobreAbiertoAbies(documento, archivos, ahora) {
+    var s = { formato: FORMATO_ABIES, version: VERSION_ABIES, creada: (ahora || new Date()).toISOString(), cifrada: false, documento: documento };
+    if (archivos && Object.keys(archivos).length) s.archivos = archivos;
+    return s;
+  }
 
   function sobreCifrado(bloque, nombreAsociacion, ahora, archivos) {
     var s = { formato: FORMATO, version: VERSION, creada: (ahora || new Date()).toISOString(),
@@ -54,11 +77,20 @@
   function leer(texto) {
     var j;
     try { j = JSON.parse(texto); } catch (e) { throw new Error("El archivo no es una copia de seguridad (no es JSON válido)."); }
+    if (j && j.formato === FORMATO_ABIES) {
+      if (j.version > VERSION_ABIES) throw new Error("Esta copia es de una versión más nueva de la aplicación. Descarga la última versión.");
+      if (j.cifrada) {
+        if (!j.boveda || !j.boveda.cabecera || !j.boveda.datos) throw new Error("La copia está incompleta o dañada.");
+        return { cifrada: true, boveda: j.boveda, asociacion: "", creada: j.creada || null, archivos: j.archivos || {} };
+      }
+      if (!j.documento || typeof j.documento !== "object") throw new Error("La copia está incompleta o dañada.");
+      return { cifrada: false, documento: j.documento, asociacion: (j.documento.asociacion && j.documento.asociacion.nombre) || "", creada: j.creada || null, archivos: j.archivos || {} };
+    }
     if (j && j.formato === FORMATO) {
       if (j.version > VERSION) throw new Error("Esta copia es de una versión más nueva de la aplicación. Descarga la última versión.");
       if (j.cifrada) {
         if (!j.datos || typeof j.datos.ct !== "string") throw new Error("La copia está incompleta o dañada.");
-        return { cifrada: true, bloque: j.datos, asociacion: j.asociacion || "", creada: j.creada || null, archivos: j.archivos || {} };
+        return { cifrada: true, antigua: true, bloque: j.datos, asociacion: j.asociacion || "", creada: j.creada || null, archivos: j.archivos || {} };
       }
       if (!j.documento || typeof j.documento !== "object") throw new Error("La copia está incompleta o dañada.");
       return { cifrada: false, documento: j.documento, asociacion: j.asociacion || "", creada: j.creada || null, archivos: j.archivos || {} };
@@ -66,7 +98,7 @@
     if (j && j.app === "webkit_asociaciones") {
       return { cifrada: false, documento: j, asociacion: (j.asociacion && j.asociacion.nombre) || "", creada: null, archivos: {} };
     }
-    throw new Error("El archivo no es una copia de seguridad de webkit_asociaciones.");
+    throw new Error("El archivo no es una copia de seguridad de ABIES · Gestión.");
   }
 
   /** "copia-asociacion-los-almendros-2026-10-01.json" (o "-sin-cifrar"). */
@@ -77,5 +109,6 @@
     return "copia-" + slug + "-" + fechaISO + (cifrada === false ? "-SIN-CIFRAR" : "") + ".json";
   }
 
-  return { FORMATO: FORMATO, sobreCifrado: sobreCifrado, sobreAbierto: sobreAbierto, leer: leer, nombreArchivo: nombreArchivo };
+  return { FORMATO: FORMATO, FORMATO_ABIES: FORMATO_ABIES, sobreCifrado: sobreCifrado, sobreAbierto: sobreAbierto,
+    sobreBoveda: sobreBoveda, sobreAbiertoAbies: sobreAbiertoAbies, leer: leer, nombreArchivo: nombreArchivo };
 });

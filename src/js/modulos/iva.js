@@ -33,7 +33,7 @@
     var devoluciones = c.config.iva.devolucionesSolicitadas || [];
 
     cont.innerHTML =
-      '<div class="cabecera-pagina"><h1>IVA</h1><button type="button" class="btn btn-secundario" id="v-excel">Descargar Excel (libros de facturas)</button></div>' +
+      '<div class="cabecera-pagina"><h1>IVA</h1><button type="button" class="btn btn-secundario lectura-ok" id="v-excel">Descargar Excel (libros de facturas)</button></div>' +
       '<div class="caja-aviso">Ayuda orientativa para rellenar el modelo 303 y el resumen anual a partir de las facturas apuntadas. <strong>No es asesoramiento fiscal</strong>: revisadlo con la asesoría antes de presentar.</div>' +
       (!c.config.iva.presenta ? '<p class="intro">Ahora mismo está configurado que la asociación <strong>no presenta IVA</strong> (Tesorería → Ajustes). Estas cifras son solo informativas.</p>' : "") +
       avisos.map(function (a) { return '<div class="caja-aviso">' + esc(a) + "</div>"; }).join("") +

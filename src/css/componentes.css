@@ -174,7 +174,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 .acceso-panel { width: 100%; max-width: 380px; }
 .acceso-panel > h1, .acceso-panel > .acceso-sub, .acceso-logo { text-align: center; }
 .acceso-panel > h1 { font-size: 1.4rem; margin: 1rem 0 0.35rem; }
-.acceso-logo { display: block; width: 56px; height: 56px; margin: 0 auto; }
+.acceso-logo { display: block; margin: 0 auto; }
 .acceso-sub { color: var(--texto-3); font-size: 0.88rem; margin-bottom: 1.5rem; }
 .acceso-opciones { display: flex; flex-direction: column; gap: 0.6rem; margin: 1.25rem 0 0.5rem; }
 .acceso-opciones .btn, .acceso-form .btn { width: 100%; }
@@ -410,3 +410,43 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
   .tarjeta-destacada { border-radius: 18px; }
   .cifra { font-size: 1.5rem; }
 }
+
+/* ── Marca ABIES, usuarios y permisos (Fase 7a) ───────────────────────── */
+/* El logotipo va en el naranja de ABIES; «Gestión» al lado, discreto. */
+.marca-logo { height: 22px; width: auto; color: var(--naranja); }
+.marca-texto { font-size: 0.85rem; font-weight: 700; color: var(--texto-2); padding-left: 0.6rem; border-left: 1px solid var(--borde); letter-spacing: 0.02em; }
+.usuario-actual { font-size: 0.8rem; font-weight: 700; color: var(--texto-2); padding: 0.3rem 0.75rem; border: 1px solid var(--borde); border-radius: 999px; background: var(--superficie-2); white-space: nowrap; max-width: 16rem; overflow: hidden; text-overflow: ellipsis; }
+@media (max-width: 700px) { .usuario-actual { display: none; } }
+@media (max-width: 380px) { .marca-texto { display: none; } }
+
+.acceso-marca { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem; }
+.acceso-logo { width: 170px; height: auto; color: var(--naranja); }
+.acceso-producto { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--texto-3); }
+.acceso-pareja { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
+.acceso-pareja > div { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+.acceso-grupo { border: 1px solid var(--borde); border-radius: var(--radio-medio); padding: 0.75rem 1rem 1rem; margin: 0.85rem 0 0; display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
+.acceso-grupo legend { font-size: 0.85rem; font-weight: 700; color: var(--titulo); padding: 0 0.35rem; }
+.acceso-opciones .btn .detalle { font-weight: 500; margin-left: 0.25rem; }
+.acceso-olvido p { font-size: 0.88rem; color: var(--texto-2); margin: 0.6rem 0; }
+
+/* Solo lectura: el menú lleva un candado y la página una franja; los botones de
+   modificar se esconden (el repositorio, además, rechaza cualquier cambio). */
+.menu-candado { width: 14px !important; height: 14px !important; margin-left: auto; opacity: 0.55; }
+.franja-lectura { display: flex; gap: 0.6rem; align-items: center; background: var(--superficie); border: 1px solid var(--borde); border-left: 3px solid var(--naranja);
+  border-radius: var(--radio-pequeno); padding: 0.6rem 0.9rem; font-size: 0.88rem; color: var(--texto-2); margin: 0 0 1.25rem; }
+.franja-lectura svg { width: 16px; height: 16px; flex-shrink: 0; }
+body.solo-lectura #principal button.btn:not(.lectura-ok),
+body.solo-lectura #principal .btn-icono:not(.lectura-ok),
+body.solo-lectura #principal a.btn[href*="/nuev"] { display: none !important; }
+body.solo-lectura #principal form :is(input, select, textarea) { pointer-events: none; background: transparent; }
+
+.grupo-permisos { border: none; padding: 0; margin: 1rem 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 0 1rem; }
+.grupo-permisos legend { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); padding: 0; margin-bottom: 0.2rem; }
+.grupo-permisos .campo-ayuda { grid-column: 1 / -1; margin: 0 0 0.25rem; }
+.grupo-permisos .casilla { margin: 0.35rem 0; }
+.fila-apagada { opacity: 0.6; }
+.celda-acciones .btn + .btn { margin-left: 0.35rem; }
+.celda-botones { white-space: normal; min-width: 11rem; }
+.botones-fila { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; }
+.botones-fila .btn + .btn { margin-left: 0; }
+.firma-registro { margin: -0.25rem 0 1rem; font-size: 0.8rem; }

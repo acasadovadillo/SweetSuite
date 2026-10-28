@@ -294,6 +294,56 @@ test("migrar de la versión 6 añade los textos de la memoria", () => {
   const v6 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
   delete v6.config.memorias; v6.esquema = 6;
   const doc = Esquema.migrar(v6);
-  assert.equal(doc.esquema, 7);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.deepEqual(doc.config.memorias, {});
+});
+
+test("migración v7 → v8: aparece el registro de cambios vacío", () => {
+  const v7 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  delete v7.registro; v7.esquema = 7;
+  const doc = Esquema.migrar(v7);
+  assert.equal(doc.esquema, 8);
+  assert.deepEqual(doc.registro, []);
+});
+
+test("repositorio con usuario: firma cada cambio, lo apunta en el registro y respeta los permisos", async () => {
+  const doc = Esquema.documentoVacio();
+  let permitido = true;
+  const repo = crearRepositorio(doc, null, () => "2026-10-17T10:00:00.000Z", null,
+    { autor: () => ({ id: "u1", texto: "Alberto · Tesorería" }), permitido: () => permitido });
+  const s = await repo.guardar("socios", { nombre: "Ana", apellidos: "Ejemplo" });
+  assert.equal(s.creadoPor, "Alberto · Tesorería");
+  assert.equal(s.modificadoPor, "Alberto · Tesorería");
+  assert.equal(s._nuevo, undefined, "la marca interna no se guarda");
+  await repo.guardar("socios", Object.assign(s, { telefono: "600000000" }));
+  await repo.escribir("config", await repo.leer("config"));
+  await repo.borrar("socios", s.id);
+  const reg = await repo.listar("registro");
+  assert.deepEqual(reg.map((r) => r.accion), ["alta", "cambio", "cambio", "baja"]);
+  assert.equal(reg[0].resumen, "Ana Ejemplo");
+  assert.equal(reg[0].autor, "Alberto · Tesorería");
+  assert.equal(reg[2].donde, "config");
+  await assert.rejects(() => repo.guardar("registro", { a: 1 }), /solo lo escribe la aplicación/);
+  permitido = false;
+  await assert.rejects(() => repo.guardar("socios", { nombre: "Otro" }), (e) => e.codigo === "PERMISO");
+  await assert.rejects(() => repo.escribir("asociacion", {}), (e) => e.codigo === "PERMISO");
+  await assert.rejects(() => repo.borrar("socios", "x"), (e) => e.codigo === "PERMISO");
+  assert.equal((await repo.listar("socios")).length, 0, "nada cambió al denegar");
+});
+
+test("copias de ABIES: la cifrada es la bóveda tal cual; las antiguas se siguen leyendo", () => {
+  const boveda = { formato: "abies-boveda", version: 1, cabecera: { v: 1, ct: "x" }, datos: { v: 2, ct: "y" } };
+  const leida = Copia.leer(JSON.stringify(Copia.sobreBoveda(boveda, { a1: { iv: "i", ct: "c" } })));
+  assert.equal(leida.cifrada, true);
+  assert.deepEqual(leida.boveda, boveda);
+  assert.equal(leida.asociacion, "", "nada en claro");
+  assert.ok(leida.archivos.a1);
+  const abierta = Copia.leer(JSON.stringify(Copia.sobreAbiertoAbies(Demo.documentoDemo())));
+  assert.equal(abierta.cifrada, false);
+  assert.ok(abierta.documento.socios.length > 0);
+  assert.throws(() => Copia.leer(JSON.stringify({ formato: "abies-copia", version: 2, cifrada: true })), /incompleta/);
+  assert.throws(() => Copia.leer(JSON.stringify({ formato: "abies-copia", version: 9, cifrada: true })), /más nueva/);
+  const antigua = Copia.leer(JSON.stringify(Copia.sobreCifrado({ v: 1, sal: "s", iv: "i", ct: "c", iter: 1 }, "X")));
+  assert.equal(antigua.antigua, true);
+  assert.equal(Copia.nombreArchivo("ABIES", "2026-10-17", true), "copia-abies-2026-10-17.json");
 });

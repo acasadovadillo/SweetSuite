@@ -1,103 +1,143 @@
 # HANDOFF.md — Estado actual
 
-*Última actualización: 2026-10-05 · Fase 6 (Informes) terminada, **sin commit**; pendiente del OK del usuario.*
+*Última actualización: 2026-10-17 · Fase 7a (ABIES: marca, usuarios, permisos y registro) terminada, **sin commit**; pendiente del OK del usuario.*
 
-El proyecto está en `~/ACV/PROYECTOS/IA/ABIES/webkit_asociaciones`. Versión 0.6.0.
+El proyecto está en `~/ACV/PROYECTOS/IA/ABIES/webkit_asociaciones`. Versión 0.7.0. La aplicación se llama **ABIES · Gestión**.
 
 ## Commits
 
-`6622e1f` Fase 1 · `a952c19` Fase 2 · `f31c56c` Fase 3 · `fd58330` Fase 4 · `5119f6a` Fase 5: actas, obligaciones, subvenciones y documentos.
+- `6622e1f` Fase 1
+- `a952c19` Fase 2
+- `f31c56c` Fase 3
+- `fd58330` Fase 4
+- `5119f6a` Fase 5
+- `1338e6f` Fase 6
+- `297cf0f` Estética de Solvento
 
-## Fase 6: informes
+## Fase 7a: ABIES
 
-El usuario pidió «todo» en las tres preguntas (memoria, cuentas y panel).
+El usuario decidió que la aplicación es **solo para ABIES**, con su logo desde la pantalla de acceso, una cuenta de administración (ABIES) y un usuario por cargo. Para entrar hacen falta nombre, cargo, contraseña personal y contraseña del archivo. Respuestas a las preguntas de diseño:
 
-- **Esquema v7:** `config.memorias[año] = { presentacion, fines, valoracion }`. Migración 6→7 con test.
-- **Lógica con tests (`logica/informes.js`):**
-  - `memoria(c, año)`:
-    - junta a 31/12 y sus cambios;
-    - socios: a 1/1, a 31/12, altas, bajas, por tipo, sexo y tramo de edad;
-    - actividades con inscritos, asistentes, menores y personas distintas;
-    - proyectos con gasto previsto y realizado;
-    - reuniones por órgano y acuerdos en orden.
-  - `pendientesEn(c, fecha)`: cuotas, inscripciones, facturas emitidas y recibidas, anticipos y reembolsos, e IVA a compensar, según los cobros y pagos hasta esa fecha.
-  - `cuentas(c, año)`:
-    - resultados frente al año anterior;
-    - saldos a 1/1 y 31/12;
-    - ejecución del presupuesto;
-    - pendientes;
-    - estado de situación simplificado;
-    - `cuentaEsfl` (partidas del modelo abreviado; `PARTIDA_POR_DEFECTO` y `categoria.partida`).
-  - `panel(c, hoy)`: saldo, año en curso, presupuesto, socios, cuotas y deuda, subvenciones en marcha, y series de 12 fines de mes.
-- **Módulo Informes (`#/informes`, `#/informes/cuentas`):**
-  - selector de ejercicio (desde el primer año con datos);
-  - textos editables de la memoria;
-  - documento imprimible (fondo blanco, estilos de impresión);
-  - aviso de «ejercicio en curso»;
-  - nota cuando la variación del saldo no coincide con el resultado (anticipos y reembolsos);
-  - avisos «verificar con asesoría» en las cuentas y en el modelo ESFL;
-  - firmas;
-  - botón de Excel (el de Tesorería).
-- **Tesorería → Ajustes:** cada categoría tiene «Partida en el informe de cuentas» (Automática o una del modelo).
-- **Inicio rehecho como panel:**
-  - Para empezar (si falta algo);
-  - Agenda: plazos, próximas actividades y subvenciones en marcha;
-  - Dinero: saldo por cuenta, el año, barras de presupuesto y gráfica del saldo;
-  - Socios y cuotas: activos, altas y bajas, barra de cuotas cobradas, deuda y gráfica de socios;
-  - La asociación: copia, junta e informes.
-- **`nucleo/graficas.js`:** líneas y barras en SVG, sin librerías, con texto alternativo y tabla oculta para lectores de pantalla.
-- **Demostración:** textos de la memoria de 2026.
+- **Sincronización** como Solvento, con cola de cambios: queda para la **7b**.
+- **Permisos:** cada cargo ve todo y edita lo suyo.
+- **Contraseña del archivo:** se pide siempre.
+- **Estilo:** el de Solvento con la marca de ABIES.
 
-## Estética de Solvento (pedido después de la Fase 6, sin commit)
+### Marca
 
-- `tokens.css`: paleta de Solvento con los nombres de webkit (más `--titulo`, `--hundido`, `--primario`, `--marca-*`…); oscuro por defecto, claro con `data-tema="claro"`.
-- `base.css` y `componentes.css`:
-  - cabecera de 64px con logotipo monocromo;
-  - menú lateral con sus elementos redondeados;
-  - paneles de 20px sin sombra, con tarjeta destacada en degradado;
-  - botón principal blanco;
-  - campos hundidos;
-  - etiquetas, cabeceras de tabla y títulos de panel en mayúsculas pequeñas;
-  - pestañas como selector segmentado;
-  - insignias traslúcidas;
-  - alertas como borde izquierdo de color.
-- Gráficas con degradado bajo la línea y rejilla discontinua (`graficas.js`).
-- Logotipo de la cabecera, del acceso y del icono de la pestaña: monocromo, sin copiar el de Solvento.
-- Nada de Solvento se ha copiado salvo estilos: ni imágenes ni datos.
-- Verificado:
-  - todas las pantallas en oscuro y claro;
-  - diálogo, calendario, formularios e informes (siguen en papel blanco);
-  - 20 rutas en móvil sin desbordar (se corrigió la tabla de presupuesto de Cuentas, que se salía);
-  - tests, `comprobar` y `probar-file` en verde.
+- `nucleo/marca.js`:
+  - el logotipo con la palabra (de `03_Comunicacion/Marca/logos/Group 3.svg`);
+  - la hoja (`path1-3-1.svg`), en `currentColor`.
+- **Colores:**
+  - el logotipo, en naranja `#e6431f`;
+  - los acentos, en el verde de ABIES (`#004b49` en el tema claro, `#3fb0a0` en el oscuro, por contraste);
+  - el icono de la pestaña: la hoja blanca sobre el verde.
+- Título «ABIES · Gestión».
+
+### Usuarios y doble llave
+
+- `cripto.js`: clave de datos, cifrar con ella (bloque v2), par ECDH por usuario, proteger y abrir la privada, envolver y desenvolver la clave de datos.
+- `datos/cuentas.js` (con tests):
+  - formato de la bóveda, crear, sellar y abrir;
+  - alta, edición, contraseña provisional y reactivación;
+  - cambio de la contraseña propia;
+  - desactivar (cambia la clave de datos);
+  - cambio de la contraseña del archivo.
+- `datos/sesion.js`, rehecha:
+  - `entrar`, `crear`;
+  - `actualizarAntigua` (datos de una sola contraseña);
+  - `restaurar` (copias nuevas, antiguas y sin cifrar);
+  - gestión de usuarios;
+  - demostración con cargo elegible;
+  - copias v2.
+- `modulos/acceso.js`, rehecho:
+  - configurar por primera vez;
+  - entrar (rellena nombre y cargo tras bloquear);
+  - convertir los datos antiguos;
+  - recuperar copias;
+  - demostración por cargos.
+- `modulos/usuarios.js` (solo administración):
+  - alta (propone los permisos del cargo);
+  - editar;
+  - contraseña provisional, reactivar y desactivar;
+  - contraseña del archivo;
+  - explicación de la seguridad.
+- **Ajustes → Mi cuenta:** cambiar la contraseña personal. Quien entra con una provisional tiene que cambiarla antes de seguir.
+
+### Permisos
+
+- `logica/permisos.js`, con los valores por defecto:
+
+  | Cargo | Edita |
+  |---|---|
+  | Presidencia y vicepresidencia | Todo |
+  | Secretaría | Asociación, socios, actas, obligaciones, documentos e informes |
+  | Tesorería | Cuotas, tesorería, facturas, IVA y presupuestos |
+  | Vocalía | Actividades |
+  | Otros cargos | Nada (solo ver) |
+
+- El repositorio rechaza las escrituras con el código `PERMISO` según el módulo abierto, y se avisa al usuario.
+- En la interfaz:
+  - candado en el menú;
+  - franja «Solo lectura»;
+  - se ocultan los botones de modificar (los de solo mirar llevan `.lectura-ok`);
+  - el menú «Usuarios» solo lo ve la cuenta ABIES.
+
+### Registro de cambios
+
+- Esquema v8: colección `registro` y la firma `creadoPor` / `modificadoPor` en cada registro.
+- Página **Actividad** (`#/registro`), con filtros por quién, dónde y texto.
+- La firma aparece bajo el título de las fichas de socio, actividad, acta, factura y proyecto.
+- La gestión de usuarios también se apunta.
+
+### Copias
+
+- La copia cifrada es la bóveda tal cual (`abies-copia` v2) y se abre con las mismas credenciales.
+- Copia sin cifrar y recuperar copias en sesión: solo administración.
+- Las copias v1, cifradas o sin cifrar, se convierten al recuperarlas.
 
 ## Verificado
 
-- `npm test`: 113 tests en verde (nuevo `tests/informes.test.js`):
-  - invariantes de socios;
-  - Δsaldo = libro del año;
-  - excedente ESFL = resultado;
-  - pendientes a una fecha;
-  - series del panel;
-  - orden de acuerdos.
-- `npm run probar-file` (Brave, `file://`) en verde, con una comprobación nueva: Inicio (con gráfica) e Informes (con documento) se pintan.
-- En el navegador, con la demostración:
-  - panel completo;
-  - memoria 2026 y 2025;
-  - guardar textos (se escapan);
-  - cuentas: el cambio de partida de una categoría se refleja en el modelo ESFL;
-  - selector de años.
-- **Móvil (375 px):** Inicio, Informes, Cuentas, Tesorería y Ajustes sin desbordar.
-- **Fallos encontrados y corregidos:**
-  - eje repetido en la gráfica de socios;
-  - acuerdos de una misma acta en orden inverso;
-  - selector de año que no ofrecía años con solo cuotas;
-  - «Sin clasificar» ambiguo (ahora dice ingresos o gastos).
+- `npm test`: 123 en verde. Nuevos:
+  - `tests/cuentas.test.js`:
+    - los cuatro campos y el error genérico;
+    - la contraseña provisional y su cambio;
+    - que solo la administración gestiona usuarios;
+    - desactivar con cambio de clave;
+    - el cambio de la contraseña del archivo;
+    - que no queda nada legible;
+    - los permisos.
+  - En `datos.test.js`: la migración a v8, la firma y el registro, el rechazo por permisos y las copias de ABIES.
+- `npm run probar-file` (`file://` en un navegador sin interfaz), 18 comprobaciones en verde:
+  - conversión de datos antiguos;
+  - usuarios que sobreviven a recargar;
+  - registro;
+  - páginas;
+  - un cargo con su contraseña provisional y sus permisos;
+  - IndexedDB v1;
+  - adjunto cifrado y vuelto a cifrar al desactivar a alguien;
+  - un desactivado que no entra;
+  - copia sin nada legible;
+  - la copia no se recupera sin sus credenciales.
+- En el navegador:
+  - configurar, alta de un usuario, error de acceso genérico, cambio obligatorio de la contraseña provisional;
+  - solo lectura en Actas y Socios para Tesorería, y escritura denegada;
+  - desactivar;
+  - actividad;
+  - demostración por cargos;
+  - firma en una ficha;
+  - móvil sin desbordes (acceso, usuarios, actividad y todas las secciones).
+  - La bóveda de prueba se borró del navegador al terminar.
 
-## Pendiente (decisión del usuario)
+## Pendiente
 
-- **Convocatorias de asamblea:** sin definir todavía (antelación, primera y segunda convocatoria, envío).
+- **7b, sincronización con GitHub y cola** (ver NEXT_STEPS.md). Hace falta que el usuario cree el repositorio privado y un token de grano fino.
+- **Convocatorias de asamblea:** sin definir todavía.
 
 ## Sin verificar
 
-- Safari y Firefox; impresión real (memoria, cuentas, actas, facturas, hoja de asistencia); el .ics en un calendario real; el Excel en Excel o LibreOffice.
-- Adjuntos grandes (varios MB) en móviles: el límite de espacio depende del navegador.
+- Safari y Firefox.
+- Impresión real.
+- El `.ics` en un calendario real.
+- El Excel en Excel o LibreOffice.
+- Las capturas del README son anteriores a la estética de Solvento y a la marca de ABIES.

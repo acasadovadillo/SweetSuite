@@ -175,7 +175,7 @@
     c.anticipos.forEach(function (a) { a.gastos.forEach(function (g) { if ((g.proyectoId || a.proyectoId) === p.id) gastosAnt.push({ a: a, g: g }); }); });
     cont.innerHTML =
       '<p class="miga"><a href="#/proyectos/lista">Proyectos y subvenciones</a> › ' + esc(p.nombre) + "</p>" +
-      "<h1>" + esc(p.nombre) + "</h1>" +
+      "<h1>" + esc(p.nombre) + "</h1>" + WA.UI.firma(p) +
       '<form id="pr-datos" class="formulario tarjeta" novalidate><h2>Datos</h2><div class="rejilla">' +
       UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: p.nombre, requerido: true, ancho: "completo" }) +
       UI.campo({ nombre: "tipo", etiqueta: "Tipo", tipo: "select", valor: p.tipo, opciones: [["proyecto", "Proyecto propio"], ["subvencion", "Subvención"]] }) +

@@ -179,7 +179,7 @@
     cont.innerHTML =
       '<p class="miga"><a href="#/actas">Actas</a> › ' + esc(a.numero || "Nueva") + "</p>" +
       '<div class="cabecera-pagina"><h1>' + (a.numero ? "Acta " + esc(a.numero) : "Nueva acta") + "</h1>" +
-      (nueva ? "" : a.estado === "aprobada" ? '<span class="estado estado-ok">Aprobada</span>' : '<span class="estado estado-aviso">Borrador</span>') + "</div>" +
+      (nueva ? "" : a.estado === "aprobada" ? '<span class="estado estado-ok">Aprobada</span>' : '<span class="estado estado-aviso">Borrador</span>') + "</div>" + WA.UI.firma(a) +
       '<form id="acta" class="formulario" novalidate>' +
       '<section class="tarjeta"><h2>Sesión</h2><div class="rejilla-12">' +
       UI.campo({ nombre: "organoId", etiqueta: "Órgano", tipo: "select", valor: a.organoId, opciones: c.config.organos.map(function (o) { return [o.id, o.nombre]; }), clase: "col-4 col-movil-completo",
@@ -206,7 +206,7 @@
       UI.campo({ nombre: "aprobacion", etiqueta: "Aprobada en", valor: a.aprobacion, ayuda: "Por ejemplo: «en la reunión siguiente, acta JD-2026-05»." }) +
       UI.campo({ nombre: "notas", etiqueta: "Notas internas", valor: a.notas, ancho: "completo" }) + "</div></section>" +
       '<div class="acciones barra-guardar"><button type="submit" class="btn btn-primario">Guardar acta</button>' +
-      (nueva ? "" : '<a class="btn btn-secundario" href="#/actas/imprimir/' + encodeURIComponent(a.id) + '">Imprimir para firmar</a><button type="button" class="btn btn-secundario" id="b-copiar">Copiar texto</button>') +
+      (nueva ? "" : '<a class="btn btn-secundario" href="#/actas/imprimir/' + encodeURIComponent(a.id) + '">Imprimir para firmar</a><button type="button" class="btn btn-secundario lectura-ok" id="b-copiar">Copiar texto</button>') +
       "</div></form>" +
       (nueva ? "" : WA.DocsUI.seccion(c.documentos, { tipo: "acta", id: a.id }, "Acta firmada y anexos")) +
       (nueva || a.estado === "aprobada" ? "" : '<div class="acciones"><button type="button" class="btn btn-peligro-suave" id="b-borrar">Borrar borrador</button></div>');
@@ -297,7 +297,7 @@
     var org = organoDe(c, a.organoId), as = c.asociacion;
     var asist = (a.asistentes || []).map(function (x) { return esc(x.nombre) + (x.cargo ? " (" + esc(x.cargo) + ")" : ""); });
     cont.innerHTML =
-      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="i-imprimir">Imprimir o guardar en PDF</button>' +
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario lectura-ok" id="i-imprimir">Imprimir o guardar en PDF</button>' +
       '<a class="btn btn-secundario" href="#/actas/ficha/' + encodeURIComponent(a.id) + '">Volver</a></div>' +
       '<article class="documento-impreso">' +
       '<p class="di-entidad">' + esc(as.nombre || "") + (as.nif ? " · NIF " + esc(as.nif) : "") + "</p>" +

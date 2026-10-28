@@ -137,11 +137,25 @@
     });
   }
 
+  /**
+   * Quién creó y quién cambió por última vez un registro (lo apunta el repositorio
+   * desde la Fase 7a). Devuelve "" si el registro es anterior a los usuarios.
+   */
+  function firma(r) {
+    if (!r || (!r.creadoPor && !r.modificadoPor)) return "";
+    var F = raiz.WA.Fechas;
+    var cuando = function (iso) { return iso ? F.corta(String(iso).slice(0, 10)) + " " + String(iso).slice(11, 16) : ""; };
+    var partes = [];
+    if (r.creadoPor) partes.push("Creado por " + esc(r.creadoPor) + (r.creado ? " el " + esc(cuando(r.creado)) : ""));
+    if (r.modificadoPor && r.modificado !== r.creado) partes.push("último cambio de " + esc(r.modificadoPor) + " el " + esc(cuando(r.modificado)));
+    return '<p class="detalle firma-registro">' + partes.join(" · ") + "</p>";
+  }
+
   function confirmar(texto, opciones) {
     var o = opciones || {};
     return dialogo({
       titulo: o.titulo || "¿Seguro?",
-      contenido: "<p>" + esc(texto) + "</p>",
+      contenido: o.html ? texto : "<p>" + esc(texto) + "</p>",   // html: solo con texto propio, nunca con datos sin escapar
       botones: [
         { texto: o.cancelar || "Cancelar", valor: "cancelar" },
         { texto: o.aceptar || "Aceptar", valor: "aceptar", estilo: o.peligro ? "btn-peligro" : "btn-primario" },
@@ -186,6 +200,6 @@
 
   (raiz.WA = raiz.WA || {}).UI = {
     esc: esc, campo: campo, leerFormulario: leerFormulario, marcarError: marcarError,
-    aviso: aviso, dialogo: dialogo, confirmar: confirmar, descargar: descargar, elegirArchivo: elegirArchivo,
+    aviso: aviso, dialogo: dialogo, confirmar: confirmar, firma: firma, descargar: descargar, elegirArchivo: elegirArchivo,
   };
 })(typeof self !== "undefined" ? self : this);

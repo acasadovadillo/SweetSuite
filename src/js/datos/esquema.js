@@ -34,7 +34,8 @@
  *            · v4 tesorería, facturas, IVA, anticipos, proyectos y presupuestos (fase 3)
  *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4)
  *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5)
- *            · v7 textos de la memoria anual; partida del modelo ESFL en cada categoría (fase 6).
+ *            · v7 textos de la memoria anual; partida del modelo ESFL en cada categoría (fase 6)
+ *            · v8 registro de cambios (quién, cuándo, qué) y firma creadoPor / modificadoPor (fase 7a).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -47,10 +48,10 @@
   "use strict";
 
   var APP = "webkit_asociaciones";
-  var VERSION = 7;
+  var VERSION = 8;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos", "registro"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -170,6 +171,13 @@
       });
       ["movimientos", "facturas", "anticipos", "proyectos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
       doc.esquema = 4;
+      return doc;
+    },
+
+    // 7 → 8: registro de cambios (Fase 7a, usuarios).
+    7: function (doc) {
+      if (!Array.isArray(doc.registro)) doc.registro = [];
+      doc.esquema = 8;
       return doc;
     },
 

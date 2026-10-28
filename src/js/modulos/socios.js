@@ -77,7 +77,7 @@
       '</tr></thead><tbody id="s-filas"></tbody></table></div>' +
       '<div class="acciones">' +
       '<button type="button" class="btn btn-secundario" id="s-importar">Importar desde CSV…</button>' +
-      '<button type="button" class="btn btn-secundario" id="s-exportar">Exportar lista (CSV)</button>' +
+      '<button type="button" class="btn btn-secundario lectura-ok" id="s-exportar">Exportar lista (CSV)</button>' +
       '<a class="btn btn-secundario" href="#/socios/libro">Libro de registro</a>' +
       '<a class="btn btn-secundario" href="#/cuotas/tipos">Tipos de socio y cuotas</a>' +
       "</div>";
@@ -263,7 +263,7 @@
     cont.innerHTML =
       '<p class="miga"><a href="#/socios">Socios</a> › ' + (nuevo ? "Nuevo" : "N.º " + esc(s.numero)) + "</p>" +
       '<div class="cabecera-pagina"><h1>' + (nuevo ? "Nuevo socio" : esc(S.nombreCompleto(s))) + "</h1>" +
-      (!nuevo ? '<span class="estado ' + (e === "baja" ? "estado-neutro" : "estado-ok") + '">' + esc(ESTADO_TEXTO[e]) + "</span>" : "") + "</div>" +
+      (!nuevo ? '<span class="estado ' + (e === "baja" ? "estado-neutro" : "estado-ok") + '">' + esc(ESTADO_TEXTO[e]) + "</span>" : "") + "</div>" + WA.UI.firma(s) +
       (e === "baja" ? '<div class="caja-aviso">Dado de baja el <strong>' + esc(F.corta(s.fechaBaja)) + "</strong>" +
         (s.motivoBaja ? " · " + esc(s.motivoBaja) : "") + '. <button type="button" class="btn btn-enlace" id="f-reactivar">Reactivar</button></div>' : "") +
       formularioFicha(s, c) +
@@ -412,7 +412,7 @@
       '<p class="miga no-imprimir"><a href="#/socios">Socios</a> › Libro de registro</p>' +
       "<h1>Libro de registro de socios</h1>" +
       '<p class="intro">' + esc(a.nombre || "") + (a.nif ? " · NIF " + esc(a.nif) : "") + " · A fecha " + esc(F.larga(F.hoy())) + "</p>" +
-      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario" id="l-imprimir">Imprimir o guardar en PDF</button>' +
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario lectura-ok" id="l-imprimir">Imprimir o guardar en PDF</button>' +
       '<label class="casilla"><input type="checkbox" id="l-bajas"' + (conBajas ? " checked" : "") + "><span>Incluir las bajas</span></label></div>" +
       '<p class="detalle no-imprimir">La relación actualizada de socios es obligatoria (Ley Orgánica 1/2002, art. 14). Qué datos debe incluir en vuestro caso: verificar con asesoría.</p>' +
       '<div class="tabla-envoltorio" id="l-tabla">' + tabla() + "</div>";

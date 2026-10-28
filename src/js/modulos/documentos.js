@@ -110,7 +110,7 @@
       return '<li><span class="doc-icono" aria-hidden="true">' + (/pdf/.test(d.tipoMime) ? "PDF" : /image/.test(d.tipoMime) ? "IMG" : "DOC") + "</span>" +
         '<span class="doc-texto"><button type="button" class="btn-enlace doc-nombre" data-abrir="' + esc(d.id) + '">' + esc(d.nombre) + "</button>" +
         '<span class="detalle">' + esc(d.categoria) + (d.fecha ? " · " + esc(F.corta(d.fecha)) : "") + " · " + esc(tamanoTexto(d.tamano)) + (d.descripcion ? " · " + esc(d.descripcion) : "") + "</span></span>" +
-        '<span class="doc-acciones"><button type="button" class="btn btn-pequeno btn-secundario" data-bajar="' + esc(d.id) + '">Descargar</button>' +
+        '<span class="doc-acciones"><button type="button" class="btn btn-pequeno btn-secundario lectura-ok" data-bajar="' + esc(d.id) + '">Descargar</button>' +
         '<button type="button" class="btn btn-pequeno btn-secundario" data-editar-doc="' + esc(d.id) + '">Editar</button></span></li>';
     }).join("") + "</ul>";
   }

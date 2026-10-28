@@ -25,11 +25,19 @@
  * Siempre se devuelven COPIAS: si un formulario modifica lo que recibió, no
  * cambia nada guardado hasta que llame a guardar().
  *
- * crearRepositorio(doc, alCambiar, reloj, archivos): «alCambiar(doc)» se llama tras
+ * crearRepositorio(doc, alCambiar, reloj, archivos, opciones): «alCambiar(doc)» se llama tras
  * cada cambio; la sesión la usa para cifrar y guardar en el navegador. En los
  * tests y en el modo demostración no hace nada. «archivos» es dónde van los bytes
  * de los adjuntos: { guardar(id, bytes), leer(id), borrar(id) } (la sesión los
  * cifra; si no se da, quedan en memoria).
+ *
+ * opciones (Fase 7a, usuarios):
+ *   autor()      → { id, texto: "Alberto · Tesorería" } de quien está trabajando
+ *   permitido()  → false si su cargo no puede modificar la sección abierta:
+ *                  entonces cualquier escritura falla con el código "PERMISO"
+ * Cada cambio queda FIRMADO en el registro (creadoPor / modificadoPor) y apuntado
+ * en la colección «registro» (quién, cuándo, qué). El registro guarda los
+ * últimos MAX_REGISTRO apuntes.
  */
 (function (raiz, fabrica) {
   var Esquema = typeof require === "function" ? require("./esquema.js") : raiz.WA.Esquema;
@@ -40,6 +48,14 @@
   "use strict";
 
   var copiar = function (x) { return x == null ? x : JSON.parse(JSON.stringify(x)); };
+  var MAX_REGISTRO = 5000;
+
+  /** Una etiqueta corta para el registro: el nombre, el título o el concepto del registro. */
+  function etiqueta(r) {
+    if (!r) return "";
+    var t = r.nombre && r.apellidos ? r.nombre + " " + r.apellidos : r.nombre || r.titulo || r.concepto || r.numero || r.persona || r.socioNombre || "";
+    return String(t).slice(0, 80);
+  }
 
   /** Almacén de bytes en memoria (demostración y tests). inicial: { id: Uint8Array }. */
   function archivosEnMemoria(inicial) {
@@ -51,12 +67,39 @@
     };
   }
 
-  function crearRepositorio(doc, alCambiar, reloj, archivos) {
+  function crearRepositorio(doc, alCambiar, reloj, archivos, opciones) {
     var ahora = reloj || function () { return new Date().toISOString(); };
     var avisar = alCambiar || function () {};
     var bytes = archivos || archivosEnMemoria();
+    var op = opciones || {};
+    var autor = function () { return op.autor ? op.autor() : null; };
 
-    function coleccion(nombre) {
+    /** Antes de cualquier escritura: ¿puede el cargo de quien trabaja tocar esta sección? */
+    function exigirPermiso() {
+      if (op.permitido && !op.permitido()) {
+        var e = new Error("Tu cargo puede ver esta sección, pero no modificarla.");
+        e.codigo = "PERMISO";
+        throw e;
+      }
+    }
+    /** Apunta un cambio en el registro (lo más reciente al final). */
+    function apuntar(accion, donde, registro, resumen, t) {
+      var a = autor();
+      if (!a) return;
+      if (!Array.isArray(doc.registro)) doc.registro = [];
+      doc.registro.push({ id: Esquema.nuevoId(), fecha: t, usuarioId: a.id, autor: a.texto, accion: accion, donde: donde,
+        registroId: registro ? registro.id || "" : "", resumen: resumen != null ? resumen : etiqueta(registro) });
+      if (doc.registro.length > MAX_REGISTRO) doc.registro.splice(0, doc.registro.length - MAX_REGISTRO);
+    }
+    function firmar(r, nuevo) {
+      var a = autor();
+      if (!a) return;
+      if (nuevo) r.creadoPor = a.texto;
+      r.modificadoPor = a.texto;
+    }
+
+    function coleccion(nombre, paraEscribir) {
+      if (paraEscribir && nombre === "registro") throw new Error("El registro solo lo escribe la aplicación.");
       if (Esquema.COLECCIONES.indexOf(nombre) < 0) throw new Error("Colección desconocida: " + nombre);
       if (!Array.isArray(doc[nombre])) doc[nombre] = [];
       return doc[nombre];
@@ -67,14 +110,18 @@
       var i = r.id ? lista.findIndex(function (x) { return x.id === r.id; }) : -1;
       if (i >= 0) {
         r.creado = lista[i].creado;
+        if (lista[i].creadoPor) r.creadoPor = lista[i].creadoPor;
         r.modificado = t;
+        firmar(r, false);
         lista[i] = r;
       } else {
         r.id = r.id || Esquema.nuevoId();
         r.creado = t;
         r.modificado = t;
+        firmar(r, true);
         lista.push(r);
       }
+      r._nuevo = i < 0; // solo para el registro; se quita antes de devolver
       return r;
     }
     function cambiado() {
@@ -90,7 +137,9 @@
         if (clave === "meta" || clave === "app" || clave === "esquema" || Esquema.COLECCIONES.indexOf(clave) >= 0) {
           throw new Error("«" + clave + "» no se escribe con escribir().");
         }
+        exigirPermiso();
         doc[clave] = copiar(valor);
+        apuntar("cambio", clave, null, clave === "config" ? "Configuración" : clave === "asociacion" ? "Datos de la asociación" : clave, ahora());
         await cambiado();
       },
 
@@ -102,23 +151,33 @@
       },
 
       guardar: async function (nombre, registro) {
-        var r = colocar(coleccion(nombre), registro, ahora());
+        exigirPermiso();
+        var t = ahora();
+        var r = colocar(coleccion(nombre, true), registro, t);
+        apuntar(r._nuevo ? "alta" : "cambio", nombre, r, null, t);
+        delete r._nuevo;
         await cambiado();
         return copiar(r);
       },
 
       guardarVarios: async function (nombre, registros) {
-        var lista = coleccion(nombre), t = ahora();
+        exigirPermiso();
+        var lista = coleccion(nombre, true), t = ahora();
         var guardados = (registros || []).map(function (r) { return colocar(lista, r, t); });
+        if (guardados.length === 1) apuntar(guardados[0]._nuevo ? "alta" : "cambio", nombre, guardados[0], null, t);
+        else if (guardados.length) apuntar("varios", nombre, null, guardados.length + " registros", t);
+        guardados.forEach(function (r) { delete r._nuevo; });
         if (guardados.length) await cambiado();
         return copiar(guardados);
       },
 
       borrar: async function (nombre, id) {
-        var lista = coleccion(nombre);
+        exigirPermiso();
+        var lista = coleccion(nombre, true);
         var i = lista.findIndex(function (x) { return x.id === id; });
         if (i < 0) return false;
-        lista.splice(i, 1);
+        var quitado = lista.splice(i, 1)[0];
+        apuntar("baja", nombre, quitado, null, ahora());
         await cambiado();
         return true;
       },
@@ -126,6 +185,7 @@
       documento: async function () { return copiar(doc); },
 
       guardarArchivo: async function (ficha, contenido) {
+        exigirPermiso();
         var r = copiar(ficha);
         r.id = r.id || Esquema.nuevoId();
         r.tamano = contenido.length;
@@ -134,17 +194,25 @@
         var t = ahora();
         var lista = coleccion("documentos");
         var i = lista.findIndex(function (x) { return x.id === r.id; });
-        if (i >= 0) { r.creado = lista[i].creado; r.modificado = t; lista[i] = r; } else { r.creado = t; r.modificado = t; lista.push(r); }
+        if (i >= 0) { r.creado = lista[i].creado; r.modificado = t; firmar(r, false); lista[i] = r; } else { r.creado = t; r.modificado = t; firmar(r, true); lista.push(r); }
+        apuntar(i >= 0 ? "cambio" : "alta", "documentos", r, null, t);
         await cambiado();
         return copiar(r);
       },
       leerArchivo: async function (id) { return bytes.leer(id); },
       borrarArchivo: async function (id) {
+        exigirPermiso();
         await bytes.borrar(id);
         var lista = coleccion("documentos");
         var i = lista.findIndex(function (x) { return x.id === id; });
-        if (i >= 0) { lista.splice(i, 1); await cambiado(); }
+        if (i >= 0) { apuntar("baja", "documentos", lista.splice(i, 1)[0], null, ahora()); await cambiado(); }
         return i >= 0;
+      },
+
+      /** Apunta en el registro algo que no es un registro de datos (p. ej. la gestión de usuarios). */
+      anotar: async function (accion, donde, resumen) {
+        apuntar(accion, donde, null, resumen, ahora());
+        await cambiado();
       },
 
       /** Estado de la copia de seguridad, para el aviso de la cabecera. */
@@ -161,5 +229,5 @@
     };
   }
 
-  return { crearRepositorio: crearRepositorio, archivosEnMemoria: archivosEnMemoria };
+  return { crearRepositorio: crearRepositorio, archivosEnMemoria: archivosEnMemoria, MAX_REGISTRO: MAX_REGISTRO };
 });
