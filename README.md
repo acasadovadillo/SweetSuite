@@ -16,11 +16,15 @@ Las series de calentamiento (toca el número de la serie) no cuentan para récor
 Igual que Solvento: todo lo de cada usuario es **un documento cifrado en el navegador** (AES-256-GCM, clave derivada de la contraseña con PBKDF2-SHA256 y 310.000 iteraciones, mismo formato de bloque) y se guarda en el repositorio **privado** `acasadovadillo/datos-cifrados`:
 
 ```
-datos-cifrados/Ironrack/<usuario>-ironrack.enc
+datos-cifrados/Ironrack/alberto-ironrack.enc
+datos-cifrados/Ironrack/hafsa-ironrack.enc
 ```
 
+Las cuentas (Alberto y Hafsa) están en `CUENTAS`, en `src/js/github.js`. Al entrar solo se elige la cuenta y se pone la contraseña; la primera vez en cada dispositivo se repite, para no estrenarla con una errata.
+
 - La contraseña nunca se guarda ni sale del navegador. GitHub solo ve texto cifrado.
-- Hace falta un token **fine-grained** con acceso solo a `datos-cifrados` y permiso *Contents: Read and write* (vale el de Solvento). Se pide la primera vez en cada dispositivo y se guarda cifrado.
+- **El token no se pide al entrar.** Sin él la app funciona entera, pero solo en ese dispositivo, y lo avisa en Entrenar. Al pulsar «Conectar» (o en Ajustes) se pega un token **fine-grained** con acceso solo a `datos-cifrados` y permiso *Contents: Read and write* (vale el de Solvento); se guarda cifrado, se sube lo de ese dispositivo y se fusiona con lo que ya hubiera en GitHub. El archivo `.enc` de cada cuenta se crea entonces.
+- El token no puede ir en el código: este repositorio es público y `datos-cifrados` es privado.
 - Cada cambio se guarda al momento en el dispositivo (cifrado) y se sube a GitHub unos segundos después, o en cuanto vuelve la conexión.
 - **Varios dispositivos**: si el móvil y el portátil guardan a la vez, los documentos se fusionan elemento a elemento (gana la versión más reciente de cada entreno, rutina o ejercicio; lo borrado no resucita).
 - «Recordar en este dispositivo» guarda la clave derivada (no la contraseña) como `CryptoKey` no exportable en IndexedDB, para no teclear la contraseña en cada entreno.
@@ -55,7 +59,7 @@ tools/servir.py       servidor local sin caché
 python3 tools/servir.py
 ```
 
-Abre <http://localhost:8771>. En `localhost` la app **no habla con GitHub**: usa un repositorio de mentira dentro del navegador, y cualquier texto vale como token. Para probar contra GitHub de verdad: <http://localhost:8771/?real>.
+Abre <http://localhost:8771>. En `localhost` la app **no habla con GitHub**: usa un repositorio de mentira dentro del navegador, y cualquier texto vale como token (salvo `malo`, que simula uno caducado). Para probar contra GitHub de verdad: <http://localhost:8771/?real>.
 
 ## Publicar
 

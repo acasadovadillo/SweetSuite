@@ -96,10 +96,19 @@
         </div></article>`;
     }).join("");
 
+    // Sin token todo funciona, pero solo en este dispositivo: se recuerda aquí,
+    // donde se ve, y no en la entrada, que ya pide bastante.
+    const sinGitHub = S.token ? "" : `<article class="tarjeta aviso-github">
+        <div><b>Tus entrenos están solo en este dispositivo</b>
+        <p class="suave">Conecta con GitHub para tener una copia cifrada en datos-cifrados y verlos en tus otros dispositivos.</p></div>
+        <button class="btn primario" data-a="ajToken">Conectar</button>
+      </article>`;
+
     return `<section class="cabeza">
         <h1>Entrenar</h1>
         <p class="suave">${esc(U.fechaLarga(Date.now()))}</p>
       </section>
+      ${sinGitHub}
       <div class="stats">
         <div class="stat"><b>${estaSemana}</b><span>esta semana</span></div>
         <div class="stat"><b>${racha}</b><span>${racha === 1 ? "semana seguida" : "semanas seguidas"}</span></div>

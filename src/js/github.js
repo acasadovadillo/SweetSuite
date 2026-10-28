@@ -15,6 +15,12 @@
   const IR = (window.IR = window.IR || {});
 
   const REPO = { owner: "acasadovadillo", repo: "datos-cifrados", branch: "main", carpeta: "Ironrack" };
+  // Quién entra en Ironrack. Cada cuenta tiene su archivo, su contraseña y su
+  // token; añadir a alguien es añadir una línea aquí.
+  const CUENTAS = [
+    { usuario: "alberto", nombre: "Alberto" },
+    { usuario: "hafsa", nombre: "Hafsa" },
+  ];
   const API = "https://api.github.com";
   const DEV = /^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname) && !/[?&]real\b/.test(location.search);
 
@@ -95,5 +101,5 @@
     },
   };
 
-  IR.github = Object.assign({ ruta, REPO, DEV }, DEV ? dev : { acceso, leer, escribir });
+  IR.github = Object.assign({ ruta, REPO, CUENTAS, DEV }, DEV ? dev : { acceso, leer, escribir });
 })();

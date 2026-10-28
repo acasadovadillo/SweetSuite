@@ -307,6 +307,21 @@ label.form { gap: 6px; margin-top: 4px; }
 .login-caja { width: 100%; max-width: 380px; }
 .logo-grande { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 28px; font-weight: 800; letter-spacing: 0.2em; font-size: 1.3rem; }
 .logo-grande svg { width: 64px; height: 64px; }
+.cuentas { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.cuentas .cuenta {
+  position: relative; flex-direction: column; align-items: center; gap: 8px; padding: 14px 8px; cursor: pointer;
+  color: var(--texto); font-weight: 600; font-size: 1rem;
+  background: var(--capa); border: 2px solid var(--borde); border-radius: var(--radio);
+}
+.cuenta input { position: absolute; opacity: 0; pointer-events: none; }
+.cuenta .avatar { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; font-size: 1.3rem; font-weight: 800; background: var(--capa2); color: var(--suave); }
+.cuenta:has(input:checked) { border-color: var(--acento); background: var(--acento-suave); }
+.cuenta:has(input:checked) .avatar { background: var(--acento); color: var(--acento-texto); }
+.cuenta:has(input:focus-visible) { outline: 2px solid var(--acento); outline-offset: 2px; }
+
+.aviso-github { display: flex; align-items: center; gap: 12px; border-color: var(--aviso); }
+.aviso-github p { margin: 4px 0 0; font-size: 0.88rem; }
+.aviso-github .btn { flex: none; }
 
 /* ── Aviso breve ── */
 .aviso {

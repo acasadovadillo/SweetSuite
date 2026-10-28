@@ -237,7 +237,7 @@
    */
   async function entrar({ usuario, password, token, crear = false, recordar = true }) {
     usuario = limpiarUsuario(usuario);
-    if (!usuario) throw fallo("Escribe tu usuario", "USUARIO");
+    if (!G.CUENTAS.some((c) => c.usuario === usuario)) throw fallo("Elige tu cuenta", "USUARIO");
     if (!password) throw fallo("Escribe tu contraseña", "PASSWORD");
     const k = (n) => clave(n, usuario);
     const localTxt = ls.get(k("doc"));
@@ -323,10 +323,24 @@
     return true;
   }
 
-  async function cambiarToken(token) {
+  // El token se añade cuando uno quiere, no al entrar. Si la sesión se abrió
+  // con la clave recordada no tiene la contraseña, y la hace falta para abrir
+  // lo que otro dispositivo publicó con otra sal: por eso se pide aquí también.
+  const necesitaContrasena = () => !!S.cripto && !S.cripto.tienePassword;
+  async function cambiarToken(token, password) {
     token = (token || "").trim();
+    if (!token) throw fallo("Pega el token", "SIN_TOKEN");
+    if (password) {
+      const otra = IR.cripto.sesion({ password, salt: S.cripto.salt, iter: S.cripto.iter });
+      const local = ls.get(clave("doc"));
+      if (local) await otra.descifrar(JSON.parse(local)); // contraseña mala → BAD_PASSWORD
+      S.cripto = otra;
+    }
     await G.acceso(token);
     S.token = token;
+    // Lo de este dispositivo se sube siempre al conectar, aunque no se haya
+    // tocado nada: una cuenta recién estrenada sin token aún no tiene archivo.
+    ls.set(clave("pendiente"), "1");
     await persistirCredenciales();
     await sincronizar({ forzar: true });
     if (pendiente()) await subir();
@@ -362,7 +376,7 @@
     S, nuevo, normalizar, fusionar,
     cambiar, cambiarActual, cambiarAjustes, cambiarItem, anadir, borrar,
     guardarLocal, subir, sincronizar, pendiente,
-    entrar, reanudar, salir, olvidarDispositivo, cambiarToken, importar,
+    entrar, reanudar, salir, olvidarDispositivo, cambiarToken, necesitaContrasena, importar,
     tieneToken, ultimoUsuario, limpiarUsuario,
   };
 })();

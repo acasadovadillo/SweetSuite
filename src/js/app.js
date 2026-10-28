@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.0.0";
+  const VERSION = "1.1.0";
 
   const TABS = ["entrenar", "historial", "progreso", "rutinas", "ejercicios"];
 
@@ -77,7 +77,8 @@
     html() {
       const aj = S.doc.ajustes;
       const DESCANSOS = [45, 60, 90, 120, 150, 180, 240, 300];
-      return `<section class="cabeza"><h1>Ajustes</h1><p class="suave">Usuario: <b>${esc(S.usuario)}</b></p></section>
+      const cuenta = IR.github.CUENTAS.find((c) => c.usuario === S.usuario);
+      return `<section class="cabeza"><h1>Ajustes</h1><p class="suave">Cuenta: <b>${esc(cuenta ? cuenta.nombre : S.usuario)}</b></p></section>
         <article class="tarjeta">
           <h3>Descanso entre series</h3>
           <div class="chips">${DESCANSOS.map((s) =>
@@ -89,7 +90,7 @@
           <p class="estado-largo ${ESTADOS[S.estado] ? ESTADOS[S.estado][0] : ""}">${esc(textoEstado())}</p>
           <p class="suave">Archivo: <code>${esc(IR.github.REPO.owner + "/" + IR.github.REPO.repo + "/" + IR.github.ruta(S.usuario))}</code>${IR.github.DEV ? " (modo local de pruebas)" : ""}</p>
           <div class="botones">
-            <button class="btn" data-a="ajToken">${S.token ? "Cambiar token" : "Añadir token"}</button>
+            <button class="btn ${S.token ? "" : "primario"}" data-a="ajToken">${S.token ? "Cambiar token" : "Conectar con GitHub"}</button>
             <button class="btn primario" data-a="ajSincronizar" ${S.token ? "" : "disabled"}>Sincronizar ahora</button>
           </div>
         </article>
@@ -117,10 +118,13 @@
     ajSonido: (el) => A.cambiarAjustes((a) => { a.sonido = el.checked; }, { render: false }),
     async ajSincronizar() { await A.sincronizar({ forzar: true }); if (A.pendiente()) await A.subir(); render(true); },
     ajToken() {
-      IR.ui.hoja(`<h3>Token de GitHub</h3>
+      const pideClave = A.necesitaContrasena();
+      IR.ui.hoja(`<h3>Conectar con GitHub</h3>
         <form class="form" id="f-token">
+          <p class="suave">Para guardar una copia cifrada en <code>${esc(IR.github.REPO.repo + "/" + IR.github.ruta(S.usuario))}</code> y tener tus entrenos en todos tus dispositivos.</p>
           ${ayudaToken()}
           <label>Token <input name="token" autocomplete="off" autocapitalize="off" spellcheck="false" required placeholder="github_pat_…"></label>
+          ${pideClave ? '<label>Tu contraseña de Ironrack <input type="password" name="password" autocomplete="current-password" required></label>' : ""}
           <p class="error" id="token-error"></p>
           <div class="botones"><button type="button" class="btn" data-a="_cerrar">Cancelar</button><button class="btn primario">Guardar</button></div>
         </form>`);
@@ -130,12 +134,12 @@
         const btn = ev.target.querySelector(".primario");
         btn.disabled = true;
         try {
-          await A.cambiarToken(ev.target.token.value);
+          await A.cambiarToken(ev.target.token.value, ev.target.password ? ev.target.password.value : null);
           IR.ui.cerrarHoja();
-          IR.ui.aviso("Token guardado");
+          IR.ui.aviso(S.estado === "ok" ? "Conectado con GitHub" : "Token guardado");
           render(true);
         } catch (e) {
-          $("#token-error").textContent = e.message;
+          $("#token-error").textContent = e.code === "BAD_PASSWORD" ? "Contraseña incorrecta" : e.message;
           btn.disabled = false;
         }
       });
@@ -187,17 +191,19 @@
   function mostrarLogin(error) {
     $("#app").hidden = true;
     $("#login").hidden = false;
-    const usuario = A.ultimoUsuario() || "alberto";
+    const ultimo = A.ultimoUsuario();
+    const usuario = IR.github.CUENTAS.some((c) => c.usuario === ultimo) ? ultimo : IR.github.CUENTAS[0].usuario;
     $("#login").innerHTML = `<div class="login-caja">
       <div class="logo-grande">${LOGO}<span>IRONRACK</span></div>
       <form class="form" id="f-login" autocomplete="on">
-        <label>Usuario <input name="usuario" value="${esc(usuario)}" autocomplete="username" autocapitalize="off" spellcheck="false" required></label>
+        <div class="cuentas" role="radiogroup" aria-label="Cuenta">
+          ${IR.github.CUENTAS.map((c) => `<label class="cuenta">
+            <input type="radio" name="usuario" value="${esc(c.usuario)}" ${c.usuario === usuario ? "checked" : ""}>
+            <span class="avatar">${esc(c.nombre.charAt(0))}</span>${esc(c.nombre)}</label>`).join("")}
+        </div>
+        <input type="text" name="username" value="${esc(usuario)}" autocomplete="username" hidden>
         <label>Contraseña <input type="password" name="password" autocomplete="current-password" required></label>
         <label id="campo-repite" hidden>Repite la contraseña <input type="password" name="password2" autocomplete="new-password"></label>
-        <div id="campo-token" ${A.tieneToken(usuario) ? "hidden" : ""}>
-          <label>Token de GitHub <input name="token" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_… (opcional)"></label>
-          ${ayudaToken()}
-        </div>
         <label class="interruptor"><input type="checkbox" name="recordar" checked> Recordar en este dispositivo</label>
         <p class="error" id="login-error">${esc(error || "")}</p>
         <button class="btn primario grande ancho" id="login-btn">Entrar</button>
@@ -205,12 +211,16 @@
       </form></div>`;
     pidiendoConfirmacion = false;
     const f = $("#f-login");
-    f.usuario.addEventListener("input", () => {
-      $("#campo-token").hidden = A.tieneToken(A.limpiarUsuario(f.usuario.value));
+    // Cambiar de cuenta deshace el «repite la contraseña» de la otra; el campo
+    // oculto es para que el gestor de contraseñas sepa de quién es cada una.
+    f.querySelectorAll("[name=usuario]").forEach((r) => r.addEventListener("change", () => {
+      f.username.value = r.value;
+      $("#login-error").textContent = "";
       if (pidiendoConfirmacion) { pidiendoConfirmacion = false; $("#campo-repite").hidden = true; $("#login-btn").textContent = "Entrar"; }
-    });
+      f.password.focus();
+    }));
     f.addEventListener("submit", entrar);
-    setTimeout(() => (f.usuario.value ? f.password : f.usuario).focus(), 50);
+    setTimeout(() => f.password.focus(), 50);
   }
 
   async function entrar(ev) {
@@ -222,16 +232,18 @@
     btn.textContent = "Abriendo…";
     try {
       const r = await A.entrar({
-        usuario: f.usuario.value, password: f.password.value, token: f.token.value,
+        usuario: f.usuario.value, password: f.password.value,
         crear: pidiendoConfirmacion, recordar: f.recordar.checked,
       });
       if (r.nuevo) {
+        // Primera vez en este dispositivo: repetir la contraseña evita estrenar
+        // la cuenta con una errata, que luego no abriría lo guardado en GitHub.
         pidiendoConfirmacion = true;
         $("#campo-repite").hidden = false;
         f.password2.focus();
         err.textContent = r.sinGitHub
-          ? "No hay datos de «" + A.limpiarUsuario(f.usuario.value) + "» en este dispositivo. Repite la contraseña para empezar (sin token, se guardará solo aquí)."
-          : "No hay datos de «" + A.limpiarUsuario(f.usuario.value) + "» en GitHub. Repite la contraseña para crear tu cuenta.";
+          ? "Primera vez en este dispositivo. Repite la contraseña para empezar; si ya usas Ironrack en otro, pon la misma."
+          : "Aún no hay datos en GitHub. Repite la contraseña para crear tu cuenta.";
         err.classList.add("info");
         btn.disabled = false;
         btn.textContent = "Crear cuenta";
