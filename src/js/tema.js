@@ -3,9 +3,11 @@
  *
  * La paleta es la de «Color de acento» de OpenClaw, medida sobre sus capturas.
  * El color elegido se guarda en el documento cifrado (ajustes.acento), así que
- * acompaña al usuario en todos sus dispositivos; además se deja una copia en
- * este navegador solo para pintar con él la pantalla de entrada, que se ve antes
- * de poder abrir el documento. Un color no es un dato personal.
+ * acompaña al usuario en todos sus dispositivos.
+ *
+ * La pantalla de entrada va siempre en el rojo de siempre: todavía no se sabe
+ * quién entra, y el acento es de cada cuenta. Al entrar se aplica el suyo, y al
+ * salir se vuelve al rojo.
  */
 (function () {
   "use strict";
@@ -23,7 +25,6 @@
     { nombre: "Pizarra", color: "#8795a7" },
   ];
   const PREDETERMINADO = ACENTOS[0].color;
-  const CLAVE = "ironrack_acento";
 
   const valido = (c) => /^#[0-9a-f]{6}$/i.test(String(c || ""));
   const deLaPaleta = (c) => ACENTOS.some((a) => a.color === String(c).toLowerCase());
@@ -67,17 +68,16 @@
     raiz.setProperty("--acento-texto", textoSobre(c));
     raiz.setProperty("--boton", boton(c));
     raiz.setProperty("--boton-texto", textoSobre(boton(c)));
-    try { localStorage.setItem(CLAVE, c); } catch (e) { /* sin almacenamiento */ }
     return c;
   }
-  // El de la última vez, para la pantalla de entrada
-  const guardado = () => { try { return localStorage.getItem(CLAVE); } catch (e) { return null; } };
   const actual = () => {
     const doc = IR.almacen && IR.almacen.S.doc;
     return (doc && valido(doc.ajustes.acento) && doc.ajustes.acento.toLowerCase()) || PREDETERMINADO;
   };
 
-  aplicar(guardado());
+  aplicar(PREDETERMINADO);
+  // Hasta la 1.5.1 se guardaba aquí el último acento para pintar la entrada
+  try { localStorage.removeItem("ironrack_acento"); } catch (e) { /* nada que borrar */ }
 
   IR.tema = { ACENTOS, PREDETERMINADO, aplicar, actual, valido, deLaPaleta };
 })();

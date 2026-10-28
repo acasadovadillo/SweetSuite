@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.5.1";
+  const VERSION = "1.5.2";
 
   // ── Pintar ──
   // Si estás escribiendo en una casilla, no se repinta debajo de ti (te
@@ -240,6 +240,9 @@
   const SUB_ENTRAR = "Entra con tu usuario y tu contraseña";
 
   function mostrarLogin(error) {
+    // Siempre en el rojo de siempre: el acento es de cada cuenta, y aquí aún
+    // no se sabe quién entra (ni queda el de quien acaba de salir).
+    IR.tema.aplicar(IR.tema.PREDETERMINADO);
     $("#app").hidden = true;
     $("#login").hidden = false;
     $("#login").innerHTML = `<form class="entrada" id="f-login" autocomplete="on" novalidate>
