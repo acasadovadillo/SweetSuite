@@ -111,7 +111,7 @@ body.con-descanso main { padding-bottom: calc(var(--tabs) + env(safe-area-inset-
   border-bottom: 1px solid var(--borde-lateral);
 }
 .marca { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 16px; letter-spacing: -.01em; margin-right: auto; }
-.marca svg, .logo-grande svg, .lateral-marca svg { fill: var(--acento); stroke: none; width: 26px; height: 26px; }
+.marca svg, .lateral-marca svg { fill: var(--acento); stroke: none; width: 26px; height: 26px; }
 
 /* Pestañas (móvil) */
 .tabs {
@@ -477,13 +477,42 @@ a.ej-nombre:hover { color: var(--acento); }
 .muestra input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
 .muestra:focus-visible, .muestra:has(input:focus-visible) { outline: 2px solid var(--texto); outline-offset: 4px; }
 
-/* ── Entrada ── */
-#login { position: relative; min-height: 100vh; min-height: 100dvh; display: grid; place-items: center; padding: 24px 16px; }
+/* ── Entrada: la misma que Solvento (#boot-overlay / .boot-panel), valor a valor ── */
+#login {
+  position: fixed; inset: 0; z-index: 1000; overflow-y: auto;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: var(--fondo);
+}
 #login::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: url("../../img/contornos.svg") right center / auto 120% no-repeat; }
-.login-caja { position: relative; width: 100%; max-width: 400px; }
-.logo-grande { display: flex; align-items: center; gap: 12px; margin-bottom: 22px; font-weight: 700; font-size: 26px; letter-spacing: -.02em; }
-.logo-grande svg { width: 40px; height: 40px; }
-.login-caja .tarjeta { padding: 18px 16px; }
+.entrada { font-family: "Albert Sans", var(--fuente); line-height: normal; position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
+.entrada-logo svg { display: block; width: 56px; height: 56px; fill: var(--acento); stroke: none; }
+.entrada-titulo { font-size: 26px; font-weight: 700; letter-spacing: 0; color: var(--acento); margin: 16px 0 5.6px; }
+.entrada-sub { font-size: 12.5px; color: var(--suave); margin-bottom: 28px; text-align: center; }
+.entrada input {
+  width: 100%; background: var(--campo); border: 1px solid var(--borde); border-radius: 8px;
+  color: var(--texto); font: inherit; font-size: 15px; padding: 9px 12px; outline: none;
+  margin-bottom: 12px; transition: border-color .15s;
+}
+.entrada input::placeholder { color: var(--suave); }
+.entrada input:focus { border-color: #2f3033; }
+/* En el iPhone, un campo de menos de 16 px hace zoom al tocarlo */
+@media (pointer: coarse) { .entrada input { font-size: 16px; } }
+.entrada-clave { position: relative; width: 100%; }
+.entrada-clave input { padding-right: 41.6px; }
+.entrada-ojo {
+  position: absolute; right: 8.8px; top: 50%; transform: translateY(-50%);
+  display: flex; align-items: center; padding: 3.2px; border: 0; background: none; color: var(--suave); cursor: pointer;
+}
+.entrada-ojo svg { width: 18px; height: 18px; stroke-width: 2; }
+.entrada-boton {
+  width: 100%; border: 0; border-radius: 10px; cursor: pointer;
+  background: var(--boton, #d23c3c); color: var(--boton-texto, #fff);
+  font: inherit; font-size: 15px; font-weight: 600; padding: 10px 14px;
+}
+.entrada-boton:hover { opacity: .85; }
+.entrada-boton:disabled { opacity: .6; cursor: default; }
+.entrada-error { font-size: 13.12px; font-weight: 600; margin-top: 16px; text-align: center; color: var(--peligro); }
+.entrada-error:empty { display: none; }
 
 /* ── Aviso breve ── */
 .aviso {

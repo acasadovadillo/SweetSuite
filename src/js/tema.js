@@ -37,11 +37,36 @@
   }
   const textoSobre = (hex) => (luminancia(hex) > 0.4 ? "#0e1015" : "#ffffff");
 
+  // El botón principal no lleva el acento tal cual, sino uno más apagado y
+  // oscuro: con el coral, #d23c3c, que es el de OpenClaw (medido en Solvento).
+  // Para los demás acentos se aplica el mismo cambio en HSL: saturación × 0,62
+  // y 15 puntos menos de luz.
+  function hsl(hex) {
+    const [r, g, b] = [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16) / 255);
+    const max = Math.max(r, g, b), min = Math.min(r, g, b), l = (max + min) / 2, d = max - min;
+    if (!d) return [0, 0, l];
+    const s = d / (1 - Math.abs(2 * l - 1));
+    const h = max === r ? ((g - b) / d) % 6 : max === g ? (b - r) / d + 2 : (r - g) / d + 4;
+    return [(h * 60 + 360) % 360, s, l];
+  }
+  function deHsl(h, s, l) {
+    const c = (1 - Math.abs(2 * l - 1)) * s, x = c * (1 - Math.abs(((h / 60) % 2) - 1)), m = l - c / 2;
+    const [r, g, b] = h < 60 ? [c, x, 0] : h < 120 ? [x, c, 0] : h < 180 ? [0, c, x] : h < 240 ? [0, x, c] : h < 300 ? [x, 0, c] : [c, 0, x];
+    return "#" + [r, g, b].map((v) => Math.round((v + m) * 255).toString(16).padStart(2, "0")).join("");
+  }
+  function boton(hex) {
+    if (hex === PREDETERMINADO) return "#d23c3c";
+    const [h, s, l] = hsl(hex);
+    return deHsl(h, s * 0.62, Math.max(0, l - 0.15));
+  }
+
   function aplicar(color) {
     const c = valido(color) ? color.toLowerCase() : PREDETERMINADO;
     const raiz = document.documentElement.style;
     raiz.setProperty("--acento", c);
     raiz.setProperty("--acento-texto", textoSobre(c));
+    raiz.setProperty("--boton", boton(c));
+    raiz.setProperty("--boton-texto", textoSobre(boton(c)));
     try { localStorage.setItem(CLAVE, c); } catch (e) { /* sin almacenamiento */ }
     return c;
   }

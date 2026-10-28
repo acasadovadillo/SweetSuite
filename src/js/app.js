@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.4.2";
+  const VERSION = "1.5.0";
 
   // ── Pintar ──
   // Si estás escribiendo en una casilla, no se repinta debajo de ti (te
@@ -233,42 +233,58 @@
   const MIN_CONTRASENA = 6;
   const esPrimeraVez = (u) => !A.tieneDatos(u);
 
+  // La pantalla es la de Solvento: logo, nombre, una línea gris y tres
+  // recuadros (usuario, contraseña con su ojo y el botón).
+  const OJO = '<svg class="ojo-ver" viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
+  const OJO_TACHADO = '<svg class="ojo-tachado" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M3 3l18 18"/><path d="M10.6 6.2A9.6 9.6 0 0 1 12 6c6.5 0 10.5 6 10.5 6a17 17 0 0 1-3.4 3.9"/><path d="M6.5 7.6A17 17 0 0 0 1.5 12S5.5 18 12 18a9.9 9.9 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
+  const SUB_ENTRAR = "Entra con tu usuario y tu contraseña";
+
   function mostrarLogin(error) {
     $("#app").hidden = true;
     $("#login").hidden = false;
-    $("#login").innerHTML = `<div class="login-caja">
-      <div class="logo-grande">${LOGO}<span>Ironrack</span></div>
-      <section class="cabeza"><h1>Entrar</h1></section>
-      <form class="form tarjeta" id="f-login" autocomplete="on" novalidate>
-        <label>Usuario <input name="usuario" value="${esc(A.ultimoUsuario())}" placeholder="alberto" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required></label>
-        <label><span id="txt-password">Contraseña</span> <input type="password" name="password" autocomplete="current-password" required></label>
-        <label id="campo-repite" hidden>Repite la contraseña <input type="password" name="password2" autocomplete="new-password"></label>
-        <p class="suave pequeno-izq" id="login-info" hidden></p>
-        <p class="error" id="login-error">${esc(error || "")}</p>
-        <button class="btn primario grande ancho" id="login-btn">Entrar</button>
-      </form>
-      ${IR.github.DEV ? '<p class="nota centro">Modo local de pruebas: no se habla con GitHub.</p>' : ""}
-    </div>`;
+    $("#login").innerHTML = `<form class="entrada" id="f-login" autocomplete="on" novalidate>
+        <span class="entrada-logo">${LOGO}</span>
+        <div class="entrada-titulo">Ironrack</div>
+        <div class="entrada-sub" id="login-info">${SUB_ENTRAR}</div>
+        <input name="usuario" value="${esc(A.ultimoUsuario())}" placeholder="Usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+        <div class="entrada-clave">
+          <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password">
+          <button type="button" class="entrada-ojo" id="login-ver" aria-label="Ver la contraseña" title="Ver la contraseña">${OJO}${OJO_TACHADO}</button>
+        </div>
+        <input type="password" name="password2" placeholder="Repite la contraseña" autocomplete="new-password" hidden>
+        <button type="submit" class="entrada-boton" id="login-btn">Entrar</button>
+        <div class="entrada-error" id="login-error">${esc(error || "")}</div>
+        ${IR.github.DEV ? '<div class="entrada-sub" style="margin:16px 0 0">Modo local de pruebas: no se habla con GitHub.</div>' : ""}
+      </form>`;
     const f = $("#f-login");
     f.usuario.addEventListener("input", () => { $("#login-error").textContent = ""; modoLogin(f); });
+    $("#login-ver").addEventListener("click", () => alternarVerClave(f));
     f.addEventListener("submit", entrar);
     modoLogin(f);
     setTimeout(() => (f.usuario.value ? f.password : f.usuario).focus(), 50);
   }
 
-  // Entrar con la contraseña de siempre, o establecerla si es la primera vez
+  // El ojo enseña u oculta lo escrito, en los dos campos de contraseña a la vez
+  function alternarVerClave(f) {
+    const ver = f.password.type === "password", btn = $("#login-ver");
+    f.password.type = f.password2.type = ver ? "text" : "password";
+    btn.querySelector(".ojo-ver").hidden = ver;
+    btn.querySelector(".ojo-tachado").hidden = !ver;
+    btn.title = btn.ariaLabel = ver ? "Ocultar la contraseña" : "Ver la contraseña";
+    f.password.focus();
+  }
+
+  // Entrar con la contraseña de siempre, o establecerla si es la primera vez:
+  // entonces aparece un cuarto recuadro para repetirla.
   function modoLogin(f) {
     const u = A.limpiarUsuario(f.usuario.value);
     const nueva = !!u && A.esCuenta(u) && esPrimeraVez(u);
-    $("#txt-password").textContent = nueva ? "Elige tu contraseña" : "Contraseña";
+    f.password.placeholder = nueva ? "Elige tu contraseña" : "Contraseña";
     f.password.autocomplete = nueva ? "new-password" : "current-password";
-    $("#campo-repite").hidden = !nueva;
-    f.password2.required = nueva;
-    const info = $("#login-info");
-    info.hidden = !nueva;
-    info.textContent = nueva
-      ? `Primera vez de «${u}» en este dispositivo. Esta contraseña cifra ${IR.github.ruta(u).split("/").pop()}: si ya usas Ironrack en otro dispositivo, pon la misma.`
-      : "";
+    f.password2.hidden = !nueva;
+    $("#login-info").textContent = nueva
+      ? "Primera vez en este dispositivo: elige tu contraseña y repítela. Si ya usas Ironrack en otro, pon la misma."
+      : SUB_ENTRAR;
     $("#login-btn").textContent = nueva ? "Crear contraseña y entrar" : "Entrar";
   }
 
@@ -277,21 +293,22 @@
     const f = ev.target, btn = $("#login-btn"), err = $("#login-error");
     const usuario = A.limpiarUsuario(f.usuario.value);
     const nueva = A.esCuenta(usuario) && esPrimeraVez(usuario);
-    err.textContent = "";
-    if (!usuario) { err.textContent = "Escribe tu usuario"; f.usuario.focus(); return; }
-    if (!f.password.value) { err.textContent = "Escribe tu contraseña"; f.password.focus(); return; }
-    if (nueva && f.password.value.length < MIN_CONTRASENA) { err.textContent = `La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres`; return; }
-    if (nueva && f.password.value !== f.password2.value) { err.textContent = "Las dos contraseñas no coinciden"; f.password2.focus(); return; }
-    const texto = btn.textContent;
+    // Como en Solvento: el aviso va en la línea de debajo del botón, en rojo
+    // si algo falla y en gris mientras se entra.
+    const aviso = (texto, gris) => { err.textContent = texto; err.style.color = gris ? "var(--suave)" : ""; };
+    aviso("");
+    if (!usuario) { aviso("Escribe tu usuario"); f.usuario.focus(); return; }
+    if (!f.password.value) { aviso("Escribe tu contraseña"); f.password.focus(); return; }
+    if (nueva && f.password.value.length < MIN_CONTRASENA) { aviso(`La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres`); return; }
+    if (nueva && f.password.value !== f.password2.value) { aviso("Las dos contraseñas no coinciden"); f.password2.focus(); return; }
     btn.disabled = true;
-    btn.textContent = "Abriendo…";
+    aviso("Entrando…", true);
     try {
       await A.entrar({ usuario, password: f.password.value, crear: nueva });
       arrancar();
     } catch (e) {
-      err.textContent = e.code === "BAD_PASSWORD" ? "Contraseña incorrecta" : e.message || String(e);
+      aviso(e.code === "BAD_PASSWORD" ? "Usuario o contraseña incorrectos" : e.message || String(e));
       btn.disabled = false;
-      btn.textContent = texto;
     }
   }
 

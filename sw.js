@@ -5,7 +5,8 @@
  * Al cambiar cualquier archivo de la app hay que subir VERSION, o los móviles
  * seguirán con la copia vieja.
  */
-const VERSION = "ironrack-1.4.2";
+const VERSION = "ironrack-1.5.0";
+const FUENTES = "ironrack-fuentes"; // no va con la versión: se conserva entre una y otra
 const APP = [
   "./", "index.html", "manifest.json", "src/css/app.css",
   "src/js/util.js", "src/js/tema.js", "src/js/cripto.js", "src/js/github.js", "src/js/almacen.js",
@@ -25,7 +26,7 @@ self.addEventListener("install", (ev) => {
 
 self.addEventListener("activate", (ev) => {
   ev.waitUntil(caches.keys()
-    .then((ks) => Promise.all(ks.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+    .then((ks) => Promise.all(ks.filter((k) => k !== VERSION && k !== FUENTES).map((k) => caches.delete(k))))
     .then(() => self.clients.claim()));
 });
 
@@ -34,7 +35,17 @@ self.addEventListener("activate", (ev) => {
 // gimnasio la red puede tardar en fallar, así que a los 3 s se tira de copia.
 self.addEventListener("fetch", (ev) => {
   const url = new URL(ev.request.url);
-  if (ev.request.method !== "GET" || url.origin !== location.origin) return;
+  if (ev.request.method !== "GET") return;
+  // Albert Sans (Google Fonts): copia primero. Una fuente no cambia, y así la
+  // pantalla de entrada se ve igual sin cobertura.
+  if (url.origin === "https://fonts.googleapis.com" || url.origin === "https://fonts.gstatic.com") {
+    ev.respondWith(caches.open(FUENTES).then((c) => c.match(ev.request).then((r) => r || fetch(ev.request).then((res) => {
+      if (res.ok || res.type === "opaque") c.put(ev.request, res.clone());
+      return res;
+    }))));
+    return;
+  }
+  if (url.origin !== location.origin) return;
   const copia = () => caches.match(ev.request, { ignoreSearch: true }).then((r) => r || caches.match("index.html"));
   // GitHub Pages deja guardar cada archivo 10 minutos (max-age=600): sin
   // no-cache, un cambio recién publicado tardaba eso en verse. Así se pregunta
