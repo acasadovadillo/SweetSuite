@@ -5,7 +5,7 @@
  * Al cambiar cualquier archivo de la app hay que subir VERSION, o los móviles
  * seguirán con la copia vieja.
  */
-const VERSION = "ironrack-1.2.0";
+const VERSION = "ironrack-1.3.0";
 const APP = [
   "./", "index.html", "manifest.json", "src/css/app.css",
   "src/js/util.js", "src/js/cripto.js", "src/js/github.js", "src/js/almacen.js",

@@ -27,7 +27,7 @@ Los usuarios (`alberto` y `hafsa`) están en `CUENTAS`, en `src/js/github.js`. A
 - El token no puede ir en el código: este repositorio es público y `datos-cifrados` es privado.
 - Cada cambio se guarda al momento en el dispositivo (cifrado) y se sube a GitHub unos segundos después, o en cuanto vuelve la conexión.
 - **Varios dispositivos**: si el móvil y el portátil guardan a la vez, los documentos se fusionan elemento a elemento (gana la versión más reciente de cada entreno, rutina o ejercicio; lo borrado no resucita).
-- «Recordar en este dispositivo» guarda la clave derivada (no la contraseña) como `CryptoKey` no exportable en IndexedDB, para no teclear la contraseña en cada entreno.
+- **La sesión no se guarda nunca.** Ni la contraseña ni la clave derivada salen de la memoria: cada vez que se abre la app hay que escribir la contraseña. En el dispositivo solo quedan, cifrados con ella, los datos y el token.
 - En Ajustes se puede descargar una copia en JSON **sin cifrar**, e importarla (se fusiona, no pisa).
 
 ## Estructura

@@ -198,7 +198,6 @@
   function errorSync(e) {
     if (e.code === "AUTH") return estado("auth", e.message);
     if (e.code === "BAD_PASSWORD") return estado("error", "Lo publicado en GitHub no se abre con tu contraseña");
-    if (e.code === "NECESITA_CONTRASENA") return estado("contrasena", "Entra otra vez con tu contraseña para sincronizar");
     if (!navigator.onLine || e instanceof TypeError) return estado("pendiente");
     estado("error", e.message || String(e));
   }
@@ -220,10 +219,10 @@
   }
 
   // ── Credenciales en este dispositivo ──
-  let recordarActivo = false;
+  // Solo el token, y cifrado con la contraseña: sin ella no sirve de nada. La
+  // sesión en sí no se guarda nunca.
   async function persistirCredenciales() {
     if (S.token) ls.set(clave("token"), JSON.stringify(await S.cripto.cifrarTexto(S.token)));
-    if (recordarActivo) { try { await IR.cripto.recordar(S.usuario, S.cripto); } catch (e) { /* sin IndexedDB */ } }
   }
   const tieneToken = (u) => !!ls.get(clave("token", u));
   const tieneDatos = (u) => !!ls.get(clave("doc", limpiarUsuario(u)));
@@ -237,7 +236,7 @@
    * pedido crear: la pantalla pide entonces repetir la contraseña, para no
    * estrenar una cuenta vacía por una errata en el usuario.
    */
-  async function entrar({ usuario, password, token, crear = false, recordar = true }) {
+  async function entrar({ usuario, password, token, crear = false }) {
     usuario = limpiarUsuario(usuario);
     if (!usuario) throw fallo("Escribe tu usuario", "USUARIO");
     if (!esCuenta(usuario)) throw fallo("No existe el usuario «" + usuario + "»", "USUARIO");
@@ -291,8 +290,6 @@
     S.doc = fusionar(local, remoto);
     if (sha) ls.set(k("sha"), sha); else ls.del(k("sha"));
     ls.set("ironrack_usuario", usuario);
-    recordarActivo = recordar;
-    if (!recordar) await IR.cripto.olvidar(usuario);
     await persistirCredenciales();
     // Lo que había aquí y no estaba publicado se sube; lo nuevo, también.
     if (local && remoto && JSON.stringify(normalizar(remoto)) !== JSON.stringify(S.doc)) ls.set(k("pendiente"), "1");
@@ -306,39 +303,10 @@
     return { ok: true };
   }
 
-  // Entrar sin contraseña con la clave recordada en este dispositivo
-  async function reanudar() {
-    const usuario = ultimoUsuario();
-    if (!usuario) return false;
-    const rec = await IR.cripto.recuperar(usuario);
-    const localTxt = ls.get(clave("doc", usuario));
-    if (!rec || !localTxt) return false;
-    const cripto = IR.cripto.sesion({ clave: rec.clave, salt: rec.salt, iter: rec.iter });
-    let doc;
-    try { doc = await cripto.descifrar(JSON.parse(localTxt)); } catch (e) { return false; }
-    let tok = null;
-    const tTxt = ls.get(clave("token", usuario));
-    if (tTxt) { try { tok = await cripto.descifrarTexto(JSON.parse(tTxt)); } catch (e) { tok = null; } }
-    Object.assign(S, { usuario, cripto, token: tok, doc: normalizar(doc), sha: ls.get(clave("sha", usuario)) });
-    recordarActivo = true;
-    estado(tok ? (pendiente() ? "pendiente" : "ok") : "local");
-    setTimeout(() => sincronizar({ forzar: true }), 50);
-    return true;
-  }
-
-  // El token se añade cuando uno quiere, no al entrar. Si la sesión se abrió
-  // con la clave recordada no tiene la contraseña, y la hace falta para abrir
-  // lo que otro dispositivo publicó con otra sal: por eso se pide aquí también.
-  const necesitaContrasena = () => !!S.cripto && !S.cripto.tienePassword;
-  async function cambiarToken(token, password) {
+  // El token se añade cuando uno quiere, desde Ajustes, no al entrar.
+  async function cambiarToken(token) {
     token = (token || "").trim();
     if (!token) throw fallo("Pega el token", "SIN_TOKEN");
-    if (password) {
-      const otra = IR.cripto.sesion({ password, salt: S.cripto.salt, iter: S.cripto.iter });
-      const local = ls.get(clave("doc"));
-      if (local) await otra.descifrar(JSON.parse(local)); // contraseña mala → BAD_PASSWORD
-      S.cripto = otra;
-    }
     await G.acceso(token);
     S.token = token;
     // Lo de este dispositivo se sube siempre al conectar, aunque no se haya
@@ -351,14 +319,12 @@
 
   async function salir() {
     await guardarLocal();
-    await IR.cripto.olvidar(S.usuario);
     Object.assign(S, { usuario: null, cripto: null, token: null, doc: null, sha: null, estado: "local", error: null });
   }
 
   // Borra de este navegador todo lo de este usuario (no lo de GitHub)
   async function olvidarDispositivo() {
     const u = S.usuario;
-    await IR.cripto.olvidar(u);
     ["doc", "token", "sha", "pendiente"].forEach((n) => ls.del(clave(n, u)));
     if (ultimoUsuario() === u) ls.del("ironrack_usuario");
     Object.assign(S, { usuario: null, cripto: null, token: null, doc: null, sha: null, estado: "local", error: null });
@@ -379,7 +345,7 @@
     S, nuevo, normalizar, fusionar,
     cambiar, cambiarActual, cambiarAjustes, cambiarItem, anadir, borrar,
     guardarLocal, subir, sincronizar, pendiente,
-    entrar, reanudar, salir, olvidarDispositivo, cambiarToken, necesitaContrasena, importar,
+    entrar, salir, olvidarDispositivo, cambiarToken, importar,
     tieneToken, tieneDatos, esCuenta, ultimoUsuario, limpiarUsuario,
   };
 })();

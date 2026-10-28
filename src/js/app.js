@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.2.0";
+  const VERSION = "1.3.0";
 
   const TABS = ["entrenar", "historial", "progreso", "rutinas", "ejercicios"];
 
@@ -52,7 +52,6 @@
     local: ["local", "Solo aquí"],
     auth: ["error", "Revisa el token"],
     error: ["error", "Error"],
-    contrasena: ["error", "Entra de nuevo"],
   };
   function pintarEstado() {
     const b = $("#estado");
@@ -118,13 +117,11 @@
     ajSonido: (el) => A.cambiarAjustes((a) => { a.sonido = el.checked; }, { render: false }),
     async ajSincronizar() { await A.sincronizar({ forzar: true }); if (A.pendiente()) await A.subir(); render(true); },
     ajToken() {
-      const pideClave = A.necesitaContrasena();
       IR.ui.hoja(`<h3>Token de GitHub</h3>
         <form class="form" id="f-token">
           <p class="suave">Para guardar una copia cifrada en <code>${esc(IR.github.REPO.repo + "/" + IR.github.ruta(S.usuario))}</code> y tener tus entrenos en todos tus dispositivos.</p>
           ${ayudaToken()}
           <label>Token <input name="token" autocomplete="off" autocapitalize="off" spellcheck="false" required placeholder="github_pat_…"></label>
-          ${pideClave ? '<label>Tu contraseña de Ironrack <input type="password" name="password" autocomplete="current-password" required></label>' : ""}
           <p class="error" id="token-error"></p>
           <div class="botones"><button type="button" class="btn" data-a="_cerrar">Cancelar</button><button class="btn primario">Guardar</button></div>
         </form>`);
@@ -134,12 +131,12 @@
         const btn = ev.target.querySelector(".primario");
         btn.disabled = true;
         try {
-          await A.cambiarToken(ev.target.token.value, ev.target.password ? ev.target.password.value : null);
+          await A.cambiarToken(ev.target.token.value);
           IR.ui.cerrarHoja();
           IR.ui.aviso(S.estado === "ok" ? "Conectado con GitHub" : "Token guardado");
           render(true);
         } catch (e) {
-          $("#token-error").textContent = e.code === "BAD_PASSWORD" ? "Contraseña incorrecta" : e.message;
+          $("#token-error").textContent = e.message;
           btn.disabled = false;
         }
       });
@@ -205,7 +202,6 @@
         <label><span id="txt-password">Contraseña</span> <input type="password" name="password" autocomplete="current-password" required></label>
         <label id="campo-repite" hidden>Repite la contraseña <input type="password" name="password2" autocomplete="new-password"></label>
         <p class="suave pequeno-izq" id="login-info" hidden></p>
-        <label class="interruptor"><input type="checkbox" name="recordar" checked> Recordar en este dispositivo</label>
         <p class="error" id="login-error">${esc(error || "")}</p>
         <button class="btn primario grande ancho" id="login-btn">Entrar</button>
         <p class="suave centro pequeno">Tus datos se cifran en este dispositivo antes de guardarse. Sin tu contraseña nadie puede leerlos, tampoco GitHub.${IR.github.DEV ? "<br><b>Modo local de pruebas:</b> no se habla con GitHub." : ""}</p>
@@ -247,7 +243,7 @@
     btn.disabled = true;
     btn.textContent = "Abriendo…";
     try {
-      await A.entrar({ usuario, password: f.password.value, crear: nueva, recordar: f.recordar.checked });
+      await A.entrar({ usuario, password: f.password.value, crear: nueva });
       arrancar();
     } catch (e) {
       err.textContent = e.code === "BAD_PASSWORD" ? "Contraseña incorrecta" : e.message || String(e);
@@ -267,11 +263,11 @@
 
   const LOGO = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="20" width="7" height="24" rx="2"/><rect x="14" y="14" width="8" height="36" rx="2"/><rect x="42" y="14" width="8" height="36" rx="2"/><rect x="51" y="20" width="7" height="24" rx="2"/><rect x="22" y="29" width="20" height="6" rx="1"/></svg>`;
 
-  async function iniciar() {
+  // La sesión no se guarda nunca: cada vez que se abre la app, contraseña.
+  function iniciar() {
     $("#marca").insertAdjacentHTML("afterbegin", LOGO);
-    let dentro = false;
-    try { dentro = await A.reanudar(); } catch (e) { dentro = false; }
-    if (dentro) arrancar(); else mostrarLogin();
+    IR.cripto.borrarSesionesAntiguas();
+    mostrarLogin();
     if ("serviceWorker" in navigator && !IR.github.DEV) navigator.serviceWorker.register("sw.js").catch(() => {});
   }
 
