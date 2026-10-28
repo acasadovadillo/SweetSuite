@@ -5,7 +5,7 @@
  * Al cambiar cualquier archivo de la app hay que subir VERSION, o los móviles
  * seguirán con la copia vieja.
  */
-const VERSION = "ironrack-1.4.1";
+const VERSION = "ironrack-1.4.2";
 const APP = [
   "./", "index.html", "manifest.json", "src/css/app.css",
   "src/js/util.js", "src/js/tema.js", "src/js/cripto.js", "src/js/github.js", "src/js/almacen.js",
@@ -16,7 +16,11 @@ const APP = [
 ];
 
 self.addEventListener("install", (ev) => {
-  ev.waitUntil(caches.open(VERSION).then((c) => c.addAll(APP)).then(() => self.skipWaiting()));
+  // reload: la copia sin conexión se baja del servidor, no de la caché del
+  // navegador, que podría tener todavía la versión anterior.
+  ev.waitUntil(caches.open(VERSION)
+    .then((c) => c.addAll(APP.map((u) => new Request(u, { cache: "reload" }))))
+    .then(() => self.skipWaiting()));
 });
 
 self.addEventListener("activate", (ev) => {
@@ -32,7 +36,10 @@ self.addEventListener("fetch", (ev) => {
   const url = new URL(ev.request.url);
   if (ev.request.method !== "GET" || url.origin !== location.origin) return;
   const copia = () => caches.match(ev.request, { ignoreSearch: true }).then((r) => r || caches.match("index.html"));
-  const red = fetch(ev.request).then((r) => {
+  // GitHub Pages deja guardar cada archivo 10 minutos (max-age=600): sin
+  // no-cache, un cambio recién publicado tardaba eso en verse. Así se pregunta
+  // siempre al servidor, que contesta un 304 sin cuerpo si no ha cambiado.
+  const red = fetch(new Request(ev.request.url, { cache: "no-cache", credentials: "same-origin" })).then((r) => {
     if (r.ok) { const c = r.clone(); caches.open(VERSION).then((cache) => cache.put(ev.request, c)); }
     return r;
   });
