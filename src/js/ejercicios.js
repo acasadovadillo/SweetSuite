@@ -25,7 +25,7 @@
   }
 
   IR.vistas.ejercicios = {
-    html: () => `<section class="cabeza"><h1>Ejercicios</h1></section>
+    html: () => `<section class="cabeza"><h1>Ejercicios</h1><p>El catálogo por grupo muscular y los que crees tú. Toca uno para ver tu progreso.</p></section>
       <input class="buscador" type="search" placeholder="Buscar ejercicio" value="${esc(texto)}" data-on="buscarBib" autocomplete="off">
       <div class="chips desliza">${["", ...IR.bib.GRUPOS].map((x) =>
         `<button class="chip ${x === grupo ? "activo" : ""}" data-a="grupoBib" data-g="${esc(x)}">${x || "Todos"}</button>`).join("")}</div>

@@ -21,7 +21,7 @@
   function resumen() {
     const sem = An.porSemana(12);
     const usados = An.usados();
-    return `<section class="cabeza"><h1>Progreso</h1></section>
+    return `<section class="cabeza"><h1>Progreso</h1><p>Cuánto entrenas y cómo evolucionan tus marcas en cada ejercicio.</p></section>
       <article class="tarjeta">
         <div class="tarjeta-cab"><h3>Entrenos por semana</h3><small class="suave">12 semanas</small></div>
         ${IR.ui.barras(sem.map((d, i) => ({ valor: d.valor, etiqueta: i % 3 === 2 || i === sem.length - 1 ? U.corta(d.desde) : "" })))}

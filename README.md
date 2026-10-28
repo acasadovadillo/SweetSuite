@@ -11,6 +11,12 @@ App web para apuntar los entrenos del gimnasio: ejercicios, series, repeticiones
 
 Las series de calentamiento (toca el número de la serie) no cuentan para récords ni volumen.
 
+## Aspecto
+
+Copia la estética de la app de OpenClaw para macOS, medida sobre sus capturas: fondo `#0e1015`, tarjetas `#161920` con borde `#1c1f27`, texto `#f4f4f5` y secundario `#8b8b94`, títulos de página en el color de acento, filas con conmutadores y la fuente del sistema (SF Pro en Mac e iPhone). En el ordenador hay barra lateral; en el móvil, pestañas abajo.
+
+En **Ajustes › Apariencia** se elige el color de acento: la paleta de OpenClaw (coral, salmón, ámbar, menta, turquesa, azul, lavanda, rosa y pizarra) o cualquier otro con el cuentagotas. Se guarda en el documento cifrado, así que es el mismo en todos tus dispositivos.
+
 ## Dónde están los datos
 
 Igual que Solvento: todo lo de cada usuario es **un documento cifrado en el navegador** (AES-256-GCM, clave derivada de la contraseña con PBKDF2-SHA256 y 310.000 iteraciones, mismo formato de bloque) y se guarda en el repositorio **privado** `acasadovadillo/datos-cifrados`:
@@ -41,6 +47,7 @@ manifest.json, img/   instalación como app
 src/css/app.css
 src/js/
   util.js             formato, 1RM (Epley), volumen
+  tema.js             color de acento (Ajustes › Apariencia)
   cripto.js           cifrado y clave recordada
   github.js           leer/escribir el bloque en datos-cifrados (y repositorio de mentira en local)
   almacen.js          el documento, fusión, copia local, sincronización, entrar/salir

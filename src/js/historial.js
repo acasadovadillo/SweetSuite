@@ -10,7 +10,7 @@
 
   function lista() {
     const ss = S.doc.sesiones;
-    if (!ss.length) return `<section class="cabeza"><h1>Historial</h1></section>
+    if (!ss.length) return `<section class="cabeza"><h1>Historial</h1><p>Tus entrenos terminados, del más reciente al más antiguo.</p></section>
       <p class="vacio">Aquí aparecerán tus entrenos cuando termines el primero.</p>`;
     const inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0, 0, 0, 0);
     const esteMes = ss.filter((s) => s.inicio >= inicioMes.getTime());
@@ -27,7 +27,7 @@
         <div class="tarjeta-pie suave"><small>⏱ ${U.duracion(s.fin - s.inicio)}</small><small>${U.volumen(U.volSesion(s))}</small></div>
       </a>`;
     }).join("");
-    return `<section class="cabeza"><h1>Historial</h1></section>
+    return `<section class="cabeza"><h1>Historial</h1><p>Tus entrenos terminados, del más reciente al más antiguo.</p></section>
       <div class="stats">
         <div class="stat"><b>${esteMes.length}</b><span>este mes</span></div>
         <div class="stat"><b>${U.volumen(esteMes.reduce((t, s) => t + U.volSesion(s), 0))}</b><span>volumen del mes</span></div>

@@ -162,10 +162,14 @@
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape" && !$("#hoja").hidden) cerrarHoja(); });
 
   // ── Gráfica de línea en SVG ──
+  // El SVG se estira al ancho de la tarjeta, y con él sus textos: en pantalla
+  // ancha se dibuja con más anchura interna para que los ejes no salgan enormes.
+  const anchoGrafica = () => (window.innerWidth >= 700 ? 680 : 340);
+
   // puntos: [{ x: tiempo, y: valor }]
   function grafica(puntos, { unidad = "kg", alto = 180 } = {}) {
     if (!puntos.length) return '<p class="vacio">Sin datos todavía.</p>';
-    const W = 340, H = alto, izq = 38, der = 10, arr = 12, abj = 24;
+    const W = anchoGrafica(), H = W > 340 ? Math.round(alto * 1.25) : alto, izq = 38, der = 10, arr = 12, abj = 24;
     const xs = puntos.map((p) => p.x), ys = puntos.map((p) => p.y);
     let x0 = Math.min(...xs), x1 = Math.max(...xs);
     if (x0 === x1) { x0 -= 86400000; x1 += 86400000; }
@@ -193,7 +197,7 @@
 
   // Barras simples: [{ etiqueta, valor }]
   function barras(datos, { alto = 120 } = {}) {
-    const W = 340, H = alto, abj = 18, max = Math.max(1, ...datos.map((d) => d.valor));
+    const W = anchoGrafica(), H = W > 340 ? Math.round(alto * 1.25) : alto, abj = 18, max = Math.max(1, ...datos.map((d) => d.valor));
     const ancho = (W - 4) / datos.length;
     return `<svg class="grafica" viewBox="0 0 ${W} ${H}" role="img" aria-label="Entrenos por semana">
       ${datos.map((d, i) => {

@@ -5,14 +5,14 @@
  * Al cambiar cualquier archivo de la app hay que subir VERSION, o los móviles
  * seguirán con la copia vieja.
  */
-const VERSION = "ironrack-1.3.0";
+const VERSION = "ironrack-1.4.0";
 const APP = [
   "./", "index.html", "manifest.json", "src/css/app.css",
-  "src/js/util.js", "src/js/cripto.js", "src/js/github.js", "src/js/almacen.js",
+  "src/js/util.js", "src/js/tema.js", "src/js/cripto.js", "src/js/github.js", "src/js/almacen.js",
   "src/js/biblioteca.js", "src/js/analisis.js", "src/js/ui.js", "src/js/descanso.js",
   "src/js/entrenar.js", "src/js/rutinas.js", "src/js/historial.js", "src/js/progreso.js",
   "src/js/ejercicios.js", "src/js/app.js",
-  "img/icono.svg", "img/icono-180.png", "img/icono-192.png", "img/icono-512.png",
+  "img/icono.svg", "img/contornos.svg", "img/icono-180.png", "img/icono-192.png", "img/icono-512.png",
 ];
 
 self.addEventListener("install", (ev) => {

@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Ironrack</title>
   <meta name="description" content="Registro de entrenos de gimnasio: ejercicios, series, repeticiones y kilos.">
-  <meta name="theme-color" content="#0e0f11">
+  <meta name="theme-color" content="#0e1015">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -19,12 +19,26 @@
   <div id="login" hidden></div>
 
   <div id="app" hidden>
-    <header class="barra">
-      <a href="#entrenar" class="marca" id="marca"><span>IRONRACK</span></a>
-      <button id="estado" class="estado" data-a="irAjustes"></button>
-      <a href="#ajustes" class="icono" aria-label="Ajustes">
-        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>
-      </a>
+    <!-- En el ordenador: barra lateral como la de OpenClaw. Sus enlaces se
+         copian de las pestañas del móvil al arrancar (app.js). -->
+    <aside class="lateral">
+      <a href="#entrenar" class="lateral-marca" id="marca-lateral">Ironrack</a>
+      <nav class="lateral-nav" id="nav-lateral"></nav>
+      <div class="lateral-seccion">Cuenta</div>
+      <nav class="lateral-nav">
+        <a href="#ajustes" data-tab="ajustes"><svg viewBox="0 0 24 24"><use href="#i-ajustes"/></svg>Ajustes</a>
+      </nav>
+      <div class="lateral-pie">
+        <span class="avatar" id="avatar"></span>
+        <span class="lateral-usuario"><b id="nombre-usuario"></b><button id="estado-lateral" class="estado-texto" data-a="irSincronizacion"></button></span>
+        <span class="version mono" id="version"></span>
+      </div>
+    </aside>
+
+    <header class="barra-sup">
+      <a href="#entrenar" class="marca" id="marca"><span>Ironrack</span></a>
+      <button id="estado" class="estado" data-a="irSincronizacion"></button>
+      <a href="#ajustes" class="icono" aria-label="Ajustes"><svg viewBox="0 0 24 24"><use href="#i-ajustes"/></svg></a>
     </header>
 
     <main id="vista"></main>
@@ -40,11 +54,16 @@
     </nav>
   </div>
 
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-ajustes" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+  </svg>
+
   <div id="velo" class="velo" hidden data-a="_cerrarVelo"></div>
   <div id="hoja" class="hoja" role="dialog" aria-modal="true" hidden></div>
   <div id="aviso" class="aviso" role="status" hidden></div>
 
   <script src="src/js/util.js"></script>
+  <script src="src/js/tema.js"></script>
   <script src="src/js/cripto.js"></script>
   <script src="src/js/github.js"></script>
   <script src="src/js/almacen.js"></script>

@@ -11,7 +11,7 @@
 
   function lista() {
     const rs = S.doc.rutinas;
-    return `<section class="cabeza"><h1>Rutinas</h1></section>
+    return `<section class="cabeza"><h1>Rutinas</h1><p>Plantillas con tus ejercicios, series y objetivos para empezar con todo ya puesto.</p></section>
       <button class="btn primario ancho" data-a="nuevaRutina">+ Nueva rutina</button>
       ${rs.length ? rs.map((r) => `<article class="tarjeta">
           <a class="tarjeta-cab enlace-tarjeta" href="#rutinas/${esc(r.id)}"><h3>${esc(r.nombre)}</h3><span class="suave">${r.ejercicios.length} ejercicios ›</span></a>
