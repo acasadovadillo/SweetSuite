@@ -40,7 +40,9 @@
   --radio-control: 10px;
   --lateral: 288px;
   --tabs: 60px;
-  --fuente: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  /* Albert Sans, la de Solvento: misma letra en las dos apps (Google Fonts,
+     guardada por el service worker para usarla sin conexión) */
+  --fuente: "Albert Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
   color-scheme: dark;
 }
@@ -77,9 +79,9 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 .volver { display: inline-flex; align-items: center; gap: 6px; color: var(--suave); font-size: 14px; margin: 0 0 14px; padding: 4px 0; }
 .volver:hover { color: var(--texto); }
 
-/* Etiqueta de sección: «COLOR DE ACENTO» */
+/* Etiqueta de sección: «COLOR DE ACENTO». La misma que en Solvento. */
 h2, .seccion-cab {
-  font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em;
+  font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
   color: var(--suave); margin: 30px 0 10px;
 }
 .seccion-cab { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
@@ -144,14 +146,14 @@ body.entrenando [data-tab="entrenar"]::after { content: ""; position: absolute; 
   }
   .lateral-marca { display: flex; align-items: center; gap: 10px; padding: 0 6px 18px; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
   .lateral-marca svg { width: 30px; height: 30px; }
-  .lateral-seccion { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .08em; color: var(--suave); padding: 22px 12px 8px; }
-  .lateral-nav { display: flex; flex-direction: column; gap: 4px; }
+  .lateral-seccion { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); padding: 22px 12px 8px; }
+  .lateral-nav { display: flex; flex-direction: column; gap: 3px; }
   .lateral-nav a {
-    position: relative; display: flex; align-items: center; gap: 10px;
-    height: 32px; padding: 0 11px; border: 1px solid transparent; border-radius: 6px;
-    font-size: 13.5px; font-weight: 500; color: var(--suave);
+    position: relative; display: flex; align-items: center; gap: 8px;
+    min-height: 31px; padding: 4px 9px; border: 1px solid transparent; border-radius: 8px;
+    font-size: 13px; font-weight: 500; color: var(--suave);
   }
-  .lateral-nav a svg { color: var(--icono); }
+  .lateral-nav a svg { width: 16px; height: 16px; color: var(--icono); }
   .lateral-nav a:hover { color: var(--texto); }
   .lateral-nav a.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
   .lateral-nav a.activo svg { color: var(--acento); }
@@ -200,8 +202,10 @@ body.entrenando [data-tab="entrenar"]::after { content: ""; position: absolute; 
 .btn:hover { border-color: color-mix(in srgb, var(--control-borde) 60%, var(--suave)); }
 .btn:active { transform: scale(.98); }
 .btn:disabled { opacity: .45; cursor: default; transform: none; }
-.btn.primario { background: var(--acento); color: var(--acento-texto); border-color: var(--acento); border-radius: 8px; font-weight: 600; }
-.btn.primario:hover { background: color-mix(in srgb, var(--acento) 88%, #fff); }
+/* El principal no lleva el acento tal cual sino el oscurecido (--boton, de
+   tema.js), como en Solvento: así el texto blanco se lee con cualquier acento. */
+.btn.primario { background: var(--boton); color: var(--boton-texto); border-color: var(--boton); border-radius: 8px; font-weight: 600; }
+.btn.primario:hover { filter: brightness(1.08); }
 .btn.peligro { background: var(--peligro); color: #fff; border-color: var(--peligro); border-radius: 8px; font-weight: 600; }
 .btn.fantasma { background: transparent; border-style: dashed; color: var(--suave); }
 .btn.texto-peligro { background: transparent; border-color: transparent; color: var(--peligro); }
@@ -484,7 +488,7 @@ a.ej-nombre:hover { color: var(--acento); }
   background: var(--fondo);
 }
 #login::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: url("../../img/contornos.svg") right center / auto 120% no-repeat; }
-.entrada { font-family: "Albert Sans", var(--fuente); line-height: normal; position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
+.entrada { line-height: normal; position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
 .entrada-logo svg { display: block; width: 56px; height: 56px; fill: var(--acento); stroke: none; }
 .entrada-titulo { font-size: 26px; font-weight: 700; letter-spacing: 0; color: var(--acento); margin: 16px 0 5.6px; }
 .entrada-sub { font-size: 12.5px; color: var(--suave); margin-bottom: 28px; text-align: center; }
@@ -523,7 +527,7 @@ a.ej-nombre:hover { color: var(--acento); }
   padding: 10px 16px; border-radius: var(--radio-control); box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
   max-width: calc(100% - 32px); text-align: center;
 }
-.aviso::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--acento); }
+.aviso::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--punto, var(--acento)); }
 .aviso.visible { opacity: 1; transform: translate(-50%, 0); }
 @media (min-width: 960px) { .aviso { top: 24px; left: calc(50% + var(--lateral) / 2); } }
 
@@ -539,3 +543,7 @@ a.ej-nombre:hover { color: var(--acento); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; }
 }
+
+/* La versión al final de Ajustes: la misma que en Solvento («Ironrack 1.5.3» /
+   «Solvento p217», en monoespaciada). */
+.version-pie { text-align: center; color: var(--suave); margin: 3rem 0 1rem; font-family: var(--mono); font-size: 12.5px; }

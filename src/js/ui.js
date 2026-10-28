@@ -55,13 +55,16 @@
   }
 
   let tAviso = null;
-  function aviso(texto) {
+  // El mismo aviso que Solvento: arriba, con un punto del color que se pida
+  // (el del acento si no se pide ninguno) y tres segundos.
+  function aviso(texto, color) {
     const a = $("#aviso");
     a.textContent = texto;
+    a.style.setProperty("--punto", color || "var(--acento)");
     a.hidden = false;
     a.classList.add("visible");
     clearTimeout(tAviso);
-    tAviso = setTimeout(() => { a.classList.remove("visible"); setTimeout(() => { a.hidden = true; }, 250); }, 2600);
+    tAviso = setTimeout(() => { a.classList.remove("visible"); setTimeout(() => { a.hidden = true; }, 250); }, 3000);
   }
 
   // ── Selector de ejercicios (uno o varios) ──

@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.5.2";
+  const VERSION = "1.5.3";
 
   // ── Pintar ──
   // Si estás escribiendo en una casilla, no se repinta debajo de ti (te
@@ -145,7 +145,7 @@
           <p>Preferencias de entreno, apariencia y sincronización de la cuenta de <b>${esc(cuenta ? cuenta.nombre : S.usuario)}</b>.</p></section>
         <nav class="pestanas">${PESTANAS.map(([id, nombre]) => `<a href="#ajustes/${id}" class="${id === p ? "activo" : ""}">${nombre}</a>`).join("")}</nav>
         ${SECCIONES[p]()}
-        <p class="nota centro mono" style="margin-top:36px">Ironrack ${VERSION}</p>`;
+        <p class="version-pie">Ironrack ${VERSION}</p>`;
     },
   };
 
