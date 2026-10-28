@@ -44,4 +44,15 @@
       IR.ui.aviso("Ejercicio creado");
     },
   });
+
+  // El buscador de la barra lateral busca aquí: pone el texto, abre esta
+  // página si no lo estaba y, si ya lo estaba, solo cambia la lista.
+  function buscar(t) {
+    texto = t;
+    if (!/^#ejercicios$/.test(location.hash)) { location.hash = "#ejercicios"; return; }
+    const caja = IR.ui.$("#lista-bib"), campo = IR.ui.$("#vista .buscador");
+    if (caja) caja.innerHTML = filas();
+    if (campo && campo !== document.activeElement) campo.value = t;
+  }
+  IR.ejercicios = { buscar };
 })();

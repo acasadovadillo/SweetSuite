@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.5.3";
+  const VERSION = "1.6.0";
 
   // ── Pintar ──
   // Si estás escribiendo en una casilla, no se repinta debajo de ti (te
@@ -29,14 +29,36 @@
     const v = IR.vistas[vista] ? vista : "entrenar";
     $("#vista").innerHTML = IR.vistas[v].html(arg ? decodeURIComponent(arg) : undefined);
     document.querySelectorAll("[data-tab]").forEach((a) => a.classList.toggle("activo", a.dataset.tab === v));
+    document.body.className = document.body.className.replace(/\bvista-\S+/g, "").trim();
+    document.body.classList.add("vista-" + v);
     document.body.classList.toggle("entrenando", !!S.doc.actual);
+    // En el móvil las secciones de Ajustes son una fila que se desliza: la
+    // elegida, a la vista aunque esté al final.
+    const tab = document.querySelector(".aj-tab.activo");
+    if (tab && !escritorio()) tab.scrollIntoView({ block: "nearest", inline: "nearest" });
     relojes();
     IR.descanso.pintar();
   }
   document.addEventListener("focusout", () => {
     if (renderPendiente) setTimeout(() => { if (renderPendiente && !escribiendo()) render(true); }, 50);
   });
-  window.addEventListener("hashchange", () => { render(true); window.scrollTo(0, 0); });
+  window.addEventListener("hashchange", () => { cerrarLateral(); render(true); window.scrollTo(0, 0); });
+
+  // ── El cajón del móvil: la barra lateral, como en Solvento ──
+  function abrirLateral() {
+    $("#lateral").classList.add("abierta");
+    $("#lateral-velo").hidden = false;
+    document.querySelector(".hamburguesa").setAttribute("aria-expanded", "true");
+  }
+  function cerrarLateral() {
+    const l = $("#lateral");
+    if (!l || !l.classList.contains("abierta")) return;
+    l.classList.remove("abierta");
+    $("#lateral-velo").hidden = true;
+    document.querySelector(".hamburguesa").setAttribute("aria-expanded", "false");
+  }
+  document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") cerrarLateral(); });
+  const escritorio = () => window.matchMedia("(min-width: 1024px)").matches;
 
   function relojes() {
     document.querySelectorAll("[data-reloj]").forEach((el) => { el.textContent = U.reloj(Date.now() - +el.dataset.reloj); });
@@ -44,19 +66,19 @@
   setInterval(relojes, 1000);
 
   // ── Estado de la sincronización ──
-  // Se ve como en OpenClaw: un punto de color y una palabra («● Conectado»).
+  // Un punto de color y una palabra («● Sincronizado»), en el pie de la barra
+  // lateral; las palabras son las de Solvento para lo que es lo mismo.
   const ESTADOS = {
-    ok: ["ok", "Guardado"],
+    ok: ["ok", "Sincronizado"],
     subiendo: ["subiendo", "Guardando…"],
-    pendiente: ["pendiente", "Pendiente de subir"],
-    local: ["local", "Solo en este dispositivo"],
+    pendiente: ["pendiente", "Sin subir"],
+    local: ["local", "Sin sincronizar"],
     auth: ["error", "Revisa el token"],
     error: ["error", "Error al sincronizar"],
   };
   function pintarEstado() {
     const [clase, texto] = ESTADOS[S.estado] || ESTADOS.local;
-    const b = $("#estado"), l = $("#estado-lateral");
-    if (b) { b.className = "estado " + clase; b.innerHTML = `<i></i>${texto === "Solo en este dispositivo" ? "Solo aquí" : texto}`; b.title = S.error || textoEstado(); }
+    const l = $("#estado-lateral");
     if (l) { l.className = "estado-texto " + clase; l.innerHTML = `<i></i>${texto}`; l.title = S.error || textoEstado(); }
   }
   function textoEstado() {
@@ -70,8 +92,16 @@
   }
 
   // ── Ajustes ──
-  // Con pestañas, como «Tema · Interfaz de usuario» de OpenClaw.
-  const PESTANAS = [["general", "General"], ["apariencia", "Apariencia"], ["sincronizacion", "Sincronización"], ["datos", "Datos"]];
+  // Como en Solvento: lista de secciones a la izquierda y una tarjeta con su
+  // título, una línea gris y el contenido. Los nombres compartidos son los
+  // mismos en las dos apps (Apariencia, Sincronización, Seguridad).
+  const PESTANAS = [
+    ["entreno", "Entreno", "Lo que pasa mientras entrenas."],
+    ["apariencia", "Apariencia", ""],
+    ["sincronizacion", "Sincronización", "La copia cifrada de tus entrenos en GitHub."],
+    ["seguridad", "Seguridad", "Copias de tus datos y lo que se guarda en este dispositivo."],
+  ];
+  const ALIAS_AJUSTES = { general: "entreno", datos: "seguridad" };   // los nombres de antes
   const fila = (titulo, desc, control, clase) => `<div class="fila ${clase || ""}">
       <div class="fila-texto"><b>${titulo}</b>${desc ? `<span>${desc}</span>` : ""}</div>
       <div class="fila-control">${control}</div></div>`;
@@ -79,10 +109,10 @@
   const ICONO_PIPETA = '<svg viewBox="0 0 24 24"><path d="m2 22 1-1h3l9-9"/><path d="M3 21v-3l9-9"/><path d="m15 6 3.4-3.4a2.1 2.1 0 1 1 3 3L18 9l.4.4a2.1 2.1 0 1 1-3 3l-3.8-3.8a2.1 2.1 0 1 1 3-3l.4.4Z"/></svg>';
 
   const SECCIONES = {
-    general() {
+    entreno() {
       const aj = S.doc.ajustes;
       const DESCANSOS = [45, 60, 90, 120, 150, 180, 240, 300];
-      return `<h2>Entreno</h2>
+      return `<h2>Descanso</h2>
         <div class="tarjeta filas">
           ${fila("Descanso entre series", "Arranca solo al marcar una serie con ✓.",
             `<select class="selector" data-cambio="ajDescanso" aria-label="Descanso entre series">${DESCANSOS.map((s) =>
@@ -122,7 +152,7 @@
         ${IR.github.DEV ? '<p class="nota">Modo local de pruebas: no se habla con GitHub.</p>' : ""}`;
     },
 
-    datos() {
+    seguridad() {
       return `<h2>Copia de seguridad</h2>
         <div class="tarjeta filas">
           ${fila("Descargar copia", "Un archivo JSON <b>sin cifrar</b> con todos tus datos. Guárdalo en un sitio seguro.", '<button class="btn" data-a="ajExportar">Descargar</button>')}
@@ -131,7 +161,7 @@
         </div>
         <h2>Este dispositivo</h2>
         <div class="tarjeta filas">
-          ${fila("Cerrar sesión", "La próxima vez que abras Ironrack te pedirá la contraseña.", '<button class="btn" data-a="ajSalir">Cerrar sesión</button>')}
+          ${fila("Bloquear", "Vuelve a la entrada: la próxima vez te pedirá la contraseña.", '<button class="btn" data-a="bloquear">Bloquear</button>')}
           ${fila("Borrar datos de este dispositivo", "Borra la copia local y el token. Lo que está en GitHub no se toca.", '<button class="btn texto-peligro" data-a="ajOlvidar">Borrar</button>')}
         </div>`;
     },
@@ -139,12 +169,15 @@
 
   IR.vistas.ajustes = {
     html(pestana) {
-      const p = SECCIONES[pestana] ? pestana : "general";
-      const cuenta = IR.github.CUENTAS.find((c) => c.usuario === S.usuario);
-      return `<section class="cabeza"><h1>Ajustes</h1>
-          <p>Preferencias de entreno, apariencia y sincronización de la cuenta de <b>${esc(cuenta ? cuenta.nombre : S.usuario)}</b>.</p></section>
-        <nav class="pestanas">${PESTANAS.map(([id, nombre]) => `<a href="#ajustes/${id}" class="${id === p ? "activo" : ""}">${nombre}</a>`).join("")}</nav>
-        ${SECCIONES[p]()}
+      const pedida = ALIAS_AJUSTES[pestana] || pestana;
+      const p = SECCIONES[pedida] ? pedida : "entreno";
+      const [, nombre, desc] = PESTANAS.find((x) => x[0] === p);
+      return `<section class="cabeza"><h1>Ajustes</h1><p>Todo lo tuyo se guarda cifrado con tu contraseña.</p></section>
+        <div class="aj-layout">
+          <nav class="aj-nav" aria-label="Secciones de Ajustes">${PESTANAS.map(([id, n]) =>
+            `<a href="#ajustes/${id}" class="aj-tab ${id === p ? "activo" : ""}">${n}</a>`).join("")}</nav>
+          <div class="aj-body"><h3>${nombre}</h3>${desc ? `<p>${desc}</p>` : ""}${SECCIONES[p]()}</div>
+        </div>
         <p class="version-pie">Ironrack ${VERSION}</p>`;
     },
   };
@@ -203,11 +236,8 @@
         IR.ui.aviso(e.message || "No se ha podido leer el archivo");
       } finally { el.value = ""; }
     },
-    async ajSalir() {
-      if (A.pendiente() && S.token && !(await IR.ui.confirmar("Hay cambios sin subir", { detalle: "Se quedan guardados y cifrados en este dispositivo, y se subirán la próxima vez que entres.", si: "Salir igualmente" }))) return;
-      await A.salir();
-      mostrarLogin();
-    },
+    ajSalir: () => bloquear(),
+    bloquear: () => bloquear(),
     async ajOlvidar() {
       const aviso = A.pendiente() ? "¡Hay cambios que aún no están en GitHub y se perderán!" : "Lo que está en GitHub no se toca.";
       if (!(await IR.ui.confirmar("¿Borrar tus datos de este dispositivo?", { detalle: aviso + " Se borran la copia local y el token.", si: "Borrar", peligro: true }))) return;
@@ -215,6 +245,37 @@
       mostrarLogin();
     },
     irSincronizacion: () => { location.hash = "#ajustes/sincronizacion"; },
+    abrirLateral: () => abrirLateral(),
+    cerrarLateral: () => cerrarLateral(),
+    // La cuenta de la barra lateral abre su menú, como en Solvento: Ajustes,
+    // entrar con otra cuenta y Bloquear.
+    menuCuenta() {
+      const cuenta = IR.github.CUENTAS.find((c) => c.usuario === S.usuario);
+      const otras = IR.github.CUENTAS.filter((c) => c.usuario !== S.usuario);
+      cerrarLateral();
+      IR.ui.menu(cuenta ? cuenta.nombre : S.usuario, [
+        { texto: "Ajustes", fn: () => { location.hash = "#ajustes"; } },
+        ...otras.map((c) => ({ texto: "Entrar como " + c.nombre, fn: () => bloquear(c.usuario) })),
+        { texto: "Bloquear", fn: () => bloquear() },
+      ]);
+    },
+    // En el ordenador filtra según se escribe; en el móvil, al pulsar Intro,
+    // para que el cajón no se cierre con la primera letra.
+    buscarLateral(el) { if (escritorio()) IR.ejercicios.buscar(el.value.trim()); },
+  });
+
+  // Bloquear: vuelve a la entrada. Con cambios sin subir, se pregunta antes;
+  // con «otra», la entrada aparece ya con ese usuario escrito.
+  async function bloquear(otra) {
+    if (A.pendiente() && S.token && !(await IR.ui.confirmar("Hay cambios sin subir", { detalle: "Se quedan guardados y cifrados en este dispositivo, y se subirán la próxima vez que entres.", si: "Salir igualmente" }))) return;
+    cerrarLateral();
+    await A.salir();
+    mostrarLogin(null, otra);
+  }
+  document.addEventListener("keydown", (ev) => {
+    if (ev.key !== "Enter" || ev.target.id !== "buscar-lateral") return;
+    IR.ejercicios.buscar(ev.target.value.trim());
+    cerrarLateral();
   });
 
   function ayudaToken() {
@@ -239,7 +300,7 @@
   const OJO_TACHADO = '<svg class="ojo-tachado" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M3 3l18 18"/><path d="M10.6 6.2A9.6 9.6 0 0 1 12 6c6.5 0 10.5 6 10.5 6a17 17 0 0 1-3.4 3.9"/><path d="M6.5 7.6A17 17 0 0 0 1.5 12S5.5 18 12 18a9.9 9.9 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
   const SUB_ENTRAR = "Entra con tu usuario y tu contraseña";
 
-  function mostrarLogin(error) {
+  function mostrarLogin(error, usuario) {
     // Siempre en el rojo de siempre: el acento es de cada cuenta, y aquí aún
     // no se sabe quién entra (ni queda el de quien acaba de salir).
     IR.tema.aplicar(IR.tema.PREDETERMINADO);
@@ -249,7 +310,7 @@
         <span class="entrada-logo">${LOGO}</span>
         <div class="entrada-titulo">Ironrack</div>
         <div class="entrada-sub" id="login-info">${SUB_ENTRAR}</div>
-        <input name="usuario" value="${esc(A.ultimoUsuario())}" placeholder="Usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+        <input name="usuario" value="${esc(usuario || A.ultimoUsuario())}" placeholder="Usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
         <div class="entrada-clave">
           <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password">
           <button type="button" class="entrada-ojo" id="login-ver" aria-label="Ver la contraseña" title="Ver la contraseña">${OJO}${OJO_TACHADO}</button>
@@ -325,6 +386,8 @@
     const nombre = cuenta ? cuenta.nombre : S.usuario;
     $("#avatar").textContent = nombre.charAt(0);
     $("#nombre-usuario").textContent = nombre;
+    $("#marca-nombre").textContent = nombre;          // arriba en el móvil, como Solvento
+    $("#buscar-lateral").value = "";
     if (!location.hash) history.replaceState(null, "", "#entrenar");
     render(true);
     pintarEstado();

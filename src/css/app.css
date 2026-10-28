@@ -89,36 +89,43 @@ h2, .seccion-cab {
 .seccion-desc { font-size: 13px; color: var(--suave); margin: -4px 0 12px; }
 .nota { font-size: 13px; color: var(--suave); margin: 10px 0 0; }
 
-/* ── Estructura ── */
+/* ── Estructura ──
+   La misma que Solvento, con sus medidas: barra lateral fija a partir de
+   1024 px; por debajo, un cajón que se abre con la hamburguesa de la barra de
+   arriba. Pestañas abajo solo en el móvil (hasta 640 px). */
 #app { min-height: 100vh; min-height: 100dvh; }
 main {
   position: relative; z-index: 1;
   max-width: 760px; margin: 0 auto;
-  padding: 20px 16px calc(var(--tabs) + env(safe-area-inset-bottom) + 28px);
+  padding: 20px 16px 48px;
 }
-body.con-descanso main { padding-bottom: calc(var(--tabs) + env(safe-area-inset-bottom) + 110px); }
+body.con-descanso main { padding-bottom: 140px; }
 /* Las curvas de nivel del fondo de OpenClaw */
 #app::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
   background: url("../../img/contornos.svg") right center / auto 120% no-repeat;
 }
 
-/* Barra superior (móvil) */
+/* Barra de arriba (móvil y tableta): hamburguesa, logo y la cuenta */
 .barra-sup {
   position: sticky; top: 0; z-index: 10;
-  display: flex; align-items: center; gap: 10px;
-  padding: calc(env(safe-area-inset-top) + 10px) 12px 10px 16px;
-  background: color-mix(in srgb, var(--fondo) 90%, transparent);
-  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
-  border-bottom: 1px solid var(--borde-lateral);
+  display: flex; align-items: center; gap: 11px;
+  height: calc(env(safe-area-inset-top) + 64px);
+  padding: env(safe-area-inset-top) 14px 0;
+  background: var(--fondo); border-bottom: 1px solid var(--borde-lateral);
 }
-.marca { display: flex; align-items: center; gap: 9px; font-weight: 700; font-size: 16px; letter-spacing: -.01em; margin-right: auto; }
-.marca svg, .lateral-marca svg { fill: var(--acento); stroke: none; width: 26px; height: 26px; }
+.hamburguesa {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer;
+  color: #b4b4bc; background: var(--tarjeta); border: 1px solid var(--control-borde); border-radius: 8px;
+}
+.hamburguesa svg { width: 16px; height: 16px; stroke-width: 2; }
+.marca { display: flex; align-items: center; gap: 9px; margin-right: auto; font-size: 13.6px; font-weight: 700; color: #b4b4bc; }
+.marca svg { fill: var(--acento); stroke: none; width: 28px; height: 28px; }
 
-/* Pestañas (móvil) */
+/* Pestañas abajo (móvil) */
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
-  display: grid; grid-template-columns: repeat(5, 1fr);
+  display: none; grid-template-columns: repeat(5, 1fr);
   padding: 4px 4px calc(env(safe-area-inset-bottom) + 4px);
   background: color-mix(in srgb, var(--fondo) 92%, transparent);
   backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
@@ -129,50 +136,80 @@ body.con-descanso main { padding-bottom: calc(var(--tabs) + env(safe-area-inset-
 .tabs a.activo { color: var(--texto); }
 .tabs a.activo svg { color: var(--acento); }
 body.entrenando [data-tab="entrenar"]::after { content: ""; position: absolute; top: 7px; left: calc(50% + 9px); width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }
+@media (max-width: 640px) {
+  .tabs { display: grid; }
+  main { padding-bottom: calc(var(--tabs) + env(safe-area-inset-bottom) + 28px); }
+  body.con-descanso main { padding-bottom: calc(var(--tabs) + env(safe-area-inset-bottom) + 110px); }
+}
 
-/* Barra lateral (ordenador) */
-.lateral { display: none; }
-@media (min-width: 960px) {
+/* La barra lateral: medidas de la de Solvento (#sidebar) */
+.lateral {
+  display: flex; flex-direction: column; z-index: 40;
+  position: fixed; top: 0; left: 0; width: var(--lateral); max-width: 86vw; height: 100vh; height: 100dvh;
+  overflow-y: auto; overscroll-behavior: contain;
+  background: var(--fondo); border-right: 1px solid var(--borde-lateral);
+  padding: calc(env(safe-area-inset-top) + 14px) 12px calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-100%); visibility: hidden; transition: transform .22s ease-out, visibility .22s;
+}
+.lateral.abierta { transform: none; visibility: visible; }
+.lateral-velo { position: fixed; inset: 0; z-index: 39; background: rgba(0, 0, 0, .55); }
+.lateral-cab { display: flex; align-items: center; gap: 8px; padding: 2px 9px 30px; min-height: 60px; }   /* 60: la fila de Solvento lleva sus botones de 28 px */
+.lateral-marca { display: flex; align-items: center; gap: 8px; margin-right: auto; font-size: 13px; font-weight: 500; color: var(--suave); }
+.lateral-marca svg { fill: var(--acento); stroke: none; width: 25px; height: 25px; }
+.lateral-cerrar {
+  display: grid; place-items: center; width: 26px; height: 22px; cursor: pointer;
+  color: #b4b4bc; background: none; border: 1px solid var(--control-borde); border-radius: 6px;
+}
+.lateral-cerrar svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.lateral-titulo { font-size: 21px; font-weight: 700; color: var(--texto); padding: 0 9px; line-height: 24px; }
+.lateral-cuenta {
+  display: flex; align-items: center; gap: 8px; width: 100%; margin: 22px 0 15px; padding: 4px 9px; height: 28px; line-height: 20px;
+  font: inherit; font-size: 14.2px; font-weight: 500; color: #b4b4bc; background: none; border: 0; border-radius: 8px; cursor: pointer; text-align: left;
+}
+.lateral-cuenta:hover { background: var(--campo); color: var(--texto); }
+.lateral-cuenta-nombre { flex: 1; min-width: 0; color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lateral-cuenta svg { width: 14px; height: 14px; stroke-width: 2; color: var(--suave); }
+.lateral-buscar {
+  display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 9px; margin-bottom: 24px;
+  background: var(--campo); border: 1px solid var(--borde); border-radius: 8px; color: var(--suave);
+}
+.lateral-buscar svg { width: 16px; height: 16px; stroke-width: 2; }
+.lateral-buscar input { flex: 1; min-width: 0; font: inherit; font-size: 12.4px; color: var(--texto); background: none; border: 0; outline: none; padding: 0; }
+.lateral-buscar input::placeholder { color: var(--suave); opacity: 1; }
+.lateral-buscar:focus-within { border-color: #2f3033; }
+@media (pointer: coarse) { .lateral-buscar input { font-size: 16px; } }
+.lateral-seccion { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); padding: 0 9px; margin: 18px 0 8px; }
+.lateral-nav { display: flex; flex-direction: column; gap: 3px; }
+.lateral-nav a {
+  position: relative; display: flex; align-items: center; gap: 8px;
+  min-height: 31px; padding: 4px 9px; border: 1px solid transparent; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: var(--suave);
+}
+.lateral-nav a svg { width: 16px; height: 16px; color: var(--icono); }
+.lateral-nav a:hover { background: var(--campo); color: var(--texto); }
+.lateral-nav a.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
+.lateral-nav a.activo svg { color: var(--acento); }
+body.entrenando .lateral-nav [data-tab="entrenar"]::after { top: 12px; left: auto; right: 12px; }
+.lateral-pie {
+  margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 18px 9px 2px; line-height: normal;
+}
+.version { color: var(--suave); font-size: 11.5px; }
+@media (min-width: 1024px) {
   #app { display: grid; grid-template-columns: var(--lateral) 1fr; }
   #app::before { left: var(--lateral); }
-  .barra-sup, .tabs { display: none; }
-  main { width: 100%; max-width: 760px; padding: 44px 16px 80px; grid-column: 2; }
-  body.con-descanso main { padding-bottom: 140px; }
-  .lateral {
-    display: flex; flex-direction: column; grid-column: 1; grid-row: 1;
-    position: sticky; top: 0; height: 100vh; height: 100dvh; z-index: 5;
-    background: var(--fondo); border-right: 1px solid var(--borde-lateral);
-    padding: 22px 12px 0;
-  }
-  .lateral-marca { display: flex; align-items: center; gap: 10px; padding: 0 6px 18px; font-size: 22px; font-weight: 700; letter-spacing: -.02em; }
-  .lateral-marca svg { width: 30px; height: 30px; }
-  .lateral-seccion { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); padding: 22px 12px 8px; }
-  .lateral-nav { display: flex; flex-direction: column; gap: 3px; }
-  .lateral-nav a {
-    position: relative; display: flex; align-items: center; gap: 8px;
-    min-height: 31px; padding: 4px 9px; border: 1px solid transparent; border-radius: 8px;
-    font-size: 13px; font-weight: 500; color: var(--suave);
-  }
-  .lateral-nav a svg { width: 16px; height: 16px; color: var(--icono); }
-  .lateral-nav a:hover { color: var(--texto); }
-  .lateral-nav a.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
-  .lateral-nav a.activo svg { color: var(--acento); }
-  body.entrenando .lateral-nav [data-tab="entrenar"]::after { top: 12px; left: auto; right: 12px; }
-  .lateral-pie {
-    margin-top: auto; display: flex; align-items: center; gap: 10px;
-    padding: 14px 6px calc(14px + env(safe-area-inset-bottom)); border-top: 1px solid var(--borde-lateral);
-  }
-  .lateral-usuario { display: flex; flex-direction: column; min-width: 0; flex: 1; line-height: 1.3; }
-  .lateral-usuario b { font-size: 14px; font-weight: 600; text-transform: capitalize; }
-  .version { color: var(--suave); font-size: 11.5px; align-self: flex-end; }
+  .barra-sup, .lateral-velo, .lateral-cerrar { display: none !important; }
+  main { width: 100%; padding: 44px 48px 80px; max-width: calc(760px + 96px); grid-column: 2; }
+  .lateral { position: sticky; grid-column: 1; grid-row: 1; transform: none; visibility: visible; max-width: none; transition: none; }
   .descanso { left: calc(var(--lateral) + 16px); bottom: 20px; }
   .hoja { bottom: auto; top: 50%; border-radius: 16px; transform: translateY(calc(-50% + 30px)) !important; opacity: 0; max-height: 80vh; padding-bottom: 20px; }
   .hoja.abierta { transform: translateY(-50%) !important; opacity: 1; }
   .hoja-asa { display: none; }
 }
+/* El avatar de la cuenta: el de OpenClaw y Solvento (20 px, verde azulado) */
 .avatar {
-  flex: none; width: 32px; height: 32px; border-radius: 50%; display: grid; place-items: center;
-  font-size: 12px; font-weight: 700; text-transform: uppercase; color: var(--acento-texto); background: var(--acento);
+  flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 8.5px; font-weight: 800; text-transform: uppercase; color: #fff; background: #369f9d;
 }
 
 /* ── Estado de la sincronización: «● Conectado» ── */
@@ -180,7 +217,7 @@ body.entrenando [data-tab="entrenar"]::after { content: ""; position: absolute; 
   display: inline-flex; align-items: center; gap: 7px;
   font: inherit; font-size: 13px; color: var(--suave); background: none; border: 0; padding: 4px 6px; cursor: pointer;
 }
-.estado-texto { padding: 0; font-size: 12px; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.estado-texto { padding: 0; font-size: 11.5px; font-weight: 600; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .estado i, .estado-texto i, .punto-estado i { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--suave); }
 .ok i { background: var(--ok); }
 .pendiente i { background: var(--aviso); }
@@ -251,8 +288,8 @@ a.tarjeta:hover, .enlace-tarjeta:hover { border-color: color-mix(in srgb, var(--
 .fila { display: flex; align-items: center; gap: 16px; padding: 14px 16px; min-height: 62px; }
 .fila + .fila { border-top: 1px solid var(--separador); }
 .fila-texto { flex: 1; min-width: 0; }
-.fila-texto b { display: block; font-size: 15px; font-weight: 500; line-height: 1.35; }
-.fila-texto span { display: block; font-size: 13px; color: var(--suave); line-height: 1.35; margin-top: 1px; }
+.fila-texto > b { display: block; font-size: 15px; font-weight: 500; line-height: 1.35; }
+.fila-texto > span { display: block; font-size: 13px; color: var(--suave); line-height: 1.35; margin-top: 1px; }
 .fila-control { flex: none; display: flex; align-items: center; gap: 8px; }
 .fila-control code { font-size: 12px; }
 @media (max-width: 520px) {
@@ -285,12 +322,6 @@ a.tarjeta:hover, .enlace-tarjeta:hover { border-color: color-mix(in srgb, var(--
 .chip.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
 .tarjeta .chip { background: var(--pozo); }
 
-.pestanas { display: inline-flex; gap: 4px; margin: 0 0 4px; border-bottom: 1px solid var(--separador); max-width: 100%; overflow-x: auto; scrollbar-width: none; }
-.pestanas::-webkit-scrollbar { display: none; }
-.pestanas a { flex: none; padding: 8px 12px 10px; font-size: 14px; font-weight: 500; color: var(--suave); border-bottom: 2px solid transparent; margin-bottom: -1px; }
-.pestanas a:hover { color: var(--texto); }
-.pestanas a.activo { color: var(--texto); border-bottom-color: var(--acento); }
-@media (max-width: 420px) { .pestanas { gap: 0; } .pestanas a { padding: 8px 9px 10px; font-size: 13.5px; } }
 
 .segmentado { display: inline-flex; padding: 3px; gap: 2px; background: var(--pista); border: 1px solid var(--control); border-radius: var(--radio-control); }
 .segmentado button { font: inherit; font-size: 13.5px; padding: 5px 14px; border: 0; border-radius: 7px; background: none; color: var(--suave); cursor: pointer; }
@@ -327,7 +358,7 @@ a.tarjeta:hover, .enlace-tarjeta:hover { border-color: color-mix(in srgb, var(--
 .buscador { padding-left: 38px; background: var(--campo) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238b8b94' stroke-width='2' stroke-linecap='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M20 20l-4-4'/%3E%3C/svg%3E") 12px center / 16px no-repeat; margin-bottom: 10px; }
 .buscador::placeholder, .form input::placeholder, .form textarea::placeholder { color: var(--suave); }
 .buscador:focus, .form input:focus, .form textarea:focus, .form select:focus { outline: none; border-color: var(--acento-elegido-borde); }
-@media (min-width: 960px) { .buscador, .form input, .form select, .form textarea { font-size: 14px; } }
+@media (min-width: 1024px) { .buscador, .form input, .form select, .form textarea { font-size: 14px; } }
 .form { display: flex; flex-direction: column; gap: 14px; }
 .form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--suave); }
 label.form { gap: 6px; margin-top: 4px; font-size: 13px; color: var(--suave); }
@@ -355,8 +386,8 @@ label.form { gap: 6px; margin-top: 4px; font-size: 13px; color: var(--suave); }
 .elegido .marca-elegido { background: var(--acento); border-color: var(--acento); color: var(--acento-texto); }
 
 /* ── Sesión en curso ── */
-.sesion-cab { position: sticky; top: calc(env(safe-area-inset-top) + 57px); z-index: 5; background: var(--fondo); padding: 4px 0 12px; margin-bottom: 8px; border-bottom: 1px solid var(--separador); }
-@media (min-width: 960px) { .sesion-cab { top: 0; padding-top: 12px; } }
+.sesion-cab { position: sticky; top: calc(env(safe-area-inset-top) + 64px); z-index: 5; background: var(--fondo); padding: 4px 0 12px; margin-bottom: 8px; border-bottom: 1px solid var(--separador); }
+@media (min-width: 1024px) { .sesion-cab { top: 0; padding-top: 12px; } }
 .titulo-sesion {
   width: 100%; font: inherit; font-size: 26px; font-weight: 700; letter-spacing: -.02em; color: var(--acento);
   background: transparent; border: 0; border-bottom: 1px solid transparent; padding: 2px 0;
@@ -520,7 +551,7 @@ a.ej-nombre:hover { color: var(--acento); }
 
 /* ── Aviso breve ── */
 .aviso {
-  position: fixed; z-index: 50; left: 50%; top: calc(env(safe-area-inset-top) + 66px);
+  position: fixed; z-index: 50; left: 50%; top: calc(env(safe-area-inset-top) + 74px); /* bajo la barra de 64 px, como en Solvento */
   transform: translate(-50%, -8px); opacity: 0; transition: .2s;
   display: flex; align-items: center; gap: 8px;
   background: var(--tarjeta); color: var(--texto); border: 1px solid var(--borde); font-size: 14px; font-weight: 500;
@@ -529,7 +560,7 @@ a.ej-nombre:hover { color: var(--acento); }
 }
 .aviso::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--punto, var(--acento)); }
 .aviso.visible { opacity: 1; transform: translate(-50%, 0); }
-@media (min-width: 960px) { .aviso { top: 24px; left: calc(50% + var(--lateral) / 2); } }
+@media (min-width: 1024px) { .aviso { top: 24px; left: calc(50% + var(--lateral) / 2); } }
 
 .aviso-github { display: flex; align-items: center; gap: 14px; border-color: var(--acento-linea); background: var(--acento-suave); }
 .aviso-github b { font-weight: 500; font-size: 15px; }
@@ -547,3 +578,31 @@ a.ej-nombre:hover { color: var(--acento); }
 /* La versión al final de Ajustes: la misma que en Solvento («Ironrack 1.5.3» /
    «Solvento p217», en monoespaciada). */
 .version-pie { text-align: center; color: var(--suave); margin: 3rem 0 1rem; font-family: var(--mono); font-size: 12.5px; }
+
+/* ── Ajustes: la estructura de Solvento ──
+   A la izquierda, la lista de secciones (200 px); a la derecha, una tarjeta con
+   el título en el acento, una línea gris y el contenido en filas. Por debajo de
+   720 px la lista se vuelve una fila de pestañas que se desliza. La página es
+   más ancha que las demás (1.040 px), igual en las dos apps. */
+.aj-layout { display: grid; grid-template-columns: 200px 1fr; gap: 32px; align-items: start; }
+.aj-nav { display: flex; flex-direction: column; gap: 2.4px; position: sticky; top: 80px; }
+.aj-tab {
+  display: block; padding: 6px 10px; border: 1px solid transparent; border-radius: 8px; white-space: nowrap;
+  font-size: 13px; font-weight: 500; color: var(--suave);
+}
+.aj-tab:hover { background: var(--campo); color: var(--texto); }
+.aj-tab.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
+.aj-body { min-width: 0; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; padding: 17px 20px; }
+.aj-body > h3 { font-size: 21px; font-weight: 700; color: var(--acento); margin: 0 0 5.6px; }
+.aj-body > p { font-size: 12.5px; color: var(--suave); margin: 0 0 17.6px; }
+.aj-body h2, .aj-body .seccion-cab { margin: 26px 0 8px; }
+.aj-body > p + h2, .aj-body > p + .seccion-cab { margin-top: 0; }
+.aj-body .tarjeta { background: transparent; margin-bottom: 0; }
+.aj-body .fila { padding-left: 14px; padding-right: 14px; }
+@media (max-width: 720px) {
+  .aj-layout { grid-template-columns: 1fr; gap: 16px; }
+  .aj-nav { flex-direction: row; overflow-x: auto; position: static; gap: 5.6px; padding-bottom: 5.6px; scrollbar-width: none; }
+  .aj-nav::-webkit-scrollbar { display: none; }
+  .aj-body { padding: 20px; }
+}
+@media (min-width: 1024px) { body.vista-ajustes main { max-width: calc(1040px + 96px); } }

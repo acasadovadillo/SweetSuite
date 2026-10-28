@@ -13,9 +13,9 @@ Las series de calentamiento (toca el número de la serie) no cuentan para récor
 
 ## Aspecto
 
-Copia la estética de la app de OpenClaw para macOS, medida sobre sus capturas: fondo `#0e1015`, tarjetas `#161920` con borde `#1c1f27`, texto `#f4f4f5` y secundario `#8b8b94`, títulos de página en el color de acento, filas con conmutadores. En el ordenador hay barra lateral; en el móvil, pestañas abajo.
+Copia la estética de la app de OpenClaw para macOS, medida sobre sus capturas: fondo `#0e1015`, tarjetas `#161920` con borde `#1c1f27`, texto `#f4f4f5` y secundario `#8b8b94`, títulos de página en el color de acento, filas con conmutadores.
 
-Comparte con Solvento la fuente (Albert Sans), el botón principal (el acento oscurecido hasta 4,5:1 con blanco), las medidas de la barra lateral y de las etiquetas de sección, el subtítulo de página, el fondo de curvas de nivel, el aviso breve y el formato de la versión.
+Comparte con Solvento la estructura —barra lateral con marca, título, cuenta, buscador y, abajo, el estado y la versión; en el móvil, la misma barra como cajón con hamburguesa y cinco pestañas abajo; Ajustes con lista de secciones y tarjeta— y también la fuente (Albert Sans), el botón principal (el acento oscurecido hasta 4,5:1 con blanco), las medidas de la barra lateral y de las etiquetas de sección, el subtítulo de página, el fondo de curvas de nivel, el aviso breve y el formato de la versión.
 
 En **Ajustes › Apariencia** se elige el color de acento: la paleta de OpenClaw (coral, salmón, ámbar, menta, turquesa, azul, lavanda, rosa y pizarra) o cualquier otro con el cuentagotas. Se guarda en el documento cifrado, así que es el mismo en todos tus dispositivos.
 
