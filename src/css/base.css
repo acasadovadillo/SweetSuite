@@ -1,6 +1,12 @@
 /*
- * webkit_asociaciones — Base: tipografía, estructura (cabecera, menú, contenido)
- * y adaptación a móvil. Estética de Solvento.
+ * webkit_asociaciones — Base: tipografía, estructura y adaptación a móvil.
+ *
+ * La estructura es la común de Ironrack y Solvento, con sus medidas:
+ *   - barra lateral de 288 px: marca, título, la cuenta, un buscador, las
+ *     secciones por grupos y, abajo, el estado de la copia y la versión;
+ *   - fija a partir de 1.024 px; por debajo, un cajón que se abre con la
+ *     hamburguesa de la barra de arriba (64 px);
+ *   - en el teléfono (hasta 640 px), cinco secciones abajo, con icono.
  */
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; }
@@ -9,12 +15,14 @@ body {
   background: var(--fondo);
   color: var(--texto);
   font-family: var(--fuente);
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 14px;
+  line-height: 1.45;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 h1, h2, h3 { line-height: 1.25; margin: 0 0 0.5rem; color: var(--titulo); }
-/* El título de cada página, grande y apretado como en Solvento. */
-h1 { font-size: 2rem; font-weight: 800; letter-spacing: -0.02em; }
+/* El título de cada página, en el acento, como en Ironrack y Solvento. */
+h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: var(--acento); }
 h2 { font-size: 1.1rem; font-weight: 700; }
 h3 { font-weight: 700; }
 p { margin: 0 0 0.75rem; }
@@ -33,73 +41,153 @@ h1:focus { outline: none; }
 .saltar { position: absolute; left: 0.5rem; top: -3rem; background: var(--primario); color: var(--primario-texto); padding: 0.5rem 1rem; border-radius: var(--radio-pequeno); z-index: 100; font-weight: 700; }
 .saltar:focus { top: 0.5rem; }
 
-/* ── Estructura ─────────────────────────────────────────────────────── */
+/* Las curvas de nivel del fondo, las mismas que en Ironrack y Solvento. El
+   dibujo va incrustado (la aplicación no carga nada de fuera) y se usa de
+   máscara: el color, muy tenue, lo pone el tema. */
+.app::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.04;
+  background-color: var(--contorno);
+  -webkit-mask: var(--curvas) right center / auto 120% no-repeat;
+  mask: var(--curvas) right center / auto 120% no-repeat;
+}
+
+/* ── Barra lateral (en el móvil, cajón) ──────────────────────────────── */
+.menu {
+  position: fixed; top: 0; left: 0; z-index: 40;
+  width: var(--ancho-menu); max-width: 86vw; height: 100vh; height: 100dvh;
+  display: flex; flex-direction: column; overflow-y: auto; overscroll-behavior: contain;
+  background: var(--fondo); border-right: 1px solid var(--filo);
+  padding: calc(env(safe-area-inset-top) + 14px) 12px calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-100%); visibility: hidden; transition: transform 0.22s ease-out, visibility 0.22s;
+}
+body.menu-abierto .menu { transform: none; visibility: visible; }
+.velo { display: none; }
+body.menu-abierto .velo { display: block; position: fixed; inset: 0; z-index: 39; background: rgba(0, 0, 0, 0.55); }
+
+.menu-cab { display: flex; align-items: center; gap: 8px; padding: 2px 9px 30px; min-height: 60px; }
+.marca { display: inline-flex; align-items: center; margin-right: auto; text-decoration: none; }
+.marca .marca-logo { height: 18px; width: auto; }
+.menu-cerrar {
+  display: grid; place-items: center; width: 26px; height: 22px; padding: 0; cursor: pointer;
+  color: var(--texto-2); background: none; border: 1px solid var(--borde-control); border-radius: 6px;
+}
+.menu-titulo { font-size: 21px; font-weight: 700; line-height: 24px; color: var(--titulo); padding: 0 9px; }
+.menu-cuenta {
+  display: flex; align-items: center; gap: 8px; width: 100%; height: 28px; margin: 22px 0 15px; padding: 4px 9px;
+  font: inherit; font-size: 14.2px; font-weight: 500; line-height: 20px; text-align: left;
+  color: var(--texto-2); background: none; border: 0; border-radius: var(--radio-menu); cursor: pointer;
+}
+.menu-cuenta:hover { background: var(--hundido); color: var(--titulo); }
+.menu-cuenta-nombre { flex: 1; min-width: 0; color: var(--titulo); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.menu-cuenta svg { flex-shrink: 0; color: var(--texto-3); }
+/* El avatar de OpenClaw (y de Ironrack y Solvento): 20 px, verde azulado */
+.avatar {
+  flex-shrink: 0; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 8.5px; font-weight: 800; text-transform: uppercase; color: #ffffff; background: #369f9d;
+}
+.menu-buscar {
+  display: flex; align-items: center; gap: 7px; height: 34px; padding: 0 9px; margin-bottom: 24px;
+  background: var(--hundido); border: 1px solid var(--borde); border-radius: var(--radio-menu); color: var(--texto-3);
+}
+.menu-buscar svg { flex-shrink: 0; }
+.menu-buscar input[type="search"] {
+  flex: 1; min-width: 0; height: auto; padding: 0; margin: 0;
+  font: inherit; font-size: 12.4px; color: var(--titulo); background: none; border: 0; outline: none; box-shadow: none;
+}
+.menu-buscar input::placeholder { color: var(--texto-3); opacity: 1; }
+.menu-buscar:focus-within { border-color: var(--borde-fuerte); }
+
+.menu ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 3px; }
+.menu .menu-grupo {
+  font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3);
+  padding: 0 9px; margin: 18px 0 5px;
+}
+.menu nav a, .menu .menu-boton {
+  display: flex; align-items: center; gap: 8px; width: 100%;
+  min-height: 31px; padding: 4px 9px; border: 1px solid transparent; border-radius: var(--radio-menu);
+  font: inherit; font-size: 13px; font-weight: 500; color: var(--texto-3); text-decoration: none; text-align: left;
+  background: none; cursor: pointer;
+}
+.menu nav a svg, .menu .menu-boton svg { width: 16px; height: 16px; flex-shrink: 0; color: var(--icono); }
+.menu nav a:hover, .menu .menu-boton:hover { background: var(--hundido); color: var(--titulo); }
+.menu nav a[aria-current="page"] { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--titulo); }
+.menu nav a[aria-current="page"] svg { color: var(--acento); }
+.menu .no-casa { display: none; }
+
+.menu-pie {
+  margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 18px 9px 2px; line-height: normal;
+}
+/* El estado, como en Ironrack y Solvento: un punto de su color y la palabra */
+.estado-copia { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 11.5px; font-weight: 600; color: var(--texto-3); }
+.estado-copia::before { content: ""; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--punto, var(--texto-3)); }
+.estado-copia:empty { display: none; }
+.version { font-family: var(--fuente-mono); font-size: 11.5px; color: var(--texto-3); }
+
+/* ── Barra de arriba (móvil y tableta) ───────────────────────────────── */
 .cabecera {
   position: sticky; top: 0; z-index: 20;
-  display: flex; align-items: center; gap: 0.7rem;
-  height: var(--alto-cabecera); padding: 0 1.5rem;
-  background: var(--superficie); border-bottom: 1px solid var(--borde);
+  display: flex; align-items: center; gap: 11px;
+  height: calc(env(safe-area-inset-top) + var(--alto-cabecera)); padding: env(safe-area-inset-top) 14px 0;
+  background: var(--fondo); border-bottom: 1px solid var(--filo);
 }
-.marca { display: inline-flex; align-items: center; gap: 0.6rem; font-weight: 800; color: var(--titulo); text-decoration: none; letter-spacing: -0.01em; }
-.marca-logo { flex-shrink: 0; }
-.cabecera-acciones { margin-left: auto; display: flex; align-items: center; gap: 0.6rem; }
-/* El botón del menú, cuadrado y con borde, como el de Solvento. */
-.cabecera .btn-icono { width: 32px; height: 32px; border: 1px solid var(--borde); border-radius: 8px; color: var(--texto-2); }
-.cabecera .btn-icono:hover, .cabecera .btn-icono[aria-expanded="true"] { color: var(--titulo); border-color: var(--borde-fuerte); background: var(--borde-suave); }
+.cabecera .btn-icono {
+  width: 34px; height: 34px; min-height: 0; padding: 0; display: grid; place-items: center;
+  color: var(--texto-2); background: var(--superficie); border: 1px solid var(--borde-control); border-radius: var(--radio-menu);
+}
+.cabecera .btn-icono:hover, .cabecera .btn-icono[aria-expanded="true"] { color: var(--titulo); border-color: var(--borde-fuerte); }
+.marca-movil { display: inline-flex; align-items: center; gap: 9px; text-decoration: none; font-size: 13.6px; font-weight: 700; color: var(--texto-2); min-width: 0; }
+.marca-movil .marca-logo { height: 18px; width: auto; flex-shrink: 0; }
+.marca-movil span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 
-.cuerpo { display: flex; min-height: calc(100vh - var(--alto-cabecera)); }
-.menu {
-  width: var(--ancho-menu); flex-shrink: 0;
-  background: var(--superficie-flotante); border-right: 1px solid var(--borde);
-  padding: 1rem 0.75rem;
-}
-.menu ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.15rem; position: sticky; top: calc(var(--alto-cabecera) + 1rem); }
-.menu a {
-  display: flex; align-items: center; gap: 0.75rem;
-  padding: 0.62rem 0.7rem; border-radius: var(--radio-pequeno);
-  color: var(--texto-2); text-decoration: none; font-size: 0.9rem; font-weight: 500;
-  transition: background 0.15s, color 0.15s;
-}
-.menu a svg { width: 18px; height: 18px; flex-shrink: 0; }
-.menu a:hover { background: var(--superficie-2); color: var(--texto); }
-.menu a[aria-current="page"] { background: var(--borde); color: var(--titulo); font-weight: 600; }
-
-.principal { flex: 1; min-width: 0; padding: 2.5rem clamp(1rem, 4vw, 3rem) 4rem; max-width: 1400px; margin: 0 auto; }
+/* ── Contenido ───────────────────────────────────────────────────────── */
+.principal { min-width: 0; padding: 20px 16px 48px; max-width: 1400px; margin: 0 auto; }
 .principal:focus { outline: none; }
-.intro { color: var(--texto-2); max-width: 65ch; margin-bottom: 1.5rem; }
+.intro { color: var(--texto-3); font-size: 13.5px; max-width: 65ch; margin: 6px 0 1.5rem; }
 .detalle { color: var(--texto-3); font-size: 0.85rem; }
 .cargando { color: var(--texto-3); }
 
 /* Doble clase para ganar a .btn-icono, que se define después. */
 .solo-movil.solo-movil { display: none; }
-.velo { display: none; }
 
-/* ── Móvil: el menú se convierte en un panel lateral ───────────────── */
+/* ── Barra de abajo (teléfono): la de Ironrack y Solvento ────────────── */
+.barra-movil { display: none; }
+@media (max-width: 640px) {
+  .barra-movil {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 30;
+    display: grid; grid-template-columns: repeat(5, 1fr);
+    padding: 4px 4px calc(env(safe-area-inset-bottom) + 4px);
+    background: color-mix(in srgb, var(--fondo) 92%, transparent);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+    border-top: 1px solid var(--filo);
+  }
+  .barra-movil a {
+    display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 50px;
+    font-size: 11px; line-height: 1.1; text-align: center; color: var(--texto-3); text-decoration: none;
+  }
+  .barra-movil svg { width: 22px; height: 22px; color: var(--icono); }
+  .barra-movil a[aria-current="page"] { color: var(--titulo); }
+  .barra-movil a[aria-current="page"] svg { color: var(--acento); }
+  .principal { padding-bottom: calc(var(--alto-barra-movil) + env(safe-area-inset-bottom) + 28px); }
+}
+
+/* ── Ordenador: la barra lateral, siempre ────────────────────────────── */
+@media (min-width: 1024px) {
+  .menu { transform: none; visibility: visible; transition: none; max-width: none; }
+  .velo, .menu-cerrar, .cabecera { display: none !important; }
+  .contenido { margin-left: var(--ancho-menu); }
+  .app::before { left: var(--ancho-menu); }
+  .principal { padding: 44px 48px 80px; }
+}
+
+/* ── Móvil ───────────────────────────────────────────────────────────── */
 @media (max-width: 800px) {
   .solo-movil.solo-movil { display: inline-flex; }
   .solo-ancho { display: none; }
-  .cabecera { padding: 0 0.85rem; }
-  .menu {
-    position: fixed; top: var(--alto-cabecera); bottom: 0; left: 0; z-index: 30;
-    max-width: 82vw;
-    transform: translateX(-100%); visibility: hidden;
-    transition: transform 0.22s ease, visibility 0.22s;
-    box-shadow: var(--sombra-flotante); overflow-y: auto;
-  }
-  .menu ul { position: static; }
-  body.menu-abierto .menu { transform: none; visibility: visible; }
-  body.menu-abierto .velo { display: block; position: fixed; inset: var(--alto-cabecera) 0 0 0; background: var(--velo); z-index: 25; }
-  .principal { padding: 1.5rem 1rem 3rem; }
-  h1 { font-size: 1.6rem; }
-  .cabecera-acciones .btn { padding-inline: 0.6rem; }
 }
 /* iOS amplía la pantalla al enfocar un campo de menos de 16px. */
 @media (max-width: 900px) {
   input, select, textarea { font-size: 16px !important; }
-}
-@media (max-width: 420px) {
-  .marca { font-size: 0.9rem; }
-  #btn-bloquear { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
   * { transition: none !important; animation: none !important; }

@@ -84,8 +84,8 @@
     el.setAttribute("role", tipo === "error" ? "alert" : "status");
     el.textContent = texto;
     zona.appendChild(el);
-    setTimeout(function () { el.classList.add("saliendo"); }, tipo === "error" ? 7000 : 3500);
-    setTimeout(function () { el.remove(); }, tipo === "error" ? 7600 : 4100);
+    setTimeout(function () { el.classList.add("saliendo"); }, tipo === "error" ? 7000 : 3000);
+    setTimeout(function () { el.remove(); }, tipo === "error" ? 7400 : 3400);
   }
 
   /**

@@ -2,7 +2,7 @@
 
 ## Ahora (esperando al usuario)
 
-1. Que el usuario revise la Fase 7a y dé el OK. Commit «Fase 7a: ABIES — marca, usuarios por cargo, permisos y registro».
+1. Que el usuario revise la estética común con Ironrack y Solvento.
 2. Para la 7b, el usuario tiene que:
    - crear un **repositorio privado** para los datos (por ejemplo `abies-datos`); lo puedo crear con `gh` si me da permiso;
    - crear un **token de GitHub de grano fino** con permiso de lectura y escritura sobre el contenido, solo para ese repositorio, e introducirlo él.

@@ -10,7 +10,7 @@ Nace de **Solvento** (`../../Solvento`, app de finanzas personales del mismo aut
 
 ```
 src/index.html            se abre directamente para desarrollar (scripts clásicos, funciona con file://)
-src/css/                  tokens (colores) · base (estructura) · componentes · impresión
+src/css/                  fuentes (Albert Sans incrustada) · tokens (colores) · fondo (curvas incrustadas) · base (estructura) · componentes · impresión
 src/js/nucleo/            dinero · fechas · validar · direccion · csv · xlsx · cripto · tema · preferencias · ui · form-direccion · app
 src/js/logica/            socios · cuotas · actividades · actas · obligaciones · facturas · iva · tesoreria · extracto   (lógica de negocio pura, sin DOM, con tests)
 src/js/datos/             esquema · repositorio · copia · demo · boveda · sesion
@@ -68,7 +68,7 @@ tools/probar-file.mjs     prueba el HTML distribuido con file:// en un Chromium 
 | Gráficas en SVG propio (`nucleo/graficas.js`), colores del tema, con texto alternativo y tabla oculta con los datos | Sin librerías y accesibles. Los recuentos (socios) empiezan en cero para no exagerar cambios pequeños |
 | Convocatorias de asamblea | Pendientes: el usuario aún no ha definido cómo convocan |
 | Sin «fines» en los datos de la asociación | Decisión del usuario: los fines vendrán de los estatutos, que se adjuntarán al archivo local más adelante |
-| Estética de Solvento (oscuro de grises azulados por defecto y claro opcional, paneles de 20px sin sombra, botón principal blanco, etiquetas en mayúsculas pequeñas, pestañas como selector segmentado, gráficas con degradado) | Decisión del usuario: mismo aspecto que su otra aplicación. Todo sale de `css/tokens.css` (nombres por función, no por color); `--texto-3` es un punto más claro que el gris de Solvento para cumplir contraste AA. El menú lateral sigue fijo en escritorio (son 15 secciones) y plegable en el móvil |
+| Estética común con Ironrack y Solvento (la de OpenClaw: fondo #0e1015, tarjetas con radio 12, Albert Sans, títulos en el acento, barra lateral de 288 px con cuenta y buscador, cajón por debajo de 1.024 px, cinco secciones abajo en el teléfono, acento elegible por usuario) | Decisión del usuario (2026-10-29): las tres apps con la misma estética. Todo sale de `css/tokens.css` (nombres por función, no por color). La fuente y las curvas del fondo van incrustadas: la aplicación no conecta con ningún servidor |
 | Solo para ABIES (Fase 7a): marca (logotipo vectorial de su identidad visual en `nucleo/marca.js`, naranja #e6431f; acentos en su verde #004b49) | Decisión del usuario: «no es un software para todas las asociaciones, es solo para ABIES» |
 | Bóveda con doble llave (`datos/cuentas.js`): clave de datos AES aleatoria; cada usuario con un par ECDH P-256 (privada cifrada con su contraseña, PBKDF2 310.000); la clave de datos envuelta para cada pública; la cabecera (usuarios) cifrada con la contraseña del archivo | Entrar exige nombre + cargo + contraseña personal + contraseña del archivo (decisión del usuario). Con claves públicas la cuenta ABIES da acceso, restablece y cambia la clave de datos sin conocer contraseñas ajenas. El error de acceso no dice qué falla |
 | Desactivar a un usuario cambia la clave de datos (`generacion` + 1) y vuelve a cifrar los adjuntos | Quien se va no lee nada guardado después aunque conserve el archivo |

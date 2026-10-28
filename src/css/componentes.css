@@ -1,31 +1,39 @@
 /*
  * webkit_asociaciones — Componentes: botones, tarjetas, formularios, tablas,
- * diálogos, avisos y pantalla de acceso. Estética de Solvento.
+ * diálogos, avisos y pantalla de acceso.
+ *
+ * Con las medidas de Ironrack y Solvento: botones de 38 px con radio 10 (el
+ * principal en el acento oscurecido, --primario), tarjetas con radio 12,
+ * etiquetas de sección de 10,8 px en mayúsculas, avisos arriba con un punto de
+ * color y, en el teléfono, los diálogos suben desde abajo.
  */
 
 /* ── Botones ─────────────────────────────────────────────────────────── */
 .btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 0.4rem;
-  min-height: 44px;                 /* objetivo táctil cómodo */
-  padding: 0.55rem 1.1rem; border-radius: var(--radio-pequeno);
-  font: inherit; font-size: 0.9rem; font-weight: 700; cursor: pointer; text-decoration: none;
-  border: 1px solid transparent; transition: background 0.15s, border-color 0.15s, opacity 0.15s, color 0.15s;
+  min-height: 38px; padding: 8px 16px; border-radius: var(--radio-pequeno);
+  font: inherit; font-size: 14px; font-weight: 500; line-height: 1.2; cursor: pointer; text-decoration: none; white-space: nowrap;
+  color: var(--texto); background: var(--superficie-2);
+  border: 1px solid var(--borde-control); transition: background 0.15s, border-color 0.15s, filter 0.15s, color 0.15s;
 }
-.btn:disabled { opacity: 0.6; cursor: progress; }
-/* La acción principal es blanca sobre oscuro (negra sobre claro), como en Solvento. */
-.btn-primario { background: var(--primario); color: var(--primario-texto); }
-.btn-primario:hover:not(:disabled) { opacity: 0.85; }
-.btn-secundario { background: var(--superficie-2); color: var(--texto); border-color: var(--borde); }
-.btn-secundario:hover:not(:disabled) { border-color: var(--borde-fuerte); color: var(--titulo); }
-.btn-peligro { background: var(--peligro-fuerte); color: #fff; }
-.btn-peligro:hover:not(:disabled) { opacity: 0.88; }
+.btn:hover:not(:disabled) { border-color: var(--borde-fuerte); }
+.btn:active:not(:disabled) { transform: scale(0.98); }
+.btn:disabled { opacity: 0.45; cursor: default; }
+/* La acción principal va en el acento oscurecido hasta que el texto blanco se
+   lee (--primario, de tema.js), como en Ironrack y Solvento. */
+.btn-primario { background: var(--primario); color: var(--primario-texto); border-color: var(--primario); border-radius: 8px; font-weight: 600; }
+.btn-primario:hover:not(:disabled) { filter: brightness(1.08); border-color: var(--primario); }
+.btn-secundario { background: var(--superficie-2); color: var(--texto); border-color: var(--borde-control); }
+.btn-secundario:hover:not(:disabled) { color: var(--titulo); }
+.btn-peligro { background: var(--peligro-fuerte); color: #fff; border-color: var(--peligro-fuerte); border-radius: 8px; font-weight: 600; }
+.btn-peligro:hover:not(:disabled) { filter: brightness(1.08); border-color: var(--peligro-fuerte); }
 .btn-peligro-suave { background: var(--peligro-suave); color: var(--peligro); border-color: transparent; }
 .btn-peligro-suave:hover:not(:disabled) { border-color: var(--peligro); }
 .btn-enlace { background: none; border: none; color: var(--enlace); text-decoration: underline; text-underline-offset: 2px; padding-inline: 0.25rem; font-weight: 600; }
-.btn-pequeno { min-height: 36px; padding: 0.35rem 0.85rem; font-size: 0.82rem; border-radius: 8px; }
+.btn-pequeno { min-height: 32px; padding: 5px 12px; font-size: 13px; border-radius: 8px; }
 .btn-icono {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 40px; height: 40px; border-radius: 8px;
+  width: 34px; height: 34px; border-radius: 8px;
   background: none; border: none; color: var(--texto-2); cursor: pointer; font-size: 1.05rem;
   transition: background 0.15s, color 0.15s;
 }
@@ -35,22 +43,22 @@
 /* ── Tarjetas (los «paneles» de Solvento) ────────────────────────────── */
 .tarjeta {
   background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio);
-  padding: 1.75rem 2rem; margin-bottom: 1.5rem;
+  padding: 17px 20px; margin-bottom: 16px;
 }
 .tarjeta > :last-child { margin-bottom: 0; }
-/* El título de un panel es una etiqueta pequeña en mayúsculas. */
+/* El título de un panel es la etiqueta de sección de Ironrack y Solvento. */
 .tarjeta h2, .rejilla-tarjetas .tarjeta h3 {
-  font-size: 0.82rem; font-weight: 700; color: var(--texto-3);
-  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem;
+  font-size: 10.8px; font-weight: 700; color: var(--texto-3);
+  text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 12px;
 }
 .tarjeta-cabecera { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; margin-bottom: 1rem; }
 .tarjeta-cabecera h2 { margin: 0; }
-/* La destacada es la «hero» de Solvento: degradado suave y más redondeo. */
-.tarjeta-destacada { background: linear-gradient(135deg, var(--superficie) 0%, var(--superficie-2) 100%); border-radius: var(--radio-grande); }
+/* La destacada lleva el acento en el borde, como lo elegido en Ironrack. */
+.tarjeta-destacada { background: var(--superficie); border-color: var(--acento-linea); }
 .tarjeta-error { border-left: 3px solid var(--peligro-fuerte); }
-.rejilla-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 1.25rem; }
-.rejilla-tarjetas .tarjeta { margin: 0; padding: 1.5rem 1.75rem; }
-.cifra { font-size: 1.7rem; font-weight: 800; color: var(--titulo); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
+.rejilla-tarjetas { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; }
+.rejilla-tarjetas .tarjeta { margin: 0; padding: 16px 18px; }
+.cifra { font-size: 1.6rem; font-weight: 700; color: var(--titulo); letter-spacing: -0.02em; font-variant-numeric: tabular-nums; }
 .enlace-flecha { display: inline-block; margin-top: 0.5rem; font-size: 0.88rem; font-weight: 700; text-decoration: none; }
 .enlace-flecha:hover { text-decoration: underline; }
 .enlace-flecha::after { content: " →"; }
@@ -61,7 +69,7 @@
 .vacio { color: var(--texto-3); font-style: italic; }
 
 /* Insignias: fondo traslúcido del mismo color, como las de Solvento. */
-.estado { display: inline-block; white-space: nowrap; padding: 0.15rem 0.55rem; border-radius: 6px; font-size: 0.75rem; font-weight: 700; margin-right: 0.35rem; }
+.estado { display: inline-block; white-space: nowrap; padding: 1px 7px; border-radius: 6px; font-size: 12px; font-weight: 600; margin-right: 0.35rem; }
 .estado-ok { background: var(--ok-fondo); color: var(--ok); }
 .estado-aviso { background: var(--aviso-fondo); color: var(--aviso); }
 
@@ -71,13 +79,13 @@
 }
 
 /* ── Franjas bajo la cabecera ───────────────────────────────────────── */
-.franja { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 0.55rem 1rem; font-size: 0.88rem; border-bottom: 1px solid; }
+.franja { display: flex; align-items: center; justify-content: center; gap: 1rem; flex-wrap: wrap; padding: 8px 16px; font-size: 13px; border-bottom: 1px solid; }
 .franja-aviso { background: var(--aviso-fondo); border-color: var(--aviso-borde); }
 .franja-info { background: var(--info-fondo); border-color: var(--info-borde); color: var(--texto-2); }
 
 /* ── Formularios ─────────────────────────────────────────────────────── */
 .formulario fieldset { border: none; padding: 0; margin: 0 0 1.25rem; }
-.formulario legend { font-weight: 700; font-size: 1rem; color: var(--titulo); margin-bottom: 0.6rem; padding: 0; }
+.formulario legend { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin-bottom: 10px; padding: 0; }
 .rejilla { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 0.25rem 1rem; }
 .campo { display: flex; flex-direction: column; margin-bottom: 0.6rem; }
 .campo-completo { grid-column: 1 / -1; }
@@ -94,34 +102,52 @@
 .vista-previa { grid-column: 1 / -1; background: var(--hundido); border: 1px solid var(--borde-suave); border-radius: var(--radio-pequeno); padding: 0.65rem 0.9rem; margin-top: 0.25rem; }
 .vista-previa strong { display: block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-3); font-weight: 700; }
 .vista-previa span { display: block; }
-/* Etiquetas de campo: pequeñas, en mayúsculas y espaciadas (Solvento). */
-.campo label, .acceso-form label { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); margin: 0.35rem 0 0.35rem; }
+/* Etiquetas de campo: como las de los formularios de Ironrack y Solvento. */
+.campo label, .acceso-form label { font-size: 13px; font-weight: 500; color: var(--texto-3); margin: 6px 0; }
 .obligatorio { color: var(--peligro); }
 input:not([type]), input[type="text"], input[type="email"], input[type="tel"], input[type="url"], input[type="date"],
 input[type="password"], input[type="number"], input[type="search"], input[type="time"], input[type="datetime-local"], select, textarea {
-  width: 100%; min-height: 44px; padding: 0.6rem 0.85rem;
-  font: inherit; font-size: 0.95rem; color: var(--texto); background: var(--hundido);
-  border: 1px solid var(--borde); border-radius: var(--radio-pequeno);
+  width: 100%; min-height: 38px; padding: 8px 12px;
+  font: inherit; font-size: 14px; color: var(--texto); background: var(--hundido);
+  border: 1px solid var(--borde); border-radius: 8px;
   transition: border-color 0.15s;
 }
-input::placeholder, textarea::placeholder { color: var(--texto-3); opacity: 0.8; }
+input::placeholder, textarea::placeholder { color: var(--texto-3); opacity: 1; }
 textarea { resize: vertical; }
 input:hover, select:hover, textarea:hover { border-color: var(--borde-fuerte); }
-input:focus, select:focus, textarea:focus { border-color: var(--texto-3); outline: none; }
-input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--foco); outline-offset: 1px; }
-.campo-ayuda { color: var(--texto-3); font-size: 0.8rem; margin: 0.3rem 0 0; }
-.campo-error { color: var(--peligro); font-size: 0.82rem; font-weight: 600; margin: 0.3rem 0 0; min-height: 0; }
+input:focus, select:focus, textarea:focus, input:focus-visible, select:focus-visible, textarea:focus-visible { border-color: var(--acento-linea); outline: none; }
+.campo-ayuda { color: var(--texto-3); font-size: 12.5px; margin: 4px 0 0; }
+.campo-error { color: var(--peligro); font-size: 13px; font-weight: 600; margin: 0.3rem 0 0; min-height: 0; }
 .campo-error:empty { display: none; }
 .con-error input, .con-error select, .con-error textarea { border-color: var(--peligro); }
 
 .grupo-opciones { border: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 0.5rem; }
-.grupo-opciones legend { font-size: 0.75rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: var(--texto-3); margin-bottom: 0.6rem; padding: 0; }
-/* Opciones como botones que se marcan (las del tema en Solvento). */
+.grupo-opciones legend { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin-bottom: 10px; padding: 0; }
+/* Opciones como el selector segmentado de Ironrack y Solvento (el del tema). */
 .opcion { position: relative; }
 .opcion input { position: absolute; opacity: 0; width: 1px; height: 1px; }
-.opcion span { display: inline-block; padding: 0.55rem 1rem; background: var(--superficie-2); color: var(--texto); border: 1px solid var(--borde); border-radius: 8px; cursor: pointer; font-size: 0.88rem; font-weight: 600; }
-.opcion input:checked + span { border-color: var(--acento); color: var(--titulo); box-shadow: inset 0 0 0 1px var(--acento); }
+.opcion span { display: inline-block; padding: 6px 14px; background: var(--pista); color: var(--texto-3); border: 1px solid var(--superficie-2); border-radius: 8px; cursor: pointer; font-size: 13.5px; }
+.opcion span:hover { color: var(--titulo); }
+.opcion input:checked + span { background: var(--superficie-2); border-color: var(--borde-control); color: var(--titulo); font-weight: 600; }
 .opcion input:focus-visible + span { outline: 2px solid var(--foco); outline-offset: 2px; }
+/* Dentro de un .segmentado las opciones van pegadas, sobre una pista. */
+.segmentado { display: inline-flex; flex-wrap: wrap; gap: 2px; padding: 3px; background: var(--pista); border: 1px solid var(--superficie-2); border-radius: var(--radio-pequeno); }
+.segmentado .opcion span { border-color: transparent; border-radius: 7px; padding: 5px 14px; }
+.segmentado .opcion input:checked + span { border-color: transparent; }
+/* Conmutador de 32 × 18 (Ironrack y Solvento). */
+.conmutador {
+  appearance: none; -webkit-appearance: none; flex: none; position: relative; margin: 0; cursor: pointer;
+  width: 32px !important; height: 18px !important; min-height: 0 !important; padding: 0 !important;
+  border-radius: 9px !important; border: 1.5px solid var(--texto-3) !important; background: var(--superficie-2) !important;
+  transition: background 0.15s, border-color 0.15s;
+}
+.conmutador::after {
+  content: ""; position: absolute; top: 50%; left: 3px; width: 9px; height: 9px; border-radius: 50%;
+  background: var(--texto-3); transform: translateY(-50%); transition: left 0.15s, background 0.15s;
+}
+.conmutador:checked { background: var(--acento) !important; border-color: var(--acento) !important; }
+.conmutador:checked::after { left: 16px; width: 10px; height: 10px; background: var(--fondo); }
+.conmutador:focus-visible { outline: 2px solid var(--acento-linea); outline-offset: 2px; }
 .casilla { display: flex; gap: 0.7rem; align-items: flex-start; margin: 0.75rem 0; cursor: pointer; }
 .casilla input { width: 18px; height: 18px; margin-top: 0.15rem; flex-shrink: 0; accent-color: var(--acento); }
 
@@ -129,10 +155,10 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 /* position: relative para que los textos solo para lectores de pantalla (.sr, con
    posición absoluta) queden dentro del recorte y no ensanchen la página en el móvil. */
 .tabla-envoltorio { overflow-x: auto; position: relative; }
-.tabla { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
-.tabla th, .tabla td { text-align: left; padding: 0.8rem 0.9rem; border-bottom: 1px solid var(--borde-suave); vertical-align: top; }
-.tabla thead th { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--texto-3); font-weight: 700; border-bottom-color: var(--borde); }
-.tabla tbody th { font-weight: 600; color: var(--titulo); }
+.tabla { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.tabla th, .tabla td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--borde-suave); vertical-align: top; }
+.tabla thead th { font-size: 10.8px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); font-weight: 700; border-bottom-color: var(--borde); }
+.tabla tbody th { font-weight: 500; color: var(--titulo); }
 .tabla tbody tr { transition: background 0.15s; }
 .tabla tbody tr:hover { background: var(--borde-suave); }
 .tabla tbody tr:last-child td, .tabla tbody tr:last-child th { border-bottom: none; }
@@ -152,37 +178,70 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px
 /* ── Diálogos ────────────────────────────────────────────────────────── */
 .dialogo {
   width: min(560px, calc(100vw - 2rem)); max-height: calc(100vh - 2rem);
-  padding: 0; border: 1px solid var(--borde-suave); border-radius: var(--radio-medio);
+  padding: 0; border: 1px solid var(--borde); border-radius: var(--radio-dialogo);
   background: var(--superficie-flotante); color: var(--texto); box-shadow: var(--sombra-flotante);
 }
 .dialogo::backdrop { background: var(--velo); }
-.dialogo-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 1.4rem 1.5rem 0.5rem; }
-.dialogo-cabecera h2 { margin: 0; font-size: 1.1rem; font-weight: 800; }
-.dialogo-cuerpo { padding: 0.5rem 1.5rem; overflow-y: auto; }
+.dialogo-cabecera { display: flex; align-items: center; justify-content: space-between; padding: 20px 20px 6px; }
+.dialogo-cabecera h2 { margin: 0; font-size: 18px; font-weight: 700; letter-spacing: -0.01em; color: var(--titulo); text-transform: none; }
+.dialogo-cuerpo { padding: 6px 20px; overflow-y: auto; }
 .dialogo-cuerpo .rejilla { grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); }
-.dialogo-botones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.5rem; padding: 1rem 1.5rem 1.5rem; }
+.dialogo-botones { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 14px 20px 20px; }
 .dialogo-botones .btn-peligro-suave { margin-right: auto; }
+/* En el teléfono, el diálogo sube desde abajo, como las hojas de Ironrack. */
+@media (max-width: 640px) {
+  .dialogo {
+    width: 100%; max-width: 100%; max-height: 88vh; margin: auto 0 0; border-radius: 16px 16px 0 0; border-bottom: 0;
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+  .dialogo::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 2px; background: var(--borde-fuerte); margin: 10px auto 0; }
+  .dialogo-botones .btn { flex: 1 1 140px; }
+}
 
 /* ── Avisos flotantes ────────────────────────────────────────────────── */
-.avisos { position: fixed; right: 1rem; bottom: 1rem; z-index: 200; display: flex; flex-direction: column; gap: 0.5rem; max-width: min(420px, calc(100vw - 2rem)); }
-.aviso { padding: 0.75rem 1rem; border-radius: var(--radio-pequeno); background: var(--globo); color: var(--globo-texto); border: 1px solid var(--borde); box-shadow: var(--sombra-flotante); font-size: 0.9rem; font-weight: 600; transition: opacity 0.5s; }
-.aviso-error { background: var(--peligro-fuerte); border-color: transparent; color: #fff; }
+/* Arriba y en el centro, con un punto de color delante: el de Ironrack y
+   Solvento (verde si ha ido bien, rojo si no, el acento si es información). */
+.avisos {
+  position: fixed; z-index: 200; left: 50%; top: calc(env(safe-area-inset-top) + 74px); transform: translateX(-50%);
+  display: flex; flex-direction: column; align-items: center; gap: 8px; width: max-content; max-width: calc(100vw - 32px); pointer-events: none;
+}
+@media (min-width: 1024px) { .avisos { top: 24px; left: calc(50% + var(--ancho-menu) / 2); } }
+.aviso {
+  display: flex; align-items: center; gap: 8px; pointer-events: auto;
+  padding: 10px 16px; border-radius: var(--radio-pequeno); background: var(--globo); color: var(--globo-texto);
+  border: 1px solid var(--borde); box-shadow: var(--sombra-flotante); font-size: 14px; font-weight: 500; transition: opacity 0.3s;
+}
+.aviso::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--ok); }
+.aviso-info::before { background: var(--acento); }
+.aviso-error::before { background: var(--peligro); }
 .aviso.saliendo { opacity: 0; }
 
-/* ── Pantalla de acceso (el «arranque» de Solvento: sin caja, centrado) ── */
-.acceso { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 1.5rem 1rem; }
-.acceso-panel { width: 100%; max-width: 380px; }
+/* ── Pantalla de acceso: la de Solvento y Ironrack (sin caja, centrada,
+   título en el acento, campos de 15 px y el botón en el acento oscurecido) ── */
+.acceso { position: relative; min-height: 100vh; min-height: 100dvh; display: flex; align-items: center; justify-content: center; padding: 24px; line-height: normal; }
+.acceso::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; opacity: 0.04;
+  background-color: var(--contorno);
+  -webkit-mask: var(--curvas) right center / auto 120% no-repeat;
+  mask: var(--curvas) right center / auto 120% no-repeat;
+}
+.acceso-panel { width: 100%; max-width: 360px; }
 .acceso-panel > h1, .acceso-panel > .acceso-sub, .acceso-logo { text-align: center; }
-.acceso-panel > h1 { font-size: 1.4rem; margin: 1rem 0 0.35rem; }
+.acceso-panel > h1 { font-size: 26px; font-weight: 700; letter-spacing: 0; color: var(--acento); margin: 16px 0 5.6px; }
 .acceso-logo { display: block; margin: 0 auto; }
-.acceso-sub { color: var(--texto-3); font-size: 0.88rem; margin-bottom: 1.5rem; }
-.acceso-opciones { display: flex; flex-direction: column; gap: 0.6rem; margin: 1.25rem 0 0.5rem; }
+.acceso-sub { color: var(--texto-3); font-size: 12.5px; line-height: 1.45; margin-bottom: 28px; }
+.acceso-opciones { display: flex; flex-direction: column; gap: 10px; margin: 20px 0 8px; }
 .acceso-opciones .btn, .acceso-form .btn { width: 100%; }
-.acceso-form { display: flex; flex-direction: column; gap: 0.35rem; margin-top: 1rem; }
-.acceso-form .btn { margin-top: 0.6rem; }
-.acceso-error { color: var(--peligro); font-weight: 600; font-size: 0.85rem; margin: 0.4rem 0 0; text-align: center; }
-.acceso-nota { color: var(--texto-3); font-size: 0.82rem; text-align: center; margin-top: 0.75rem; }
-.acceso-olvido { margin-top: 1.5rem; border-top: 1px solid var(--borde); padding-top: 0.85rem; font-size: 0.9rem; }
+.acceso-form { display: flex; flex-direction: column; gap: 0; margin-top: 0; }
+.acceso-form input { font-size: 15px; padding: 9px 12px; min-height: 0; margin-bottom: 12px; }
+.acceso-form label { margin: 0 0 6px; }
+.acceso-form .campo-ayuda { margin: -8px 0 12px; }
+.acceso-panel .btn-primario { border-radius: 10px; font-size: 15px; padding: 10px 14px; min-height: 0; }
+.acceso-panel .btn-primario:hover:not(:disabled) { filter: none; opacity: 0.85; }
+.acceso-form .btn { margin-top: 4px; }
+.acceso-error { color: var(--peligro); font-weight: 600; font-size: 13.12px; margin: 16px 0 0; text-align: center; }
+.acceso-nota { color: var(--texto-3); font-size: 12.5px; text-align: center; margin-top: 12px; }
+.acceso-olvido { margin-top: 24px; border-top: 1px solid var(--borde); padding-top: 14px; font-size: 13.5px; }
 .acceso-olvido summary { cursor: pointer; color: var(--texto-2); font-weight: 600; }
 
 /* ── Páginas de listado (socios, cuotas) ───────────────────────────────── */
@@ -406,26 +465,21 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
 /* ── Móvil: menos aire dentro de los paneles ─────────────────────────── */
 @media (max-width: 640px) {
-  .tarjeta, .rejilla-tarjetas .tarjeta { padding: 1.25rem; border-radius: 16px; }
-  .tarjeta-destacada { border-radius: 18px; }
+  .tarjeta, .rejilla-tarjetas .tarjeta { padding: 16px; }
   .cifra { font-size: 1.5rem; }
 }
 
 /* ── Marca ABIES, usuarios y permisos (Fase 7a) ───────────────────────── */
-/* El logotipo va en el naranja de ABIES; «Gestión» al lado, discreto. */
-.marca-logo { height: 22px; width: auto; color: var(--naranja); }
-.marca-texto { font-size: 0.85rem; font-weight: 700; color: var(--texto-2); padding-left: 0.6rem; border-left: 1px solid var(--borde); letter-spacing: 0.02em; }
-.usuario-actual { font-size: 0.8rem; font-weight: 700; color: var(--texto-2); padding: 0.3rem 0.75rem; border: 1px solid var(--borde); border-radius: 999px; background: var(--superficie-2); white-space: nowrap; max-width: 16rem; overflow: hidden; text-overflow: ellipsis; }
-@media (max-width: 700px) { .usuario-actual { display: none; } }
-@media (max-width: 380px) { .marca-texto { display: none; } }
+/* El logotipo va siempre en el naranja de ABIES (no cambia con el acento). */
+.marca-logo { height: 18px; width: auto; color: var(--naranja); }
 
-.acceso-marca { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; margin-bottom: 1.5rem; }
-.acceso-logo { width: 170px; height: auto; color: var(--naranja); }
-.acceso-producto { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--texto-3); }
+.acceso-marca { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 8px; }
+.acceso-logo { width: 150px; height: auto; color: var(--naranja); }
+.acceso-producto { font-size: 10.8px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--texto-3); }
 .acceso-pareja { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
 .acceso-pareja > div { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
-.acceso-grupo { border: 1px solid var(--borde); border-radius: var(--radio-medio); padding: 0.75rem 1rem 1rem; margin: 0.85rem 0 0; display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }
-.acceso-grupo legend { font-size: 0.85rem; font-weight: 700; color: var(--titulo); padding: 0 0.35rem; }
+.acceso-grupo { border: 1px solid var(--borde); border-radius: var(--radio); padding: 12px 14px 4px; margin: 0 0 14px; display: flex; flex-direction: column; min-width: 0; }
+.acceso-grupo legend { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); padding: 0 6px; }
 .acceso-opciones .btn .detalle { font-weight: 500; margin-left: 0.25rem; }
 .acceso-olvido p { font-size: 0.88rem; color: var(--texto-2); margin: 0.6rem 0; }
 
@@ -450,3 +504,70 @@ body.solo-lectura #principal form :is(input, select, textarea) { pointer-events:
 .botones-fila { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; }
 .botones-fila .btn + .btn { margin-left: 0; }
 .firma-registro { margin: -0.25rem 0 1rem; font-size: 0.8rem; }
+
+/* ── Menú de la cuenta (el de la barra lateral: Ajustes, Bloquear, Cerrar sesión) ── */
+.menu-flotante {
+  position: fixed; z-index: 60; min-width: 220px; padding: 4px;
+  background: var(--superficie-flotante); border: 1px solid var(--borde); border-radius: var(--radio-pequeno); box-shadow: var(--sombra-flotante);
+}
+.menu-flotante button, .menu-flotante a {
+  display: flex; align-items: center; gap: 8px; width: 100%; min-height: 34px; padding: 6px 10px;
+  font: inherit; font-size: 13.5px; color: var(--texto); text-align: left; text-decoration: none;
+  background: none; border: 0; border-radius: 6px; cursor: pointer;
+}
+.menu-flotante button:hover, .menu-flotante a:hover, .menu-flotante button:focus-visible, .menu-flotante a:focus-visible { background: var(--superficie-2); outline: none; }
+.menu-flotante svg { width: 16px; height: 16px; color: var(--icono); flex-shrink: 0; }
+.menu-flotante .menu-flotante-cab { padding: 8px 10px 6px; font-size: 12px; color: var(--texto-3); border-bottom: 1px solid var(--borde-suave); margin-bottom: 4px; }
+.menu-flotante .menu-flotante-cab b { display: block; color: var(--titulo); font-size: 13.5px; font-weight: 600; }
+
+/* ── Ajustes: la estructura de Ironrack y Solvento ──
+   A la izquierda, la lista de secciones (200 px); a la derecha, una tarjeta con
+   el título en el acento, una línea gris y el contenido en filas. Por debajo de
+   720 px la lista se vuelve una fila de pestañas que se desliza. La página es
+   más ancha que las demás (1.040 px), igual en las tres apps. */
+.aj-layout { display: grid; grid-template-columns: 200px minmax(0, 1fr); gap: 32px; align-items: start; max-width: 1040px; }
+.aj-nav { display: flex; flex-direction: column; gap: 2.4px; position: sticky; top: 24px; }
+.aj-tab {
+  display: block; padding: 6px 10px; border: 1px solid transparent; border-radius: 8px; white-space: nowrap;
+  font-size: 13px; font-weight: 500; color: var(--texto-3); text-decoration: none;
+}
+.aj-tab:hover { background: var(--hundido); color: var(--titulo); }
+.aj-tab[aria-current="page"] { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--titulo); }
+.aj-body { min-width: 0; background: var(--superficie); border: 1px solid var(--borde); border-radius: var(--radio); padding: 17px 20px; }
+.aj-body > h2:first-child { font-size: 21px; font-weight: 700; color: var(--acento); text-transform: none; letter-spacing: 0; margin: 0 0 5.6px; }
+.aj-body > h2:first-child + p { font-size: 12.5px; color: var(--texto-3); margin: 0 0 17.6px; }
+.aj-body h3 { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--texto-3); margin: 26px 0 8px; }
+.aj-body > p + h3 { margin-top: 0; }
+.aj-body .tarjeta { background: transparent; margin-bottom: 0; }
+@media (max-width: 720px) {
+  .aj-layout { grid-template-columns: 1fr; gap: 16px; }
+  .aj-nav { flex-direction: row; overflow-x: auto; position: static; gap: 5.6px; padding-bottom: 5.6px; scrollbar-width: none; }
+  .aj-nav::-webkit-scrollbar { display: none; }
+  .aj-body { padding: 20px; }
+}
+/* Filas: título y descripción a la izquierda, el control a la derecha */
+.filas { padding: 0; overflow: hidden; border: 1px solid var(--borde); border-radius: var(--radio); }
+.fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px; min-height: 62px; margin: 0; }
+.fila + .fila { border-top: 1px solid var(--borde-suave); }
+.fila-texto { flex: 1 1 220px; min-width: 0; }
+.fila-texto > b { display: block; font-size: 15px; font-weight: 500; line-height: 1.35; color: var(--titulo); }
+.fila-texto > span { display: block; font-size: 13px; color: var(--texto-3); line-height: 1.35; margin-top: 1px; }
+.fila-control { flex: none; display: flex; align-items: center; gap: 8px; }
+.fila-control select { width: auto; }
+@media (max-width: 520px) {
+  .fila.apilar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .fila.apilar .fila-texto { flex: none; }
+  .fila.apilar .fila-control { justify-content: flex-start; flex-wrap: wrap; }
+}
+/* Muestras del color de acento (las de Ironrack y Solvento) */
+.muestras { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px 14px; }
+.muestra {
+  position: relative; width: 36px; height: 36px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: var(--c); display: grid; place-items: center; color: var(--fondo);
+}
+.muestra.elegida { box-shadow: 0 0 0 2px var(--superficie), 0 0 0 4px var(--c); }
+.muestra svg { width: 18px; height: 18px; }
+.muestra input { position: absolute; inset: 0; width: 100% !important; height: 100% !important; min-height: 0 !important; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+.muestra:focus-visible, .muestra:has(input:focus-visible) { outline: 2px solid var(--texto); outline-offset: 4px; }
+/* La versión al final de Ajustes, como en Ironrack y Solvento */
+.version-pie { text-align: center; color: var(--texto-3); margin: 3rem 0 1rem; font-family: var(--fuente-mono); font-size: 12.5px; }

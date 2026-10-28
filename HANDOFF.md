@@ -1,8 +1,8 @@
 # HANDOFF.md — Estado actual
 
-*Última actualización: 2026-10-17 · Fase 7a (ABIES: marca, usuarios, permisos y registro) terminada, **sin commit**; pendiente del OK del usuario.*
+*Última actualización: 2026-10-29 · Fase 7a confirmada (`db7dafb`) y estética común con Ironrack y Solvento.*
 
-El proyecto está en `~/ACV/PROYECTOS/IA/ABIES/webkit_asociaciones`. Versión 0.7.0. La aplicación se llama **ABIES · Gestión**.
+El proyecto está en `~/ACV/DEVELOPER/Apps/webkit-asociaciones`. Versión 0.7.0. La aplicación se llama **ABIES · Gestión**.
 
 ## Commits
 
@@ -13,6 +13,18 @@ El proyecto está en `~/ACV/PROYECTOS/IA/ABIES/webkit_asociaciones`. Versión 0.
 - `5119f6a` Fase 5
 - `1338e6f` Fase 6
 - `297cf0f` Estética de Solvento
+- `db7dafb` Fase 7a: ABIES (marca, usuarios, permisos y registro)
+- Estética común con Ironrack y Solvento (ver abajo)
+
+## Estética común con Ironrack y Solvento
+
+La misma interfaz que las otras dos apps del autor (que vienen de OpenClaw):
+
+- **Estructura:** barra lateral de 288 px (marca, «Gestión», la cuenta con avatar y menú —Ajustes, Bloquear, Cerrar sesión—, un buscador que filtra las secciones, las secciones por grupos —Gente, Dinero, Gobierno, Cuenta— y al pie el estado de la copia con su punto y la versión). Fija desde 1.024 px; por debajo, cajón con la hamburguesa de la barra de arriba (64 px); hasta 640 px, cinco secciones abajo (Inicio, Socios, Cuotas, Actividades, Tesorería). Los grupos están en `GRUPOS` de `nucleo/app.js`.
+- **Colores y medidas:** `css/tokens.css` (fondo #0e1015, tarjetas #161920, radios 12/10/8). Fuente **Albert Sans incrustada** en `css/fuentes.css` (OFL, sin conectar a Google) y las curvas de nivel del fondo incrustadas en `css/fondo.css` (se usan de máscara; el color lo pone el tema).
+- **Acento por usuario:** Ajustes › Apariencia, paleta de OpenClaw más el verde de ABIES (el de siempre) y un color propio. Se guarda cifrado en `config.acentos[id del usuario]` (cuenta como un cambio, y queda en el registro como «Configuración»). Al salir y en la pantalla de acceso, siempre el verde. Lo aplica `WA.Tema.acento()` inyectando los tonos derivados para los dos temas.
+- **Ajustes:** lista de secciones (200 px) y tarjeta con filas, como Ironrack; `#/ajustes/<sección>`.
+- **Avisos** arriba con un punto de color; **diálogos** que suben desde abajo en el teléfono; **acceso** con las medidas del de Solvento.
 
 ## Fase 7a: ABIES
 
@@ -21,7 +33,7 @@ El usuario decidió que la aplicación es **solo para ABIES**, con su logo desde
 - **Sincronización** como Solvento, con cola de cambios: queda para la **7b**.
 - **Permisos:** cada cargo ve todo y edita lo suyo.
 - **Contraseña del archivo:** se pide siempre.
-- **Estilo:** el de Solvento con la marca de ABIES.
+- **Estilo:** el de Solvento con la marca de ABIES (hoy, la estética común con Ironrack y Solvento).
 
 ### Marca
 

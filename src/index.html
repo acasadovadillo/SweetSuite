@@ -11,7 +11,9 @@
   <!-- build:version -->
   <!-- El tema va antes que los estilos para que no haya fogonazo al cargar. -->
   <script src="js/nucleo/tema.js"></script>
+  <link rel="stylesheet" href="css/fuentes.css">
   <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/fondo.css">
   <link rel="stylesheet" href="css/base.css">
   <link rel="stylesheet" href="css/componentes.css">
   <link rel="stylesheet" href="css/impresion.css">
@@ -22,36 +24,55 @@
   <!-- Pantalla de acceso (crear / desbloquear / recuperar). La pinta modulos/acceso.js -->
   <div id="acceso" class="acceso"></div>
 
-  <!-- La aplicación, visible solo con la sesión abierta -->
+  <!-- La aplicación, visible solo con la sesión abierta. La estructura es la de
+       Ironrack y Solvento: barra lateral (en el móvil, un cajón), barra de
+       arriba solo en el móvil y cinco pestañas abajo en el teléfono. -->
   <div id="app" class="app" hidden>
-    <header class="cabecera">
-      <button type="button" id="btn-menu" class="btn-icono solo-movil" aria-expanded="false" aria-controls="menu-lateral" aria-label="Menú">
-        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
-      </button>
-      <a class="marca" href="#/inicio" id="marca" aria-label="ABIES · Gestión, inicio"><span class="marca-texto">Gestión</span></a>
-      <div class="cabecera-acciones">
-        <span id="usuario-actual" class="usuario-actual" hidden></span>
-        <button type="button" id="btn-bloquear" class="btn btn-secundario btn-pequeno" title="Bloquear: pide la contraseña para volver a entrar">Bloquear</button>
-        <button type="button" id="btn-cerrar-sesion" class="btn btn-secundario btn-pequeno">Cerrar sesión</button>
+    <aside id="menu-lateral" class="menu" aria-label="Menú">
+      <div class="menu-cab">
+        <a class="marca" href="#/inicio" id="marca" aria-label="ABIES · Gestión, inicio"></a>
+        <button type="button" id="btn-cerrar-menu" class="menu-cerrar" aria-label="Cerrar el menú" title="Cerrar">
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+        </button>
       </div>
-    </header>
+      <div class="menu-titulo">Gestión</div>
+      <!-- Quién ha entrado: abre el menú de la cuenta (Ajustes, Bloquear, Cerrar sesión) -->
+      <button type="button" id="menu-cuenta" class="menu-cuenta" aria-haspopup="true">
+        <span class="avatar" id="avatar" aria-hidden="true"></span>
+        <span class="menu-cuenta-nombre" id="usuario-actual"></span>
+        <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <label class="menu-buscar">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        <input type="search" id="menu-buscar" placeholder="Buscar en ABIES…" autocomplete="off" aria-label="Buscar una sección">
+      </label>
+      <nav aria-label="Secciones"><ul id="menu-lista"></ul></nav>
+      <div class="menu-pie"><span id="estado-copia" class="estado-copia"></span><span class="version" id="menu-version"></span></div>
+    </aside>
+    <div id="velo-menu" class="velo" aria-hidden="true"></div>
 
-    <div id="franja-demo" class="franja franja-info" hidden>
-      <span>Estás viendo una <strong>demostración</strong> con datos inventados. Nada de lo que hagas se guarda.</span>
-      <button type="button" id="btn-salir-demo" class="btn btn-pequeno btn-secundario">Salir de la demostración</button>
-    </div>
-    <div id="franja-copia" class="franja franja-aviso" role="status" hidden>
-      <span id="franja-copia-texto"></span>
-      <button type="button" id="btn-franja-copia" class="btn btn-pequeno btn-primario">Descargar copia</button>
-    </div>
+    <div class="contenido">
+      <header class="cabecera">
+        <button type="button" id="btn-menu" class="btn-icono" aria-expanded="false" aria-controls="menu-lateral" aria-label="Abrir el menú">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+        </button>
+        <a class="marca-movil" href="#/inicio" id="marca-movil" aria-label="ABIES · Gestión, inicio"><span id="marca-nombre"></span></a>
+      </header>
 
-    <div class="cuerpo">
-      <nav id="menu-lateral" class="menu" aria-label="Secciones">
-        <ul id="menu-lista"></ul>
-      </nav>
-      <div id="velo-menu" class="velo" aria-hidden="true"></div>
+      <div id="franja-demo" class="franja franja-info" hidden>
+        <span>Estás viendo una <strong>demostración</strong> con datos inventados. Nada de lo que hagas se guarda.</span>
+        <button type="button" id="btn-salir-demo" class="btn btn-pequeno btn-secundario">Salir de la demostración</button>
+      </div>
+      <div id="franja-copia" class="franja franja-aviso" role="status" hidden>
+        <span id="franja-copia-texto"></span>
+        <button type="button" id="btn-franja-copia" class="btn btn-pequeno btn-primario">Descargar copia</button>
+      </div>
+
       <main id="principal" class="principal" tabindex="-1"></main>
     </div>
+
+    <!-- En el teléfono: cinco secciones abajo, con icono; el resto, en el cajón -->
+    <nav id="barra-movil" class="barra-movil" aria-label="Secciones principales"></nav>
   </div>
 
   <div id="avisos" class="avisos"></div>
