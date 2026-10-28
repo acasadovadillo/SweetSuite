@@ -20,10 +20,10 @@ datos-cifrados/Ironrack/alberto-ironrack.enc
 datos-cifrados/Ironrack/hafsa-ironrack.enc
 ```
 
-Las cuentas (Alberto y Hafsa) están en `CUENTAS`, en `src/js/github.js`. Al entrar solo se elige la cuenta y se pone la contraseña; la primera vez en cada dispositivo se repite, para no estrenarla con una errata.
+Los usuarios (`alberto` y `hafsa`) están en `CUENTAS`, en `src/js/github.js`. Al entrar se escribe el usuario y la contraseña. La primera vez de un usuario en un dispositivo, la contraseña se establece escribiéndola dos veces (mínimo 6 caracteres): es la que cifra su `.enc`, así que en otro dispositivo hay que poner la misma.
 
 - La contraseña nunca se guarda ni sale del navegador. GitHub solo ve texto cifrado.
-- **El token no se pide al entrar.** Sin él la app funciona entera, pero solo en ese dispositivo, y lo avisa en Entrenar. Al pulsar «Conectar» (o en Ajustes) se pega un token **fine-grained** con acceso solo a `datos-cifrados` y permiso *Contents: Read and write* (vale el de Solvento); se guarda cifrado, se sube lo de ese dispositivo y se fusiona con lo que ya hubiera en GitHub. El archivo `.enc` de cada cuenta se crea entonces.
+- **El token no se pide al entrar.** Sin él la app funciona entera, pero solo en ese dispositivo, y lo avisa en Entrenar. En **Ajustes → Pegar token de GitHub** se pega un token **fine-grained** con acceso solo a `datos-cifrados` y permiso *Contents: Read and write* (vale el de Solvento); se guarda cifrado, se sube lo de ese dispositivo y se fusiona con lo que ya hubiera en GitHub. El archivo `.enc` de cada usuario se crea entonces.
 - El token no puede ir en el código: este repositorio es público y `datos-cifrados` es privado.
 - Cada cambio se guarda al momento en el dispositivo (cifrado) y se sube a GitHub unos segundos después, o en cuanto vuelve la conexión.
 - **Varios dispositivos**: si el móvil y el portátil guardan a la vez, los documentos se fusionan elemento a elemento (gana la versión más reciente de cada entreno, rutina o ejercicio; lo borrado no resucita).

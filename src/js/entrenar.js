@@ -100,8 +100,8 @@
     // donde se ve, y no en la entrada, que ya pide bastante.
     const sinGitHub = S.token ? "" : `<article class="tarjeta aviso-github">
         <div><b>Tus entrenos están solo en este dispositivo</b>
-        <p class="suave">Conecta con GitHub para tener una copia cifrada en datos-cifrados y verlos en tus otros dispositivos.</p></div>
-        <button class="btn primario" data-a="ajToken">Conectar</button>
+        <p class="suave">Pega tu token de GitHub en Ajustes para tener una copia cifrada en datos-cifrados y verlos en tus otros dispositivos.</p></div>
+        <a class="btn primario" href="#ajustes">Ajustes</a>
       </article>`;
 
     return `<section class="cabeza">

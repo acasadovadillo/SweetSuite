@@ -226,6 +226,8 @@
     if (recordarActivo) { try { await IR.cripto.recordar(S.usuario, S.cripto); } catch (e) { /* sin IndexedDB */ } }
   }
   const tieneToken = (u) => !!ls.get(clave("token", u));
+  const tieneDatos = (u) => !!ls.get(clave("doc", limpiarUsuario(u)));
+  const esCuenta = (u) => G.CUENTAS.some((c) => c.usuario === limpiarUsuario(u));
   const ultimoUsuario = () => ls.get("ironrack_usuario") || "";
   const limpiarUsuario = (u) => String(u || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
 
@@ -237,7 +239,8 @@
    */
   async function entrar({ usuario, password, token, crear = false, recordar = true }) {
     usuario = limpiarUsuario(usuario);
-    if (!G.CUENTAS.some((c) => c.usuario === usuario)) throw fallo("Elige tu cuenta", "USUARIO");
+    if (!usuario) throw fallo("Escribe tu usuario", "USUARIO");
+    if (!esCuenta(usuario)) throw fallo("No existe el usuario «" + usuario + "»", "USUARIO");
     if (!password) throw fallo("Escribe tu contraseña", "PASSWORD");
     const k = (n) => clave(n, usuario);
     const localTxt = ls.get(k("doc"));
@@ -377,6 +380,6 @@
     cambiar, cambiarActual, cambiarAjustes, cambiarItem, anadir, borrar,
     guardarLocal, subir, sincronizar, pendiente,
     entrar, reanudar, salir, olvidarDispositivo, cambiarToken, necesitaContrasena, importar,
-    tieneToken, ultimoUsuario, limpiarUsuario,
+    tieneToken, tieneDatos, esCuenta, ultimoUsuario, limpiarUsuario,
   };
 })();

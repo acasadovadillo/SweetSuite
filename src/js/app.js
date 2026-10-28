@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.1.0";
+  const VERSION = "1.2.0";
 
   const TABS = ["entrenar", "historial", "progreso", "rutinas", "ejercicios"];
 
@@ -90,7 +90,7 @@
           <p class="estado-largo ${ESTADOS[S.estado] ? ESTADOS[S.estado][0] : ""}">${esc(textoEstado())}</p>
           <p class="suave">Archivo: <code>${esc(IR.github.REPO.owner + "/" + IR.github.REPO.repo + "/" + IR.github.ruta(S.usuario))}</code>${IR.github.DEV ? " (modo local de pruebas)" : ""}</p>
           <div class="botones">
-            <button class="btn ${S.token ? "" : "primario"}" data-a="ajToken">${S.token ? "Cambiar token" : "Conectar con GitHub"}</button>
+            <button class="btn ${S.token ? "" : "primario"}" data-a="ajToken">${S.token ? "Cambiar token" : "Pegar token de GitHub"}</button>
             <button class="btn primario" data-a="ajSincronizar" ${S.token ? "" : "disabled"}>Sincronizar ahora</button>
           </div>
         </article>
@@ -119,7 +119,7 @@
     async ajSincronizar() { await A.sincronizar({ forzar: true }); if (A.pendiente()) await A.subir(); render(true); },
     ajToken() {
       const pideClave = A.necesitaContrasena();
-      IR.ui.hoja(`<h3>Conectar con GitHub</h3>
+      IR.ui.hoja(`<h3>Token de GitHub</h3>
         <form class="form" id="f-token">
           <p class="suave">Para guardar una copia cifrada en <code>${esc(IR.github.REPO.repo + "/" + IR.github.ruta(S.usuario))}</code> y tener tus entrenos en todos tus dispositivos.</p>
           ${ayudaToken()}
@@ -187,74 +187,72 @@
   }
 
   // ── Entrada ──
-  let pidiendoConfirmacion = false;
+  //
+  // Usuario y contraseña, nada más: el token se pega luego en Ajustes. La
+  // primera vez que un usuario entra en un dispositivo no hay nada que abrir,
+  // así que la contraseña se establece escribiéndola dos veces; una errata ahí
+  // dejaría el archivo cifrado con una contraseña que nadie recuerda.
+  const MIN_CONTRASENA = 6;
+  const esPrimeraVez = (u) => !A.tieneDatos(u);
+
   function mostrarLogin(error) {
     $("#app").hidden = true;
     $("#login").hidden = false;
-    const ultimo = A.ultimoUsuario();
-    const usuario = IR.github.CUENTAS.some((c) => c.usuario === ultimo) ? ultimo : IR.github.CUENTAS[0].usuario;
     $("#login").innerHTML = `<div class="login-caja">
       <div class="logo-grande">${LOGO}<span>IRONRACK</span></div>
-      <form class="form" id="f-login" autocomplete="on">
-        <div class="cuentas" role="radiogroup" aria-label="Cuenta">
-          ${IR.github.CUENTAS.map((c) => `<label class="cuenta">
-            <input type="radio" name="usuario" value="${esc(c.usuario)}" ${c.usuario === usuario ? "checked" : ""}>
-            <span class="avatar">${esc(c.nombre.charAt(0))}</span>${esc(c.nombre)}</label>`).join("")}
-        </div>
-        <input type="text" name="username" value="${esc(usuario)}" autocomplete="username" hidden>
-        <label>Contraseña <input type="password" name="password" autocomplete="current-password" required></label>
+      <form class="form" id="f-login" autocomplete="on" novalidate>
+        <label>Usuario <input name="usuario" value="${esc(A.ultimoUsuario())}" placeholder="alberto" autocomplete="username" autocapitalize="off" autocorrect="off" spellcheck="false" required></label>
+        <label><span id="txt-password">Contraseña</span> <input type="password" name="password" autocomplete="current-password" required></label>
         <label id="campo-repite" hidden>Repite la contraseña <input type="password" name="password2" autocomplete="new-password"></label>
+        <p class="suave pequeno-izq" id="login-info" hidden></p>
         <label class="interruptor"><input type="checkbox" name="recordar" checked> Recordar en este dispositivo</label>
         <p class="error" id="login-error">${esc(error || "")}</p>
         <button class="btn primario grande ancho" id="login-btn">Entrar</button>
         <p class="suave centro pequeno">Tus datos se cifran en este dispositivo antes de guardarse. Sin tu contraseña nadie puede leerlos, tampoco GitHub.${IR.github.DEV ? "<br><b>Modo local de pruebas:</b> no se habla con GitHub." : ""}</p>
       </form></div>`;
-    pidiendoConfirmacion = false;
     const f = $("#f-login");
-    // Cambiar de cuenta deshace el «repite la contraseña» de la otra; el campo
-    // oculto es para que el gestor de contraseñas sepa de quién es cada una.
-    f.querySelectorAll("[name=usuario]").forEach((r) => r.addEventListener("change", () => {
-      f.username.value = r.value;
-      $("#login-error").textContent = "";
-      if (pidiendoConfirmacion) { pidiendoConfirmacion = false; $("#campo-repite").hidden = true; $("#login-btn").textContent = "Entrar"; }
-      f.password.focus();
-    }));
+    f.usuario.addEventListener("input", () => { $("#login-error").textContent = ""; modoLogin(f); });
     f.addEventListener("submit", entrar);
-    setTimeout(() => f.password.focus(), 50);
+    modoLogin(f);
+    setTimeout(() => (f.usuario.value ? f.password : f.usuario).focus(), 50);
+  }
+
+  // Entrar con la contraseña de siempre, o establecerla si es la primera vez
+  function modoLogin(f) {
+    const u = A.limpiarUsuario(f.usuario.value);
+    const nueva = !!u && A.esCuenta(u) && esPrimeraVez(u);
+    $("#txt-password").textContent = nueva ? "Elige tu contraseña" : "Contraseña";
+    f.password.autocomplete = nueva ? "new-password" : "current-password";
+    $("#campo-repite").hidden = !nueva;
+    f.password2.required = nueva;
+    const info = $("#login-info");
+    info.hidden = !nueva;
+    info.textContent = nueva
+      ? `Primera vez de «${u}» en este dispositivo. Esta contraseña cifra ${IR.github.ruta(u).split("/").pop()}: si ya usas Ironrack en otro dispositivo, pon la misma.`
+      : "";
+    $("#login-btn").textContent = nueva ? "Crear contraseña y entrar" : "Entrar";
   }
 
   async function entrar(ev) {
     ev.preventDefault();
     const f = ev.target, btn = $("#login-btn"), err = $("#login-error");
+    const usuario = A.limpiarUsuario(f.usuario.value);
+    const nueva = A.esCuenta(usuario) && esPrimeraVez(usuario);
     err.textContent = "";
-    if (pidiendoConfirmacion && f.password.value !== f.password2.value) { err.textContent = "Las contraseñas no coinciden"; return; }
+    if (!usuario) { err.textContent = "Escribe tu usuario"; f.usuario.focus(); return; }
+    if (!f.password.value) { err.textContent = "Escribe tu contraseña"; f.password.focus(); return; }
+    if (nueva && f.password.value.length < MIN_CONTRASENA) { err.textContent = `La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres`; return; }
+    if (nueva && f.password.value !== f.password2.value) { err.textContent = "Las dos contraseñas no coinciden"; f.password2.focus(); return; }
+    const texto = btn.textContent;
     btn.disabled = true;
     btn.textContent = "Abriendo…";
     try {
-      const r = await A.entrar({
-        usuario: f.usuario.value, password: f.password.value,
-        crear: pidiendoConfirmacion, recordar: f.recordar.checked,
-      });
-      if (r.nuevo) {
-        // Primera vez en este dispositivo: repetir la contraseña evita estrenar
-        // la cuenta con una errata, que luego no abriría lo guardado en GitHub.
-        pidiendoConfirmacion = true;
-        $("#campo-repite").hidden = false;
-        f.password2.focus();
-        err.textContent = r.sinGitHub
-          ? "Primera vez en este dispositivo. Repite la contraseña para empezar; si ya usas Ironrack en otro, pon la misma."
-          : "Aún no hay datos en GitHub. Repite la contraseña para crear tu cuenta.";
-        err.classList.add("info");
-        btn.disabled = false;
-        btn.textContent = "Crear cuenta";
-        return;
-      }
+      await A.entrar({ usuario, password: f.password.value, crear: nueva, recordar: f.recordar.checked });
       arrancar();
     } catch (e) {
-      err.classList.remove("info");
       err.textContent = e.code === "BAD_PASSWORD" ? "Contraseña incorrecta" : e.message || String(e);
       btn.disabled = false;
-      btn.textContent = pidiendoConfirmacion ? "Crear cuenta" : "Entrar";
+      btn.textContent = texto;
     }
   }
 
