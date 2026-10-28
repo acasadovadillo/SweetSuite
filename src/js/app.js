@@ -10,7 +10,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.5.0";
+  const VERSION = "1.5.1";
 
   // ── Pintar ──
   // Si estás escribiendo en una casilla, no se repinta debajo de ti (te
@@ -268,8 +268,10 @@
   function alternarVerClave(f) {
     const ver = f.password.type === "password", btn = $("#login-ver");
     f.password.type = f.password2.type = ver ? "text" : "password";
-    btn.querySelector(".ojo-ver").hidden = ver;
-    btn.querySelector(".ojo-tachado").hidden = !ver;
+    // toggleAttribute y no «.hidden = …»: un <svg> no tiene esa propiedad, y
+    // asignarla solo crea una variable suelta sin tocar el atributo.
+    btn.querySelector(".ojo-ver").toggleAttribute("hidden", ver);
+    btn.querySelector(".ojo-tachado").toggleAttribute("hidden", !ver);
     btn.title = btn.ariaLabel = ver ? "Ocultar la contraseña" : "Ver la contraseña";
     f.password.focus();
   }
