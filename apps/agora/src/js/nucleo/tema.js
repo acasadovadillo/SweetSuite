@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Tema (claro, oscuro o el del sistema) y color de acento.
+ * Agora — Tema (claro, oscuro o el del sistema) y color de acento.
  *
  * Se carga en <head>, ANTES que el CSS, a propósito: si se aplicara después de
  * pintar, quien use el tema oscuro vería un fogonazo blanco en cada carga.
@@ -18,7 +18,7 @@
  */
 (function () {
   "use strict";
-  var CLAVE = "webkit_asociaciones_tema";
+  var CLAVE = "sweetsuite_tema";      // el de SweetSuite, que lo comparte
   var VALIDOS = ["auto", "claro", "oscuro"];
   var sistema = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
 
@@ -99,6 +99,8 @@
 
   aplicar();
   if (sistema && sistema.addEventListener) sistema.addEventListener("change", aplicar);
+  // Si se cambia en SweetSuite o en otra app, aquí también
+  window.addEventListener("storage", function (e) { if (e.key === CLAVE) aplicar(); });
 
   window.WA = window.WA || {};
   window.WA.Tema = { poner: poner, actual: guardado, VALIDOS: VALIDOS, ACENTOS: ACENTOS, acento: acento, valido: valido };

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Ayuda para el IVA (sin interfaz: tests/iva.test.js).
+ * Agora — Ayuda para el IVA (sin interfaz: tests/iva.test.js).
  *
  * ⚠️ ES UNA AYUDA ORIENTATIVA, NO ASESORAMIENTO FISCAL. Suma lo que hay en las
  * facturas para que sea más fácil rellenar el modelo 303 (trimestral) y el

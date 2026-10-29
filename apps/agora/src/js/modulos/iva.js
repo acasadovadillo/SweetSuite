@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «IVA»: ayuda para el modelo 303 (trimestral) y el resumen anual.
+ * Agora — Módulo «IVA»: ayuda para el modelo 303 (trimestral) y el resumen anual.
  *
  * ⚠️ Orientativo: suma lo que hay en las facturas. Quien presenta los modelos
  * debe revisarlo (verificar con asesoría). La lógica está en logica/iva.js, con tests.

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Lógica de socios (sin interfaz: se prueba en tests/socios.test.js).
+ * Agora — Lógica de socios (sin interfaz: se prueba en tests/socios.test.js).
  *
  * Un socio:
  *   { id, numero,                                 número de socio: nunca se reutiliza

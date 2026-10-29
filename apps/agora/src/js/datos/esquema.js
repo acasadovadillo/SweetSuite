@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Forma de los datos (esquema) y migraciones.
+ * Agora — Forma de los datos (esquema) y migraciones.
  *
  * Todos los datos de una asociación son UN documento JSON:
  *
@@ -47,6 +47,8 @@
 })(typeof self !== "undefined" ? self : this, function (Direccion, Tesoreria, Actas) {
   "use strict";
 
+  // El identificador del documento no cambia con el nombre (Agora): así se
+  // siguen abriendo los datos y las copias de antes.
   var APP = "webkit_asociaciones";
   var VERSION = 8;
 
@@ -220,7 +222,7 @@
     var copia = JSON.parse(JSON.stringify(doc));
     var v = typeof copia.esquema === "number" ? copia.esquema : 0;
     if (v > VERSION) {
-      throw new Error("Estos datos se crearon con una versión más nueva de webkit_asociaciones. Descarga la última versión para abrirlos.");
+      throw new Error("Estos datos se crearon con una versión más nueva de Agora. Descarga la última versión para abrirlos.");
     }
     while (v < VERSION) {
       copia = MIGRACIONES[v](copia);

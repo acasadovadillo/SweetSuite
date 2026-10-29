@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Cuotas».
+ * Agora — Módulo «Cuotas».
  *
  *   #/cuotas            cuotas de un periodo: emitirlas (remesa), cobrarlas, anularlas
  *   #/cuotas/impagados  quién debe qué

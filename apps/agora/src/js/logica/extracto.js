@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Importar el extracto del banco (sin interfaz: tests/extracto.test.js).
+ * Agora — Importar el extracto del banco (sin interfaz: tests/extracto.test.js).
  *
  * Cada banco exporta a su manera (CSV o Excel, con unas filas de cabecera
  * antes de la tabla, importe en una columna con signo o en dos columnas

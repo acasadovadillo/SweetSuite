@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — CSV (leer y escribir hojas de cálculo en texto).
+ * Agora — CSV (leer y escribir hojas de cálculo en texto).
  *
  * Al ESCRIBIR se usa el formato que Excel en español abre con doble clic:
  *   · separador punto y coma (;), porque la coma es el separador decimal;

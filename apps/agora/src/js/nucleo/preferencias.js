@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Preferencias de ESTE dispositivo.
+ * Agora — Preferencias de ESTE dispositivo.
  *
  * No son datos de la asociación (por eso no van cifradas ni en la copia de
  * seguridad): cada ordenador decide las suyas. Viven en localStorage.
@@ -11,7 +11,7 @@
  */
 (function (raiz) {
   "use strict";
-  var CLAVE = "webkit_asociaciones_preferencias";
+  var CLAVE = "sweetsuite_agora_preferencias";
   var POR_DEFECTO = { bloqueoMinutos: 15, borrarAlSalir: false };
 
   function leer() {

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Componentes: botones, tarjetas, formularios, tablas,
+ * Agora — Componentes: botones, tarjetas, formularios, tablas,
  * diálogos, avisos y pantalla de acceso.
  *
  * Con las medidas de Ironrack y Solvento: botones de 38 px con radio 10 (el
@@ -475,6 +475,10 @@ fieldset[disabled] input, fieldset[disabled] select, fieldset[disabled] textarea
 
 .acceso-marca { display: flex; flex-direction: column; align-items: center; gap: 10px; margin-bottom: 8px; }
 .acceso-logo { width: 150px; height: auto; color: var(--naranja); }
+/* Agora: la hoja de ABIES con su nombre (barra lateral, móvil y avisos de entrada) */
+.marca-hoja { height: 20px; width: auto; flex-shrink: 0; color: var(--naranja); }
+.marca { gap: 9px; font-size: 17px; font-weight: 700; color: var(--titulo); }
+.acceso-hoja { width: 56px; height: auto; color: var(--naranja); }
 .acceso-producto { font-size: 10.8px; font-weight: 700; letter-spacing: 0.25em; text-transform: uppercase; color: var(--texto-3); }
 .acceso-pareja { display: grid; grid-template-columns: 1fr 1fr; gap: 0 0.75rem; }
 .acceso-pareja > div { display: flex; flex-direction: column; gap: 0.35rem; min-width: 0; }

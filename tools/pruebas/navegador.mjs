@@ -246,6 +246,7 @@ async function main() {
     await hasta(() => $("#b-nueva")); $("#b-nueva").click();
     await hasta(() => $("#f-crear")); const c = $("#f-crear"); c.repetir.value = "empresa-1234"; c.requestSubmit();
     await hasta(() => $("#c-guardada"), 30000); $("#c-guardada").click(); $("#b-seguir").click();
+    await hasta(() => location.hash === "#inicio"); location.hash = "#app/solvento";   // ABIES tiene Solvento y Agora
     const W = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.document.getElementById("boot-overlay").style.display === "none" && w; }, 40000);
     W.document.getElementById("sync-token").value = "dev"; W.document.getElementById("sync-save-token").click();
     await hasta(() => W.document.getElementById("sync-status").textContent.includes("empieza vacío"), 30000);
@@ -260,8 +261,22 @@ async function main() {
     await hasta(() => $("#f-rep")); f = $("#f-rep"); f.usuario.value = "alberto"; f.contrasena.value = "mala"; f.requestSubmit();
     await hasta(() => $(".entrada-error").textContent.includes("no es correcta"), 20000);
     f = $("#f-rep"); f.contrasena.value = "prueba-1234"; f.requestSubmit();
-    await hasta(() => location.hash === "#app/solvento", 20000);
+    await hasta(() => location.hash === "#inicio", 20000); location.hash = "#app/solvento";
     return true;`));
+
+  await prueba("Agora: ABIES entra con el cargo de su representante y lo guardado sigue al volver", () => E.js(`
+    location.hash = "#app/agora";
+    const abierta = () => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; };
+    let W = await hasta(abierta, 40000);
+    const datos = W.WA.Sesion.datos;
+    await datos.escribir("asociacion", Object.assign({}, await datos.leer("asociacion"), { nombre: "ABIES de prueba" }));
+    const cargo = W.WA.Sesion.firma === "Alberto · Presidencia" && W.WA.Sesion.puedeEditar("socios");
+    await window.SweetSuite.bloquear();
+    await hasta(() => $("#f-empresa")); let f = $("#f-empresa"); f.contrasena.value = "empresa-1234"; f.requestSubmit();
+    await hasta(() => $("#f-rep")); f = $("#f-rep"); f.usuario.value = "alberto"; f.contrasena.value = "prueba-1234"; f.requestSubmit();
+    await hasta(() => location.hash === "#inicio", 20000); location.hash = "#app/agora";
+    W = await hasta(abierta, 40000);
+    return cargo && (await W.WA.Sesion.datos.leer("asociacion")).nombre === "ABIES de prueba";`));
 
   await prueba("se bloquea solo tras un rato sin usarla", () => E.js(`
     const real = Date.now; Date.now = () => real() + 16 * 60000;

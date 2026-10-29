@@ -1,5 +1,5 @@
 /*
- * ABIES · Gestión — Cuentas de usuario y bóveda con doble llave (Fase 7a).
+ * Agora — Cuentas de usuario y bóveda con doble llave (Fase 7a).
  *
  * Sin interfaz ni almacenamiento: recibe y devuelve objetos, así que se prueba
  * en Node (tests/cuentas.test.js). La sesión lo une con la bóveda del navegador.
@@ -104,7 +104,7 @@
 
   /** Lee la cabecera con la contraseña del archivo. Lanza «ACCESO» si no es. */
   async function abrirCabecera(boveda, contrasenaArchivo) {
-    if (!esBoveda(boveda)) throw errorUso("No es una bóveda de ABIES · Gestión.");
+    if (!esBoveda(boveda)) throw errorUso("No es una bóveda de Agora.");
     try {
       var r = await C.descifrar(boveda.cabecera, contrasenaArchivo);
       return { cabecera: r.objeto, llaveArchivo: r.llave };

@@ -128,7 +128,7 @@ test(".ics: escapado, plegado a 75 octetos, todo el día, zona horaria y cancela
   assert.ok(lineas.includes("DTEND;VALUE=DATE:20261014"), "DTEND de un día completo es el día siguiente al último");
   assert.ok(lineas.includes("STATUS:CANCELLED"));
   assert.ok(lineas.includes("DTSTAMP:20261001T080000Z"));
-  assert.ok(lineas.includes("UID:a1@webkit-asociaciones"));
+  assert.ok(lineas.includes("UID:a1@agora.sweetsuite"));
   // Ninguna línea pasa de 75 octetos y las de continuación empiezan con un espacio.
   for (const l of lineas) assert.ok(Buffer.byteLength(l, "utf8") <= 75, l);
   const desplegado = txt.replace(/\r\n /g, "");

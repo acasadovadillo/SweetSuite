@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Comprobaciones de formato.
+ * Agora — Comprobaciones de formato.
  *
  * IMPORTANTE: aquí solo se comprueba que un dato ESTÁ BIEN ESCRITO (que la letra
  * de control de un NIF cuadra, que un IBAN pasa su prueba de dígitos). No se

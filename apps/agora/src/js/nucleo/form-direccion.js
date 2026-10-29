@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Formulario de dirección postal por partes (componente de interfaz).
+ * Agora — Formulario de dirección postal por partes (componente de interfaz).
  *
  * Lo usan el domicilio social de la asociación y la ficha de cada socio, para que
  * las direcciones se escriban siempre igual. La lógica está en nucleo/direccion.js.

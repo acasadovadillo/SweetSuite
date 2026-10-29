@@ -1,5 +1,7 @@
 # CONTEXT.md — Decisiones y arquitectura
 
+> Escrito antes de que la app pasara a SweetSuite como **Agora**. Lo de la entrada propia, la doble llave, los usuarios y el archivo único de `dist/` ya no vale: ver el README y `AGORA.md`. La organización del código y las decisiones de la lógica, sí.
+
 ## Qué es
 
 **ABIES · Gestión** (desde la Fase 7a, solo para la asociación ABIES; antes era un «webkit» genérico, y el repositorio conserva el nombre `webkit_asociaciones`). Aplicación de gestión integral, que se distribuye como **un único archivo HTML** (HTML + CSS + JavaScript sin dependencias), funciona **sin conexión** abriendo el archivo y guarda los datos **cifrados en el navegador**. **Software privativo, todos los derechos reservados** (decisión del 2026-10-01; podría abrirse más adelante). Código, comentarios e interfaz en español.

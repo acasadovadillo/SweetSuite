@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Inicio»: el panel de resumen.
+ * Agora — Módulo «Inicio»: el panel de resumen.
  *
  * Arriba, lo que falta por rellenar (solo mientras falte). Después, en bloques:
  *   · Agenda: plazos que vencen, próximas actividades y subvenciones en marcha.
@@ -23,7 +23,6 @@
     var hoy = F.hoy(), anio = +hoy.slice(0, 4);
     var c = await WA.TesUI.cargar(datos);
     var obligaciones = await datos.listar("obligaciones");
-    var copia = await datos.estadoCopia();
     var a = c.asociacion, config = c.config;
     var p = WA.Informes.panel(c, hoy);
     var junta = WA.Informes.juntaEn(c.junta, hoy);
@@ -38,7 +37,6 @@
     if (!c.socios.length) pendientes.push('<a href="#/socios">Da de alta a los socios (o impórtalos desde una hoja de cálculo)</a>');
     if (!c.documentos.some(function (d) { return d.categoria === "Estatutos"; })) pendientes.push('<a href="#/documentos">Adjunta los estatutos</a>');
     if (!obligaciones.length) pendientes.push('<a href="#/obligaciones">Elige las obligaciones (fiscales, asociativas, renovaciones) que queréis tener con aviso</a>');
-    if (!demo && !copia.ultimaCopia) pendientes.push('<a href="#/copias">Descarga tu primera copia de seguridad</a>');
 
     // ── Agenda ──
     var venc = (await WA.ObligacionesUI.vencimientos(datos, (anio - 1) + "-01-01", F.sumarDias(hoy, 60)))
@@ -100,12 +98,7 @@
     var graficaSocios = '<section class="tarjeta tarjeta-ancha" aria-labelledby="t-gsocios"><h3 id="t-gsocios">Socios activos (últimos 12 meses)</h3>' +
       WA.Graficas.lineas(p.serieSocios, { titulo: "Socios activos a fin de mes", desdeCero: true }) + "</section>";
 
-    // ── Copia y junta ──
-    var estadoCopia = demo ? "No aplica en la demostración."
-      : !copia.ultimaCopia ? '<span class="estado estado-aviso">Sin copias todavía</span>'
-      : copia.cambiosDesdeCopia ? '<span class="estado estado-aviso">Cambios sin copia</span> Última: ' + esc(F.corta(copia.ultimaCopia.slice(0, 10)))
-      : '<span class="estado estado-ok">Al día</span> Última: ' + esc(F.corta(copia.ultimaCopia.slice(0, 10)));
-    var copiaHtml = tarjeta("copia", "Copia de seguridad", "<p>" + estadoCopia + "</p>", ["#/copias", "Ir a copias"]);
+    // ── Junta ──
     var juntaHtml = tarjeta("junta", "Junta directiva", '<p><span class="cifra">' + junta.length + "</span> " + (junta.length === 1 ? "cargo vigente" : "cargos vigentes") + "</p>",
       ["#/asociacion", "Ver junta"]);
 
@@ -117,7 +110,7 @@
       '<h2 class="titulo-bloque">Agenda</h2><div class="rejilla-tarjetas">' + vencHtml + proximasHtml + subvHtml + "</div>" +
       '<h2 class="titulo-bloque">Dinero</h2><div class="rejilla-tarjetas">' + saldoHtml + anioHtml + presHtml + graficaSaldo + "</div>" +
       '<h2 class="titulo-bloque">Socios y cuotas</h2><div class="rejilla-tarjetas">' + sociosHtml + cuotasHtml + deudaHtml + graficaSocios + "</div>" +
-      '<h2 class="titulo-bloque">La asociación</h2><div class="rejilla-tarjetas">' + copiaHtml + juntaHtml +
+      '<h2 class="titulo-bloque">La asociación</h2><div class="rejilla-tarjetas">' + juntaHtml +
       tarjeta("informes", "Informes", '<p class="detalle">Memoria anual y cuentas del ejercicio, listas para imprimir.</p>', ["#/informes", "Ver informes"]) + "</div>";
   }
 

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Gráficas sencillas en SVG, sin librerías.
+ * Agora — Gráficas sencillas en SVG, sin librerías.
  *
  *   lineas(serie, opciones)  evolución en el tiempo. serie: [{ fecha, valor }]
  *     opciones: { titulo, formato(valor) → texto, alto, desdeCero (para recuentos) }

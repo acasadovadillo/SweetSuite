@@ -1,5 +1,5 @@
 /*
- * ABIES · Gestión — Permisos por cargo (sin interfaz: tests/cuentas.test.js).
+ * Agora — Permisos por cargo (sin interfaz: tests/cuentas.test.js).
  *
  * Todos los usuarios VEN todo; cada uno EDITA las secciones de su cargo. La
  * cuenta de administración (ABIES) lo edita todo y es la única que gestiona

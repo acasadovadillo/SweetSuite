@@ -58,12 +58,25 @@
   function leerLlaveroLocal(u) {
     try { const x = JSON.parse(ls.get(claveLlavero(u))); return L.esLlavero(x) ? x : null; } catch (e) { return null; }
   }
+  // Agora guarda en IndexedDB (sus adjuntos no caben en localStorage): al
+  // borrar la cuenta de este dispositivo, también lo suyo
+  function borrarAgora(u) {
+    try {
+      const pet = indexedDB.open("sweetsuite_agora");
+      pet.onsuccess = () => {
+        const bd = pet.result;
+        if (bd.objectStoreNames.contains("boveda")) bd.transaction("boveda", "readwrite").objectStore("boveda").delete("datos:" + u);
+        bd.close();
+      };
+    } catch (e) { /* sin IndexedDB: no hay nada que borrar */ }
+  }
   const guardarLlaveroLocal = (ll) => ls.set(claveLlavero(ll.usuario), JSON.stringify(ll));
 
   // Lo que cada app deja en este dispositivo, para saber su estado sin abrirla
   const MARCAS = {
     solvento: { pendiente: (u) => "sweetsuite_solvento_sync_pendiente:" + u, token: () => "sweetsuite_solvento_gh_token:" + usuarioToken() },
     ironrack: { pendiente: (u) => "sweetsuite_ironrack_pendiente_" + u, token: (u) => "sweetsuite_ironrack_token_" + u },
+    agora: { pendiente: (u) => "sweetsuite_agora_pendiente:" + u, token: () => "sweetsuite_agora_token:" + usuarioToken() },
   };
   function estadoDe(id) {
     if (S.estados[id]) return S.estados[id];
@@ -1204,10 +1217,12 @@
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
         if (k === claveLlavero(u) || (k.indexOf("sweetsuite_solvento_") === 0 && (k.endsWith(":" + u) || k.indexOf(":" + u + "@") > 0)) ||
-            (k.indexOf("sweetsuite_ironrack_") === 0 && k.endsWith("_" + u))) borrar.push(k);
+            (k.indexOf("sweetsuite_ironrack_") === 0 && k.endsWith("_" + u)) ||
+            (k.indexOf("sweetsuite_agora_") === 0 && (k.endsWith(":" + u) || k.indexOf(":" + u + "@") > 0))) borrar.push(k);
       }
       borrar.push("sweetsuite_ironrack_descanso");
       borrar.forEach(ls.del);
+      borrarAgora(u);
       Object.assign(S, SIN_SESION, { apis: {}, estados: {}, anteriores: [], prefs: {} });
       history.replaceState(null, "", location.pathname);
       mostrarEntrada("");
@@ -1258,6 +1273,8 @@
         usuario: S.cuenta.usuario, nombre: S.cuenta.nombre, tipo: S.cuenta.tipo || "persona",
         // En una empresa, quién la representa: firma los cambios y lleva su propio token
         representante: S.representante ? { usuario: S.representante.usuario, nombre: S.representante.nombre } : null,
+        // Su cargo en la asociación (Agora), que pone la Administración en cuentas.json
+        cargo: S.representante && S.cuenta.cargos ? S.cuenta.cargos[S.representante.usuario] || "" : "",
         secreto: await L.secretoDeApp(S.maestra, app),
         anteriores: await Promise.all(S.anteriores.map((m) => L.secretoDeApp(m, app))),
         repo: E.repos[app], antiguo: E.antiguo,

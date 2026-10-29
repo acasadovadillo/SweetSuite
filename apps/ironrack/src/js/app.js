@@ -370,7 +370,8 @@
     // La barra lateral del ordenador lleva los mismos enlaces que las pestañas del móvil
     $("#nav-lateral").innerHTML = [...document.querySelectorAll(".tabs a")].map((a) => a.outerHTML).join("");
     // El inicio de SweetSuite y las demás apps de la cuenta
-    const ICONOS = { solvento: '<circle cx="9" cy="9" r="5.5"/><path d="M14.6 9.6a5.5 5.5 0 1 1-5 6.8"/><path d="M9 6.8v4.4M7.2 9h3.6"/>' };
+    const ICONOS = { solvento: '<circle cx="9" cy="9" r="5.5"/><path d="M14.6 9.6a5.5 5.5 0 1 1-5 6.8"/><path d="M9 6.8v4.4M7.2 9h3.6"/>',
+      agora: '<path d="M3.5 9.5 12 4.5l8.5 5"/><path d="M4.5 20h15M6.5 11v6.5M10 11v6.5M14 11v6.5M17.5 11v6.5"/>' };
     $("#nav-suite").innerHTML = `<a href="#" data-a="volverSuite"><svg viewBox="0 0 24 24"><use href="#i-suite"/></svg>Inicio</a>` +
       IR.suite.apps().filter((a) => a.id !== "ironrack").map((a) =>
         `<a href="#" data-a="irApp" data-app="${esc(a.id)}"><svg viewBox="0 0 24 24">${ICONOS[a.id] || '<use href="#i-suite"/>'}</svg>${esc(a.nombre)}</a>`).join("");

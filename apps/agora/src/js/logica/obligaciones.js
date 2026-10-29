@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Calendario de obligaciones y seguimiento de subvenciones
+ * Agora — Calendario de obligaciones y seguimiento de subvenciones
  * (sin interfaz: tests/gobierno.test.js).
  *
  * ⚠️ FECHAS ORIENTATIVAS. Los plazos de la lista de habituales son los más

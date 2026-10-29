@@ -1,5 +1,5 @@
 /*
- * ABIES · Gestión — Módulo «Ajustes»: mi cuenta, apariencia, seguridad y privacidad.
+ * Agora — Módulo «Ajustes»: mi cuenta, apariencia, seguridad y privacidad.
  *
  * Con la estructura de los Ajustes de Ironrack y Solvento: la lista de
  * secciones a la izquierda y la tarjeta de la elegida a la derecha, en filas.
@@ -8,40 +8,12 @@
   "use strict";
   var WA = raiz.WA, UI = WA.UI, esc = UI.esc;
 
-  /** Cada usuario cambia su contraseña personal (la del archivo la cambia la cuenta ABIES en Usuarios). */
-  async function cambiarMiContrasena() {
-    var r = await UI.dialogo({
-      titulo: "Cambiar mi contraseña",
-      contenido: "<p>Es tu contraseña personal. La del archivo no cambia.</p>" +
-        '<form class="formulario" novalidate>' +
-        UI.campo({ nombre: "actual", etiqueta: "Tu contraseña actual", tipo: "password", requerido: true, atributos: 'autocomplete="current-password"' }) +
-        UI.campo({ nombre: "nueva", etiqueta: "Nueva contraseña", tipo: "password", requerido: true, ayuda: "Mínimo 8 caracteres.", atributos: 'autocomplete="new-password"' }) +
-        UI.campo({ nombre: "repetida", etiqueta: "Repite la nueva", tipo: "password", requerido: true, atributos: 'autocomplete="new-password"' }) +
-        "</form>",
-      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Cambiar", valor: "enviar", estilo: "btn-primario" }],
-      validar: function (form) {
-        var d = UI.leerFormulario(form);
-        var cortaMal = d.nueva.length < 8, distintas = d.nueva !== d.repetida;
-        UI.marcarError(form, "nueva", cortaMal ? "Mínimo 8 caracteres." : "");
-        UI.marcarError(form, "repetida", !cortaMal && distintas ? "No coinciden." : "");
-        return !cortaMal && !distintas;
-      },
-    });
-    if (r.valor !== "enviar") return;
-    try {
-      await WA.Sesion.cambiarMiContrasena(r.datos.actual, r.datos.nueva);
-      UI.aviso("Contraseña cambiada. A partir de ahora, entra con la nueva.");
-    } catch (e) {
-      UI.aviso(e.message, "error");
-    }
-  }
-
   // Las secciones de Ajustes, como en Ironrack y Solvento: una lista a la
   // izquierda y, a la derecha, la tarjeta de la elegida (#/ajustes/apariencia).
   var SECCIONES = [
     { id: "cuenta", titulo: "Mi cuenta", sub: "Con quién has entrado y qué puedes modificar." },
     { id: "apariencia", titulo: "Apariencia", sub: "El tema de este ordenador y tu color de acento." },
-    { id: "seguridad", titulo: "Seguridad", sub: "Cuándo se bloquea y qué pasa al cerrar la sesión en este ordenador." },
+    { id: "seguridad", titulo: "Seguridad", sub: "Tu cuenta de SweetSuite: contraseña, clave de recuperación y bloqueo." },
     { id: "privacidad", titulo: "Privacidad", sub: "Dónde están los datos y buenas prácticas con los de los socios." },
     { id: "acerca", titulo: "Acerca de", sub: "La versión y la autoría de la aplicación." },
   ];
@@ -52,14 +24,13 @@
       '</div><div class="fila-control">' + control + "</div></div>";
   }
 
-  function cuenta(u, demo) {
+  function cuenta(u) {
     var edita = !u ? "" : u.rol === "admin" || u.permisos.length === WA.Permisos.IDS.length ? "Todas las secciones"
       : u.permisos.length ? u.permisos.map(WA.Permisos.nombreSeccion).join(", ") : "Ninguna (solo ver)";
     return (u ? '<div class="filas">' +
-      fila(esc(u.nombre), esc(u.cargo) + (demo ? " · demostración" : ""), '<span class="avatar" aria-hidden="true" style="width:28px;height:28px;font-size:11px">' + esc(WA.App.iniciales(u.nombre)) + "</span>") +
+      fila(esc(u.nombre), esc(u.cargo), '<span class="avatar" aria-hidden="true" style="width:28px;height:28px;font-size:11px">' + esc(WA.App.iniciales(u.nombre)) + "</span>") +
       fila("Puedes modificar", esc(edita) + ". El resto lo ves sin cambiarlo.", "", "apilar") +
-      fila("Contraseña", demo ? "En la demostración no hay contraseñas." : "Tu contraseña personal. La del archivo no cambia.",
-        demo ? "" : '<button type="button" class="btn btn-secundario" id="a-pass">Cambiar…</button>') +
+      fila("Tu cargo", "Lo pone la Administración de SweetSuite. Si cambia, pídeselo.", "", "apilar") +
       "</div>" : "");
   }
 
@@ -85,25 +56,21 @@
       '<p class="campo-ayuda">El acento es tuyo: va con tu usuario en los datos cifrados. La pantalla de acceso sale siempre en el verde de ABIES.</p>';
   }
 
-  function seguridad(p, demo) {
-    var opciones = [["5", "5 minutos"], ["15", "15 minutos"], ["30", "30 minutos"], ["60", "1 hora"], ["0", "Nunca"]];
-    return (demo ? '<p class="detalle">En la demostración no hay contraseña ni datos guardados.</p>' : "") +
-      '<form id="f-seguridad" class="formulario" novalidate><div class="filas">' +
-      fila("Bloquear tras un rato sin usarla", "Pide otra vez la contraseña. Los datos siguen guardados.",
-        '<select name="bloqueoMinutos" aria-label="Bloquear tras un rato sin usarla">' + opciones.map(function (o) {
-          return '<option value="' + o[0] + '"' + (String(p.bloqueoMinutos) === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
-        }).join("") + "</select>") +
-      fila("Borrar los datos al cerrar la sesión", "Para ordenadores compartidos. Al pulsar «Cerrar sesión» te pedirá descargar la copia si hay cambios, y después borrará los datos de este navegador. Si cierras la pestaña sin más, los datos se quedan guardados (cifrados).",
-        '<input type="checkbox" class="conmutador" name="borrarAlSalir" aria-label="Borrar los datos al cerrar la sesión"' + (p.borrarAlSalir ? " checked" : "") + ">") +
-      "</div></form>";
+  function seguridad() {
+    return '<div class="filas">' +
+      fila("Contraseña y clave de recuperación", "Son las de tu cuenta de SweetSuite, para todas tus apps.",
+        '<button type="button" class="btn btn-secundario" id="a-cuenta">Abrir</button>') +
+      fila("Bloquear", "Vuelve a la entrada de SweetSuite. También se bloquea sola tras un rato sin usarla (lo eliges en tu cuenta).",
+        '<button type="button" class="btn btn-secundario" id="a-bloquear">Bloquear</button>') +
+      "</div>";
   }
 
   function privacidad() {
-    return "<p>Esta aplicación <strong>no envía nada a ningún servidor</strong>: ni nube, ni analítica. Los datos solo están en este navegador (cifrados con la contraseña del archivo y la de cada usuario) y en las copias que se descarguen.</p>" +
+    return "<p>Agora <strong>no envía nada a ningún servidor</strong>: ni nube, ni analítica. Los datos están cifrados con la cuenta de ABIES en SweetSuite, y sin ella no se pueden leer.</p>" +
       "<p>Aun así, la asociación es responsable de los datos personales de sus socios. Algunas buenas prácticas:</p><ul class=\"lista\">" +
-      "<li>Cada miembro de la junta, con su propio usuario: así queda registrado quién hace cada cambio. Cuando alguien deja la junta, desactívalo en Usuarios.</li>" +
-      "<li>Contraseñas largas. Nunca envíes la contraseña del archivo por el mismo canal que la copia de seguridad o que una contraseña personal.</li>" +
-      "<li>Guarda las copias cifradas. Las copias sin cifrar, bórralas en cuanto termines.</li>" +
+      "<li>Cada miembro de la junta, con su propia cuenta de representante: así queda registrado quién hace cada cambio. Cuando alguien deja la junta, pide a la Administración que le dé de baja.</li>" +
+      "<li>Contraseñas largas. Nunca envíes la contraseña de ABIES por el mismo canal que la de un representante.</li>" +
+      "<li>Las copias sin cifrar, bórralas en cuanto termines.</li>" +
       "<li>Recoge solo los datos que necesitas e informa a los socios de para qué se usan.</li>" +
       "<li>Cuando alguien se da de baja, revisa cuánto tiempo debes conservar sus datos.</li>" +
       "</ul>" +
@@ -111,27 +78,25 @@
   }
 
   function acerca() {
-    return '<div class="filas">' + fila("ABIES · Gestión", "© 2026 Alberto Casado Vadillo. Todos los derechos reservados.",
+    return '<div class="filas">' + fila("Agora", "© 2026 Alberto Casado Vadillo. Todos los derechos reservados.",
       '<code id="a-version">' + esc(raiz.WA_VERSION || "desarrollo") + "</code>") + "</div>";
   }
 
   async function pintar(cont, datos, ruta) {
     var sec = SECCIONES.find(function (x) { return x.id === (ruta && ruta[0]); }) || SECCIONES[0];
-    var p = WA.Preferencias.leer();
-    var demo = WA.Sesion.modo === "demostración";
     var u = WA.Sesion.usuario;
-    var cuerpo = sec.id === "cuenta" ? cuenta(u, demo)
+    var cuerpo = sec.id === "cuenta" ? cuenta(u)
       : sec.id === "apariencia" ? apariencia(WA.Tema.actual(), await WA.App.acentoGuardado())
-      : sec.id === "seguridad" ? seguridad(p, demo)
+      : sec.id === "seguridad" ? seguridad()
       : sec.id === "privacidad" ? privacidad() : acerca();
     cont.innerHTML =
-      '<h1>Ajustes</h1><p class="intro">Tu cuenta, cómo se ve la aplicación y cómo se protege en este ordenador.</p>' +
+      '<h1>Ajustes</h1><p class="intro">Tu cargo, cómo se ve Agora y tu cuenta de SweetSuite.</p>' +
       '<div class="aj-layout"><nav class="aj-nav" aria-label="Secciones de Ajustes">' +
       SECCIONES.map(function (x) {
         return '<a class="aj-tab" href="#/ajustes/' + x.id + '"' + (x === sec ? ' aria-current="page"' : "") + ">" + x.titulo + "</a>";
       }).join("") + "</nav>" +
       '<section class="aj-body" aria-labelledby="aj-titulo"><h2 id="aj-titulo">' + sec.titulo + "</h2><p>" + sec.sub + "</p>" + cuerpo + "</section></div>" +
-      '<p class="version-pie">ABIES · Gestión ' + esc(raiz.WA_VERSION || "desarrollo") + "</p>";
+      '<p class="version-pie">Agora ' + esc(raiz.WA_VERSION || "desarrollo") + "</p>";
 
     // En el móvil las secciones son una fila que se desliza: que se vea la elegida
     var activa = cont.querySelector(".aj-tab[aria-current]");
@@ -152,18 +117,11 @@
     });
     var propio = cont.querySelector("#a-acento-propio");
     if (propio) propio.addEventListener("change", function () { elegir(propio.value); });
-    var f = cont.querySelector("#f-seguridad");
-    if (f) f.addEventListener("change", function () {
-      var d = UI.leerFormulario(f);
-      WA.Preferencias.poner({ bloqueoMinutos: parseInt(d.bloqueoMinutos, 10) || 0, borrarAlSalir: !!d.borrarAlSalir });
-      WA.App.reiniciarBloqueo();
-      UI.aviso("Ajuste guardado en este ordenador.");
-    });
-    var bp = cont.querySelector("#a-pass");
-    if (bp) bp.addEventListener("click", cambiarMiContrasena);
+    var bc = cont.querySelector("#a-cuenta"), bb = cont.querySelector("#a-bloquear");
+    if (bc) bc.addEventListener("click", function () { WA.Suite.cuenta(); });
+    if (bb) bb.addEventListener("click", function () { WA.Suite.bloquear(); });
   }
 
-  WA.Ajustes = { cambiarMiContrasena: cambiarMiContrasena };
   WA.App.registrar({
     id: "ajustes", titulo: "Ajustes", orden: 100, pintar: pintar,
     icono: '<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/>',

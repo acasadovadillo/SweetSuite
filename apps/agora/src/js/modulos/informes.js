@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Informes»: memoria anual y cuentas del ejercicio,
+ * Agora — Módulo «Informes»: memoria anual y cuentas del ejercicio,
  * listas para imprimir o guardar en PDF desde el navegador.
  *
  *   #/informes            memoria anual de actividades

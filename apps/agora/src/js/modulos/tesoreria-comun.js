@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Piezas de interfaz compartidas por Tesorería, Facturas,
+ * Agora — Piezas de interfaz compartidas por Tesorería, Facturas,
  * IVA y Proyectos (WA.TesUI):
  *
  *   cargar(datos)              todo lo que hace falta, de una vez

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Actas»: libro de actas de cada órgano.
+ * Agora — Módulo «Actas»: libro de actas de cada órgano.
  *
  *   #/actas                     actas, por órgano y año
  *   #/actas/nueva/<organoId>    nueva acta con la plantilla del órgano

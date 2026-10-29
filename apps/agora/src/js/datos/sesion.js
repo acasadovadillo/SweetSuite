@@ -1,5 +1,5 @@
 /*
- * ABIES · Gestión — Sesión: entrar, guardar y salir (con usuarios desde la Fase 7a).
+ * Agora — Sesión: entrar, guardar y salir (con usuarios desde la Fase 7a).
  *
  * Une las piezas: Cuentas (usuarios y doble llave), Cripto (cifrar), Bóveda
  * (guardar en el navegador), Esquema (migrar) y Repositorio (la puerta que usan
@@ -38,7 +38,8 @@
     pendientes++;
     cola = cola.then(function () {
       c.doc = estado.doc;
-      return Cu().sellar(c).then(WA.Boveda.escribir);
+      // Dentro de SweetSuite: un solo bloque, cifrado con el secreto de la cuenta
+      return (c.suite ? WA.Cripto.cifrar(estado.doc, c.llaveDatos) : Cu().sellar(c)).then(WA.Boveda.escribir);
     }).catch(function (e) {
       console.error(e);
       WA.UI && WA.UI.aviso("No se ha podido guardar en el navegador. Descarga una copia de seguridad ahora.", "error");
@@ -148,6 +149,42 @@
       if (WA.Cripto.esBloque(b)) return "antigua";
       return "ninguna";
     },
+
+    /**
+     * Entrar desde SweetSuite. s = lo que da SweetSuite.sesion("agora"):
+     * la cuenta (ABIES), quién la representa, su cargo y el secreto de Agora.
+     * Lo de este dispositivo se abre con el secreto (o con uno anterior, si la
+     * cuenta ha cambiado de llave; entonces se vuelve a cifrar con el nuevo).
+     * Quien entra es un usuario de paso, con los permisos de su cargo.
+     */
+    entrarEnSuite: async function (s) {
+      WA.Boveda.usar(s.usuario);
+      var bloque = await WA.Boveda.leer(), doc = null, llave = null, vieja = null;
+      if (bloque && WA.Cripto.esBloque(bloque)) {
+        var secretos = [s.secreto].concat(s.anteriores || []);
+        for (var i = 0; i < secretos.length && !doc; i++) {
+          try {
+            var r = await WA.Cripto.descifrar(bloque, secretos[i]);
+            doc = r.objeto;
+            if (i === 0) llave = r.llave; else vieja = r.llave;
+          } catch (e) { if (e.codigo !== "CONTRASENA") throw e; }
+        }
+        if (!doc) throw new Error("Los datos de Agora de este dispositivo no se abren con tu cuenta de SweetSuite.");
+      }
+      if (!llave) llave = await WA.Cripto.crearLlave(s.secreto);
+      if (vieja) await recifrarArchivos(doc, vieja, llave);
+      doc = WA.Esquema.migrar(doc || WA.Esquema.documentoVacio());
+      var quien = s.representante || { usuario: s.usuario, nombre: s.nombre };
+      var cargo = s.cargo || "Sin cargo";
+      var u = { id: quien.usuario, nombre: quien.nombre, cargo: cargo,
+        // Presidencia hace lo que hacía la cuenta ABIES: recuperar copias, la copia sin cifrar…
+        rol: WA.Permisos.normalizar(cargo).indexOf("presiden") === 0 ? "admin" : "cargo",
+        permisos: WA.Permisos.porDefecto(cargo), activo: true, debeCambiar: false };
+      abrirCon(doc, { suite: true, cabecera: { generacion: 1, usuarios: [u] }, usuarioId: u.id, llaveDatos: llave }, "abierta");
+      await persistir();
+    },
+    /** Espera a que acaben los guardados en curso (SweetSuite, antes de salir). */
+    esperar: function () { return cola; },
 
     /** Primera vez: bóveda vacía con la contraseña del archivo y la cuenta ABIES. */
     crear: async function (o) {

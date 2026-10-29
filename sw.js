@@ -18,7 +18,7 @@ const BASE = [
   "./src/css/suite.css", "./src/js/tema.js", "./src/js/entorno.js", "./src/js/llavero.js", "./src/js/admin.js", "./src/js/suite.js",
   "./img/icono.svg", "./img/icono-180.png", "./img/icono-192.png", "./img/icono-512.png", "./img/contornos.svg",
 ];
-const APPS = ["./apps/solvento/", "./apps/ironrack/"];
+const APPS = ["./apps/solvento/", "./apps/ironrack/", "./apps/agora/src/"];
 
 // Lo que carga el index.html de cada app (scripts, estilos, imágenes)
 async function recursosDe(carpeta) {
@@ -27,7 +27,7 @@ async function recursosDe(carpeta) {
     if (!res.ok) return [];
     const html = await res.text();
     const urls = [carpeta + "index.html", carpeta + "perfil.json"];
-    const re = /(?:src|href)="((?:src\/|img\/)[^"]+)"/g;
+    const re = /(?:src|href)="((?:src\/|img\/|js\/|css\/)[^"]+)"/g;
     let m;
     while ((m = re.exec(html))) urls.push(carpeta + m[1]);
     return urls;

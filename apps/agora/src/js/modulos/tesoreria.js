@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Tesorería».
+ * Agora — Módulo «Tesorería».
  *
  *   #/tesoreria                      resumen: saldos, ingresos y gastos del año, pendientes
  *   #/tesoreria/movimientos          libro de movimientos; apuntar a mano o importar el extracto

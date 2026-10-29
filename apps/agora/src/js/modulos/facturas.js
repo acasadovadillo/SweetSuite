@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Facturas».
+ * Agora — Módulo «Facturas».
  *
  *   #/facturas                        emitidas (las que hace la asociación)
  *   #/facturas/recibidas              recibidas (de proveedores)

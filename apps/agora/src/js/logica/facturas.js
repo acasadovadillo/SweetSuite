@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Lógica de facturas (sin interfaz: tests/facturas.test.js).
+ * Agora — Lógica de facturas (sin interfaz: tests/facturas.test.js).
  *
  * FACTURA:
  *   { id, tipo: "emitida" | "recibida",

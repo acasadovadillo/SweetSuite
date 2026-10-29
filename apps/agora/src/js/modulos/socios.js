@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Socios»: libro de registro de socios.
+ * Agora — Módulo «Socios»: libro de registro de socios.
  *
  *   #/socios                listado con búsqueda y filtros
  *   #/socios/nuevo          ficha vacía para dar de alta

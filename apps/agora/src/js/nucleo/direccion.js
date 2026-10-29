@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Direcciones postales españolas.
+ * Agora — Direcciones postales españolas.
  *
  * Una dirección se guarda por partes (no como una línea de texto) para poder
  * escribirla bien en convocatorias, recibos y certificados, y para comprobar

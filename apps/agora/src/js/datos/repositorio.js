@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Capa de datos (repositorio).
+ * Agora — Capa de datos (repositorio).
  *
  * ES LA ÚNICA PUERTA A LOS DATOS. Los módulos de la interfaz (socios,
  * tesorería…) nunca tocan el documento ni el almacenamiento directamente: piden

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Asociación»: datos de la entidad y junta directiva.
+ * Agora — Módulo «Asociación»: datos de la entidad y junta directiva.
  *
  * Los datos de la asociación (nombre, NIF, domicilio…) se usan después en
  * convocatorias, actas, recibos y la memoria anual, así que conviene rellenarlos

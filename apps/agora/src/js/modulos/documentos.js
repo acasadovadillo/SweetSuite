@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Documentos»: archivos adjuntos (estatutos, actas
+ * Agora — Módulo «Documentos»: archivos adjuntos (estatutos, actas
  * firmadas, bases de subvenciones, pólizas…).
  *
  *   #/documentos   todos los documentos, por categoría

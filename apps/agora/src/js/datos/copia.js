@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Formato de la copia de seguridad.
+ * Agora — Formato de la copia de seguridad.
  *
  * Una copia es un archivo .json con un «sobre» que dice qué es y, dentro, los
  * datos. Hay dos variantes:
@@ -35,6 +35,8 @@
 })(typeof self !== "undefined" ? self : this, function () {
   "use strict";
 
+  // Como el del documento (esquema.js), no cambia con el nombre: las copias de
+  // antes se siguen abriendo.
   var FORMATO = "webkit_asociaciones-copia";
   var VERSION = 1;
   var FORMATO_ABIES = "abies-copia";
@@ -98,7 +100,7 @@
     if (j && j.app === "webkit_asociaciones") {
       return { cifrada: false, documento: j, asociacion: (j.asociacion && j.asociacion.nombre) || "", creada: null, archivos: {} };
     }
-    throw new Error("El archivo no es una copia de seguridad de ABIES · Gestión.");
+    throw new Error("El archivo no es una copia de seguridad de Agora (ni de ABIES · Gestión).");
   }
 
   /** "copia-asociacion-los-almendros-2026-10-01.json" (o "-sin-cifrar"). */

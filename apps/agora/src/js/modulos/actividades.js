@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Actividades».
+ * Agora — Módulo «Actividades».
  *
  *   #/actividades                 calendario del mes y próximas actividades
  *   #/actividades/lista           todas, con búsqueda

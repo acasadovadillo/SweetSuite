@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Lógica de cuotas (sin interfaz: se prueba en tests/cuotas.test.js).
+ * Agora — Lógica de cuotas (sin interfaz: se prueba en tests/cuotas.test.js).
  *
  * TIPOS DE SOCIO (en la configuración): { id, nombre, cuota (céntimos por periodo),
  *   periodicidad: "anual" | "semestral" | "trimestral" | "mensual", activo }

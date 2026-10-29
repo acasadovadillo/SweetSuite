@@ -1,5 +1,5 @@
 /*
- * ABIES · Gestión — Esqueleto de la aplicación: módulos, navegación, permisos y avisos.
+ * Agora — Esqueleto de la aplicación: módulos, navegación, permisos y avisos.
  *
  * CÓMO SE AÑADE UN MÓDULO (p. ej. «Socios» en la Fase 2):
  *   1. Crea src/js/modulos/socios.js
@@ -21,13 +21,16 @@
  * La estructura es la de Ironrack y Solvento: barra lateral con la cuenta, un
  * buscador y las secciones por grupos (GRUPOS); en el teléfono, cinco de ellas
  * abajo (BARRA_MOVIL). Un módulo que no esté en ningún grupo sale en «Más».
+ *
+ * Agora vive dentro de SweetSuite (suite-puente.js): la entrada, el bloqueo por
+ * inactividad y cerrar la sesión son de SweetSuite. Al final de la barra lateral
+ * está su apartado: el inicio y las demás apps de la cuenta.
  */
 (function (raiz) {
   "use strict";
   var WA = raiz.WA;
   var modulos = [];
   var actual = null;
-  var temporizadorBloqueo = null;
 
   var $ = function (id) { return document.getElementById(id); };
 
@@ -66,6 +69,12 @@
   };
   var I_BLOQUEAR = '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>';
   var I_SALIR = '<path d="M15 4h3a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2h-3"/><path d="M10 17l-5-5 5-5"/><path d="M5 12h11"/>';
+  var I_SUITE = '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>';
+  // Los iconos de las demás apps, los mismos que en SweetSuite
+  var I_APPS = {
+    solvento: '<circle cx="9" cy="9" r="5.5"/><path d="M14.6 9.6a5.5 5.5 0 1 1-5 6.8"/><path d="M9 6.8v4.4M7.2 9h3.6"/>',
+    ironrack: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  };
   var I_AJUSTES = '<circle cx="12" cy="12" r="3"/><path d="M12 2v3M12 19v3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M2 12h3M19 12h3M4.9 19.1 7 17M17 7l2.1-2.1"/>';
 
   var CANDADO = '<svg class="menu-candado" viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>';
@@ -88,17 +97,29 @@
     $("menu-lista").innerHTML = grupos.map(function (g) {
       var html = g.ms.map(enlace).join("");
       if (g === cuenta && WA.Sesion.modo !== "cerrada") {
-        var demo = WA.Sesion.modo === "demostración";
-        if (!demo) html += '<li><button type="button" class="menu-boton" data-accion="bloquear">' + svg(I_BLOQUEAR) + "<span>Bloquear</span></button></li>";
-        html += '<li><button type="button" class="menu-boton" data-accion="salir">' + svg(I_SALIR) + "<span>" + (demo ? "Salir de la demostración" : "Cerrar sesión") + "</span></button></li>";
+        html += '<li><button type="button" class="menu-boton" data-accion="bloquear">' + svg(I_BLOQUEAR) + "<span>Bloquear</span></button></li>";
+        html += '<li><button type="button" class="menu-boton" data-accion="salir">' + svg(I_SALIR) + "<span>Cerrar sesión</span></button></li>";
       }
       if (!html) return "";
       return (g.titulo ? '<li class="menu-grupo" aria-hidden="true">' + WA.UI.esc(g.titulo) + "</li>" : "") + html;
-    }).join("");
+    }).join("") + menuSuite();
     $("barra-movil").innerHTML = vis.filter(function (m) { return BARRA_MOVIL[m.id]; }).map(function (m) {
       return '<a href="#/' + m.id + '" data-modulo="' + m.id + '">' + svg(m.icono || "") + "<span>" + BARRA_MOVIL[m.id] + "</span></a>";
     }).join("");
     filtrarMenu($("menu-buscar").value);
+  }
+
+  /** El apartado SweetSuite: su inicio y las demás apps de la cuenta. */
+  function menuSuite() {
+    var esc = WA.UI.esc;
+    var boton = function (accion, icono, texto, app) {
+      return '<li><button type="button" class="menu-boton" data-accion="' + accion + '"' + (app ? ' data-app="' + esc(app) + '"' : "") + ">" +
+        svg(icono) + "<span>" + esc(texto) + "</span></button></li>";
+    };
+    return '<li class="menu-grupo" aria-hidden="true">SweetSuite</li>' + boton("suite", I_SUITE, "Inicio") +
+      WA.Suite.apps().filter(function (a) { return a.id !== "agora"; }).map(function (a) {
+        return boton("app", I_APPS[a.id] || I_SUITE, a.nombre, a.id);
+      }).join("");
   }
 
   // ── Buscador de la barra lateral: filtra las secciones por su nombre ──────
@@ -185,7 +206,7 @@
   }
   function abrirMenuCuenta() {
     if ($("menu-cuenta-lista")) { cerrarMenuCuenta(); return; }
-    var u = WA.Sesion.usuario, demo = WA.Sesion.modo === "demostración", esc = WA.UI.esc;
+    var u = WA.Sesion.usuario, esc = WA.UI.esc;
     var b = $("menu-cuenta").getBoundingClientRect();
     var m = document.createElement("div");
     m.id = "menu-cuenta-lista";
@@ -194,17 +215,18 @@
     m.style.left = b.left + "px";
     m.style.top = b.bottom + 6 + "px";
     m.style.width = Math.max(220, b.width) + "px";
-    m.innerHTML = (u ? '<div class="menu-flotante-cab"><b>' + esc(u.nombre) + "</b>" + esc(u.cargo) + (demo ? " · demostración" : "") + "</div>" : "") +
-      '<a href="#/ajustes" role="menuitem">' + svg(I_AJUSTES) + "Ajustes</a>" +
-      (demo ? "" : '<button type="button" role="menuitem" data-accion="bloquear">' + svg(I_BLOQUEAR) + "Bloquear</button>") +
-      '<button type="button" role="menuitem" data-accion="salir">' + svg(I_SALIR) + (demo ? "Salir de la demostración" : "Cerrar sesión") + "</button>";
+    m.innerHTML = (u ? '<div class="menu-flotante-cab"><b>' + esc(u.nombre) + "</b>" + esc(u.cargo) + "</div>" : "") +
+      '<a href="#/ajustes" role="menuitem">' + svg(I_AJUSTES) + "Ajustes de Agora</a>" +
+      '<button type="button" role="menuitem" data-accion="suite">' + svg(I_SUITE) + "Inicio de SweetSuite</button>" +
+      '<button type="button" role="menuitem" data-accion="bloquear">' + svg(I_BLOQUEAR) + "Bloquear</button>" +
+      '<button type="button" role="menuitem" data-accion="salir">' + svg(I_SALIR) + "Cerrar sesión</button>";
     document.body.appendChild(m);
     $("menu-cuenta").setAttribute("aria-expanded", "true");
     m.addEventListener("click", function (e) {
       var x = e.target.closest("a, button");
       if (!x) return;
       cerrarMenuCuenta();
-      accion(x.getAttribute("data-accion"));
+      accion(x.getAttribute("data-accion"), x);
     });
     m.addEventListener("keydown", function (e) {
       var items = Array.prototype.slice.call(m.querySelectorAll("a, button")), i = items.indexOf(document.activeElement);
@@ -216,9 +238,13 @@
     document.addEventListener("pointerdown", fueraDelMenu, true);
     m.querySelector("a").focus();
   }
-  function accion(a) {
-    if (a === "bloquear") WA.Sesion.bloquear();
-    else if (a === "salir") cerrarSesion();
+  /** Bloquear, cerrar la sesión y cambiar de app: lo hace SweetSuite, que antes guarda lo pendiente. */
+  function accion(a, el) {
+    cerrarMenuMovil();
+    if (a === "bloquear") WA.Suite.bloquear();
+    else if (a === "salir") WA.Suite.cerrarSesion();
+    else if (a === "suite") WA.Suite.volver();
+    else if (a === "app") WA.Suite.abrir(el.getAttribute("data-app"));
   }
 
   // ── El acento de quien ha entrado (Ajustes › Apariencia) ─────────────────
@@ -240,107 +266,60 @@
     WA.Tema.acento(color);
   }
 
-  // ── Franjas de aviso (demostración / copia de seguridad) y el estado del pie ──
+  // ── El estado del pie: dónde está guardado ──────────────────────────────
   function ponerEstado(texto, color) {
     var e = $("estado-copia");
     e.textContent = texto;
     e.style.setProperty("--punto", color);
   }
-  async function actualizarFranjas() {
-    var demo = WA.Sesion.modo === "demostración";
-    $("franja-demo").hidden = !demo;
-    var franja = $("franja-copia");
-    if (demo) ponerEstado("Demostración", "var(--acento)");
-    if (demo || WA.Sesion.modo !== "abierta") { franja.hidden = true; return; }
-    var e = await WA.Sesion.datos.estadoCopia();
-    var texto = "";
-    if (!e.ultimaCopia && e.cambiosDesdeCopia > 0) texto = "Todavía no has hecho ninguna copia de seguridad.";
-    else if (e.cambiosDesdeCopia > 0) {
-      var dias = WA.Fechas.diasEntre(e.ultimaCopia.slice(0, 10), WA.Fechas.hoy());
-      texto = "Hay cambios sin copia de seguridad" + (dias > 0 ? " (la última es de hace " + dias + (dias === 1 ? " día)." : " días).") : ".");
-    }
-    $("franja-copia-texto").textContent = texto;
-    franja.hidden = !texto;
-    if (e.cambiosDesdeCopia > 0) ponerEstado("Sin copia", "var(--aviso)");
-    else ponerEstado("Copia al día", "var(--ok)");
+  function actualizarFranjas() {
+    if (WA.Sesion.modo === "abierta") ponerEstado("En este dispositivo", "var(--aviso)");
   }
 
-  // ── Bloqueo por inactividad ──────────────────────────────────────────────
-  function reiniciarBloqueo() {
-    clearTimeout(temporizadorBloqueo);
-    var min = WA.Preferencias.leer().bloqueoMinutos;
-    if (WA.Sesion.modo !== "abierta" || !(min > 0)) return;
-    temporizadorBloqueo = setTimeout(function () {
-      WA.Sesion.bloquear().then(function () { WA.UI.aviso("Se ha bloqueado por inactividad. Tus datos siguen guardados.", "info"); });
-    }, min * 60000);
+  // ── La entrada, desde SweetSuite ─────────────────────────────────────────
+  function pantallaError(texto) {
+    $("app").hidden = true;
+    var a = $("acceso");
+    a.hidden = false;
+    a.innerHTML = '<main class="acceso-panel"><div class="acceso-marca">' + WA.Marca.hoja("acceso-hoja") + '<span class="acceso-producto">Agora</span></div>' +
+      '<p class="acceso-error" role="alert">' + WA.UI.esc(texto) + "</p>" +
+      '<div class="acceso-opciones"><button type="button" class="btn btn-primario" id="btn-volver-suite">Volver a SweetSuite</button></div></main>';
+    $("btn-volver-suite").addEventListener("click", function () { WA.Suite.volver(); });
+  }
+  async function entrarEnSuite() {
+    var SS = WA.Suite, s = await SS.sesion("agora");
+    if (!s) { pantallaError("Tu cuenta no tiene Agora."); return; }
+    try {
+      await WA.Sesion.entrarEnSuite(s);
+    } catch (e) {
+      console.error(e);
+      pantallaError("No se pueden abrir los datos de Agora de este dispositivo: " + (e.message || e));
+      return;
+    }
+    SS.registrar("agora", {
+      guardarAlSalir: function () {
+        return WA.Sesion.esperar().then(function () { return { estado: "local", texto: "guardado en este dispositivo" }; });
+      },
+      pendiente: function () { return WA.Sesion.hayGuardadosPendientes(); },
+      // La cuenta ha cambiado de llave (p. ej. en otro dispositivo): se vuelve a cifrar con la nueva
+      alCambiarClaves: async function () {
+        await WA.Sesion.esperar();
+        await WA.Sesion.entrarEnSuite(await SS.sesion("agora"));
+        await repintar();
+      },
+    });
   }
 
-  // ── Cerrar sesión (y, si está activado, borrar los datos de este navegador) ──
-  async function cerrarSesion() {
-    if (WA.Sesion.modo === "demostración") { await WA.Sesion.bloquear(); return; }
-    var borrar = WA.Preferencias.leer().borrarAlSalir;
-    if (!borrar) { await WA.Sesion.bloquear(); return; }
-    var e = await WA.Sesion.datos.estadoCopia();
-    if (e.cambiosDesdeCopia > 0) {
-      var r = await WA.UI.dialogo({
-        titulo: "Hay cambios sin copia de seguridad",
-        contenido: "<p>Este navegador está configurado para <strong>borrar los datos al cerrar la sesión</strong>. " +
-          "Si sales sin descargar una copia, perderás los cambios desde la última.</p>",
-        botones: [
-          { texto: "Cancelar", valor: "cancelar" },
-          { texto: "Salir sin copia", valor: "sin", estilo: "btn-peligro" },
-          { texto: "Descargar copia y salir", valor: "copia", estilo: "btn-primario" },
-        ],
-      });
-      if (r.valor === "cancelar") return;
-      if (r.valor === "copia") await WA.Copias.descargar(true);
-    }
-    await WA.Sesion.borrarDelNavegador();
-    await WA.Sesion.bloquear();
-    WA.UI.aviso("Sesión cerrada y datos borrados de este navegador.", "info");
-  }
-
-  /** Quien entra con una contraseña provisional tiene que elegir la suya antes de seguir. */
-  async function exigirCambioDeContrasena() {
-    var u = WA.Sesion.usuario;
-    if (!u || !u.debeCambiar || WA.Sesion.modo !== "abierta") return;
-    while (WA.Sesion.usuario && WA.Sesion.usuario.debeCambiar) {
-      var r = await WA.UI.dialogo({
-        titulo: "Elige tu contraseña",
-        contenido: "<p>Has entrado con una contraseña provisional. Elige ahora la tuya: solo la sabrás tú.</p>" +
-          '<form class="formulario" novalidate>' +
-          WA.UI.campo({ nombre: "nueva", etiqueta: "Tu contraseña", tipo: "password", requerido: true, ayuda: "Mínimo 8 caracteres. Mejor una frase.", atributos: 'autocomplete="new-password"' }) +
-          WA.UI.campo({ nombre: "repetida", etiqueta: "Repítela", tipo: "password", requerido: true, atributos: 'autocomplete="new-password"' }) +
-          "</form>",
-        botones: [{ texto: "Salir", valor: "salir" }, { texto: "Guardar", valor: "enviar", estilo: "btn-primario" }],
-        validar: function (form) {
-          var d = WA.UI.leerFormulario(form);
-          var corta = d.nueva.length < 8, distintas = d.nueva !== d.repetida;
-          WA.UI.marcarError(form, "nueva", corta ? "Mínimo 8 caracteres." : "");
-          WA.UI.marcarError(form, "repetida", !corta && distintas ? "No coinciden." : "");
-          return !corta && !distintas;
-        },
-      });
-      if (r.valor !== "enviar") { await WA.Sesion.bloquear(); return; }
-      try {
-        await WA.Sesion.cambiarMiContrasena(provisional, r.datos.nueva);
-        WA.UI.aviso("Contraseña guardada. A partir de ahora, entra con ella.");
-      } catch (e) { WA.UI.aviso(e.message, "error"); }
-    }
-  }
-  var provisional = "";
   /** Las iniciales del avatar: «María López» → «ML». */
   function iniciales(nombre) {
     var p = String(nombre || "").trim().split(/\s+/).filter(Boolean);
     return ((p[0] || "").charAt(0) + (p.length > 1 ? p[p.length - 1].charAt(0) : "")).toUpperCase();
   }
-  /** La pantalla de acceso deja aquí la contraseña con la que se entró (solo en memoria, para el cambio obligatorio). */
-  function recordarProvisional(c) { provisional = c || ""; }
 
   function iniciar() {
-    $("marca").insertAdjacentHTML("afterbegin", WA.Marca.logo("marca-logo", "ABIES"));
-    $("marca-movil").insertAdjacentHTML("afterbegin", WA.Marca.logo("marca-logo", ""));
-    $("marca-nombre").textContent = "Gestión";
+    $("marca").insertAdjacentHTML("afterbegin", WA.Marca.hoja("marca-hoja") + "<span>Agora</span>");
+    $("marca-movil").insertAdjacentHTML("afterbegin", WA.Marca.hoja("marca-hoja"));
+    $("marca-nombre").textContent = "Agora";
     $("menu-version").textContent = raiz.WA_VERSION || "desarrollo";
     pintarMenu();
     // Si un cargo intenta modificar lo que no le toca, el repositorio lo rechaza: se avisa.
@@ -359,7 +338,7 @@
     $("menu-cuenta").addEventListener("click", abrirMenuCuenta);
     $("menu-lista").addEventListener("click", function (e) {
       var b = e.target.closest("button[data-accion]");
-      if (b) accion(b.getAttribute("data-accion"));
+      if (b) accion(b.getAttribute("data-accion"), b);
     });
     var buscador = $("menu-buscar");
     buscador.addEventListener("input", function () { filtrarMenu(buscador.value); });
@@ -369,11 +348,7 @@
         if (a) { buscador.value = ""; filtrarMenu(""); location.hash = a.getAttribute("href"); }
       } else if (e.key === "Escape") { buscador.value = ""; filtrarMenu(""); }
     });
-    $("btn-franja-copia").addEventListener("click", function () { WA.Copias.descargar(true); });
-    $("btn-salir-demo").addEventListener("click", function () { WA.Sesion.bloquear(); });
-    ["click", "keydown", "pointermove", "scroll"].forEach(function (ev) {
-      document.addEventListener(ev, reiniciarBloqueo, { passive: true });
-    });
+    $("btn-apps").addEventListener("click", function () { cerrarMenuMovil(); WA.Suite.elegirApp(); });
     window.addEventListener("beforeunload", function (e) {
       if (WA.Sesion.hayGuardadosPendientes()) { e.preventDefault(); e.returnValue = ""; }
     });
@@ -395,20 +370,19 @@
       $("menu-buscar").value = "";
       pintarMenu();
       if (abierta) {
-        reiniciarBloqueo();
         // El acento de la cuenta, antes de pintar la primera página
         acentoGuardado().catch(function () { return ""; }).then(function (c) {
           WA.Tema.acento(c);
           return navegar();
-        }).then(exigirCambioDeContrasena);
+        });
       } else {
         WA.Tema.acento(null);
         ponerEstado("", "");
-        $("principal").innerHTML = ""; document.body.classList.remove("solo-lectura"); provisional = ""; WA.Acceso.mostrar();
+        $("principal").innerHTML = ""; document.body.classList.remove("solo-lectura");
       }
     });
   }
 
-  WA.App = { registrar: registrar, iniciar: iniciar, navegar: navegar, repintar: repintar, actualizarFranjas: actualizarFranjas, reiniciarBloqueo: reiniciarBloqueo,
-    moduloActual: moduloActual, pintarMenu: pintarMenu, recordarProvisional: recordarProvisional, ponerAcento: ponerAcento, acentoGuardado: acentoGuardado, iniciales: iniciales };
+  WA.App = { registrar: registrar, iniciar: iniciar, entrarEnSuite: entrarEnSuite, navegar: navegar, repintar: repintar, actualizarFranjas: actualizarFranjas,
+    moduloActual: moduloActual, pintarMenu: pintarMenu, ponerAcento: ponerAcento, acentoGuardado: acentoGuardado, iniciales: iniciales };
 })(typeof self !== "undefined" ? self : this);

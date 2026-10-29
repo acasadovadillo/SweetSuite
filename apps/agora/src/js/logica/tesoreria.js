@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Lógica de tesorería (sin interfaz: tests/tesoreria.test.js).
+ * Agora — Lógica de tesorería (sin interfaz: tests/tesoreria.test.js).
  *
  * MOVIMIENTO (dinero que entra o sale de una cuenta):
  *   { id, fecha, cuentaId, tipo, importe (céntimos, siempre positivo), concepto,

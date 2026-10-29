@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Lógica de actividades (sin interfaz: tests/actividades.test.js).
+ * Agora — Lógica de actividades (sin interfaz: tests/actividades.test.js).
  *
  * ACTIVIDAD:
  *   { id, titulo, tipo, descripcion, inicio ("aaaa-mm-ddThh:mm"), fin, todoElDia,
@@ -274,7 +274,7 @@
   function ics(actividades, opciones) {
     var o = opciones || {};
     var tz = ZONAS[o.zona] ? o.zona : "Europe/Madrid";
-    var lineas = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//webkit_asociaciones//ES", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
+    var lineas = ["BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//Agora//ES", "CALSCALE:GREGORIAN", "METHOD:PUBLISH"];
     if (o.nombreCalendario) lineas.push("X-WR-CALNAME:" + escaparIcs(o.nombreCalendario));
     var conHora = (actividades || []).some(function (a) { return !a.todoElDia; });
     if (conHora) lineas = lineas.concat(vtimezone(tz));
@@ -282,7 +282,7 @@
     (actividades || []).forEach(function (a) {
       var ini = String(a.inicio || ""), fin = String(a.fin || "");
       if (!F.esValida(ini.slice(0, 10))) return;
-      lineas.push("BEGIN:VEVENT", "UID:" + a.id + "@webkit-asociaciones", "DTSTAMP:" + stamp);
+      lineas.push("BEGIN:VEVENT", "UID:" + a.id + "@agora.sweetsuite", "DTSTAMP:" + stamp);
       if (a.todoElDia) {
         var ultimo = F.esValida(fin.slice(0, 10)) && fin.slice(0, 10) >= ini.slice(0, 10) ? fin.slice(0, 10) : ini.slice(0, 10);
         lineas.push("DTSTART;VALUE=DATE:" + compacta(ini.slice(0, 10)), "DTEND;VALUE=DATE:" + compacta(F.sumarDias(ultimo, 1))); // DTEND es el día siguiente (no incluido)

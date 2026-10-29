@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Colores y medidas (tokens).
+ * Agora — Colores y medidas (tokens).
  *
  * Todo el CSS usa estas variables, nunca colores sueltos: así cada tema es solo
  * redefinirlas. tema.js pone data-tema="claro" u "oscuro" en <html>.

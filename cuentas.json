@@ -1,5 +1,5 @@
 {
-  "_": "Quién entra en SweetSuite y qué apps tiene cada uno. Este repositorio es público: aquí solo van nombres, nunca datos. Los datos de cada app viven cifrados en su repositorio privado (Solvento-Data, Ironrack-Data). Una empresa (tipo «organizacion») lleva sus «representantes»: los usuarios que pueden entrar en ella; se dan de alta y de baja aquí. La cuenta «admin» (la única de tipo «admin») lo hace desde SweetSuite → Administración.",
+  "_": "Quién entra en SweetSuite y qué apps tiene cada uno. Este repositorio es público: aquí solo van nombres, nunca datos. Los datos de cada app viven cifrados en su repositorio privado (Solvento-Data, Ironrack-Data, Agora-Data). Una empresa (tipo «organizacion») lleva sus «representantes»: los usuarios que pueden entrar en ella; se dan de alta y de baja aquí. En una asociación con Agora, «cargos» dice el cargo de cada representante (Presidencia, Vicepresidencia, Secretaría, Tesorería, Vocalía o Coordinación), que decide qué edita. La cuenta «admin» (la única de tipo «admin») lo hace desde SweetSuite → Administración.",
   "apps": [
     {
       "id": "solvento",
@@ -12,12 +12,18 @@
       "nombre": "Ironrack",
       "descripcion": "Tu gimnasio: entrenos, series, kilos y progreso.",
       "ruta": "apps/ironrack/"
+    },
+    {
+      "id": "agora",
+      "nombre": "Agora",
+      "descripcion": "La asociación: socios, cuotas, tesorería, actividades y actas.",
+      "ruta": "apps/agora/src/"
     }
   ],
   "cuentas": [
     { "usuario": "alberto", "nombre": "Alberto", "tipo": "persona", "apps": ["solvento", "ironrack"] },
     { "usuario": "hafsa", "nombre": "Hafsa", "tipo": "persona", "apps": ["solvento", "ironrack"] },
-    { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion", "apps": ["solvento"], "representantes": ["alberto"] },
+    { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion", "apps": ["solvento", "agora"], "representantes": ["alberto"], "cargos": { "alberto": "Presidencia" } },
     { "usuario": "paula", "nombre": "Paula", "tipo": "persona", "apps": ["solvento"] },
     { "usuario": "admin", "nombre": "Admin", "tipo": "admin", "apps": [] }
   ]

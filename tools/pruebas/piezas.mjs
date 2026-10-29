@@ -162,8 +162,10 @@ await prueba("dar de baja quita también de las empresas que representaba; al Ad
 await prueba("dice qué tokens crear para lo nuevo, sin tildes y solo sobre su repositorio", () => {
   let c = AD.alta(cat, { usuario: "lucia", nombre: "Lucía", tipo: "persona", apps: ["solvento"] });
   c = AD.editar(c, "abies", { representantes: ["alberto", "lucia"] });
-  const t = AD.tokensQueCrear(cat, c, { solvento: { repo: "Solvento-Data" }, ironrack: { repo: "Ironrack-Data" } });
-  return t.map((x) => x.nombre).sort().join() === "ABIES-Lucia-Solvento,Lucia-Solvento" && t.every((x) => x.acceso.join() === "Solvento-Data,Solvento");
+  const t = AD.tokensQueCrear(cat, c, { solvento: { repo: "Solvento-Data" }, ironrack: { repo: "Ironrack-Data" }, agora: { repo: "Agora-Data" } });
+  // ABIES tiene Solvento y Agora: su representante nuevo necesita un token para cada una
+  return t.map((x) => x.nombre).sort().join() === "ABIES-Lucia-Agora,ABIES-Lucia-Solvento,Lucia-Solvento" &&
+    t.every((x) => x.acceso.join() === (x.app === "Agora" ? "Agora-Data" : "Solvento-Data,Solvento"));
 });
 await prueba("cuentas.json se escribe como a mano y se vuelve a leer igual", () => {
   const txt = AD.formatear(cat);

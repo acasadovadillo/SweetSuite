@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Presupuestos»: presupuesto anual y proyectos o subvenciones.
+ * Agora — Módulo «Presupuestos»: presupuesto anual y proyectos o subvenciones.
  *
  *   #/proyectos                presupuesto anual (lo aprobado en asamblea) frente a lo realizado
  *   #/proyectos/lista          proyectos y subvenciones con su ejecución

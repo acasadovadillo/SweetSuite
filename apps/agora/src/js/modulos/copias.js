@@ -1,5 +1,5 @@
 /*
- * ABIES · Gestión — Módulo «Copia de seguridad».
+ * Agora — Módulo «Copia de seguridad».
  *
  * La copia cifrada es la bóveda tal cual: se abre con nombre, cargo y las dos
  * contraseñas, así que la puede descargar cualquier usuario. La copia sin
@@ -107,7 +107,9 @@
 
   WA.Copias = { descargar: descargar };
   WA.App.registrar({
-    id: "copias", titulo: "Copia de seguridad", orden: 90, pintar: pintar,
+    // Dentro de SweetSuite las copias son las de GitHub: este módulo solo
+    // vuelve como «Traer una copia de antes», para los datos de la app anterior.
+    id: "copias", titulo: "Copia de seguridad", orden: 90, pintar: pintar, oculto: true,
     icono: '<path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2"/>',
   });
 })(typeof self !== "undefined" ? self : this);

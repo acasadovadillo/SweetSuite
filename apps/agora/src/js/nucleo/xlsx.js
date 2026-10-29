@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Excel (.xlsx) sin librerías: escribir y leer.
+ * Agora — Excel (.xlsx) sin librerías: escribir y leer.
  *
  * Un .xlsx es un ZIP con unos cuantos XML dentro. Escribirlo cabe aquí (portado
  * de exportar.js de Solvento) y así no hace falta traer una librería de medio

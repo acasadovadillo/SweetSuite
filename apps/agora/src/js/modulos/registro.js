@@ -1,5 +1,5 @@
 /*
- * ABIES · Gestión — Módulo «Actividad»: el registro de cambios.
+ * Agora — Módulo «Actividad»: el registro de cambios.
  *
  * Cada alta, cambio o baja queda apuntada con quién la hizo («Alberto ·
  * Tesorería»), cuándo y sobre qué. Lo apunta el repositorio: aquí solo se lee,

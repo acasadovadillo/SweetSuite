@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Dinero.
+ * Agora — Dinero.
  *
  * REGLA DE ORO: todos los importes se guardan y se calculan en CÉNTIMOS
  * ENTEROS (1234,56 € → 123456). Nunca en euros con decimales: en coma flotante

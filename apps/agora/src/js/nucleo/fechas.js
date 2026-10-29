@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Fechas.
+ * Agora — Fechas.
  *
  * Todas las fechas se GUARDAN como texto ISO «aaaa-mm-dd» (2026-10-01): se
  * ordenan bien como texto, no dependen de la zona horaria y cualquier hoja de

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Libro de actas (sin interfaz: tests/gobierno.test.js).
+ * Agora — Libro de actas (sin interfaz: tests/gobierno.test.js).
  *
  * ÓRGANOS (configurables en config.organos): { id, nombre, prefijo, tipo }
  *   tipo: "junta" | "coordinacion" | "asamblea" | "departamento" | "otro"

@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Bóveda: dónde se guarda el bloque CIFRADO en el navegador.
+ * Agora — Bóveda: dónde se guarda el bloque CIFRADO en el navegador.
  *
  * Por qué IndexedDB y no localStorage:
  *   · localStorage admite unos 5 MB y solo texto; IndexedDB, cientos de MB y
@@ -18,11 +18,11 @@
 (function (raiz) {
   "use strict";
 
-  var BD = "webkit_asociaciones";
+  var BD = "sweetsuite_agora";
   var ALMACEN = "boveda";
   var ARCHIVOS = "archivos";   // adjuntos cifrados: { id → { iv, ct } } (versión 2 de la base de datos)
   var CLAVE = "datos";
-  var CLAVE_LS = "webkit_asociaciones_boveda";
+  var CLAVE_LS = "sweetsuite_agora_boveda";
 
   var abierta = null; // promesa de la base de datos (o null si no hay IndexedDB)
 
@@ -137,6 +137,15 @@
     await operacion("readwrite", function (s) { return s.clear(); }, ARCHIVOS);
   }
 
+  /**
+   * Dentro de SweetSuite, cada cuenta guarda lo suyo con su nombre, por si en
+   * el mismo dispositivo entra más de una (los adjuntos llevan ids al azar).
+   */
+  function usar(cuenta) {
+    CLAVE = "datos:" + cuenta;
+    CLAVE_LS = "sweetsuite_agora_boveda:" + cuenta;
+  }
+
   /** Espacio usado y disponible según el navegador (orientativo), en bytes. */
   async function espacio() {
     try {
@@ -145,6 +154,6 @@
     return null;
   }
 
-  (raiz.WA = raiz.WA || {}).Boveda = { leer: leer, escribir: escribir, borrar: borrar, hayDatos: hayDatos, tipo: tipo, pedirPersistencia: pedirPersistencia,
+  (raiz.WA = raiz.WA || {}).Boveda = { leer: leer, escribir: escribir, borrar: borrar, hayDatos: hayDatos, tipo: tipo, usar: usar, pedirPersistencia: pedirPersistencia,
     leerArchivo: leerArchivo, escribirArchivo: escribirArchivo, borrarArchivo: borrarArchivo, borrarArchivos: borrarArchivos, espacio: espacio };
 })(typeof self !== "undefined" ? self : this);

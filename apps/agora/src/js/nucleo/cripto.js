@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Cifrado (Web Crypto API del navegador, sin librerías).
+ * Agora — Cifrado (Web Crypto API del navegador, sin librerías).
  *
  * Es el ÚNICO sitio donde se cifra o descifra. La contraseña nunca se guarda ni
  * sale del navegador: solo sirve para derivar una clave que vive en memoria
@@ -88,7 +88,7 @@
    * Si la contraseña no es la buena lanza un error con codigo "CONTRASENA".
    */
   async function descifrar(bloque, contrasena) {
-    if (!esBloque(bloque)) throw new Error("No es un bloque cifrado de webkit_asociaciones.");
+    if (!esBloque(bloque)) throw new Error("No es un bloque cifrado de Agora.");
     var sal = desdeBase64(bloque.sal);
     var clave = await derivarClave(contrasena, sal, bloque.iter);
     var plano;

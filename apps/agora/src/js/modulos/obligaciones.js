@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Módulo «Obligaciones»: calendario de plazos con aviso.
+ * Agora — Módulo «Obligaciones»: calendario de plazos con aviso.
  *
  *   #/obligaciones          vencimientos (vencidos sin hacer y próximos 12 meses)
  *   #/obligaciones/lista    las obligaciones configuradas, para editarlas

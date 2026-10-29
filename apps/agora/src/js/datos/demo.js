@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Datos de demostración.
+ * Agora — Datos de demostración.
  *
  * TODO ES INVENTADO. Ninguna persona, asociación, NIF, correo ni teléfono de
  * aquí es real:

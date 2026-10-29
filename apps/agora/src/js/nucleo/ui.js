@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Utilidades de interfaz compartidas por todos los módulos.
+ * Agora — Utilidades de interfaz compartidas por todos los módulos.
  *
  *   esc(texto)            escapa texto antes de meterlo en HTML. ÚSALO SIEMPRE con
  *                         cualquier dato que haya escrito una persona: evita que un

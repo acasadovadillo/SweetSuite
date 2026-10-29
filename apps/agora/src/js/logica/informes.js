@@ -1,5 +1,5 @@
 /*
- * webkit_asociaciones — Informes: memoria anual, cuentas y panel (sin interfaz:
+ * Agora — Informes: memoria anual, cuentas y panel (sin interfaz:
  * tests/informes.test.js).
  *
  * Todas las funciones reciben «c», un objeto con lo que hay en los datos:

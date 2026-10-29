@@ -159,6 +159,7 @@
   const ICONOS_APPS = {
     inicio: '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
     ironrack: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+    agora: '<path d="M3.5 9.5 12 4.5l8.5 5"/><path d="M4.5 20h15M6.5 11v6.5M10 11v6.5M14 11v6.5M17.5 11v6.5"/>',
   };
   function pintarAppsSuite() {
     const caja = $("sn-suite");
