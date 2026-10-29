@@ -354,6 +354,19 @@ main {
 .entrada-boton.secundario { background: var(--control); color: var(--texto); border: 1px solid var(--control-borde); margin-top: 10px; }
 .entrada-enlace { margin-top: 18px; font: inherit; font-size: 12.5px; color: var(--suave); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
 .entrada-enlace:hover { color: var(--texto); }
+/* Particular | Empresa: dos botones en una cápsula, el elegido resaltado */
+.modo-entrada {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4px; width: 100%; margin: -8px 0 16px; padding: 4px;
+  background: var(--pista); border: 1px solid var(--borde); border-radius: 12px;
+}
+.modo-entrada button {
+  display: flex; align-items: center; justify-content: center; gap: 7px; min-height: 36px;
+  font: inherit; font-size: 13.5px; font-weight: 500; color: var(--suave);
+  background: none; border: 1px solid transparent; border-radius: 9px; cursor: pointer;
+}
+.modo-entrada button svg { width: 17px; height: 17px; }
+.modo-entrada button:hover { color: var(--texto); }
+.modo-entrada button[aria-checked="true"] { color: var(--texto); background: var(--control); border-color: var(--control-borde); }
 .entrada-error { font-size: 13.12px; font-weight: 600; margin-top: 16px; text-align: center; color: var(--peligro); }
 .entrada-error:empty { display: none; }
 .entrada-check { display: flex; gap: 9px; align-items: flex-start; width: 100%; font-size: 13px; color: var(--texto-medio); margin: 0 0 14px; cursor: pointer; text-align: left; }

@@ -53,6 +53,12 @@
     #sync-estado { font-size: 0.75rem; font-weight: 600; color: var(--t2); margin-top: 0.15rem; }
     .um-item { display: block; width: 100%; text-align: left; background: none; border: none; color: var(--t1); font-family: inherit; font-size: 0.86rem; font-weight: 500; padding: 0.55rem 0.7rem; border-radius: 8px; cursor: pointer; }
     .um-item:hover { background: var(--f4); }
+    .registro-lista { display: flex; flex-direction: column; }
+    .registro-fila { padding: 0.65rem 0; border-top: 1px solid var(--b1); }
+    .registro-fila:first-child { border-top: 0; }
+    .registro-cab { display: flex; justify-content: space-between; gap: 0.75rem; font-size: 0.86rem; }
+    .registro-cab span { color: var(--t2); font-size: 0.78rem; white-space: nowrap; }
+    .registro-que { font-size: 0.82rem; color: var(--t1b); margin-top: 0.15rem; }
     .aj-layout { display: grid; grid-template-columns: 200px 1fr; gap: 2rem; align-items: start; }
     .aj-nav { display: flex; flex-direction: column; gap: 0.15rem; position: sticky; top: 5rem; }
     .aj-tab { background: none; border: none; text-align: left; color: var(--t1b); font-family: inherit; font-size: 0.88rem; font-weight: 500; padding: 0.55rem 0.75rem; border-radius: 8px; cursor: pointer; }
@@ -313,6 +319,7 @@
           <button class="aj-tab" data-sec="sync" onclick="v2AjSec('sync')">Sincronización</button>
           <button class="aj-tab" data-sec="revision" onclick="v2AjSec('revision')">Revisión</button>
           <button class="aj-tab" data-sec="seguridad" onclick="v2AjSec('seguridad')">Seguridad</button>
+          <button class="aj-tab solo-org" data-sec="registro" onclick="v2AjSec('registro')">Registro de cambios</button>
         </nav>
         <div class="aj-body">
           <section class="aj-sec active" id="aj-sec-cuentas">
@@ -400,6 +407,7 @@
         style="background:var(--f4);border:1px solid var(--b2);border-radius:8px;color:var(--t1b);font-size:0.9rem;padding:0 0.7rem;cursor:pointer;font-family:inherit;">👁</button>
     </div>
     <small style="display:block;margin:0.4rem 0 0.5rem;">Token <b>fine-grained</b> con permiso <b>Contents: Read and write</b> en <b>Solvento-Data</b> (tus datos) y en <b>Solvento</b> (la lista de precios). Se guarda cifrado con tu cuenta <b>en este dispositivo</b>, y no viaja con tus datos: en otro dispositivo hay que pegarlo otra vez.</small>
+    <small id="sync-token-nombre" style="display:block;margin:0 0 0.5rem;"></small>
     <div id="sync-token-status" style="font-size:0.78rem;margin-bottom:0.5rem;"></div>
     <button id="sync-save-token" class="primary" style="width:100%;margin-bottom:1.25rem;">Guardar token</button>
     <!-- Con el token ya guardado, el campo se bloquea: cambiarlo o quitarlo es
@@ -429,6 +437,13 @@
     <input id="antiguo-pass" type="password" placeholder="Contraseña del Solvento de antes" autocomplete="off" style="width:100%;margin-bottom:0.6rem;" />
     <input id="antiguo-token" type="password" placeholder="Token de antes (solo si no estaba en este dispositivo)" autocomplete="off" style="width:100%;margin-bottom:0.6rem;" />
     <button id="antiguo-traer" type="button" style="width:100%;">Traer del Solvento de antes</button>
+          </section>
+
+          <section class="aj-sec solo-org" id="aj-sec-registro">
+            <h3>Registro de cambios</h3>
+            <p>Quién ha cambiado qué y cuándo. Cada representante entra con su nombre y lo que guarda queda apuntado aquí,
+               cifrado con los datos, y en el mensaje de cada subida a GitHub.</p>
+            <div id="aj-registro"></div>
           </section>
 
           <section class="aj-sec" id="aj-sec-seguridad">

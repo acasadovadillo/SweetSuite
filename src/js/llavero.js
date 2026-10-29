@@ -18,6 +18,13 @@
  * de cada app (<usuario>.llavero.json en Solvento-Data e Ironrack-Data), para
  * que un dispositivo nuevo lo encuentre en cuanto tenga el token de una app.
  *
+ * Una EMPRESA (ABIES) no tiene contraseña propia: su clave maestra va envuelta
+ * una vez por cada representante, con una clave que sale de la contraseña de
+ * la empresa Y de la del representante a la vez. Sin las dos no se abre nada.
+ * Quién es representante lo dice cuentas.json; la app no da de alta a nadie.
+ * Un representante nuevo (o uno que olvidó algo) entra la primera vez con la
+ * clave de recuperación de la empresa, que le crea su entrada.
+ *
  * Si alguna vez una cuenta acaba con dos llaveros distintos (se estrenó en dos
  * dispositivos sin conexión), se quedan los dos: gana el más antiguo y la
  * clave del otro pasa a «anteriores», cifrada con la ganadora. Las apps
@@ -110,27 +117,60 @@
   // Crea un llavero nuevo. Devuelve { llavero, maestra, recuperacion }.
   // Uno «provisional» es el de un dispositivo que dice que la cuenta ya existe
   // en otro: no lleva clave de recuperación, y en cuanto aparezca el de GitHub,
-  // gana ese.
-  async function crear(usuario, contrasena, { provisional = false } = {}) {
+  // gana ese. Con «empresa» ({ representante, contrasenaRep }), la contraseña
+  // es la de la empresa y la maestra se envuelve para ese representante.
+  async function crear(usuario, contrasena, { provisional = false, empresa = null } = {}) {
     const maestra = aleatorio(32);
     const recuperacion = provisional ? null : nuevaRecuperacion();
     const ahora = Date.now();
-    const llavero = {
+    let llavero = {
       v: 1, tipo: "llavero-sweetsuite", usuario,
       id: aB64(aleatorio(9)).replace(/[+/=]/g, "x"),
       creado: ahora, actualizado: ahora,
       provisional: provisional || undefined,
-      contrasena: await envolver(maestra, contrasena, ITER_CONTRASENA),
+      contrasena: empresa ? null : await envolver(maestra, contrasena, ITER_CONTRASENA),
       recuperacion: recuperacion ? await envolver(maestra, normalizarRecuperacion(recuperacion), ITER_RECUPERACION) : null,
       anteriores: null,
       preferencias: null,
     };
+    if (empresa) {
+      llavero = await conRepresentante(llavero, maestra, contrasena, empresa.representante, empresa.contrasenaRep);
+      llavero.actualizado = ahora;
+    }
     return { llavero, maestra, recuperacion };
   }
 
   // Abre con la contraseña o con la clave de recuperación. Devuelve la maestra.
   async function abrir(llavero, contrasena) {
+    if (!llavero.contrasena) throw fallo("Este llavero es de una empresa", "BAD_PASSWORD");
     return desenvolver(llavero.contrasena, contrasena);
+  }
+
+  // ── Empresas ──
+  // La clave de cada representante sale de las dos contraseñas juntas
+  const textoEmpresa = (empresa, rep, pwEmpresa, pwRep) => ["SweetSuite", empresa, rep, pwEmpresa, pwRep].join("\u0000");
+  const esEmpresa = (ll) => !!ll && !!ll.representantes;
+  async function conRepresentante(llavero, maestra, pwEmpresa, rep, pwRep) {
+    const reps = Object.assign({}, llavero.representantes || {});
+    reps[rep] = await envolver(maestra, textoEmpresa(llavero.usuario, rep, pwEmpresa, pwRep), ITER_CONTRASENA);
+    // Ya no se abre con una sola contraseña (si era un llavero de antes)
+    return Object.assign({}, llavero, { contrasena: null, representantes: reps, actualizado: Date.now() });
+  }
+  // Abre como representante. Un llavero de antes de ser empresa (con su
+  // contraseña sola) se abre con la de la empresa, y quien entra lo convierte.
+  async function abrirEmpresa(llavero, rep, pwEmpresa, pwRep) {
+    if (llavero.representantes && llavero.representantes[rep]) {
+      return desenvolver(llavero.representantes[rep], textoEmpresa(llavero.usuario, rep, pwEmpresa, pwRep));
+    }
+    if (llavero.contrasena) return abrir(llavero, pwEmpresa);
+    throw fallo("Aún no tienes acceso a esta empresa", "SIN_REPRESENTANTE");
+  }
+  // Solo se quedan los representantes que siguen en cuentas.json
+  function soloRepresentantes(llavero, lista) {
+    if (!llavero.representantes) return llavero;
+    const reps = {};
+    Object.keys(llavero.representantes).forEach((r) => { if (lista.indexOf(r) >= 0) reps[r] = llavero.representantes[r]; });
+    return Object.assign({}, llavero, { representantes: reps });
   }
   async function abrirConRecuperacion(llavero, codigo) {
     if (!llavero.recuperacion) throw fallo("Esta cuenta no tiene clave de recuperación", "SIN_RECUPERACION");
@@ -189,11 +229,12 @@
     return a.id < b.id ? a : b;
   }
 
-  const esLlavero = (x) => !!x && x.tipo === "llavero-sweetsuite" && x.v === 1 && !!x.contrasena;
+  const esLlavero = (x) => !!x && x.tipo === "llavero-sweetsuite" && x.v === 1 && !!(x.contrasena || x.representantes);
 
   window.SweetLlavero = {
     crear, abrir, abrirConRecuperacion, abrirConCualquiera, cambiarContrasena, cambiarRecuperacion,
     anteriores, conAnteriores, preferencias, conPreferencias, secretoDeApp, ganador, esLlavero,
+    esEmpresa, conRepresentante, abrirEmpresa, soloRepresentantes,
     nuevaRecuperacion, normalizarRecuperacion, pareceRecuperacion, igual,
   };
 })();

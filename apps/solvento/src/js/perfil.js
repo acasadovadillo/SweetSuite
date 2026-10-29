@@ -71,7 +71,13 @@
   // Cualquier otra llave de este navegador que sea de una cuenta y no de todas.
   const claveDe = (base) => "sweetsuite_" + base + sufijo();
   const claveBlob = () => "sweetsuite_solvento_data_enc" + sufijo();
-  const claveToken = () => "sweetsuite_solvento_gh_token" + sufijo();
+  // En una empresa, cada representante tiene su token (ABIES-Alberto-Solvento)
+  let rep = null, repNombre = "";
+  const representante = (u, nombre) => {
+    if (u !== undefined) { rep = u || null; repNombre = rep ? nombre || rep : ""; aplicar(); }
+    return rep;
+  };
+  const claveToken = () => "sweetsuite_solvento_gh_token" + sufijo() + (rep ? "@" + rep : "");
   const claveSha = () => "sweetsuite_solvento_data_sha" + sufijo();
   // Las del Solvento de antes: la primera cuenta (alberto) sin sufijo y las
   // demás con «:<usuario>»
@@ -151,7 +157,7 @@
     if (el) { el.textContent = nombre; el.hidden = !nombre; }
     // La cuenta en el menú lateral, con sus iniciales en el círculo.
     const cn = document.getElementById("sn-cuenta-nombre"), av = document.getElementById("sn-avatar");
-    if (cn) cn.textContent = nombre || c.usuario || "";
+    if (cn) cn.textContent = (nombre || c.usuario || "") + (dentro && repNombre ? " · " + repNombre : "");
     if (av) av.textContent = String(nombre || c.usuario || "").split(/\s+/).map((w) => w.replace(/[^\p{L}]/gu, "")).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
     document.title = (E && !E.prod ? "[DEV] " : "") + (nombre ? nombre + " · Solvento" : "Solvento");
   }
@@ -159,7 +165,7 @@
 
   window.SolventoPerfil = {
     cargar, aplicar, entrar, usar, cuentas, actual, porUsuario, esOrganizacion,
-    claveBlob, claveToken, claveSha, claveDe, clavesAntiguas,
+    claveBlob, claveToken, claveSha, claveDe, clavesAntiguas, representante,
     app: () => app,
     datos: () => actual(),
     PRINCIPAL,

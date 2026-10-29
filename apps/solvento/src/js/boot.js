@@ -107,6 +107,7 @@
   async function unlock(doc, password) {
     if (P()) P().entrar(true);          // ya se puede decir de quién es esto
     DB.state.doc = doc;
+    ULTIMO = JSON.stringify(doc);       // lo de partida, para el registro de cambios
     DB.state.password = password;
     $("boot-overlay").style.display = "none";
     document.documentElement.style.overflow = "";
@@ -441,7 +442,7 @@
     pintarEstado("guardando");
     const v0 = version;
     try {
-      const r = await SYNC.push(DB.state.doc, DB.state.password, DB.state.token, mensaje || "Solvento: cambios desde la web");
+      const r = await SYNC.push(DB.state.doc, DB.state.password, DB.state.token, firmar(mensaje || "Solvento: cambios desde la web"));
       if (version !== v0) {
         // Llegó otro cambio mientras subía: ya está guardado aquí y es más
         // nuevo que lo subido. Sigue pendiente, y la cola lo sube a continuación.
@@ -555,6 +556,7 @@
     if (esperandoDatos) { render(); toast("Aún no tienes tus datos aquí: añade tu token en ⚙ Ajustes → Sincronización", "var(--ambar-2)"); return; }
     if (esInvitado()) { render(); avisoLectura(); return; }
     version++;
+    anotarCambio();
     render();
     await guardarLocal();
     // Pendiente desde YA, no solo si falla la subida: si se cierra la pestaña a
@@ -944,12 +946,75 @@
     }
   }
 
+  // ── Registro de cambios (empresas) ───────────────────────────────────────
+  // En una empresa, cada guardado apunta en el documento quién cambió qué:
+  // cuántos movimientos, operaciones, inmuebles, deudas o cobros añadió,
+  // cambió o borró, y si tocó los ajustes. Va cifrado con los datos y se ve en
+  // Ajustes → Registro de cambios. El nombre va también en el commit.
+  let ULTIMO = null;
+  const REGISTRO_MAX = 1000;
+  const COLECCIONES_REG = [
+    ["movimientos", "Movimientos", "o"], ["inversiones", "Operaciones", "a"], ["propiedades", "Inmuebles", "o"],
+    ["pasivos", "Deudas", "a"], ["cobros", "Cobros", "o"],
+  ];
+  function indice(lista) {
+    const m = {};
+    (Array.isArray(lista) ? lista : []).forEach((x, i) => { m[(x && x.id) || "#" + i + JSON.stringify(x)] = JSON.stringify(x); });
+    return m;
+  }
+  function resumenCambios(antes, ahora) {
+    const partes = [];
+    COLECCIONES_REG.forEach(([k, nombre, g]) => {
+      const a = indice(antes[k]), b = indice(ahora[k]);
+      let nuevos = 0, cambiados = 0, borrados = 0;
+      Object.keys(b).forEach((id) => { if (!(id in a)) nuevos++; else if (a[id] !== b[id]) cambiados++; });
+      Object.keys(a).forEach((id) => { if (!(id in b)) borrados++; });
+      const t = [];
+      const pal = (n, raiz) => n + " " + raiz + (n === 1 ? g : g + "s");
+      if (nuevos) t.push(pal(nuevos, "nuev"));
+      if (cambiados) t.push(pal(cambiados, "cambiad"));
+      if (borrados) t.push(pal(borrados, "borrad"));
+      if (t.length) partes.push(nombre + ": " + t.join(", "));
+    });
+    if (JSON.stringify(antes.config || {}) !== JSON.stringify(ahora.config || {})) partes.push("Ajustes");
+    const vistos = COLECCIONES_REG.map((c) => c[0]).concat(["config", "registro"]);
+    const otros = Object.keys(Object.assign({}, antes, ahora)).filter((k) => vistos.indexOf(k) < 0 &&
+      JSON.stringify(antes[k]) !== JSON.stringify(ahora[k]));
+    if (otros.length) partes.push("Otros datos");
+    return partes.join(" · ");
+  }
+  function anotarCambio() {
+    const doc = DB.state.doc;
+    if (!REP || !doc) return;
+    const antes = ULTIMO ? JSON.parse(ULTIMO) : {};
+    const cambios = resumenCambios(antes, doc);
+    if (cambios) {
+      doc.registro = (Array.isArray(doc.registro) ? doc.registro : [])
+        .concat([{ fecha: new Date().toISOString(), quien: REP.usuario, nombre: REP.nombre, cambios }]).slice(-REGISTRO_MAX);
+    }
+    ULTIMO = JSON.stringify(doc);
+  }
+  function pintarRegistro() {
+    const caja = $("aj-registro");
+    if (!caja) return;
+    const lista = ((DB.state.doc && DB.state.doc.registro) || []).slice().reverse().slice(0, 300);
+    const f = (iso) => { const d = new Date(iso); return d.toLocaleDateString("es-ES") + " " + d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" }); };
+    caja.innerHTML = !lista.length
+      ? '<p style="color:var(--t2);">Aún no hay cambios registrados.</p>'
+      : '<div class="registro-lista">' + lista.map((r) =>
+          `<div class="registro-fila"><div class="registro-cab"><b>${esc(r.nombre || r.quien)}</b><span>${esc(f(r.fecha))}</span></div>` +
+          `<div class="registro-que">${esc(r.cambios)}</div></div>`).join("") + "</div>";
+  }
+
   // ── Dentro de SweetSuite ─────────────────────────────────────────────────
   // La entrada es la de SweetSuite: aquí se llega con la cuenta ya abierta y
   // el secreto de Solvento, que hace de contraseña de los datos. Si la cuenta
   // tiene claves anteriores (SweetSuite unió dos llaveros), lo que no se abra
   // con la actual se prueba con ellas y se vuelve a cifrar con la actual.
   let ANTERIORES = [];
+  // En una empresa, quién la representa: firma cada commit y cada cambio
+  let REP = null;
+  const firmar = (mensaje) => (REP ? mensaje + " · " + REP.nombre : mensaje);
   async function abrirBlob(blob) {
     try { return { doc: await C.decryptDoc(blob, DB.state.password), actual: true }; }
     catch (e) { if (e.code !== "BAD_PASSWORD") throw e; }
@@ -1015,6 +1080,8 @@
     const cuenta = s && P() && P().porUsuario(s.usuario);
     if (!cuenta) { pantallaSuite("Tu cuenta no tiene Solvento."); return; }
     P().usar(cuenta.id);
+    REP = s.representante || null;
+    P().representante(REP ? REP.usuario : null, REP ? REP.nombre : "");
     ANTERIORES = s.anteriores || [];
     DB.state.password = s.secreto;
     let token = await cargarToken(s.secreto);
@@ -1109,7 +1176,7 @@
     DB.state.doc = r.doc;
     if (venia) await unlock(r.doc, DB.state.password);
     if (DB.state.token) await saveDoc();
-    else { await guardarLocal(); marcarPendiente(true); localStorage.setItem(EDITAR_IGUAL, "1"); pintarLectura(); render(); }
+    else { anotarCambio(); await guardarLocal(); marcarPendiente(true); localStorage.setItem(EDITAR_IGUAL, "1"); pintarLectura(); render(); }
     setError("sync-status", `Traídos ${n(r.doc, "movimientos")} movimientos y ${n(r.doc, "inversiones")} operaciones de ${r.origen} ✓`, "var(--verde)");
     toast("Tus datos de antes ya están en Solvento ✓", "var(--verde)");
   }
@@ -1145,6 +1212,14 @@
     const guardar = $("sync-save-token"), puesto = $("sync-token-puesto");
     if (guardar) guardar.hidden = hay;
     if (puesto) puesto.style.display = hay ? "flex" : "none";
+    // Cómo llamarlo en GitHub: empresa, representante y app
+    const nombre = $("sync-token-nombre"), c = P() && P().actual();
+    if (nombre && c) {
+      const cap = (x) => String(x || "").charAt(0).toUpperCase() + String(x || "").slice(1);
+      nombre.textContent = REP
+        ? `En una empresa, cada representante usa su propio token. Llámalo en GitHub «${String(c.usuario).toUpperCase()}-${cap(REP.nombre)}-Solvento».`
+        : `Llámalo en GitHub, por ejemplo, «${cap(c.nombre || c.usuario)}-Solvento».`;
+    }
   }
 
   // Cambiarlo se pide: el campo se vacía y se abre, y hasta que no se guarde el
@@ -1221,7 +1296,7 @@
       const remote = await SYNC.fetchRemoteBlob(DB.state.token);
       if (!remote) { setError("sync-status", "No hay datos en el repo todavía"); return; }
       const { doc, actual } = await abrirBlob(remote.blob);
-      DB.state.doc = doc; DB.storeBlob(remote.blob); render();
+      DB.state.doc = doc; DB.storeBlob(remote.blob); ULTIMO = JSON.stringify(doc); render();
       if (!actual) { await guardarLocal(); marcarPendiente(true); }
       setError("sync-status", "Actualizado desde GitHub ✓", "var(--verde)");
     } catch (e) {
@@ -1412,6 +1487,6 @@
     entrarEnSuite();
   }
 
-  window.SolventoBoot = { volverSuite: () => SS && SS.volver(), irAlToken: () => showPageSync(), lock, openSync, saveDoc, toast, cambiarPassword, abrirCambioPassword, esInvitado, editarIgualmente, avisoLectura, pintarLectura, rellenarToken, pintarComprobacion, comprobarAhora, cargarNav, activosParaNav, precios: () => PRICES };
+  window.SolventoBoot = { pintarRegistro, volverSuite: () => SS && SS.volver(), irAlToken: () => showPageSync(), lock, openSync, saveDoc, toast, cambiarPassword, abrirCambioPassword, esInvitado, editarIgualmente, avisoLectura, pintarLectura, rellenarToken, pintarComprobacion, comprobarAhora, cargarNav, activosParaNav, precios: () => PRICES };
   document.addEventListener("DOMContentLoaded", init);
 })();

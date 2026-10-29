@@ -2990,6 +2990,7 @@
     // lo ponga en su campo cuando esta sección se abre, venga uno por donde venga.
     const B = window.SolventoBoot;
     if (sec === "apariencia") { pintarTema(); pintarAcento(); }
+    if (sec === "registro" && B && B.pintarRegistro) B.pintarRegistro();
     if (sec === "sync" && B) {
       if (B.rellenarToken) B.rellenarToken();
       // Y el estado del guardado al día: si se abre esta pestaña media hora

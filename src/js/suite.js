@@ -10,6 +10,11 @@
  * window.SweetSuite. Se quedan abiertas mientras dura la sesión; al volver al
  * inicio, la app de la que sales sube lo que tenga pendiente.
  *
+ * Una empresa (ABIES) entra en dos pasos: la empresa y su contraseña, y
+ * después quién la representa, con su usuario y su contraseña de SweetSuite.
+ * Hacen falta las dos para abrir los datos (llavero.js), y cada cambio queda
+ * registrado con el nombre del representante.
+ *
  * Rutas: #inicio, #cuenta/<sección> y #app/<id>.
  */
 (function () {
@@ -28,12 +33,19 @@
 
   let CAT = { apps: [], cuentas: [] };
   // La sesión, solo en memoria
-  const S = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null };
+  // (en una empresa, «contrasena» es la del representante y «empresaPw» la de la empresa)
+  const S = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
+              representante: null, empresaPw: null };
+  const SIN_SESION = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
+                       representante: null, empresaPw: null };
 
   const limpiar = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const cuentaDe = (u) => CAT.cuentas.find((c) => c.usuario === limpiar(u));
   const appDe = (id) => CAT.apps.find((a) => a.id === id);
   const misApps = () => (S.cuenta ? CAT.apps.filter((a) => S.cuenta.apps.indexOf(a.id) >= 0) : []);
+  const esEmpresa = (c) => !!c && c.tipo === "organizacion";
+  // El usuario con el que cada app guarda el token: en una empresa, uno por representante
+  const usuarioToken = () => S.cuenta.usuario + (S.representante ? "@" + S.representante.usuario : "");
   const iniciales = (n) => String(n || "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
 
   const claveLlavero = (u) => "sweetsuite_llavero_" + u;
@@ -44,7 +56,7 @@
 
   // Lo que cada app deja en este dispositivo, para saber su estado sin abrirla
   const MARCAS = {
-    solvento: { pendiente: (u) => "sweetsuite_solvento_sync_pendiente:" + u, token: (u) => "sweetsuite_solvento_gh_token:" + u },
+    solvento: { pendiente: (u) => "sweetsuite_solvento_sync_pendiente:" + u, token: () => "sweetsuite_solvento_gh_token:" + usuarioToken() },
     ironrack: { pendiente: (u) => "sweetsuite_ironrack_pendiente_" + u, token: (u) => "sweetsuite_ironrack_token_" + u },
   };
   function estadoDe(id) {
@@ -137,16 +149,36 @@
     e.style.color = gris ? "var(--suave)" : "";
   }
 
-  function mostrarEntrada(usuario) {
+  // Particular o Empresa, como el selector de dos botones de OpenClaw. Se
+  // recuerda en este dispositivo cuál se usó la última vez.
+  const CLAVE_MODO = "sweetsuite_modo_entrada";
+  const ICONO_PARTICULAR = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="3.6"/><path d="M5 20c.8-3.6 3.6-5.6 7-5.6s6.2 2 7 5.6"/></svg>';
+  const ICONO_EMPRESA = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3.5" width="11" height="17" rx="1.5"/><path d="M15 9.5h4a1 1 0 0 1 1 1v10h-5M7.5 7.5h4M7.5 11h4M7.5 14.5h4M9 20.5v-2.5h1.5v2.5"/></svg>';
+  const selectorModo = (modo) => `<div class="modo-entrada" role="radiogroup" aria-label="Tipo de cuenta">
+      <button type="button" role="radio" aria-checked="${modo === "particular"}" data-modo="particular">${ICONO_PARTICULAR}Particular</button>
+      <button type="button" role="radio" aria-checked="${modo === "empresa"}" data-modo="empresa">${ICONO_EMPRESA}Empresa</button>
+    </div>`;
+  function enchufarModo(el, alCambiar) {
+    el.querySelectorAll("[data-modo]").forEach((b) => b.addEventListener("click", () => {
+      ls.set(CLAVE_MODO, b.dataset.modo);
+      alCambiar(b.dataset.modo);
+    }));
+  }
+
+  function mostrarEntrada(usuario, modo) {
     pendienteEntrar = null;
+    modo = modo || (esEmpresa(cuentaDe(usuario)) ? "empresa" : ls.get(CLAVE_MODO) === "empresa" ? "empresa" : "particular");
+    if (modo === "empresa") { mostrarEmpresa(esEmpresa(cuentaDe(usuario)) ? usuario : ""); return; }
     const el = pantalla(`<form class="entrada" id="f-entrar" novalidate autocomplete="on">
         ${cabecera("SweetSuite", "Entra con tu usuario y tu contraseña")}
+        ${selectorModo("particular")}
         <input name="usuario" placeholder="Usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(usuario || "")}">
         ${campoClave("contrasena", "Contraseña", "current-password")}
         <button type="submit" class="entrada-boton">Entrar</button>
         <div class="entrada-error"></div>
         <button type="button" class="entrada-enlace" id="b-olvide">¿Has olvidado tu contraseña?</button>
       </form>`);
+    enchufarModo(el, (m) => mostrarEntrada("", m));
     if (usuario) setTimeout(() => el.querySelector('[name="contrasena"]').focus(), 60);
     $("#b-olvide").onclick = () => mostrarRecuperar(el.querySelector('[name="usuario"]').value);
     $("#f-entrar").addEventListener("submit", async (ev) => {
@@ -155,6 +187,7 @@
       const cuenta = cuentaDe(f.usuario.value), pw = f.contrasena.value;
       if (!limpiar(f.usuario.value)) { errorEntrada("Escribe tu usuario"); f.usuario.focus(); return; }
       if (!pw) { errorEntrada("Escribe tu contraseña"); f.contrasena.focus(); return; }
+      if (esEmpresa(cuenta)) { errorEntrada(cuenta.nombre + " es una empresa: elige «Empresa» arriba"); return; }
       // Usuario que no existe o contraseña que no vale: el mismo aviso, para
       // no decirle a nadie qué cuentas hay
       if (!cuenta) { errorEntrada("Usuario o contraseña incorrectos"); f.contrasena.value = ""; return; }
@@ -173,35 +206,167 @@
     });
   }
 
+  // ── Empresa, paso 1: la empresa y su contraseña ──
+  function mostrarEmpresa(usuario) {
+    pendienteEntrar = null;
+    const el = pantalla(`<form class="entrada" id="f-empresa" novalidate autocomplete="on">
+        ${cabecera("SweetSuite", "Entra con la empresa y su contraseña")}
+        ${selectorModo("empresa")}
+        <input name="empresa" placeholder="Empresa" autocomplete="organization" autocapitalize="none" autocorrect="off" spellcheck="false" value="${esc(usuario || "")}">
+        ${campoClave("contrasena", "Contraseña de la empresa", "current-password")}
+        <button type="submit" class="entrada-boton">Siguiente</button>
+        <div class="entrada-error"></div>
+        <button type="button" class="entrada-enlace" id="b-olvide">¿Has olvidado una contraseña?</button>
+      </form>`);
+    enchufarModo(el, (m) => mostrarEntrada("", m));
+    $("#b-olvide").onclick = () => mostrarRecuperarEmpresa(el.querySelector('[name="empresa"]').value);
+    $("#f-empresa").addEventListener("submit", (ev) => {
+      ev.preventDefault();
+      const f = ev.target, cuenta = cuentaDe(f.empresa.value);
+      if (!limpiar(f.empresa.value)) { errorEntrada("Escribe el nombre de la empresa"); f.empresa.focus(); return; }
+      if (!f.contrasena.value) { errorEntrada("Escribe la contraseña de la empresa"); f.contrasena.focus(); return; }
+      if (!esEmpresa(cuenta)) { errorEntrada("No hay ninguna empresa con ese nombre"); return; }
+      mostrarRepresentante(cuenta, f.contrasena.value);
+    });
+  }
+
+  // ── Empresa, paso 2: quién la representa ──
+  // Hacen falta las dos contraseñas a la vez: hasta aquí no se ha comprobado
+  // la de la empresa, porque sola no abre nada.
+  function mostrarRepresentante(cuenta, pwEmpresa) {
+    const el = pantalla(`<form class="entrada" id="f-rep" novalidate autocomplete="on">
+        ${cabecera(cuenta.nombre, "Ahora, quién eres: tu usuario y tu contraseña de SweetSuite. Lo que cambies quedará registrado con tu nombre.")}
+        <input name="usuario" placeholder="Representante (tu usuario)" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
+        ${campoClave("contrasena", "Tu contraseña", "current-password")}
+        <button type="submit" class="entrada-boton">Entrar</button>
+        <div class="entrada-error"></div>
+        <button type="button" class="entrada-enlace" id="b-volver">Volver</button>
+      </form>`);
+    $("#b-volver").onclick = () => mostrarEmpresa(cuenta.usuario);
+    $("#f-rep").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = ev.target, btn = f.querySelector(".entrada-boton");
+      const rep = limpiar(f.usuario.value), pwRep = f.contrasena.value, repCuenta = cuentaDe(rep);
+      if (!rep) { errorEntrada("Escribe tu usuario"); f.usuario.focus(); return; }
+      if (!pwRep) { errorEntrada("Escribe tu contraseña"); f.contrasena.focus(); return; }
+      if (!repCuenta || esEmpresa(repCuenta) || (cuenta.representantes || []).indexOf(rep) < 0) {
+        errorEntrada("Ese usuario no es representante de " + cuenta.nombre); return;
+      }
+      btn.disabled = true;
+      errorEntrada("Comprobando…", true);
+      const fin = (texto) => { btn.disabled = false; f.contrasena.value = ""; errorEntrada(texto); };
+      // Tu contraseña, primero contra tu propio llavero, si está en este dispositivo
+      const propio = leerLlaveroLocal(rep);
+      if (propio) { try { await L.abrir(propio, pwRep); } catch (e) { fin("Tu contraseña no es correcta"); return; } }
+      const ll = leerLlaveroLocal(cuenta.usuario);
+      const empresa = { representante: repCuenta, empresaPw: pwEmpresa };
+      if (!ll) { pendienteEntrar = { cuenta, pw: pwEmpresa, empresa: { rep: repCuenta, pwRep } }; mostrarPrimeraVez(); return; }
+      try {
+        const maestra = await L.abrirEmpresa(ll, rep, pwEmpresa, pwRep);
+        let nuevo = ll;
+        // Un llavero de antes de ser empresa (o sin entrada tuya) se pone al día
+        if (ll.contrasena || !ll.representantes || !ll.representantes[rep]) {
+          nuevo = L.soloRepresentantes(await L.conRepresentante(ll, maestra, pwEmpresa, rep, pwRep), cuenta.representantes || []);
+          guardarLlaveroLocal(nuevo);
+        }
+        await iniciarSesion(cuenta, pwRep, nuevo, maestra, empresa);
+      } catch (e) {
+        if (e.code === "SIN_REPRESENTANTE") fin("Aún no tienes acceso a " + cuenta.nombre + " en este dispositivo: entra con su clave de recuperación (abajo).");
+        else if (e.code === "BAD_PASSWORD") fin("La contraseña de la empresa o la tuya no es correcta. Si has cambiado tu contraseña personal, entra con la clave de recuperación de la empresa.");
+        else fin(e.message || String(e));
+        if (e.code === "SIN_REPRESENTANTE" || e.code === "BAD_PASSWORD") {
+          const enlace = $("#b-volver");
+          enlace.insertAdjacentHTML("beforebegin", '<button type="button" class="entrada-enlace" id="b-rec-empresa">Entrar con la clave de recuperación de la empresa</button>');
+          $("#b-rec-empresa").onclick = () => mostrarRecuperarEmpresa(cuenta.usuario, rep);
+        }
+      }
+    });
+  }
+
+  // Con la clave de recuperación de la empresa: para un representante que
+  // entra por primera vez en un dispositivo donde ya está la empresa, para
+  // quien olvidó una contraseña y para quien cambió la suya personal. Crea (o
+  // rehace) la entrada de ese representante con las dos contraseñas.
+  function mostrarRecuperarEmpresa(empresa, rep) {
+    pantalla(`<form class="entrada" id="f-rec-empresa" novalidate>
+        ${cabecera("Clave de recuperación", "De la empresa. Con ella, la contraseña de la empresa y la tuya quedan como las escribas aquí. Los datos no se tocan.")}
+        <input name="empresa" placeholder="Empresa" autocapitalize="none" spellcheck="false" value="${esc(empresa || "")}">
+        <input name="codigo" placeholder="Clave de recuperación de la empresa" autocomplete="off" autocapitalize="characters" spellcheck="false">
+        <input name="usuario" placeholder="Representante (tu usuario)" autocomplete="username" autocapitalize="none" spellcheck="false" value="${esc(rep || "")}">
+        ${campoClave("contrasena", "Tu contraseña", "current-password")}
+        <input type="password" name="pwEmpresa" placeholder="Contraseña de la empresa" autocomplete="off">
+        <input type="password" name="repetir" placeholder="Repite la contraseña de la empresa" autocomplete="off">
+        <button type="submit" class="entrada-boton">Entrar</button>
+        <div class="entrada-error"></div>
+        <div class="entrada-sub" style="margin:16px 0 0">En un dispositivo donde la empresa nunca ha entrado, usa «Ya usa SweetSuite en otro dispositivo»: al conectar su primera app te pedirá esta clave.</div>
+        <button type="button" class="entrada-enlace" id="b-volver">Volver</button>
+      </form>`);
+    $("#b-volver").onclick = () => mostrarEmpresa(empresa);
+    $("#f-rec-empresa").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = ev.target, cuenta = cuentaDe(f.empresa.value), r = limpiar(f.usuario.value), repCuenta = cuentaDe(r);
+      const ll = esEmpresa(cuenta) && leerLlaveroLocal(cuenta.usuario);
+      if (!ll) { errorEntrada("Este dispositivo no tiene esa empresa: mira la nota de abajo"); return; }
+      if (!repCuenta || (cuenta.representantes || []).indexOf(r) < 0) { errorEntrada("Ese usuario no es representante de " + cuenta.nombre); return; }
+      if (!f.contrasena.value) { errorEntrada("Escribe tu contraseña"); return; }
+      if (f.pwEmpresa.value.length < MIN_CONTRASENA) { errorEntrada(`La contraseña de la empresa debe tener al menos ${MIN_CONTRASENA} caracteres`); return; }
+      if (f.pwEmpresa.value !== f.repetir.value) { errorEntrada("Las dos contraseñas de la empresa no coinciden"); return; }
+      errorEntrada("Comprobando…", true);
+      const propio = leerLlaveroLocal(r);
+      if (propio) { try { await L.abrir(propio, f.contrasena.value); } catch (e) { errorEntrada("Tu contraseña no es correcta"); return; } }
+      try {
+        const maestra = await L.abrirConRecuperacion(ll, f.codigo.value);
+        const nuevo = L.soloRepresentantes(await L.conRepresentante(ll, maestra, f.pwEmpresa.value, r, f.contrasena.value), cuenta.representantes || []);
+        guardarLlaveroLocal(nuevo);
+        await iniciarSesion(cuenta, f.contrasena.value, nuevo, maestra, { representante: repCuenta, empresaPw: f.pwEmpresa.value });
+        aviso("Ya puedes entrar en " + cuenta.nombre + " con estas contraseñas", "ok");
+      } catch (e) {
+        errorEntrada(e.code === "BAD_PASSWORD" ? "Esa clave de recuperación no es la de " + cuenta.nombre : e.message);
+      }
+    });
+  }
+
   // Primera vez de esta cuenta en este dispositivo: o es su primera vez en
-  // SweetSuite, o ya la usa en otro y su llavero está en GitHub.
+  // SweetSuite, o ya la usa en otro y su llavero está en GitHub. Lo mismo
+  // para una empresa, con las dos contraseñas.
+  const extraEmpresa = () => (pendienteEntrar.empresa
+    ? { representante: pendienteEntrar.empresa.rep, empresaPw: pendienteEntrar.pw } : null);
+  const opcionesEmpresa = (provisional) => (pendienteEntrar.empresa
+    ? { provisional, empresa: { representante: pendienteEntrar.empresa.rep.usuario, contrasenaRep: pendienteEntrar.empresa.pwRep } }
+    : { provisional });
+  const contrasenaSesion = () => (pendienteEntrar.empresa ? pendienteEntrar.empresa.pwRep : pendienteEntrar.pw);
+
   function mostrarPrimeraVez() {
-    const { cuenta } = pendienteEntrar;
+    const { cuenta, empresa } = pendienteEntrar;
     pantalla(`<div class="entrada">
-        ${cabecera("Primera vez aquí", `En este dispositivo no hay ninguna cuenta de SweetSuite de <b>${esc(cuenta.nombre)}</b>.`)}
-        <button type="button" class="entrada-boton" id="b-nueva">Es mi primera vez en SweetSuite</button>
-        <button type="button" class="entrada-boton secundario" id="b-yalauso">Ya uso SweetSuite en otro dispositivo</button>
+        ${empresa
+          ? cabecera("Primera vez aquí", `En este dispositivo no está <b>${esc(cuenta.nombre)}</b>.`)
+          : cabecera("Primera vez aquí", `En este dispositivo no hay ninguna cuenta de SweetSuite de <b>${esc(cuenta.nombre)}</b>.`)}
+        <button type="button" class="entrada-boton" id="b-nueva">${empresa ? "Es la primera vez de " + esc(cuenta.nombre) + " en SweetSuite" : "Es mi primera vez en SweetSuite"}</button>
+        <button type="button" class="entrada-boton secundario" id="b-yalauso">${empresa ? esc(cuenta.nombre) + " ya usa SweetSuite en otro dispositivo" : "Ya uso SweetSuite en otro dispositivo"}</button>
         <div class="entrada-error"></div>
         <button type="button" class="entrada-enlace" id="b-volver">Volver</button>
       </div>`);
-    $("#b-volver").onclick = () => mostrarEntrada(cuenta.usuario);
+    $("#b-volver").onclick = () => (empresa ? mostrarRepresentante(cuenta, pendienteEntrar.pw) : mostrarEntrada(cuenta.usuario));
     $("#b-nueva").onclick = () => mostrarCrear();
     $("#b-yalauso").onclick = async () => {
       errorEntrada("Entrando…", true);
-      const { llavero, maestra } = await L.crear(cuenta.usuario, pendienteEntrar.pw, { provisional: true });
+      const { llavero, maestra } = await L.crear(cuenta.usuario, pendienteEntrar.pw, opcionesEmpresa(true));
       guardarLlaveroLocal(llavero);
-      await iniciarSesion(cuenta, pendienteEntrar.pw, llavero, maestra);
-      aviso("Abre una de tus apps y pega su token: tu cuenta se traerá de GitHub");
+      await iniciarSesion(cuenta, contrasenaSesion(), llavero, maestra, extraEmpresa());
+      aviso("Abre una de las apps y pega su token: la cuenta se traerá de GitHub");
     };
   }
 
   function mostrarCrear() {
-    const { cuenta, pw } = pendienteEntrar;
+    const { cuenta, pw, empresa } = pendienteEntrar;
     pantalla(`<form class="entrada" id="f-crear" novalidate>
-        ${cabecera("Elige tu contraseña", `Abrirá todas tus apps de SweetSuite. Escríbela dos veces, de al menos ${MIN_CONTRASENA} caracteres.`)}
-        ${campoClave("contrasena", "Contraseña", "new-password", pw)}
+        ${empresa
+          ? cabecera("Contraseña de " + cuenta.nombre, `La de la empresa, que junto con la de cada representante abre sus datos. Escríbela dos veces, de al menos ${MIN_CONTRASENA} caracteres.`)
+          : cabecera("Elige tu contraseña", `Abrirá todas tus apps de SweetSuite. Escríbela dos veces, de al menos ${MIN_CONTRASENA} caracteres.`)}
+        ${campoClave("contrasena", empresa ? "Contraseña de la empresa" : "Contraseña", "new-password", pw)}
         <input type="password" name="repetir" placeholder="Repite la contraseña" autocomplete="new-password">
-        <button type="submit" class="entrada-boton">Crear mi cuenta</button>
+        <button type="submit" class="entrada-boton">${empresa ? "Crear " + esc(cuenta.nombre) + " en SweetSuite" : "Crear mi cuenta"}</button>
         <div class="entrada-error"></div>
         <button type="button" class="entrada-enlace" id="b-volver">Volver</button>
       </form>`);
@@ -212,11 +377,13 @@
       if (f.contrasena.value.length < MIN_CONTRASENA) { errorEntrada(`La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres`); return; }
       if (f.contrasena.value !== f.repetir.value) { errorEntrada("Las dos contraseñas no coinciden"); f.repetir.focus(); return; }
       f.querySelector(".entrada-boton").disabled = true;
-      errorEntrada("Creando tu cuenta…", true);
-      const { llavero, maestra, recuperacion } = await L.crear(cuenta.usuario, f.contrasena.value);
+      errorEntrada(empresa ? "Creando la empresa…" : "Creando tu cuenta…", true);
+      pendienteEntrar.pw = f.contrasena.value;
+      const { llavero, maestra, recuperacion } = await L.crear(cuenta.usuario, f.contrasena.value, opcionesEmpresa(false));
       guardarLlaveroLocal(llavero);
-      const pwElegida = f.contrasena.value;
-      mostrarClaveRecuperacion(recuperacion, () => iniciarSesion(cuenta, pwElegida, llavero, maestra));
+      const pwSesion = contrasenaSesion(), extra = extraEmpresa();
+      mostrarClaveRecuperacion(recuperacion, () => iniciarSesion(cuenta, pwSesion, llavero, maestra, extra),
+        empresa ? "Es la de " + cuenta.nombre + ": guárdala donde la junta pueda encontrarla. Sirve para recuperar la empresa y para dar acceso a un representante nuevo. No se vuelve a enseñar." : null);
     });
   }
 
@@ -236,9 +403,9 @@
     boton.disabled = true;
     c.addEventListener("change", () => { boton.disabled = !c.checked; });
   }
-  function mostrarClaveRecuperacion(codigo, siguiente) {
+  function mostrarClaveRecuperacion(codigo, siguiente, texto) {
     const el = pantalla(`<div class="entrada">
-        ${cabecera("Tu clave de recuperación", "Si olvidas tu contraseña, es la única forma de volver a abrir tus datos. No se vuelve a enseñar.")}
+        ${cabecera(texto ? "Clave de recuperación" : "Tu clave de recuperación", texto || "Si olvidas tu contraseña, es la única forma de volver a abrir tus datos. No se vuelve a enseñar.")}
         ${htmlRecuperacion(codigo)}
         <button type="button" class="entrada-boton" id="b-seguir">Entrar en SweetSuite</button>
       </div>`);
@@ -280,8 +447,10 @@
   }
 
   // ── La sesión ──
-  async function iniciarSesion(cuenta, contrasena, llavero, maestra) {
-    Object.assign(S, { cuenta, contrasena, maestra, llavero, estados: {}, apis: {}, abierta: null });
+  // «empresa»: { representante, empresaPw } si se entra como representante
+  async function iniciarSesion(cuenta, contrasena, llavero, maestra, empresa) {
+    Object.assign(S, SIN_SESION, { cuenta, contrasena, maestra, llavero, estados: {}, apis: {} });
+    if (empresa) Object.assign(S, { representante: empresa.representante, empresaPw: empresa.empresaPw });
     S.anteriores = await L.anteriores(llavero, maestra);
     S.prefs = await L.preferencias(llavero, maestra);
     pendienteEntrar = null;
@@ -291,7 +460,7 @@
     $("#suite").classList.add("con-curvas");
     T.aplicarAcento(S.prefs.acento);
     $("#avatar").textContent = iniciales(cuenta.nombre);
-    $("#nombre-usuario").textContent = cuenta.nombre;
+    $("#nombre-usuario").textContent = cuenta.nombre + (S.representante ? " · " + S.representante.nombre : "");
     $("#marca-nombre").textContent = cuenta.nombre;
     pintarMenus();
     const apps = misApps();
@@ -313,7 +482,7 @@
     await guardarTodas();
     const usuario = S.cuenta && S.cuenta.usuario;
     $("#marcos").innerHTML = "";
-    Object.assign(S, { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null });
+    Object.assign(S, SIN_SESION, { apis: {}, estados: {}, anteriores: [], prefs: {} });
     history.replaceState(null, "", location.pathname);
     document.title = "SweetSuite";
     cerrarLateral();
@@ -374,6 +543,22 @@
   const rutaLlavero = () => S.cuenta.usuario + ".llavero.json";
   const mensaje = (que) => "SweetSuite: " + que + " de " + S.cuenta.usuario;
 
+  // Abrir un llavero con lo que tiene la sesión
+  const abrirConSesion = (ll) => (S.representante
+    ? L.abrirEmpresa(ll, S.representante.usuario, S.empresaPw, S.contrasena)
+    : L.abrir(ll, S.contrasena));
+  // En una empresa, que el llavero tenga la entrada de quien está dentro y solo
+  // las de los representantes de cuentas.json. Devuelve el mismo si no cambia.
+  async function conMiEntrada(ll, maestra) {
+    if (!S.representante) return ll;
+    const rep = S.representante.usuario;
+    let nuevo = ll;
+    if (ll.contrasena || !ll.representantes || !ll.representantes[rep]) nuevo = await L.conRepresentante(ll, maestra, S.empresaPw, rep, S.contrasena);
+    const lista = S.cuenta.representantes || [];
+    if (Object.keys(nuevo.representantes || {}).some((r) => lista.indexOf(r) < 0)) nuevo = L.soloRepresentantes(nuevo, lista);
+    return nuevo;
+  }
+
   async function adoptar(ll) {
     S.llavero = ll;
     guardarLlaveroLocal(ll);
@@ -406,19 +591,23 @@
     // El mismo llavero: gana el que se tocó por última vez
     if (remoto.id === local.id) {
       if ((remoto.actualizado || 0) > (local.actualizado || 0)) {
+        let escribir = false;
         try {
-          await L.abrir(remoto, S.contrasena);
+          await abrirConSesion(remoto);
         } catch (e) {
           // La contraseña se cambió en otro dispositivo
           const r = await pedirClave(app, remoto, "cambiada");
           if (!r) throw fallo("Tu contraseña cambió en otro dispositivo", "LLAVERO_PENDIENTE");
           if (r.recuperada) {
-            remoto = await L.cambiarContrasena(remoto, r.maestra, S.contrasena);
-            await ad.escribir(rutaLlavero(), JSON.stringify(remoto), res.sha, mensaje("contraseña"));
-          } else {
-            S.contrasena = r.texto;
-          }
+            remoto = S.representante ? await L.conRepresentante(remoto, r.maestra, S.empresaPw, S.representante.usuario, S.contrasena)
+              : await L.cambiarContrasena(remoto, r.maestra, S.contrasena);
+            escribir = true;
+          } else if (S.representante) S.empresaPw = r.texto;
+          else S.contrasena = r.texto;
         }
+        const conEntrada = await conMiEntrada(remoto, S.maestra);
+        if (conEntrada !== remoto) { remoto = conEntrada; escribir = true; }
+        if (escribir) await ad.escribir(rutaLlavero(), JSON.stringify(remoto), res.sha, mensaje("llavero"));
         await adoptar(remoto);
       } else if ((local.actualizado || 0) > (remoto.actualizado || 0)) {
         await ad.escribir(rutaLlavero(), JSON.stringify(local), res.sha, mensaje("llavero"));
@@ -429,7 +618,7 @@
     // Dos llaveros distintos de la misma cuenta: se quedan los dos (ver llavero.js)
     let mRemota, tecleada = null, recuperada = false;
     try {
-      mRemota = await L.abrir(remoto, S.contrasena);
+      mRemota = await abrirConSesion(remoto);
     } catch (e) {
       const r = await pedirClave(app, remoto, "distinta");
       if (!r) throw fallo("Tu cuenta en GitHub no se abre con esta contraseña", "LLAVERO_PENDIENTE");
@@ -439,16 +628,19 @@
     let nuevo;
     if (L.ganador(local, remoto) === remoto) {
       nuevo = await L.conAnteriores(remoto, mRemota, todas);
-      if (recuperada) nuevo = await L.cambiarContrasena(nuevo, mRemota, S.contrasena);
+      if (recuperada && S.representante) nuevo = await L.conRepresentante(nuevo, mRemota, S.empresaPw, S.representante.usuario, S.contrasena);
+      else if (recuperada) nuevo = await L.cambiarContrasena(nuevo, mRemota, S.contrasena);
+      else if (tecleada && S.representante) S.empresaPw = tecleada;   // la de la empresa es la de GitHub
       else if (tecleada) S.contrasena = tecleada;         // la contraseña es la de la cuenta de GitHub
       S.maestra = mRemota;
     } else {
       nuevo = await L.conAnteriores(local, S.maestra, todas);
     }
+    nuevo = await conMiEntrada(nuevo, S.maestra);
     nuevo = Object.assign({}, nuevo, { actualizado: Date.now() });
     await ad.escribir(rutaLlavero(), JSON.stringify(nuevo), res.sha, mensaje("llavero"));
     await adoptar(nuevo);
-    if (tecleada && !recuperada) aviso("A partir de ahora tu contraseña es la de tu cuenta de GitHub", "ok");
+    if (tecleada && !recuperada) aviso(S.representante ? "La contraseña de la empresa es la de su cuenta de GitHub" : "A partir de ahora tu contraseña es la de tu cuenta de GitHub", "ok");
     avisarApps("alCambiarClaves");
     return { cambio: true };
   }
@@ -461,6 +653,7 @@
 
   function pedirClave(app, remoto, motivo) {
     const nombre = appDe(app).nombre;
+    if (S.representante) return pedirClaveEmpresa(app, remoto, motivo);
     const texto = motivo === "cambiada"
       ? `Tu contraseña de SweetSuite se cambió en otro dispositivo. Escribe la nueva (o tu clave de recuperación) para seguir con ${esc(nombre)}.`
       : `En ${esc(nombre)} ya hay una cuenta de SweetSuite de ${esc(S.cuenta.nombre)}, creada en otro dispositivo, y no se abre con la contraseña con la que has entrado aquí. Escribe la contraseña de esa cuenta o tu clave de recuperación.`;
@@ -482,6 +675,38 @@
           cerrarDialogo(Object.assign({ texto: t }, r));
         } catch (e) {
           d.querySelector("#clave-error").textContent = "No es ni la contraseña ni la clave de recuperación de esa cuenta";
+        }
+      });
+    });
+  }
+
+  function pedirClaveEmpresa(app, remoto, motivo) {
+    const nombre = appDe(app).nombre, e = S.cuenta.nombre, rep = S.representante.usuario;
+    const texto = motivo === "cambiada"
+      ? `La contraseña de ${esc(e)} se cambió en otro dispositivo. Escribe la nueva (o la clave de recuperación de ${esc(e)}) para seguir con ${esc(nombre)}.`
+      : `En ${esc(nombre)} ya está ${esc(e)}, creada en otro dispositivo, y no se abre con las contraseñas con las que has entrado. Escribe la contraseña de ${esc(e)} que se usa allí o su clave de recuperación.`;
+    return new Promise((ok) => {
+      const d = dialogo(`<h3>${motivo === "cambiada" ? "La contraseña de la empresa ha cambiado" : "La empresa tiene otra contraseña"}</h3>
+        <p>${texto}</p>
+        <form class="form" id="f-clave">
+          <input class="campo" type="password" name="clave" placeholder="Contraseña de ${esc(e)} o su clave de recuperación" autocomplete="off">
+          <p class="error" id="clave-error"></p>
+          <div class="botones"><button type="button" class="btn" data-r="no">Ahora no</button><button class="btn primario">Seguir</button></div>
+        </form>`, ok);
+      d.querySelector('[data-r="no"]').onclick = () => cerrarDialogo(null);
+      d.querySelector("#f-clave").addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const t = ev.target.clave.value;
+        if (!t) return;
+        try {
+          if (L.pareceRecuperacion(t) && remoto.recuperacion) {
+            try { cerrarDialogo({ texto: t, maestra: await L.abrirConRecuperacion(remoto, t), recuperada: true }); return; } catch (x) { /* sigue */ }
+          }
+          cerrarDialogo({ texto: t, maestra: await L.abrirEmpresa(remoto, rep, t, S.contrasena), recuperada: false });
+        } catch (x) {
+          d.querySelector("#clave-error").textContent = x.code === "SIN_REPRESENTANTE"
+            ? `Aún no tienes acceso a ${e} allí: usa su clave de recuperación`
+            : `No es ni la contraseña de ${e} ni su clave de recuperación`;
         }
       });
     });
@@ -558,10 +783,14 @@
           <b>Tu cuenta aún no está unida a la de GitHub.</b>
           <p class="nota" style="margin-top:4px">Abre una de tus apps y pega su token en Ajustes: SweetSuite traerá tu cuenta y tus datos.</p></div>`
       : "";
-    return `<section class="cabeza"><h1>Hola, ${esc(S.cuenta.nombre)}</h1>
-        <p>Tus apps de SweetSuite. Lo de cada una se guarda aparte, cifrado, en su propio repositorio de GitHub.</p></section>
+    const cabeza = S.representante
+      ? `<h1>${esc(S.cuenta.nombre)}</h1>
+        <p>Entras como <b>${esc(S.representante.nombre)}</b>, representante de ${esc(S.cuenta.nombre)}. Cada cambio queda registrado con tu nombre.</p>`
+      : `<h1>Hola, ${esc(S.cuenta.nombre)}</h1>
+        <p>Tus apps de SweetSuite. Lo de cada una se guarda aparte, cifrado, en su propio repositorio de GitHub.</p>`;
+    return `<section class="cabeza">${cabeza}</section>
       ${provisional}
-      <h2>Tus apps</h2>
+      <h2>${S.representante ? "Sus apps" : "Tus apps"}</h2>
       <div class="apps">${apps.map((a) => `<button class="app-tarjeta" data-a="abrir" data-app="${a.id}">
           <span class="app-icono">${ICONO(a.id)}</span>
           <span class="app-texto"><b>${esc(a.nombre)}</b><span class="desc">${esc(a.descripcion)}</span>
@@ -582,14 +811,21 @@
       <div class="fila-control">${control}</div></div>`;
   const ICONO_OK = '<svg viewBox="0 0 24 24"><path d="M20 6 9 17l-5-5"/></svg>';
   const CONTENIDO = {
-    cuenta: () => `<div class="tarjeta filas">
+    cuenta: () => S.representante ? `<div class="tarjeta filas">
+        ${fila("Empresa", "Con la que has entrado.", `<code>${esc(S.cuenta.usuario)}</code>`)}
+        ${fila("Representante", "Quién eres: lo que cambies queda registrado con tu nombre.", `<code>${esc(S.representante.usuario)}</code>`)}
+        ${fila("Representantes de " + esc(S.cuenta.nombre), (S.cuenta.representantes || []).map((r) => esc((cuentaDe(r) || {}).nombre || r)).join(" · ") +
+          ". Se dan de alta y de baja en el código (cuentas.json), no desde la app.", "", "apilar")}
+        ${fila("Sus apps", misApps().map((a) => esc(a.nombre)).join(" · "), "")}
+        ${fila("Contraseñas", "Hacen falta la de la empresa y la tuya. Para cambiar la de la empresa, o si un representante cambia la suya, se entra con la clave de recuperación de la empresa («¿Has olvidado una contraseña?» en la entrada).", "", "apilar")}
+      </div>` : `<div class="tarjeta filas">
         ${fila("Usuario", "Con el que entras en SweetSuite.", `<code>${esc(S.cuenta.usuario)}</code>`)}
         ${fila("Tus apps", misApps().map((a) => esc(a.nombre)).join(" · "), "")}
         ${fila("Contraseña", "La misma para todas tus apps. Cambiarla no toca tus datos.", '<button class="btn" data-a="cambiarContrasena">Cambiar</button>')}
       </div>`,
     recuperacion: () => `<div class="tarjeta filas">
-        ${fila("Clave de recuperación", S.llavero.recuperacion
-          ? "La guardaste al crear tu cuenta. Si generas otra, la de antes deja de valer."
+        ${fila(S.representante ? "Clave de recuperación de " + esc(S.cuenta.nombre) : "Clave de recuperación", S.llavero.recuperacion
+          ? (S.representante ? "La de la empresa, para todos sus representantes. Si generas otra, la de antes deja de valer: díselo a la junta." : "La guardaste al crear tu cuenta. Si generas otra, la de antes deja de valer.")
           : "Tu cuenta aún no tiene: se crea al unirla con GitHub o al generarla aquí.",
           `<button class="btn" data-a="nuevaRecuperacion">${S.llavero.recuperacion ? "Generar otra" : "Generar"}</button>`, "apilar")}
       </div>
@@ -612,7 +848,8 @@
     },
     dispositivo: () => `<div class="tarjeta filas">
         ${fila("Bloquear", "Vuelve a la entrada. Antes, cada app sube lo que tenga pendiente.", '<button class="btn" data-a="bloquear">Bloquear</button>')}
-        ${fila("Borrar tu cuenta de este dispositivo", "Borra tu llavero y lo que tus apps guardan aquí. Lo que está en GitHub no se toca.", '<button class="btn texto-peligro" data-a="olvidar">Borrar</button>')}
+        ${fila(S.representante ? "Borrar " + esc(S.cuenta.nombre) + " de este dispositivo" : "Borrar tu cuenta de este dispositivo",
+          "Borra el llavero y lo que las apps guardan aquí. Lo que está en GitHub no se toca.", '<button class="btn texto-peligro" data-a="olvidar">Borrar</button>')}
       </div>`,
     acerca: () => `<div class="tarjeta filas">
         ${fila("Versión", "", `<code>SweetSuite ${VERSION}</code>`)}
@@ -758,11 +995,11 @@
       const borrar = [];
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        if (k === claveLlavero(u) || (k.indexOf("sweetsuite_solvento_") === 0 && k.endsWith(":" + u)) ||
+        if (k === claveLlavero(u) || (k.indexOf("sweetsuite_solvento_") === 0 && (k.endsWith(":" + u) || k.indexOf(":" + u + "@") > 0)) ||
             (k.indexOf("sweetsuite_ironrack_") === 0 && k.endsWith("_" + u))) borrar.push(k);
       }
       borrar.forEach(ls.del);
-      Object.assign(S, { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null });
+      Object.assign(S, SIN_SESION, { apis: {}, estados: {}, anteriores: [], prefs: {} });
       history.replaceState(null, "", location.pathname);
       mostrarEntrada("");
     },
@@ -790,6 +1027,8 @@
       if (!S.cuenta || S.cuenta.apps.indexOf(app) < 0) return null;
       return {
         usuario: S.cuenta.usuario, nombre: S.cuenta.nombre, tipo: S.cuenta.tipo || "persona",
+        // En una empresa, quién la representa: firma los cambios y lleva su propio token
+        representante: S.representante ? { usuario: S.representante.usuario, nombre: S.representante.nombre } : null,
         secreto: await L.secretoDeApp(S.maestra, app),
         anteriores: await Promise.all(S.anteriores.map((m) => L.secretoDeApp(m, app))),
         repo: E.repos[app], antiguo: E.antiguo,

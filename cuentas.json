@@ -1,5 +1,5 @@
 {
-  "_": "Quién entra en SweetSuite y qué apps tiene cada uno. Este repositorio es público: aquí solo van nombres, nunca datos. Los datos de cada app viven cifrados en su repositorio privado (Solvento-Data, Ironrack-Data).",
+  "_": "Quién entra en SweetSuite y qué apps tiene cada uno. Este repositorio es público: aquí solo van nombres, nunca datos. Los datos de cada app viven cifrados en su repositorio privado (Solvento-Data, Ironrack-Data). Una empresa (tipo «organizacion») lleva sus «representantes»: los usuarios que pueden entrar en ella; se dan de alta y de baja solo aquí.",
   "apps": [
     {
       "id": "solvento",
@@ -17,7 +17,7 @@
   "cuentas": [
     { "usuario": "alberto", "nombre": "Alberto", "tipo": "persona", "apps": ["solvento", "ironrack"] },
     { "usuario": "hafsa", "nombre": "Hafsa", "tipo": "persona", "apps": ["solvento", "ironrack"] },
-    { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion", "apps": ["solvento"] },
+    { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion", "apps": ["solvento"], "representantes": ["alberto"] },
     { "usuario": "paula", "nombre": "Paula", "tipo": "persona", "apps": ["solvento"] }
   ]
 }
