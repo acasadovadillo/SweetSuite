@@ -1,0 +1,37 @@
+/*
+ * webkit_asociaciones — Impresión (y «Guardar como PDF» del navegador).
+ * Se quita todo lo que es de manejo (menú, botones, avisos) y queda el contenido.
+ * Los informes de la Fase 6 se apoyan en esto.
+ */
+@media print {
+  :root, :root[data-tema] { --fondo: #fff; --superficie: #fff; --superficie-2: #fff; --hundido: #fff; --titulo: #000; --texto: #000; --texto-2: #222; --texto-3: #444; --borde: #bbb; --borde-suave: #ccc; --borde-fuerte: #888; color-scheme: light; }
+  .tabla tbody tr:hover { background: none; }
+  body { background: #fff; color: #000; font-size: 11pt; }
+  .cabecera, .menu, .velo, .franja, .avisos, .saltar, .acciones, .btn, .celda-acciones, .no-imprimir { display: none !important; }
+  .cuerpo { display: block; min-height: 0; }
+  .principal { padding: 0; max-width: none; }
+  .tarjeta { box-shadow: none; border: none; padding: 0; margin: 0 0 1.5rem; break-inside: avoid; }
+  a { color: #000; text-decoration: none; }
+  .tabla th, .tabla td { border-bottom: 1px solid #999; }
+  details { display: block; }
+  details > summary { list-style: none; }
+  .barra-guardar, .barra-filtros, .pestanas, .miga { display: none !important; }
+  .tabla-libro { font-size: 9.5pt; }
+  .tabla-libro th, .tabla-libro td { padding: 0.25rem 0.35rem; }
+  thead { display: table-header-group; } /* la cabecera se repite en cada hoja */
+  tr { break-inside: avoid; }
+  .tabla-envoltorio { overflow: visible; }
+  .tabla-asistencia th, .tabla-asistencia td { border: 1px solid #999; }
+  .documento-impreso { border: none; padding: 0; margin: 0; max-width: none; }
+  .factura-impresa { border: none; padding: 0; margin: 0; max-width: none; }
+  .importe-positivo, .importe-negativo { color: #000; }
+}
+
+/* Informes (Fase 6): que no se partan las tablas cortas ni las cifras. */
+@media print {
+  .informe { max-width: none; }
+  .rejilla-informe .tabla-informe, .cifras-informe { break-inside: avoid; }
+  .documento-impreso h3 { break-after: avoid; }
+  .aviso-informe { background: none; }
+  .grafica svg { max-height: 200px; }
+}

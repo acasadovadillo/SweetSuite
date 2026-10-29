@@ -1,0 +1,134 @@
+/*
+ * webkit_asociaciones — Colores y medidas (tokens).
+ *
+ * Todo el CSS usa estas variables, nunca colores sueltos: así cada tema es solo
+ * redefinirlas. tema.js pone data-tema="claro" u "oscuro" en <html>.
+ *
+ * La estética es la común de Ironrack y Solvento, que viene de la app de
+ * OpenClaw (medida sobre sus capturas): fondo #0e1015, tarjetas #161920 con
+ * borde #1c1f27, texto #f4f4f5 y secundario #8b8b94, radios de 12, 10 y 8,
+ * títulos de página en el acento, fuente Albert Sans (incrustada en
+ * fuentes.css) y el botón principal en el acento oscurecido hasta que el texto
+ * blanco se lea (4,5:1). El tema claro es el de Solvento.
+ *
+ * El acento por defecto es el verde de ABIES (#004b49; aclarado en el tema
+ * oscuro para que se lea) y cada usuario puede elegir otro en Ajustes ›
+ * Apariencia (tema.js lo aplica). El naranja del logotipo no cambia. El nombre
+ * de cada variable dice para qué sirve, no de qué color es.
+ *
+ * Contraste: los textos cumplen AA (4,5:1) sobre los fondos en los dos temas.
+ */
+:root {
+  /* Fondos, de la página a lo que flota encima */
+  --fondo: #0e1015;
+  --hundido: #14161d;          /* campos de formulario, buscador, pistas */
+  --superficie-flotante: #161920; /* diálogos, menús */
+  --superficie: #161920;       /* paneles y tarjetas */
+  --superficie-2: #191c24;     /* botón secundario, al pasar el ratón */
+  --pista: #101218;            /* selectores segmentados y desplegables */
+  /* Bordes */
+  --borde-suave: #1b1d25;      /* separadores dentro de una tarjeta */
+  --borde: #1c1f27;
+  --borde-control: #1e2028;    /* el del botón secundario */
+  --borde-fuerte: #2f3033;
+  --filo: #1a1c22;             /* el de la barra lateral */
+  /* Texto */
+  --titulo: #f4f4f5;
+  --texto: #f4f4f5;
+  --texto-2: #b4b4bc;
+  --texto-3: #8b8b94;
+  --icono: #696972;
+  /* Acción principal: el acento oscurecido hasta 4,5:1 con texto blanco */
+  --primario: #2e8276;
+  --primario-texto: #ffffff;
+  /* Acento (selección, foco, gráficas, enlaces, títulos de página) */
+  --acento: #3fb0a0;            /* verde ABIES aclarado (6,3:1 sobre las tarjetas) */
+  --acento-hover: #5cc2b4;
+  --acento-texto: #0e1015;
+  --acento-suave: #132224;      /* fondo del elemento activo: el acento al 11 % */
+  --acento-linea: #1a3838;      /* su borde: al 25 % */
+  --enlace: var(--acento);
+  --foco: var(--acento);
+  --naranja: #e6431f;           /* el del logotipo de ABIES */
+  --abies: #3fb0a0;             /* la muestra del acento de siempre en Ajustes */
+  /* Con significado */
+  --peligro: #ff5c5c;
+  --peligro-fuerte: #d23c3c;
+  --peligro-suave: #2a1619;
+  --aviso: #f6b94b;
+  --aviso-fondo: #2a2109;
+  --aviso-borde: #5c4712;
+  --info-fondo: #161920;
+  --info-borde: #1c1f27;
+  --ok: #1bc565;
+  --ok-fondo: #0f2a1c;
+  /* Globos y avisos flotantes */
+  --globo: #161920;
+  --globo-texto: #f4f4f5;
+  /* Logotipo */
+  --marca-fondo: #004b49;
+  --marca-trazo: #ffffff;
+  --sombra: none;
+  --sombra-flotante: 0 10px 30px rgba(0, 0, 0, 0.5);
+  --velo: rgba(0, 0, 0, 0.6);
+
+  --radio: 12px;               /* paneles */
+  --radio-grande: 12px;        /* tarjeta destacada */
+  --radio-medio: 12px;         /* elementos dentro de un panel */
+  --radio-dialogo: 16px;       /* diálogos y hojas */
+  --radio-pequeno: 10px;       /* campos y botones */
+  --radio-menu: 8px;           /* elementos del menú */
+  --ancho-menu: 288px;
+  --alto-cabecera: 64px;
+  --alto-barra-movil: 60px;
+  --fuente: "Albert Sans", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --fuente-mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --contorno: #ffffff;         /* las curvas de nivel del fondo (muy tenues) */
+  color-scheme: dark;
+}
+
+:root[data-tema="claro"] {
+  --fondo: #f6f6f7;
+  --hundido: #f1f1f3;
+  --superficie-flotante: #ffffff;
+  --superficie: #ffffff;
+  --superficie-2: #efeff1;
+  --pista: #f1f1f3;
+  --borde-suave: #ebebee;
+  --borde: #e6e6e9;
+  --borde-control: #dcdce0;
+  --borde-fuerte: #c4c4ca;
+  --filo: #e6e6e9;
+  --titulo: #0e1015;
+  --texto: #16181f;
+  --texto-2: #45464e;
+  --texto-3: #6b6c75;
+  --icono: #9a9ba3;
+  --primario: #004b49;
+  --primario-texto: #ffffff;
+  --acento: #004b49;            /* verde ABIES */
+  --acento-hover: #0b6b67;
+  --acento-texto: #ffffff;
+  --acento-suave: #e4ecec;
+  --acento-linea: #adc5c5;
+  --naranja: #e6431f;
+  --abies: #004b49;
+  --peligro: #b91c1c;
+  --peligro-fuerte: #dc2626;
+  --peligro-suave: #fee2e2;
+  --aviso: #92400e;
+  --aviso-fondo: #fef3c7;
+  --aviso-borde: #f2c96b;
+  --info-fondo: #ffffff;
+  --info-borde: #e6e6e9;
+  --ok: #047857;
+  --ok-fondo: #d1fae5;
+  --globo: #ffffff;
+  --globo-texto: #0e1015;
+  --marca-fondo: #004b49;
+  --marca-trazo: #ffffff;
+  --sombra-flotante: 0 10px 30px rgba(15, 20, 35, 0.16);
+  --velo: rgba(15, 20, 35, 0.45);
+  --contorno: #0e1015;
+  color-scheme: light;
+}
