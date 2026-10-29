@@ -32,7 +32,7 @@
 
   const CFG = window.SolventoConfig;
   const E = window.SolventoEntorno;
-  const K_ACTUAL = "solvento_cuenta";
+  const K_ACTUAL = "sweetsuite_solvento_cuenta";
   const PRINCIPAL = "principal";
 
   // En desarrollo, una cuenta que no se puede abrir: la que queda si falta
@@ -64,14 +64,23 @@
     ? catalogo[0]
     : catalogo.find((c) => normal(c.usuario) === normal(u));
 
-  // Las llaves del navegador. La primera cuenta usa las de toda la vida: si
-  // cambiaran, el bloque cifrado que ya está guardado dejaría de encontrarse.
-  const sufijo = () => (actualId === PRINCIPAL ? "" : ":" + actualId);
+  // Las llaves del navegador, con el prefijo de SweetSuite y el usuario: en el
+  // mismo dominio vive todavía el Solvento de antes, con las suyas
+  // («solvento_…»), que no se tocan (se leen al traer los datos de antes).
+  const sufijo = () => ":" + (actual().usuario || actualId);
   // Cualquier otra llave de este navegador que sea de una cuenta y no de todas.
-  const claveDe = (base) => base + sufijo();
-  const claveBlob = () => "solvento_data_enc" + sufijo();
-  const claveToken = () => "solvento_gh_token" + sufijo();
-  const claveSha = () => "solvento_data_sha" + sufijo();
+  const claveDe = (base) => "sweetsuite_" + base + sufijo();
+  const claveBlob = () => "sweetsuite_solvento_data_enc" + sufijo();
+  const claveToken = () => "sweetsuite_solvento_gh_token" + sufijo();
+  const claveSha = () => "sweetsuite_solvento_data_sha" + sufijo();
+  // Las del Solvento de antes: la primera cuenta (alberto) sin sufijo y las
+  // demás con «:<usuario>»
+  const sufijoAntiguo = (u) => (normal(u) === "alberto" ? "" : ":" + normal(u).replace(/[^a-z0-9]+/g, "-"));
+  const clavesAntiguas = (u) => ({
+    blob: "solvento_data_enc" + sufijoAntiguo(u),
+    token: "solvento_gh_token" + sufijoAntiguo(u),
+    pendiente: "solvento_sync_pendiente" + sufijoAntiguo(u),
+  });
 
   function normalizarCuenta(c, i) {
     const id = i === 0 ? PRINCIPAL : (normal(c.usuario || c.nombre || "").replace(/[^a-z0-9]+/g, "-") || "cuenta" + i);
@@ -150,7 +159,7 @@
 
   window.SolventoPerfil = {
     cargar, aplicar, entrar, usar, cuentas, actual, porUsuario, esOrganizacion,
-    claveBlob, claveToken, claveSha, claveDe,
+    claveBlob, claveToken, claveSha, claveDe, clavesAntiguas,
     app: () => app,
     datos: () => actual(),
     PRINCIPAL,

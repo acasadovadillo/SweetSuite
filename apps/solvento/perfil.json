@@ -1,5 +1,5 @@
 {
-  "_": "Quién entra en este Solvento y dónde guarda cada uno. El login solo pide usuario y contraseña (y, la primera vez en cada dispositivo, el token de GitHub). Los datos NO están en este repositorio, que es público: cada cuenta tiene su archivo cifrado en el repositorio PRIVADO datos-cifrados, carpeta Solvento/. Sin token no se lee ni el texto cifrado; sin su contraseña, el archivo es ruido. «app» es este repositorio: ahí se publica la lista de símbolos para el proceso de precios.",
+  "_": "Quién entra en Solvento dentro de SweetSuite y dónde guarda cada uno. La entrada es la de SweetSuite. Los datos NO están en este repositorio, que es público: cada cuenta tiene su archivo cifrado en el repositorio PRIVADO Solvento-Data (<usuario>-solvento.enc), con el llavero de SweetSuite al lado. «app» es el repositorio de Solvento de siempre: ahí se publica la lista de símbolos para el proceso de precios (en la fase 8 se renombra a Solvento-Price-Update).",
   "app": {
     "owner": "acasadovadillo",
     "repo": "Solvento",
@@ -12,9 +12,9 @@
       "tipo": "persona",
       "almacen": {
         "owner": "acasadovadillo",
-        "repo": "datos-cifrados",
+        "repo": "Solvento-Data",
         "branch": "main",
-        "path": "Solvento/alberto-solvento.enc",
+        "path": "alberto-solvento.enc",
         "privado": true
       }
     },
@@ -24,9 +24,9 @@
       "tipo": "organizacion",
       "almacen": {
         "owner": "acasadovadillo",
-        "repo": "datos-cifrados",
+        "repo": "Solvento-Data",
         "branch": "main",
-        "path": "Solvento/abies-solvento.enc",
+        "path": "abies-solvento.enc",
         "privado": true
       }
     },
@@ -36,9 +36,9 @@
       "tipo": "persona",
       "almacen": {
         "owner": "acasadovadillo",
-        "repo": "datos-cifrados",
+        "repo": "Solvento-Data",
         "branch": "main",
-        "path": "Solvento/hafsa-solvento.enc",
+        "path": "hafsa-solvento.enc",
         "privado": true
       }
     },
@@ -48,9 +48,9 @@
       "tipo": "persona",
       "almacen": {
         "owner": "acasadovadillo",
-        "repo": "datos-cifrados",
+        "repo": "Solvento-Data",
         "branch": "main",
-        "path": "Solvento/paula-solvento.enc",
+        "path": "paula-solvento.enc",
         "privado": true
       }
     }

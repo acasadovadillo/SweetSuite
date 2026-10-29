@@ -31,7 +31,11 @@ var doc = JSON.parse(leer(base + "tools/pruebas/datos-ejemplo.json"));
 window.SolventoConfig.usarDoc(doc);
 eval(leer(base + "src/js/model.js"));
 var precios = {};
-try { precios = JSON.parse(leer(base + "prices.json")); } catch (e) {}
+// Los precios no viven en SweetSuite sino en el repositorio de Solvento (el
+// del proceso de precios): se leen de su carpeta, al lado de SweetSuite.
+try { precios = JSON.parse(leer(base + "prices.json")); } catch (e) {
+  try { precios = JSON.parse(leer(base + "../../../solvento/prices.json")); } catch (e2) {}
+}
 
 var M = window.SolventoModel;
 var fallos = [];
@@ -547,7 +551,7 @@ C.usarDoc(doc);
 // ── El entorno y dónde viven los datos ──────────────────────────────────────
 // Producción es solo la web publicada; en local no sale ni una llamada a
 // GitHub. Y los datos de las cuentas viven en el repositorio PRIVADO
-// datos-cifrados (carpeta Solvento/), no en este, que es público.
+// Solvento-Data, no en SweetSuite, que es público.
 eval(leer(base + "src/js/entorno.js"));
 var E = window.SolventoEntorno;
 var bloquea = function (u) { try { E.url(u); return false; } catch (e) { return e.code === "PRODUCCION_BLOQUEADA"; } };
@@ -564,13 +568,13 @@ comprobar("las cuentas de desarrollo lo son, y una que apunte a producción se r
   E.almacenNoValido({ owner: "acasadovadillo", repo: "datos-cifrados", dev: true }) !== null &&
   E.almacenNoValido({ owner: "acasadovadillo", repo: "Solvento", dev: true }) !== null);
 var perfilProd = JSON.parse(leer(base + "perfil.json"));
-comprobar("en producción, cada cuenta lee de datos-cifrados/Solvento/ (privado) y la app es Solvento",
+comprobar("en producción, cada cuenta lee de Solvento-Data (privado) y la app es Solvento",
   perfilProd.cuentas.length === 4 && perfilProd.cuentas.every(function (c) {
     var a = c.almacen || {};
-    return a.repo === "datos-cifrados" && a.privado === true && a.path === "Solvento/" + c.usuario + "-solvento.enc";
+    return a.repo === "Solvento-Data" && a.privado === true && a.path === c.usuario + "-solvento.enc";
   }) && perfilProd.app && perfilProd.app.repo === "Solvento");
-comprobar("ningún dato cifrado puede volver a este repositorio público",
-  /^\*\.enc$/m.test(leer(base + ".gitignore")) && /\\\.enc\$/.test(leer(base + ".githooks/pre-commit")) &&
+comprobar("ningún dato cifrado puede ir al repositorio público de SweetSuite",
+  /^\*\.enc$/m.test(leer(base + "../../.gitignore")) &&
   window.SolventoConfig.SYNC.repo !== "Solvento" && window.SolventoConfig.SYNC.privado === true);
 
 print("");

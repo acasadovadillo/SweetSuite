@@ -1,5 +1,5 @@
 {
-  "_": "Cuentas de DESARROLLO. Solo se usan cuando Solvento corre fuera de acasadovadillo.github.io. Sus datos viven en un repositorio PRIVADO simulado (datos-cifrados-dev, en dev-data/), con datos ficticios y la contraseña «desarrollo»; hace falta token (en desarrollo, «dev») hasta para leer. Todas llevan dev: true; ninguna puede apuntar a producción.",
+  "_": "Cuentas de DESARROLLO. Solo se usan fuera de acasadovadillo.github.io. Sus datos viven en el repositorio privado simulado solvento-data-dev (dev-data/ del servidor de tools/dev de SweetSuite). Token de prueba: «dev».",
   "app": {
     "owner": "dev",
     "repo": "solvento-dev",
@@ -13,9 +13,9 @@
       "tipo": "persona",
       "almacen": {
         "owner": "dev",
-        "repo": "datos-cifrados-dev",
+        "repo": "solvento-data-dev",
         "branch": "main",
-        "path": "Solvento/alberto-solvento.enc",
+        "path": "alberto-solvento.enc",
         "privado": true,
         "dev": true
       }
@@ -26,9 +26,9 @@
       "tipo": "organizacion",
       "almacen": {
         "owner": "dev",
-        "repo": "datos-cifrados-dev",
+        "repo": "solvento-data-dev",
         "branch": "main",
-        "path": "Solvento/abies-solvento.enc",
+        "path": "abies-solvento.enc",
         "privado": true,
         "dev": true
       }
@@ -39,9 +39,9 @@
       "tipo": "persona",
       "almacen": {
         "owner": "dev",
-        "repo": "datos-cifrados-dev",
+        "repo": "solvento-data-dev",
         "branch": "main",
-        "path": "Solvento/hafsa-solvento.enc",
+        "path": "hafsa-solvento.enc",
         "privado": true,
         "dev": true
       }
@@ -52,9 +52,9 @@
       "tipo": "persona",
       "almacen": {
         "owner": "dev",
-        "repo": "datos-cifrados-dev",
+        "repo": "solvento-data-dev",
         "branch": "main",
-        "path": "Solvento/paula-solvento.enc",
+        "path": "paula-solvento.enc",
         "privado": true,
         "dev": true
       }

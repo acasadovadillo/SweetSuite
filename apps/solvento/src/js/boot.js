@@ -18,6 +18,10 @@
   const C = window.SolventoCrypto;
   const DB = window.SolventoDB;
   const SYNC = window.SolventoSync;
+  // SweetSuite: da la cuenta y el secreto con el que se cifra (suite-puente.js)
+  const SS = window.SolventoSuite || null;
+  // Los precios y la lista de activos, del repositorio público de Solvento
+  const PUBLICO = (SS && SS.entorno && SS.entorno.precios) || "";
 
   const $ = (id) => document.getElementById(id);
   // Los motivos de un error llevan dentro lo que dijo GitHub: van a un
@@ -211,15 +215,14 @@
   };
 
   // ── Autoguardado ─────────────────────────────────────────────────────────
-  // Con el token puesto, cada cambio podía subirse solo. Ahora eso es una
-  // elección, y viene APAGADA: cada cuenta y cada navegador la enciende a
-  // propósito en Ajustes → Sincronización. Apagado, todo se guarda cifrado en
-  // este navegador y se sube cuando tú quieras —el botón de Ajustes o ⌘S /
-  // Ctrl+S—; y si intentas salir con cambios sin subir, se avisa.
+  // En SweetSuite viene ENCENDIDO, en el móvil y en el ordenador: cada cambio
+  // se sube solo. Se puede apagar en Ajustes → Sincronización (cada cuenta y
+  // cada navegador); apagado, todo se guarda cifrado en este navegador y se
+  // sube con el botón, con ⌘S / Ctrl+S o al volver a SweetSuite.
   const AUTO_KEY = () => clave("solvento_autoguardado");
-  const autoguardado = () => { try { return localStorage.getItem(AUTO_KEY()) === "1"; } catch (e) { return false; } };
+  const autoguardado = () => { try { return localStorage.getItem(AUTO_KEY()) !== "0"; } catch (e) { return true; } };
   function ponerAutoguardado(v) {
-    try { if (v) localStorage.setItem(AUTO_KEY(), "1"); else localStorage.removeItem(AUTO_KEY()); } catch (e) { /* nada */ }
+    try { if (v) localStorage.removeItem(AUTO_KEY()); else localStorage.setItem(AUTO_KEY(), "0"); } catch (e) { /* nada */ }
     pintarAutoguardado();
     if (v && DB.state.token && hayPendiente()) subirAhora("Solvento: subir cambios pendientes");
     else if (!v && DB.state.token && !hayPendiente()) pintarEstado("ok", "Autoguardado desactivado: lo que cambies se sube cuando tú digas");
@@ -271,6 +274,11 @@
                                 estado === "dudoso" || estado === "roto");
     const btn = $("user-btn");
     if (btn) btn.title = txt ? "Tu cuenta · " + txt : "Tu cuenta";
+    // Y a SweetSuite, que lo enseña en el inicio
+    const PARA_SUITE = { guardando: "subiendo", ok: "ok", pendiente: "pendiente", local: "pendiente", sintoken: "", dudoso: "ok", roto: "error" };
+    const TEXTO_SUITE = { guardando: "Guardando…", ok: "Guardado en GitHub", pendiente: "Cambios sin subir", local: "Cambios sin subir",
+      sintoken: "Sin token: solo en este dispositivo", dudoso: "Guardado en GitHub", roto: "Lo guardado no se puede releer" };
+    if (SS && estado) SS.estado("solvento", PARA_SUITE[estado] || "", TEXTO_SUITE[estado] || palabra);
   }
 
   /* ── «Sin comprobar», explicado ────────────────────────────────────────────
@@ -373,7 +381,7 @@
   // No es una cerradura —quien tiene la contraseña puede descifrarlo todo, eso
   // es lo que significa zero-knowledge— sino una señal: esto no es tuyo, no lo
   // toques. Contra el despiste, no contra nadie.
-  const EDITAR_IGUAL = "solvento_editar_sin_token";
+  const EDITAR_IGUAL = "sweetsuite_solvento_editar_sin_token";
   const esInvitado = () => esperandoDatos || (!SYNC.hasToken() && localStorage.getItem(EDITAR_IGUAL) !== "1");
   function editarIgualmente() {
     localStorage.setItem(EDITAR_IGUAL, "1");
@@ -474,7 +482,7 @@
 
   // Si cambian los activos, el proceso que descarga precios necesita enterarse.
   // Solo se sube cuando la lista cambia de verdad, para no gastar llamadas.
-  const TICKERS_KEY = "solvento_tickers_subidos";
+  const TICKERS_KEY = "sweetsuite_solvento_tickers_subidos";
   async function sincronizarTickers() {
     if (!DB.state.token || !DB.state.doc) return;
     const activos = (DB.state.doc.config && DB.state.doc.config.activos) || [];
@@ -500,7 +508,7 @@
     // menos, una cartera que miente.
     let previos = [];
     try {
-      const r = await fetch("tickers.json?" + Date.now(), { cache: "no-store" });
+      const r = await fetch(PUBLICO + "tickers.json?" + Date.now(), { cache: "no-store" });
       if (r.ok) { const d = await r.json(); if (Array.isArray(d.tickers)) previos = d.tickers; }
     } catch (e) { previos = []; }
     const lista = Array.from(new Set(symbols.concat(previos))).sort();
@@ -667,7 +675,7 @@
   // ── Recordatorio de copia de seguridad ──────────────────────────────
   // Sin contraseña no hay recuperación posible, así que una copia cifrada
   // guardada aparte es la única red de seguridad real.
-  const COPIA_KEY = "solvento_ultima_copia";
+  const COPIA_KEY = "sweetsuite_solvento_ultima_copia";
   const DIAS_AVISO = 30;
   function marcarCopiaHecha() { localStorage.setItem(COPIA_KEY, String(Date.now())); quitarBandaCopia(); }
   // Un aviso de 3 segundos es demasiado fugaz para algo que evita perderlo todo:
@@ -682,7 +690,7 @@
     b.style.cssText = "background:var(--ambar-fondo);border-bottom:1px solid #a16207;color:var(--ambar-2);font-size:0.82rem;font-weight:600;padding:0.6rem 1rem;display:flex;align-items:center;justify-content:center;gap:0.75rem;flex-wrap:wrap;text-align:center;";
     b.innerHTML =
       `<span>${ultima ? `Hace ${Math.floor(dias)} días de tu última copia de seguridad.` : "Aún no has hecho ninguna copia de seguridad."}
-        Sin tu contraseña no hay forma de recuperar los datos.</span>
+        Una copia guardada aparte es tu red de seguridad.</span>
        <button id="v2-copia-ya" style="background:var(--ambar-2);color:var(--f0);border:none;border-radius:7px;font-size:0.78rem;font-weight:700;padding:0.35rem 0.8rem;cursor:pointer;font-family:inherit;">Exportar copia</button>
        <button id="v2-copia-luego" style="background:none;border:none;color:#a16207;font-size:0.78rem;cursor:pointer;font-family:inherit;">Ahora no</button>`;
     const app = $("app");
@@ -791,26 +799,35 @@
       setError("sync-status", e.code === "AUTH" || e.code === "SIN_ACCESO" ? e.message : "No se puede hablar con GitHub: " + e.message);
       return;
     }
-    if (!r) {
-      // El token vale pero no hay archivo: es una cuenta que empieza. Se
-      // elige la contraseña con calma, en su panel de siempre.
-      await SYNC.storeToken(t, pw);
-      lock();
-      empezarCuenta(cuenta, pw);
+    try { await llaveroCon(t); } catch (e) {
+      setError("sync-status", e.message);
       return;
     }
-    let doc;
-    try { doc = await C.decryptDoc(r.blob, pw); }
+    const pwAhora = DB.state.password;
+    if (!r) {
+      // El token vale pero no hay archivo: es una cuenta que empieza. La
+      // contraseña ya es la de SweetSuite: se empieza vacía.
+      await SYNC.storeToken(t, pwAhora);
+      DB.state.token = t;
+      await empezarVacia(pwAhora);
+      showPageSync();
+      setError("sync-status", "Token guardado ✓ · tu Solvento empieza vacío", "var(--verde)");
+      return;
+    }
+    let doc, actual = true;
+    try { ({ doc, actual } = await abrirBlob(r.blob)); }
     catch (e) {
       setError("sync-status", e.code === "BAD_PASSWORD"
-        ? "Tu contraseña no abre estos datos. Bloquea (menú de la cuenta) y vuelve a entrar con la buena."
+        ? "Estos datos no se abren con tu cuenta de SweetSuite. Si son del Solvento de antes, tráelos aquí abajo."
         : "Error al abrir tus datos: " + e.message);
       return;
     }
     DB.storeBlob(r.blob);
-    await SYNC.storeToken(t, pw);
+    await SYNC.storeToken(t, pwAhora);
     esperandoDatos = false; cuentaEsperando = null;
-    await unlock(doc, pw);
+    await unlock(doc, pwAhora);
+    if (!actual) { await guardarLocal(); marcarPendiente(true); reintentarPendiente(); }
+    setError("sync-status", "");
     if (window.v2Tab) window.v2Tab("patrimonio");
     toast("Tus datos ya están en este dispositivo ✓", "var(--verde)");
   }
@@ -927,6 +944,176 @@
     }
   }
 
+  // ── Dentro de SweetSuite ─────────────────────────────────────────────────
+  // La entrada es la de SweetSuite: aquí se llega con la cuenta ya abierta y
+  // el secreto de Solvento, que hace de contraseña de los datos. Si la cuenta
+  // tiene claves anteriores (SweetSuite unió dos llaveros), lo que no se abra
+  // con la actual se prueba con ellas y se vuelve a cifrar con la actual.
+  let ANTERIORES = [];
+  async function abrirBlob(blob) {
+    try { return { doc: await C.decryptDoc(blob, DB.state.password), actual: true }; }
+    catch (e) { if (e.code !== "BAD_PASSWORD") throw e; }
+    for (const p of ANTERIORES) {
+      try { return { doc: await C.decryptDoc(blob, p), actual: false }; } catch (e) { /* la siguiente */ }
+    }
+    const err = new Error("Estos datos no se abren con tu cuenta de SweetSuite");
+    err.code = "BAD_PASSWORD";
+    throw err;
+  }
+  async function cargarToken(pw) {
+    const t = await SYNC.loadToken(pw).catch(() => null);
+    if (t) return t;
+    for (const p of ANTERIORES) {
+      const x = await SYNC.loadToken(p).catch(() => null);
+      if (x) { await SYNC.storeToken(x, pw); return x; }
+    }
+    return null;
+  }
+  // Las claves de la cuenta cambiaron: lo de aquí se vuelve a cifrar
+  async function refrescarClaves() {
+    const s = SS && await SS.sesion("solvento");
+    if (!s) return;
+    ANTERIORES = s.anteriores || [];
+    const viejo = DB.state.password;
+    if (!viejo || s.secreto === viejo) return;
+    if (ANTERIORES.indexOf(viejo) < 0) ANTERIORES.push(viejo);
+    DB.state.password = s.secreto;
+    if (DB.state.doc && !esperandoDatos) { await guardarLocal(); marcarPendiente(true); }
+    else {
+      const b = DB.getStoredBlob();
+      if (b) { try { DB.storeBlob(await C.encryptDoc(await C.decryptDoc(b, viejo), s.secreto)); } catch (e) { /* ya estaba con la nueva */ } }
+    }
+    const t = DB.state.token || await SYNC.loadToken(viejo).catch(() => null);
+    if (t) await SYNC.storeToken(t, s.secreto);
+  }
+  // El llavero de la cuenta, al lado de los datos: SweetSuite lo pone de
+  // acuerdo con el de este dispositivo
+  async function llaveroCon(token) {
+    if (!SS || !token) return;
+    await SS.reconciliar("solvento", {
+      leer: (r) => SYNC.leerArchivo(token, r),
+      escribir: (r, texto, sha, m) => SYNC.escribirArchivo(token, r, texto, sha, m),
+    });
+    await refrescarClaves();
+  }
+  async function empezarVacia(pw) {
+    const doc = docVacio();
+    DB.storeBlob(await C.encryptDoc(doc, pw));
+    esperandoDatos = false; cuentaEsperando = null;
+    await unlock(doc, pw);
+  }
+  function pantallaSuite(texto) {
+    panel("checking");
+    const c = $("boot-checking");
+    if (c) c.querySelector(".boot-sub").innerHTML = texto +
+      '<br><br><button type="button" class="primary" onclick="window.SolventoSuite.volver()">Volver a SweetSuite</button>';
+  }
+
+  async function entrarEnSuite() {
+    panel("checking");
+    const s = await SS.sesion("solvento");
+    const cuenta = s && P() && P().porUsuario(s.usuario);
+    if (!cuenta) { pantallaSuite("Tu cuenta no tiene Solvento."); return; }
+    P().usar(cuenta.id);
+    ANTERIORES = s.anteriores || [];
+    DB.state.password = s.secreto;
+    let token = await cargarToken(s.secreto);
+    if (token) {
+      try { await llaveroCon(token); } catch (e) { /* sin conexión o sin contestar: se sigue con lo de aquí */ }
+    }
+    const pw = DB.state.password;
+    let blob = DB.getStoredBlob();
+    if (token) {
+      if (blob) await refrescarBlobRemoto(token);
+      blob = DB.getStoredBlob();
+      if (!blob) {
+        try {
+          const r = await SYNC.fetchRemoteBlob(token);
+          if (r) { blob = r.blob; DB.storeBlob(r.blob); }
+          else await SYNC.acceso(token);
+        } catch (e) {
+          entrarSinDatos(cuenta, pw, e.code === "AUTH" || e.code === "SIN_ACCESO" ? e.message : "No se puede hablar con GitHub (" + e.message + ")");
+          return;
+        }
+      }
+    }
+    if (!blob) {
+      if (!token) { entrarSinDatos(cuenta, pw, null); return; }
+      await empezarVacia(pw);          // con token y sin archivo: una cuenta que empieza
+      return;
+    }
+    let r;
+    try { r = await abrirBlob(blob); }
+    catch (e) { pantallaSuite("No se pueden abrir tus datos de Solvento de este dispositivo: " + e.message); return; }
+    await unlock(r.doc, pw);
+    if (!r.actual) { await guardarLocal(); marcarPendiente(true); reintentarPendiente(); }
+  }
+
+  // Al volver a SweetSuite o bloquear: guardar aquí y subir lo pendiente
+  async function guardarAlSalir() {
+    if (!DB.state.doc || esperandoDatos) return { estado: "", texto: "" };
+    await guardarLocal();
+    if (hayPendiente() && DB.state.token && navigator.onLine && !esInvitado()) await subirEnCola("Solvento: cambios desde la web");
+    return hayPendiente()
+      ? { estado: "pendiente", texto: "guardado en este dispositivo; se subirá en cuanto se pueda" }
+      : { estado: "ok", texto: "guardado en GitHub" };
+  }
+
+  // ── Traer del Solvento de antes ──
+  // Guardaba en este mismo dominio (llaves «solvento_…») y en datos-cifrados/
+  // Solvento/, cifrado con la contraseña de entonces. Se trae lo último: lo de
+  // GitHub, salvo que aquí quedara algo sin subir.
+  async function traerAntigua(pwAntigua, tokenAntiguo) {
+    const u = P().actual().usuario, K = P().clavesAntiguas(u);
+    let local = null;
+    try { local = JSON.parse(localStorage.getItem(K.blob)); } catch (e) { local = null; }
+    let token = (tokenAntiguo || "").trim();
+    if (!token && localStorage.getItem(K.token)) {
+      try { token = await C.decryptString(JSON.parse(localStorage.getItem(K.token)), pwAntigua); } catch (e) { token = ""; }
+    }
+    let blob = null, origen = "";
+    if (token && !(local && localStorage.getItem(K.pendiente) === "1")) {
+      try {
+        const r = await SYNC.leerArchivo(token, "Solvento/" + u + "-solvento.enc", SS.entorno.antiguo);
+        if (r) { blob = JSON.parse(r.texto); origen = "GitHub"; }
+      } catch (e) { if (!local) throw e; }
+    }
+    if (!blob && local) { blob = local; origen = "este dispositivo"; }
+    if (!blob) {
+      throw new Error(token ? "No hay datos tuyos en el Solvento de antes"
+        : "En este dispositivo no hay datos del Solvento de antes: pega también el token que usabas en él");
+    }
+    return { doc: await C.decryptDoc(blob, pwAntigua), origen };
+  }
+  async function doTraerAntigua() {
+    const pass = $("antiguo-pass"), tok = $("antiguo-token");
+    if (!pass || !pass.value) { setError("sync-status", "Escribe la contraseña del Solvento de antes"); return; }
+    setError("sync-status", "Buscando tus datos de antes…", "var(--t1b)");
+    let r;
+    try { r = await traerAntigua(pass.value, tok && tok.value); }
+    catch (e) { setError("sync-status", e.code === "BAD_PASSWORD" ? "Esa no es la contraseña del Solvento de antes" : e.message); return; }
+    const ahora = DB.state.doc || {};
+    const n = (d, k) => (Array.isArray(d[k]) ? d[k].length : 0);
+    if (!esperandoDatos && (n(ahora, "movimientos") || n(ahora, "inversiones")) && !window.confirm(
+      `Se va a SUSTITUIR lo que hay ahora en Solvento por tus datos de antes (de ${r.origen}):
+
+` +
+      `  movimientos  ${n(ahora, "movimientos")} → ${n(r.doc, "movimientos")}
+` +
+      `  operaciones  ${n(ahora, "inversiones")} → ${n(r.doc, "inversiones")}
+
+¿Sigo?`)) { setError("sync-status", ""); return; }
+    pass.value = ""; if (tok) tok.value = "";
+    const venia = esperandoDatos;
+    esperandoDatos = false; cuentaEsperando = null;
+    DB.state.doc = r.doc;
+    if (venia) await unlock(r.doc, DB.state.password);
+    if (DB.state.token) await saveDoc();
+    else { await guardarLocal(); marcarPendiente(true); localStorage.setItem(EDITAR_IGUAL, "1"); pintarLectura(); render(); }
+    setError("sync-status", `Traídos ${n(r.doc, "movimientos")} movimientos y ${n(r.doc, "inversiones")} operaciones de ${r.origen} ✓`, "var(--verde)");
+    toast("Tus datos de antes ya están en Solvento ✓", "var(--verde)");
+  }
+
   // ── Sincronización (UI) ──
   function updateSyncUi() {
     pintarAutoguardado();
@@ -1010,6 +1197,7 @@
     if (esperandoDatos) { await traerConToken(t); return; }
     await SYNC.storeToken(t, DB.state.password);
     DB.state.token = t;
+    try { await llaveroCon(t); } catch (e) { setError("sync-status", e.message); }
     rellenarToken();                     // se queda puesto, oculto y bloqueado
     updateSyncUi();
     pintarLectura();                     // con token ya no es un invitado
@@ -1032,8 +1220,9 @@
     try {
       const remote = await SYNC.fetchRemoteBlob(DB.state.token);
       if (!remote) { setError("sync-status", "No hay datos en el repo todavía"); return; }
-      const doc = await C.decryptDoc(remote.blob, DB.state.password);
+      const { doc, actual } = await abrirBlob(remote.blob);
       DB.state.doc = doc; DB.storeBlob(remote.blob); render();
+      if (!actual) { await guardarLocal(); marcarPendiente(true); }
       setError("sync-status", "Actualizado desde GitHub ✓", "var(--verde)");
     } catch (e) {
       setError("sync-status", e.code === "BAD_PASSWORD" ? "La copia del repo usa otra contraseña" : ("Error: " + e.message));
@@ -1131,7 +1320,7 @@
    * el navegador sabe qué es «standalone», que solo lo sabe Safari en iOS.
    */
   function avisoInstalar() {
-    const K = "solvento_aviso_instalar";
+    const K = "sweetsuite_solvento_aviso_instalar";
     const esSafariMovil = typeof navigator.standalone === "boolean" && /iPhone|iPad|iPod/.test(navigator.userAgent);
     if (!esSafariMovil || navigator.standalone) return;          // ya abierta como app
     try { if (localStorage.getItem(K) === "1") return; } catch (e) { /* nada */ }
@@ -1156,14 +1345,19 @@
     // Antes que nada: de quién es este Solvento y dónde guarda. De eso depende
     // hasta la primera lectura, así que no puede llegar tarde.
     if (window.SolventoPerfil) { try { await window.SolventoPerfil.cargar(); } catch (e) {} }
-    avisoInstalar();
     $("login-form").addEventListener("submit", handleLogin);
     $("pass-form").addEventListener("submit", handlePassword);
     $("pw-cancelar").addEventListener("click", cerrarCambioPassword);
     $("login-ver").addEventListener("click", alternarVerPass);
-    $("cuenta-btn").addEventListener("click", () => salirConCuidado(() => { $("login-user").value = ""; lock(); }));
+    // La cuenta es la de SweetSuite: volver, bloquear y salir son suyos (antes
+    // de salir, SweetSuite pide a Solvento que suba lo pendiente)
+    $("cuenta-btn").addEventListener("click", () => SS.volver());
     $("import-form").addEventListener("submit", handleImport);
-    $("logout-btn").addEventListener("click", () => salirConCuidado(lock));
+    $("logout-btn").addEventListener("click", () => SS.bloquear());
+    const salirBtn = $("salir-btn");
+    if (salirBtn) salirBtn.addEventListener("click", () => SS.cerrarSesion());
+    const traer = $("antiguo-traer");
+    if (traer) traer.addEventListener("click", doTraerAntigua);
     const auto = $("sync-auto");
     if (auto) auto.addEventListener("change", () => ponerAutoguardado(auto.checked));
     // ⌘S / Ctrl+S: subir lo que haya. Dentro de la app, nunca «guardar la página».
@@ -1174,11 +1368,8 @@
         subirAhora();
       }
     });
-    // Cerrar la pestaña, recargar o irse a otra web con cambios sin subir: el
-    // navegador pregunta. Su texto no se puede cambiar, pero sí que salga.
-    window.addEventListener("beforeunload", (ev) => {
-      if (DB.state.doc && hayPendiente() && !esInvitado()) { ev.preventDefault(); ev.returnValue = ""; }
-    });
+    // Cerrar la pestaña con cambios sin subir lo pregunta SweetSuite, que es
+    // la página de verdad.
     $("sync-save-token").addEventListener("click", saveToken);
     $("sync-token-ver").addEventListener("click", alternarVerToken);
     $("sync-token-cambiar").addEventListener("click", cambiarToken);
@@ -1205,15 +1396,22 @@
     // Reintentar lo pendiente al recuperar conexión o al volver a la pestaña
     window.addEventListener("online", reintentarPendiente);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) reintentarPendiente(); });
-    fetch("prices.json?" + Date.now())
+    fetch(PUBLICO + "prices.json?" + Date.now())
       .then((r) => (r.ok ? r.json() : null))
       .then((p) => { PRICES = p; render(); cargarNav(); })
       .catch(() => {});
     window.addEventListener("online", reintentarPendiente);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) reintentarPendiente(); });
-    startBoot();
+    if (!SS) return;                       // fuera de SweetSuite: suite-puente.js ya se va
+    SS.registrar("solvento", {
+      guardarAlSalir,
+      pendiente: () => !!DB.state.doc && !esperandoDatos && hayPendiente(),
+      alCambiarClaves: refrescarClaves,
+      llaveroCambiado: () => { if (DB.state.token) llaveroCon(DB.state.token).catch(() => {}); },
+    });
+    entrarEnSuite();
   }
 
-  window.SolventoBoot = { irAlToken: () => showPageSync(), lock, openSync, saveDoc, toast, cambiarPassword, abrirCambioPassword, esInvitado, editarIgualmente, avisoLectura, pintarLectura, rellenarToken, pintarComprobacion, comprobarAhora, cargarNav, activosParaNav, precios: () => PRICES };
+  window.SolventoBoot = { volverSuite: () => SS && SS.volver(), irAlToken: () => showPageSync(), lock, openSync, saveDoc, toast, cambiarPassword, abrirCambioPassword, esInvitado, editarIgualmente, avisoLectura, pintarLectura, rellenarToken, pintarComprobacion, comprobarAhora, cargarNav, activosParaNav, precios: () => PRICES };
   document.addEventListener("DOMContentLoaded", init);
 })();

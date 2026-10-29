@@ -12,7 +12,7 @@
   "use strict";
   // La llave depende de la cuenta abierta: cada una guarda su bloque cifrado
   // aparte. La de por defecto conserva la de siempre, sin sufijo.
-  const LS_KEY = () => (window.SolventoPerfil ? window.SolventoPerfil.claveBlob() : "solvento_data_enc");
+  const LS_KEY = () => (window.SolventoPerfil ? window.SolventoPerfil.claveBlob() : "sweetsuite_solvento_data_enc");
 
   const state = { doc: null };
 

@@ -77,6 +77,36 @@
     return j.content && j.content.sha;
   }
 
+  // ── Otros archivos del mismo repositorio (el llavero de SweetSuite) ──
+  const urlArchivo = (repo, ruta) => E.url(`${E.base.api}/repos/${repo.owner}/${repo.repo}/contents/${ruta}`);
+  async function leerArchivo(token, ruta, repo) {
+    repo = repo || SYNC;
+    const url = urlArchivo(repo, ruta) + "?ref=" + encodeURIComponent(repo.branch || "main") + "&_=" + Date.now();
+    const headers = { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "X-GitHub-Api-Version": "2022-11-28" };
+    const r = await fetch(url, { headers, cache: "no-store" });
+    if (r.status === 401 || r.status === 403) throw fallo("El token de GitHub no tiene permiso", "AUTH");
+    if (r.status === 404) return null;
+    if (!r.ok) throw new Error("GitHub GET " + r.status);
+    const j = await r.json();
+    if (j.content) return { sha: j.sha, texto: b64dec(j.content) };
+    const raw = await fetch(url, { headers: Object.assign({}, headers, { Accept: "application/vnd.github.raw" }), cache: "no-store" });
+    if (!raw.ok) throw new Error("GitHub GET raw " + raw.status);
+    return { sha: j.sha, texto: await raw.text() };
+  }
+  async function escribirArchivo(token, ruta, texto, sha, mensaje) {
+    const body = { message: mensaje || "Solvento: actualizar", content: b64enc(texto), branch: SYNC.branch };
+    if (sha) body.sha = sha;
+    const r = await fetch(urlArchivo(SYNC, ruta), {
+      method: "PUT",
+      headers: { Accept: "application/vnd.github+json", Authorization: "Bearer " + token, "Content-Type": "application/json", "X-GitHub-Api-Version": "2022-11-28" },
+      body: JSON.stringify(body),
+    });
+    if (r.status === 409 || r.status === 422) throw fallo("conflicto: el fichero cambió en el repo", "CONFLICT");
+    if (r.status === 401 || r.status === 403 || r.status === 404) throw fallo("el token no puede escribir en " + SYNC.repo, "AUTH");
+    if (!r.ok) throw new Error("GitHub PUT " + r.status);
+    return (await r.json()).content.sha;
+  }
+
   // ── Token (cifrado con la contraseña) ──
   async function storeToken(token, password) {
     localStorage.setItem(TOKEN_KEY(), JSON.stringify(await C.encryptString(token, password)));
@@ -317,6 +347,6 @@
     ghPutArchivo,
     ghGet, ghPut, storeToken, loadToken, hasToken, clearToken,
     fetchRemoteBlob, fetchBlobRaw, push, pushTickers, getSha, setSha, verificarGuardado, comprobarPublicado,
-    acceso, privado, rawApp,
+    acceso, privado, rawApp, leerArchivo, escribirArchivo,
   };
 })();

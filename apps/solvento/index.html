@@ -7,20 +7,16 @@
   <title>Solvento</title>
   <link rel="icon" href="img/icono-solvento.svg" type="image/svg+xml" />
   <link rel="icon" href="img/app/icon-32.png" sizes="32x32" type="image/png" />
-  <!-- Instalable: icono en la pantalla de inicio y ventana sin barra de navegador -->
-  <link rel="manifest" href="manifest.json" />
-  <link rel="apple-touch-icon" href="img/app/icon-180.png" />
+  <!-- Se instala SweetSuite, no Solvento: esto vive dentro de ella -->
   <meta name="theme-color" content="#12141d" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Solvento" />
   <meta name="description" content="Tus finanzas, cifradas y siempre contigo." />
+  <script src="src/js/suite-puente.js?v=p219"></script>
   <!-- El tema, antes que el CSS: si se aplicara después de pintar, quien use
        el tema claro vería un fogonazo oscuro en cada carga. -->
-  <script src="src/js/tema.js?v=p218"></script>
-  <link rel="stylesheet" href="src/css/base.css?v=p218" />
-  <link rel="stylesheet" href="src/css/layout.css?v=p218" />
-  <link rel="stylesheet" href="src/css/components.css?v=p218" />
+  <script src="src/js/tema.js?v=p219"></script>
+  <link rel="stylesheet" href="src/css/base.css?v=p219" />
+  <link rel="stylesheet" href="src/css/layout.css?v=p219" />
+  <link rel="stylesheet" href="src/css/components.css?v=p219" />
   <style>
     /* Arranque (login / importación) — cubre todo hasta desbloquear */
     #boot-overlay input {
@@ -117,7 +113,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="src/css/openclaw.css?v=p218" />
+  <link rel="stylesheet" href="src/css/openclaw.css?v=p219" />
 </head>
 <body>
 
@@ -200,6 +196,11 @@
     <div style="display:flex;align-items:center;gap:0.85rem;">
       <!-- El menú de la cuenta. Se abre desde la cuenta del menú lateral; vive
            aquí, en la barra, para colocarse encima de todo. -->
+      <button type="button" class="nb-menu" onclick="window.SolventoBoot.volverSuite()"
+              title="Volver a SweetSuite" aria-label="Volver a SweetSuite">
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
+      </button>
       <div class="user-wrap">
         <div id="user-menu" hidden role="menu">
           <div class="um-head">
@@ -207,8 +208,9 @@
             <div id="sync-estado" title="Estado del guardado"></div>
           </div>
           <button class="um-item" role="menuitem" onclick="v2UserIr('ajustes')">⚙ Ajustes</button>
-          <button class="um-item" id="cuenta-btn" role="menuitem">👤 Cambiar de cuenta</button>
+          <button class="um-item" id="cuenta-btn" role="menuitem">▦ Volver a SweetSuite</button>
           <button class="um-item" id="logout-btn" role="menuitem">🔒 Bloquear</button>
+          <button class="um-item" id="salir-btn" role="menuitem">↩ Cerrar sesión</button>
         </div>
       </div>
     </div>
@@ -278,6 +280,7 @@
     <div class="sn-etiqueta">Cuenta</div>
     <nav class="sn-list sn-list-cuenta">
       <button class="sn-item" data-page="ajustes" onclick="v2UserIr('ajustes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span>Ajustes</span></button>
+      <button class="sn-item" onclick="window.SolventoBoot.volverSuite()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span>Volver a SweetSuite</span></button>
       <button class="sn-item" onclick="document.getElementById('logout-btn').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Bloquear</span></button>
     </nav>
     <div class="sn-pie"><span id="sn-estado"></span><span class="sn-version"></span></div>
@@ -384,7 +387,7 @@
 
           <section class="aj-sec" id="aj-sec-sync">
             <h3>Sincronización</h3>
-<p style="font-size:0.82rem;color:var(--t1b);margin:0 0 1.25rem;">Guarda tu bloque cifrado en tu repo de GitHub para tenerlo en el móvil y el Mac. Los datos viajan siempre cifrados con tu contraseña.</p>
+<p style="font-size:0.82rem;color:var(--t1b);margin:0 0 1.25rem;">Guarda tu bloque cifrado en tu repositorio privado de GitHub (Solvento-Data) para tenerlo en el móvil y el Mac. Los datos viajan siempre cifrados con tu cuenta de SweetSuite.</p>
 
     <!-- El estado del guardado, contado entero: en la navbar cabe en dos
          palabras y dos palabras no bastan para explicar «Sin comprobar». -->
@@ -396,7 +399,7 @@
       <button id="sync-token-ver" type="button" title="Mostrar u ocultar el token"
         style="background:var(--f4);border:1px solid var(--b2);border-radius:8px;color:var(--t1b);font-size:0.9rem;padding:0 0.7rem;cursor:pointer;font-family:inherit;">👁</button>
     </div>
-    <small style="display:block;margin:0.4rem 0 0.5rem;">Token <b>fine-grained</b> con permiso <b>Contents: Read and write</b> en el repositorio de tus datos (y en el de la app, para la lista de precios). Se guarda cifrado con tu contraseña <b>en este dispositivo</b>, y no viaja con tus datos: en otro dispositivo hay que pegarlo otra vez.</small>
+    <small style="display:block;margin:0.4rem 0 0.5rem;">Token <b>fine-grained</b> con permiso <b>Contents: Read and write</b> en <b>Solvento-Data</b> (tus datos) y en <b>Solvento</b> (la lista de precios). Se guarda cifrado con tu cuenta <b>en este dispositivo</b>, y no viaja con tus datos: en otro dispositivo hay que pegarlo otra vez.</small>
     <div id="sync-token-status" style="font-size:0.78rem;margin-bottom:0.5rem;"></div>
     <button id="sync-save-token" class="primary" style="width:100%;margin-bottom:1.25rem;">Guardar token</button>
     <!-- Con el token ya guardado, el campo se bloquea: cambiarlo o quitarlo es
@@ -406,7 +409,7 @@
       <button id="sync-token-quitar" type="button" style="flex:1;">Quitar de este dispositivo</button>
     </div>
 
-    <!-- Autoguardado: de cada cuenta y de este navegador, apagado de entrada. -->
+    <!-- Autoguardado: de cada cuenta y de este navegador, encendido de entrada. -->
     <label style="display:flex;gap:0.6rem;align-items:flex-start;cursor:pointer;margin:0 0 0.4rem;">
       <input type="checkbox" id="sync-auto" style="width:17px;height:17px;margin:0.1rem 0 0;accent-color:var(--azul);cursor:pointer;flex-shrink:0;">
       <span style="font-size:0.88rem;font-weight:600;color:var(--t1);">Autoguardado en GitHub</span>
@@ -418,15 +421,23 @@
       <button id="sync-pull" style="flex:1;">⬇️ Traer de GitHub</button>
     </div>
                 <div id="sync-status" style="font-size:0.82rem;font-weight:600;margin-top:1rem;text-align:center;display:none;"></div>
+
+    <!-- La primera vez: los datos del Solvento de antes de SweetSuite -->
+    <h3 style="margin-top:2rem;">Traer tus datos del Solvento de antes</h3>
+    <p>Con la contraseña que usabas en él. Se trae lo último que guardaste —de GitHub o de este dispositivo— y
+       <b>sustituye</b> lo que haya ahora aquí.</p>
+    <input id="antiguo-pass" type="password" placeholder="Contraseña del Solvento de antes" autocomplete="off" style="width:100%;margin-bottom:0.6rem;" />
+    <input id="antiguo-token" type="password" placeholder="Token de antes (solo si no estaba en este dispositivo)" autocomplete="off" style="width:100%;margin-bottom:0.6rem;" />
+    <button id="antiguo-traer" type="button" style="width:100%;">Traer del Solvento de antes</button>
           </section>
 
           <section class="aj-sec" id="aj-sec-seguridad">
-            <h3>Contraseña</h3>
-            <p>Es la que cifra todo lo de esta cuenta. Se descifra con la actual y se vuelve a cifrar con la nueva, así que tendrás que usar la nueva en todos tus dispositivos.</p>
-            <button id="sync-password" class="primary" style="width:100%;" onclick="v2Password()">🔑 Cambiar la contraseña</button>
+            <h3>Tu cuenta de SweetSuite</h3>
+            <p>La contraseña y la clave de recuperación son las de SweetSuite, las mismas para todas tus apps.</p>
+            <button id="sync-password" class="primary" style="width:100%;" onclick="v2Password()">🔑 Abrir los ajustes de la cuenta</button>
 
             <h3 style="margin-top:2rem;">Copia de seguridad</h3>
-            <p>Sin tu contraseña no hay forma de recuperar los datos. Una copia guardada aparte es tu única red.</p>
+            <p>Una copia guardada aparte, además de la de GitHub, es tu red de seguridad.</p>
             <div style="display:flex;gap:0.6rem;align-items:center;flex-wrap:wrap;">
               <button id="sync-export" style="flex:1;min-width:150px;">Exportar copia</button>
               <label class="filebtn" style="flex:1;min-width:150px;text-align:center;">Importar copia<input id="sync-import" type="file" accept=".enc,application/octet-stream,application/json" style="display:none;" /></label>
@@ -459,34 +470,20 @@
 <!-- ══ MODAL DE SINCRONIZACIÓN ══ -->
 
 
-<script src="src/js/entorno.js?v=p218"></script>
-<script src="src/js/crypto.js?v=p218"></script>
-<script src="src/js/config.js?v=p218"></script>
-<script src="src/js/model.js?v=p218"></script>
-<script src="src/js/charts.js?v=p218"></script>
-<script src="src/js/render.js?v=p218"></script>
-<script src="src/js/db.js?v=p218"></script>
-<script src="src/js/sync.js?v=p218"></script>
-<script src="src/js/nav.js?v=p218"></script>
-<script src="src/js/plan.js?v=p218"></script>
-<script src="src/js/forms.js?v=p218"></script>
-<script src="src/js/perfil.js?v=p218"></script>
-<script src="src/js/exportar.js?v=p218"></script>
-<script src="src/js/boot.js?v=p218"></script>
-  <script>
-    // Registro del service worker: si falla (navegador antiguo, http://), la app
-    // funciona igual, solo que sin instalación ni modo sin conexión.
-    // En desarrollo no hay service worker: la copia en caché escondería los
-    // cambios que se están probando. Si quedó uno de antes, se quita.
-    if ("serviceWorker" in navigator) {
-      window.addEventListener("load", function () {
-        if (window.SolventoEntorno && !window.SolventoEntorno.prod) {
-          navigator.serviceWorker.getRegistrations().then(function (rs) { rs.forEach(function (r) { r.unregister(); }); });
-          return;
-        }
-        navigator.serviceWorker.register("sw.js").catch(function () {});
-      });
-    }
-  </script>
+<script src="src/js/entorno.js?v=p219"></script>
+<script src="src/js/crypto.js?v=p219"></script>
+<script src="src/js/config.js?v=p219"></script>
+<script src="src/js/model.js?v=p219"></script>
+<script src="src/js/charts.js?v=p219"></script>
+<script src="src/js/render.js?v=p219"></script>
+<script src="src/js/db.js?v=p219"></script>
+<script src="src/js/sync.js?v=p219"></script>
+<script src="src/js/nav.js?v=p219"></script>
+<script src="src/js/plan.js?v=p219"></script>
+<script src="src/js/forms.js?v=p219"></script>
+<script src="src/js/perfil.js?v=p219"></script>
+<script src="src/js/exportar.js?v=p219"></script>
+<script src="src/js/boot.js?v=p219"></script>
+  <!-- Sin service worker propio: el de SweetSuite guarda también Solvento -->
 </body>
 </html>

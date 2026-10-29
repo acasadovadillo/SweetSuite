@@ -2545,7 +2545,7 @@
   }
   // Plegar y desplegar un grupo del menú. Se recuerda en este dispositivo: si
   // alguien tiene Activos siempre abierto, no tiene que abrirlo cada vez.
-  const K_GRUPO = (id) => "solvento_menu_grupo_" + id;
+  const K_GRUPO = (id) => "sweetsuite_solvento_menu_grupo_" + id;
   function abrirGrupo(g, abrir) {
     g.classList.toggle("abierto", abrir);
     const b = g.querySelector(".sn-grupo-btn");
@@ -3085,7 +3085,7 @@
     ABIERTAS[nombre] = !ABIERTAS[nombre];
     document.getElementById("v2-page-balance").innerHTML = pageBalance(window.__MODEL);
   };
-  window.v2Password = () => window.SolventoBoot && window.SolventoBoot.abrirCambioPassword();
+  window.v2Password = () => window.SolventoSuite && window.SolventoSuite.cuenta();   // la contraseña es la de SweetSuite
   window.v2CompModo = (modo) => {
     COMP_MODO = modo;
     // Solo cambia esta gráfica, así que se repinta solo su panel. Antes se

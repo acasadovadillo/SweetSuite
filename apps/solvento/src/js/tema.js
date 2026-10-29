@@ -12,7 +12,7 @@
  */
 (function () {
   "use strict";
-  const CLAVE = "solvento_tema";
+  const CLAVE = "sweetsuite_tema";      // el de SweetSuite, que lo comparte
   const VALIDOS = ["auto", "claro", "oscuro"];
   const sistema = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
 
