@@ -276,7 +276,12 @@ def main():
     ap.add_argument("--red", action="store_true", help="escuchar también en la wifi (para el iPhone)")
     ap.add_argument("--puerto", type=int, default=PUERTO)
     ap.add_argument("--reiniciar", action="store_true", help="borrar dev-data/ y volver a sembrar")
+    ap.add_argument("--datos", help="otra carpeta en vez de dev-data/ (las pruebas automáticas usan una propia)")
     args = ap.parse_args()
+
+    global DATOS
+    if args.datos:
+        DATOS = os.path.abspath(args.datos)
 
     if args.reiniciar and os.path.isdir(DATOS):
         shutil.rmtree(DATOS)

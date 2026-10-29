@@ -1,0 +1,10 @@
+#!/bin/sh
+# SweetSuite — Antes de publicar, las pruebas rápidas. Si alguna falla, no se
+# sube nada. (Activo con: git config core.hooksPath .githooks)
+# Para saltárselo a propósito, una vez: git push --no-verify
+NODE=$(command -v node || echo "$HOME/.local/node/bin/node")
+echo "Pasando las pruebas rápidas antes de publicar…"
+if ! "$NODE" "$(git rev-parse --show-toplevel)/tools/pruebas/todo.mjs" --rapidas; then
+  echo "✋ No se publica: hay pruebas que fallan."
+  exit 1
+fi

@@ -31,11 +31,10 @@ var doc = JSON.parse(leer(base + "tools/pruebas/datos-ejemplo.json"));
 window.SolventoConfig.usarDoc(doc);
 eval(leer(base + "src/js/model.js"));
 var precios = {};
-// Los precios no viven en SweetSuite sino en el repositorio de Solvento (el
-// del proceso de precios): se leen de su carpeta, al lado de SweetSuite.
-try { precios = JSON.parse(leer(base + "prices.json")); } catch (e) {
-  try { precios = JSON.parse(leer(base + "../../../solvento/prices.json")); } catch (e2) {}
-}
+// Los precios de verdad viven en el repositorio de Solvento (el del proceso de
+// precios). Las pruebas usan una copia fija, precios-ejemplo.json, para dar
+// siempre lo mismo, aquí y en GitHub.
+try { precios = JSON.parse(leer(base + "tools/pruebas/precios-ejemplo.json")); } catch (e) {}
 
 var M = window.SolventoModel;
 var fallos = [];

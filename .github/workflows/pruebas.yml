@@ -1,0 +1,22 @@
+# SweetSuite — Todas las pruebas en cada subida. Si algo falla, GitHub lo marca
+# con una ✗ junto al commit y te avisa por correo.
+name: Pruebas
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  pruebas:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - name: Pruebas rápidas y con navegador
+        env:
+          NAVEGADOR: /usr/bin/google-chrome
+        run: node tools/pruebas/todo.mjs

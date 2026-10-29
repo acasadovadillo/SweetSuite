@@ -59,11 +59,17 @@ python3 tools/dev/servidor.py --reiniciar
 
 Abre <http://localhost:4500>. Nada sale del ordenador: el servidor hace de GitHub (`dev-data/`, que git ignora). El token de prueba es `dev`. Hay datos ficticios del Solvento de antes en `datos-cifrados-dev`, con la contraseña `desarrollo`, para probar «Traer tus datos del Solvento de antes». `localhost` y `127.0.0.1` son dos dispositivos distintos.
 
-Pruebas de Solvento (necesitan la carpeta `../solvento` al lado para los precios):
+## Pruebas
 
 ```bash
-cd apps/solvento && jsc tools/pruebas/humo.js
+node tools/pruebas/todo.mjs             # todas: piezas y uso real con navegador (un par de minutos)
+node tools/pruebas/todo.mjs --rapidas   # solo las piezas (unos segundos)
 ```
+
+- **Piezas** (`tools/pruebas/piezas.mjs`, sin navegador): el llavero (contraseña, clave de recuperación, empresas con las dos contraseñas, dos llaveros que se juntan), la mezcla de Ironrack y las pruebas de Solvento (`apps/solvento/tools/pruebas/humo.js`, con precios fijos de `precios-ejemplo.json`).
+- **Uso real** (`tools/pruebas/navegador.mjs`): abre Chrome, Brave, Edge o Chromium sin ventana contra el servidor de desarrollo, con datos propios (no toca `dev-data/`). Entra, abre las apps, guarda, prueba dos dispositivos a la vez, una empresa, el bloqueo, la política de contenido y el móvil. Otro navegador: `NAVEGADOR=/ruta`.
+- **Antes de publicar:** `git push` pasa solo las rápidas (`.githooks/pre-push`) y no sube nada si alguna falla. En un clon nuevo se activa con `git config core.hooksPath .githooks`.
+- **En GitHub:** todas, en cada subida (`.github/workflows/pruebas.yml`). Si falla algo, sale una ✗ junto al commit y llega un correo.
 
 ## Publicar una versión
 
