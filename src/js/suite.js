@@ -465,7 +465,11 @@
     pintarMenus();
     const apps = misApps();
     // Con una sola app no hay nada que elegir: se entra en ella
+    // Si se llegó con una app en la dirección (#app/ironrack, desde la dirección
+    // de antes), se abre esa, si la cuenta la tiene
+    const pedida = (/^#app\/([a-z0-9-]+)/.exec(location.hash) || [])[1];
     if (apps.length === 1) location.hash = "#app/" + apps[0].id;
+    else if (pedida && apps.some((a) => a.id === pedida)) { /* se queda la pedida */ }
     else if (!/^#(inicio|cuenta)/.test(location.hash)) location.hash = "#inicio";
     ruta();
   }
