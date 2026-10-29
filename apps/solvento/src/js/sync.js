@@ -253,17 +253,19 @@
     return { ok: true, movimientos: n(vuelta, "movimientos") };
   }
 
-  // Cifra el doc y lo sube al repo. Devuelve { sha, verificacion }.
+  // Cifra el doc y lo sube al repo. Devuelve { sha, verificacion, blob, doc,
+  // mezclado }.
   //
   // El sha identifica la versión del fichero en GitHub y se cachea en este
-  // navegador. Si el fichero cambió por otra vía (otro dispositivo, o un commit
-  // por git), ese sha queda obsoleto y GitHub rechaza la escritura con un 409.
-  // Antes eso dejaba el guardado en local para siempre; ahora se auto-repara:
-  // se relee el sha actual y se reintenta una vez (last-write-wins, que es lo
-  // acordado para un único usuario).
-  async function push(doc, password, token, message) {
-    const blob = await C.encryptDoc(doc, password);
-    const contentStr = JSON.stringify(blob);
+  // navegador. Si el fichero cambió por otra vía (otro dispositivo, otro
+  // representante), ese sha queda obsoleto y GitHub rechaza la escritura con
+  // un 409. Entonces se trae lo publicado, se MEZCLA con lo de aquí registro a
+  // registro («mezclar», de boot.js, con mezcla.js) y se sube la mezcla. Antes
+  // se subía lo de aquí encima y lo del otro se perdía.
+  async function push(doc, password, token, message, mezclar) {
+    let blob = await C.encryptDoc(doc, password);
+    let contentStr = JSON.stringify(blob);
+    let mezclado = false;
 
     // La copia local ya NO se pisa aquí. Mientras esto subía, pudo llegar otro
     // cambio que ya está guardado en este navegador; escribir encima el bloque
@@ -275,15 +277,30 @@
       return newSha;
     }
 
+    // Lo publicado, mezclado con lo de aquí: el documento a subir pasa a ser la mezcla
+    async function conLoPublicado() {
+      const cur = await fetchRemoteBlob(token);
+      if (!cur) return null;
+      if (mezclar) {
+        doc = await mezclar(cur.blob);
+        blob = await C.encryptDoc(doc, password);
+        contentStr = JSON.stringify(blob);
+        mezclado = true;
+      }
+      return cur.sha;
+    }
+
     let sha = getSha();
-    if (!sha) { const cur = await ghGet(token); if (cur) sha = cur.sha; } // ya existía
+    if (!sha) sha = await conLoPublicado();      // ya existía y aquí no se sabía
     let nuevoSha;
-    try {
-      nuevoSha = await intentar(sha);
-    } catch (e) {
-      if (e.code !== "CONFLICT") throw e;
-      const cur = await ghGet(token);           // sha fresco y reintento
-      nuevoSha = await intentar(cur ? cur.sha : null);
+    for (let intento = 0; ; intento++) {
+      try {
+        nuevoSha = await intentar(sha);
+        break;
+      } catch (e) {
+        if (e.code !== "CONFLICT" || intento >= 2) throw e;
+        sha = await conLoPublicado();            // otro guardó entretanto: mezclar y reintentar
+      }
     }
     // La comprobación NO se espera: descifrar un documento entero son unos
     // segundos, y el guardado ya está hecho. Va en segundo plano y la pantalla
@@ -291,7 +308,7 @@
     // comprobar se cuenta como no comprobado, no como roto.
     const verificacion = verificarGuardado(contentStr, doc, password, token)
       .catch((e) => ({ ok: false, grave: false, motivo: e.message || "no se pudo comprobar" }));
-    return { sha: nuevoSha, verificacion, blob };
+    return { sha: nuevoSha, verificacion, blob, doc, mezclado };
   }
 
 

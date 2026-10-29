@@ -577,6 +577,68 @@ comprobar("ningún dato cifrado puede ir al repositorio público de SweetSuite",
   /^\*\.enc$/m.test(leer(base + "../../.gitignore")) &&
   window.SolventoConfig.SYNC.repo !== "Solvento" && window.SolventoConfig.SYNC.privado === true);
 
+// ── Mezclar dos copias sin perder cambios (mezcla.js) ───────────────────────
+// Dos dispositivos (o dos representantes de ABIES) que guardan a la vez: antes
+// ganaba el último y lo del otro se perdía. Ahora se mezcla registro a registro.
+eval(leer(base + "src/js/mezcla.js"));
+var MZ = window.SolventoMezcla;
+var copia = function (x) { return JSON.parse(JSON.stringify(x)); };
+var base0 = { version: 2, config: { cuentas: [{ cuenta: "Banco" }] }, nav: {},
+  movimientos: [{ id: "m1", importe: "10" }, { id: "m2", importe: "20" }, { id: "m3", importe: "30" }],
+  inversiones: [], propiedades: [], pasivos: [], cobros: [] };
+// Dispositivo A: añade m4 y cambia m1. Dispositivo B: añade m5 y borra m3.
+var A = copia(base0), B = copia(base0);
+A.movimientos.push({ id: "m4", importe: "40" });
+A.movimientos[0].importe = "11";
+MZ.sellar(base0, A, 1000);
+B.movimientos.push({ id: "m5", importe: "50" });
+B.movimientos = B.movimientos.filter(function (m) { return m.id !== "m3"; });
+MZ.sellar(base0, B, 2000);
+var AB = MZ.fusionar(A, B), BA = MZ.fusionar(B, A);
+var ids = function (d) { return d.movimientos.map(function (m) { return m.id; }).sort().join(","); };
+comprobar("dos dispositivos que guardan a la vez: se queda todo lo de los dos",
+  ids(AB) === "m1,m2,m4,m5" && AB.movimientos.filter(function (m) { return m.id === "m1"; })[0].importe === "11", ids(AB));
+comprobar("da igual el orden en que se mezclen: las dos copias acaban igual",
+  MZ.iguales(AB, BA) && ids(BA) === ids(AB));
+comprobar("lo borrado en un dispositivo no vuelve desde el otro",
+  !AB.movimientos.some(function (m) { return m.id === "m3"; }) && AB.borrados.m3 === 2000);
+// El mismo movimiento cambiado en los dos: gana el último cambio
+var C1 = copia(base0), C2 = copia(base0);
+C1.movimientos[1].importe = "21"; MZ.sellar(base0, C1, 3000);
+C2.movimientos[1].importe = "22"; MZ.sellar(base0, C2, 4000);
+comprobar("el mismo registro cambiado en los dos sitios: gana el cambio más reciente",
+  MZ.fusionar(C1, C2).movimientos[1].importe === "22" && MZ.fusionar(C2, C1).movimientos.filter(function (m) { return m.id === "m2"; })[0].importe === "22");
+// Borrado en uno y cambiado DESPUÉS en el otro: el cambio posterior lo recupera
+var D1 = copia(base0), D2 = copia(base0);
+D1.movimientos = D1.movimientos.filter(function (m) { return m.id !== "m2"; }); MZ.sellar(base0, D1, 5000);
+D2.movimientos[1].importe = "25"; MZ.sellar(base0, D2, 6000);
+var D12 = MZ.fusionar(D1, D2), D21 = MZ.fusionar(D2, D1);
+comprobar("borrado en uno y cambiado después en el otro: se queda el cambio",
+  D12.movimientos.some(function (m) { return m.id === "m2" && m.importe === "25"; }) && MZ.iguales(D12, D21));
+// Al guardar solo se pone la hora a lo que cambió
+var E = copia(base0); E.movimientos[2].importe = "33";
+var nE = MZ.sellar(base0, E, 7000);
+comprobar("al guardar solo se marca lo que ha cambiado",
+  nE === 1 && E.movimientos[2].mod === 7000 && E.movimientos[0].mod === undefined && E.mod === 7000);
+// Copias de antes de esto, sin horas: iguales no se duplican y distintas acaban igual en los dos
+var V1 = copia(base0), V2 = copia(base0);
+V2.movimientos[0].importe = "99";
+comprobar("dos copias antiguas, sin horas: no se duplica nada y las dos acaban igual",
+  MZ.fusionar(V1, V2).movimientos.length === 3 && MZ.iguales(MZ.fusionar(V1, V2), MZ.fusionar(V2, V1)));
+// Ajustes: los más recientes. Registro de cambios de la empresa: se unen
+var F1 = copia(base0), F2 = copia(base0);
+F1.config.objetivo = 1; MZ.sellar(base0, F1, 8000);
+F2.config.objetivo = 2; MZ.sellar(base0, F2, 9000);
+F1.registro = [{ fecha: "2026-10-29T10:00:00Z", quien: "alberto", cambios: "a" }];
+F2.registro = [{ fecha: "2026-10-29T11:00:00Z", quien: "otra", cambios: "b" }];
+var F12 = MZ.fusionar(F1, F2);
+comprobar("los ajustes más recientes ganan y el registro de cambios de los dos se une",
+  F12.config.objetivo === 2 && F12.registro.length === 2 && F12.registro[0].quien === "alberto");
+// Y sobre los datos de ejemplo de verdad: mezclar consigo mismo no cambia nada
+var ej = JSON.parse(leer(base + "tools/pruebas/datos-ejemplo.json"));
+comprobar("mezclar los datos de ejemplo con una copia de sí mismos no cambia nada",
+  MZ.iguales(MZ.fusionar(ej, copia(ej)), ej) && MZ.fusionar(ej, copia(ej)).movimientos.length === ej.movimientos.length);
+
 print("");
 if (fallos.length) { print(fallos.length + " comprobación(es) fallidas"); salir(1); }
 print("todo en orden");

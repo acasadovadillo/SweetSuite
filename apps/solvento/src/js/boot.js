@@ -18,6 +18,7 @@
   const C = window.SolventoCrypto;
   const DB = window.SolventoDB;
   const SYNC = window.SolventoSync;
+  const M = window.SolventoMezcla;
   // SweetSuite: da la cuenta y el secreto con el que se cifra (suite-puente.js)
   const SS = window.SolventoSuite || null;
   // Los precios y la lista de activos, del repositorio público de Solvento
@@ -442,7 +443,9 @@
     pintarEstado("guardando");
     const v0 = version;
     try {
-      const r = await SYNC.push(DB.state.doc, DB.state.password, DB.state.token, firmar(mensaje || "Solvento: cambios desde la web"));
+      const r = await SYNC.push(DB.state.doc, DB.state.password, DB.state.token, firmar(mensaje || "Solvento: cambios desde la web"),
+        async (blobPublicado) => M.fusionar(DB.state.doc, (await abrirBlob(blobPublicado)).doc));
+      if (r && r.mezclado) adoptarMezcla(r.doc);
       if (version !== v0) {
         // Llegó otro cambio mientras subía: ya está guardado aquí y es más
         // nuevo que lo subido. Sigue pendiente, y la cola lo sube a continuación.
@@ -983,16 +986,58 @@
     if (otros.length) partes.push("Otros datos");
     return partes.join(" · ");
   }
+  // Al guardar: la hora de lo que cambió (para mezclar con otras copias, ver
+  // mezcla.js) y, en una empresa, quién lo cambió
   function anotarCambio() {
     const doc = DB.state.doc;
-    if (!REP || !doc) return;
+    if (!doc) return;
     const antes = ULTIMO ? JSON.parse(ULTIMO) : {};
-    const cambios = resumenCambios(antes, doc);
+    M.sellar(antes, doc);
+    const cambios = REP ? resumenCambios(antes, doc) : "";
     if (cambios) {
       doc.registro = (Array.isArray(doc.registro) ? doc.registro : [])
         .concat([{ fecha: new Date().toISOString(), quien: REP.usuario, nombre: REP.nombre, cambios }]).slice(-REGISTRO_MAX);
     }
     ULTIMO = JSON.stringify(doc);
+  }
+
+  // Lo de otra copia ya mezclado con lo de aquí. Se vuelve a mezclar con lo de
+  // AHORA, por si mientras subía se guardó algo más: así no se pierde ni eso.
+  function adoptarMezcla(mezcla) {
+    const antes = DB.state.doc;
+    const nuevo = M.fusionar(antes, mezcla);
+    const traidos = M.diferencias(antes, nuevo);
+    DB.state.doc = nuevo;
+    ULTIMO = JSON.stringify(nuevo);
+    guardarLocal();
+    render();
+    if (traidos) toast(traidos === 1 ? "Se ha traído 1 cambio de otro dispositivo" : "Se han traído " + traidos + " cambios de otro dispositivo", "var(--azul)");
+    return traidos;
+  }
+
+  // Traer lo publicado y mezclarlo, sin esperar a que haya conflicto: al
+  // volver a la app y al entrar. Si lo de aquí tenía algo que allí no está, se
+  // sube. «ya»: sin el respiro de 30 s entre una mirada y otra (al volver desde
+  // SweetSuite); «aunqueIgual»: mezclar aunque el sha no haya cambiado.
+  let ultimaTraida = 0, trayendo = null;
+  async function traerYMezclar({ ya = false, aunqueIgual = false } = {}) {
+    if (!DB.state.doc || !DB.state.token || esperandoDatos || enCurso || esInvitado()) return 0;
+    if (trayendo) return trayendo;
+    if (!ya && Date.now() - ultimaTraida < 30000) return 0;
+    ultimaTraida = Date.now();
+    trayendo = traerYa(aunqueIgual).finally(() => { trayendo = null; });
+    return trayendo;
+  }
+  async function traerYa(aunqueIgual) {
+    const shaAntes = SYNC.getSha();
+    let r;
+    try { r = await SYNC.fetchRemoteBlob(DB.state.token); } catch (e) { return 0; }
+    if (!r || (r.sha === shaAntes && !aunqueIgual)) return 0;
+    let remoto;
+    try { remoto = (await abrirBlob(r.blob)).doc; } catch (e) { return 0; }
+    const traidos = adoptarMezcla(M.fusionar(DB.state.doc, remoto));
+    if (!M.iguales(DB.state.doc, remoto)) { marcarPendiente(true); reintentarPendiente(); }
+    return traidos;
   }
   function pintarRegistro() {
     const caja = $("aj-registro");
@@ -1114,6 +1159,7 @@
     catch (e) { pantallaSuite("No se pueden abrir tus datos de Solvento de este dispositivo: " + e.message); return; }
     await unlock(r.doc, pw);
     if (!r.actual) { await guardarLocal(); marcarPendiente(true); reintentarPendiente(); }
+    else if (token && hayPendiente()) traerYMezclar({ ya: true, aunqueIgual: true });   // lo de aquí sin subir, con lo publicado
   }
 
   // Al volver a SweetSuite o bloquear: guardar aquí y subir lo pendiente
@@ -1296,9 +1342,10 @@
       const remote = await SYNC.fetchRemoteBlob(DB.state.token);
       if (!remote) { setError("sync-status", "No hay datos en el repo todavía"); return; }
       const { doc, actual } = await abrirBlob(remote.blob);
-      DB.state.doc = doc; DB.storeBlob(remote.blob); ULTIMO = JSON.stringify(doc); render();
-      if (!actual) { await guardarLocal(); marcarPendiente(true); }
-      setError("sync-status", "Actualizado desde GitHub ✓", "var(--verde)");
+      // Se mezcla con lo de aquí: lo que solo está aquí no se pierde
+      const traidos = adoptarMezcla(M.fusionar(DB.state.doc, doc));
+      if (!actual || !M.iguales(DB.state.doc, doc)) { marcarPendiente(true); reintentarPendiente(); }
+      setError("sync-status", traidos ? "Actualizado desde GitHub ✓ (" + traidos + " cambios traídos)" : "Ya estaba al día ✓", "var(--verde)");
     } catch (e) {
       setError("sync-status", e.code === "BAD_PASSWORD" ? "La copia del repo usa otra contraseña" : ("Error: " + e.message));
     }
@@ -1477,12 +1524,16 @@
       .catch(() => {});
     window.addEventListener("online", reintentarPendiente);
     document.addEventListener("visibilitychange", () => { if (!document.hidden) reintentarPendiente(); });
+    // Lo que otros hayan guardado, al volver a la app
+    document.addEventListener("visibilitychange", () => { if (!document.hidden) traerYMezclar(); });
+    window.addEventListener("focus", () => traerYMezclar());
     if (!SS) return;                       // fuera de SweetSuite: suite-puente.js ya se va
     SS.registrar("solvento", {
       guardarAlSalir,
       pendiente: () => !!DB.state.doc && !esperandoDatos && hayPendiente(),
       alCambiarClaves: refrescarClaves,
       llaveroCambiado: () => { if (DB.state.token) llaveroCon(DB.state.token).catch(() => {}); },
+      alVolver: () => traerYMezclar({ ya: true }),
     });
     entrarEnSuite();
   }

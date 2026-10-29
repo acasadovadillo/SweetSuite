@@ -18,6 +18,7 @@ Web: <https://acasadovadillo.github.io/SweetSuite/> (se instala en el móvil con
 
 - **Un token por cuenta y app.** *Fine-grained*, con *Contents: Read and write* solo sobre su repositorio (el de Solvento, además, sobre `Solvento`, donde publica la lista de precios). Se pega en los Ajustes de cada app, nunca al entrar, y se guarda cifrado en el dispositivo. Cambiarlo no toca los datos.
 - **Guardado.** Cada cambio se guarda al momento en el dispositivo, cifrado. El **autoguardado** (encendido de serie) lo sube a GitHub; también **Guardar**, **⌘S / Ctrl+S** y **volver al inicio de SweetSuite**, que sube lo pendiente de la app de la que sales.
+- **Cambios a la vez.** Si dos dispositivos (o dos representantes de una empresa) guardan a la vez, no se pierde nada: Ironrack mezcla elemento a elemento y Solvento registro a registro (`apps/solvento/src/js/mezcla.js`). Gana el último cambio de cada registro y lo borrado no resucita.
 - **Otro dispositivo.** Se entra con «Ya uso SweetSuite en otro dispositivo». Al pegar el token de una app, SweetSuite trae el llavero de GitHub; si allí la contraseña es otra, la pide (o la clave de recuperación).
 - **Los datos de antes.** En los Ajustes de Solvento, «Traer tus datos del Solvento de antes» abre con la contraseña de entonces lo que guardaba en este dispositivo y en `datos-cifrados`, y lo pasa a SweetSuite. `datos-cifrados` solo se lee. Ironrack no lo necesita: nadie tenía entrenos.
 

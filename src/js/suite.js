@@ -20,7 +20,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.1.0";
+  const VERSION = "1.2.0";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -504,6 +504,8 @@
       f.title = app.nombre;
       f.src = app.ruta + "index.html";
       $("#marcos").appendChild(f);
+    } else if (S.apis[id] && S.apis[id].alVolver) {
+      S.apis[id].alVolver();             // lo que otros guardaron mientras tanto
     }
     $("#marcos").querySelectorAll("iframe").forEach((x) => x.classList.toggle("activo", x === f));
     $("#marcos").classList.remove("oculto");
