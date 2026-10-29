@@ -5,13 +5,15 @@
  *     empresas con dos contraseñas, dos llaveros que se juntan…
  *   · la mezcla de Ironrack (apps/ironrack/src/js/almacen.js)
  *   · las de Solvento (apps/solvento/tools/pruebas/humo.js), que ya existían
+ *   · las de Agora (apps/agora/tests/*.test.js): socios, cuotas, tesorería,
+ *     la mezcla, SEPA, rectificativas, convocatorias…
  *
  *   node tools/pruebas/piezas.mjs
  *
  * Node trae el mismo cifrado que el navegador (WebCrypto): se cargan los
  * archivos de verdad, no copias.
  */
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -235,6 +237,20 @@ else {
   console.log(`  ✗ Solvento: ${mal.length} fallan`);
   mal.forEach((l) => console.log("    " + l.trim()));
   if (r.stderr) console.log(r.stderr.split("\n").slice(0, 5).join("\n"));
+}
+
+// ── Agora ───────────────────────────────────────────────────────────────────
+console.log("\nAgora");
+const dirAgora = join(RAIZ, "apps/agora");
+const pruebasAgora = readdirSync(join(dirAgora, "tests")).filter((f) => f.endsWith(".test.js")).sort().map((f) => join("tests", f));
+const ra = spawnSync(process.execPath, ["--test", "--test-reporter=tap", ...pruebasAgora], { cwd: dirAgora, encoding: "utf8" });
+const cuenta = (que) => +(((ra.stdout || "").match(new RegExp("^# " + que + " (\\d+)", "m")) || [])[1] || 0);
+if (ra.status === 0 && cuenta("pass") > 0 && !cuenta("fail")) { bien++; console.log(`  ✓ las ${cuenta("pass")} pruebas de Agora (${pruebasAgora.length} archivos)`); }
+else {
+  fallos.push("Agora");
+  console.log(`  ✗ Agora: ${cuenta("fail")} fallan`);
+  (ra.stdout || "").split("\n").filter((l) => /^\s*not ok/.test(l)).slice(0, 10).forEach((l) => console.log("    " + l.trim()));
+  if (ra.stderr) console.log(ra.stderr.split("\n").slice(0, 5).join("\n"));
 }
 
 console.log("");

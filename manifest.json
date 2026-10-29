@@ -1,7 +1,7 @@
 {
   "name": "SweetSuite",
   "short_name": "SweetSuite",
-  "description": "Tus apps en un sitio: Solvento e Ironrack, con una sola contraseña.",
+  "description": "Tus apps en un sitio: Solvento, Ironrack y Agora, con una sola contraseña.",
   "lang": "es",
   "start_url": "./",
   "scope": "./",
