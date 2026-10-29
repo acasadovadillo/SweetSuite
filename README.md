@@ -46,7 +46,7 @@ Abre <http://localhost:4500>. Nada sale del ordenador: el servidor hace de GitHu
 Pruebas de Solvento (necesitan la carpeta `../solvento` al lado para los precios):
 
 ```bash
-jsc apps/solvento/tools/pruebas/humo.js
+cd apps/solvento && jsc tools/pruebas/humo.js
 ```
 
 ## Estética
