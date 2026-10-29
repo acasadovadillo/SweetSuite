@@ -1,0 +1,5 @@
+.DS_Store
+# Nunca: datos sin cifrar ni copias de seguridad exportadas
+*.json.bak
+ironrack-*.json
+.claude/
