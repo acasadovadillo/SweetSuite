@@ -1,0 +1,414 @@
+/*
+ * SweetSuite — estilos.
+ *
+ * La estética común de Ironrack y Solvento (la de OpenClaw, medida sobre sus
+ * capturas): fondo #0e1015, tarjetas #161920 con borde #1c1f27, texto #f4f4f5
+ * y secundario #8b8b94, radios 12/10/8, títulos de página en el acento, Albert
+ * Sans, barra lateral de 288 px, cajón por debajo de 1.024 px y pestañas abajo
+ * en el teléfono. El tema claro es el de Solvento.
+ */
+
+:root {
+  --fondo: #0e1015;
+  --tarjeta: #161920;
+  --borde: #1c1f27;
+  --borde-lateral: #1d1f26;
+  --separador: #1b1d25;
+  --pozo: #0e1015;
+  --control: #191c24;
+  --control-borde: #1e2028;
+  --campo: #14161d;
+  --pista: #101218;
+  --texto: #f4f4f5;
+  --texto-medio: #b4b4bc;
+  --suave: #8b8b94;
+  --icono: #696972;
+  --enfoque: #2f3033;
+  --ok: #1bc565;
+  --aviso: #f6b94b;
+  --peligro: #ff5c5c;
+  --contorno: #ffffff;
+  --sombra: 0 10px 30px rgba(0, 0, 0, .5);
+
+  --acento: #ff5c5c;            /* tema.js lo cambia por el de la cuenta */
+  --acento-texto: #ffffff;
+  --boton: #d23c3c;
+  --boton-texto: #ffffff;
+  --acento-tinta: var(--acento);  /* el acento como color de texto */
+  --acento-suave: color-mix(in srgb, var(--acento) 11%, var(--fondo));
+  --acento-linea: color-mix(in srgb, var(--acento) 25%, var(--fondo));
+
+  --radio: 12px;
+  --radio-control: 10px;
+  --lateral: 288px;
+  --tabs: 60px;
+  --fuente: "Albert Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
+  --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: dark;
+}
+:root[data-tema="claro"] {
+  --fondo: #f6f6f7;
+  --tarjeta: #ffffff;
+  --borde: #e6e6e9;
+  --borde-lateral: #e6e6e9;
+  --separador: #ebebee;
+  --pozo: #f6f6f7;
+  --control: #efeff1;
+  --control-borde: #dcdce0;
+  --campo: #f1f1f3;
+  --pista: #f1f1f3;
+  --texto: #16181f;
+  --texto-medio: #45464e;
+  --suave: #6b6c75;
+  --icono: #9a9ba3;
+  --enfoque: #c4c4ca;
+  --ok: #047857;
+  --aviso: #92400e;
+  --peligro: #b91c1c;
+  --contorno: #0e1015;
+  --sombra: 0 10px 30px rgba(15, 20, 35, .16);
+  --acento-tinta: var(--boton);
+  --acento-suave: color-mix(in srgb, var(--acento) 10.5%, #ffffff);
+  --acento-linea: color-mix(in srgb, var(--acento) 32%, #ffffff);
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0; background: var(--fondo); color: var(--texto);
+  font: 14px/1.45 var(--fuente);
+  -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+[hidden] { display: none !important; }
+svg[hidden] { display: none; }
+a { color: inherit; text-decoration: none; }
+p { margin: 0 0 8px; }
+code, .mono { font-family: var(--mono); font-size: 12.5px; }
+svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 6px; }
+.suave { color: var(--suave); }
+
+/* Las curvas de nivel del fondo de OpenClaw, muy tenues: el dibujo hace de
+   máscara y el color lo pone el tema */
+.con-curvas::before {
+  content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-color: var(--contorno);
+  -webkit-mask: url("../../img/contornos.svg") right center / auto 120% no-repeat;
+  mask: url("../../img/contornos.svg") right center / auto 120% no-repeat;
+}
+
+/* ── Cabecera de página ── */
+.cabeza { margin: 4px 0 22px; }
+.cabeza h1 { font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; color: var(--acento-tinta); margin: 0; }
+.cabeza p { font-size: 13.5px; color: var(--suave); margin: 6px 0 0; max-width: 560px; }
+h2 {
+  font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--suave); margin: 30px 0 10px;
+}
+.nota { font-size: 13px; color: var(--suave); margin: 10px 0 0; }
+
+/* ── Estructura: la de Ironrack y Solvento ── */
+#suite { min-height: 100vh; min-height: 100dvh; }
+main {
+  position: relative; z-index: 1;
+  max-width: 760px; margin: 0 auto; padding: 20px 16px 48px;
+}
+.barra-sup {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; gap: 11px;
+  height: calc(env(safe-area-inset-top) + 64px);
+  padding: env(safe-area-inset-top) 14px 0;
+  background: var(--fondo); border-bottom: 1px solid var(--borde-lateral);
+}
+.hamburguesa {
+  flex: none; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer;
+  color: var(--texto-medio); background: var(--tarjeta); border: 1px solid var(--control-borde); border-radius: 8px;
+}
+.hamburguesa svg { width: 16px; height: 16px; stroke-width: 2; }
+.marca { display: flex; align-items: center; gap: 9px; margin-right: auto; font-size: 13.6px; font-weight: 700; color: var(--texto-medio); }
+.marca svg { width: 26px; height: 26px; }
+
+.tabs {
+  position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
+  display: none; grid-auto-flow: column; grid-auto-columns: 1fr;
+  padding: 4px 4px calc(env(safe-area-inset-bottom) + 4px);
+  background: color-mix(in srgb, var(--fondo) 92%, transparent);
+  backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  border-top: 1px solid var(--borde-lateral);
+}
+.tabs a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; min-height: 50px; font-size: 11px; color: var(--suave); }
+.tabs a svg { width: 22px; height: 22px; color: var(--icono); }
+.tabs a.activo { color: var(--texto); }
+.tabs a.activo svg { color: var(--acento); }
+@media (max-width: 640px) {
+  .tabs { display: grid; }
+  main { padding-bottom: calc(var(--tabs) + env(safe-area-inset-bottom) + 28px); }
+}
+
+.lateral {
+  display: flex; flex-direction: column; z-index: 40;
+  position: fixed; top: 0; left: 0; width: var(--lateral); max-width: 86vw; height: 100vh; height: 100dvh;
+  overflow-y: auto; overscroll-behavior: contain;
+  background: var(--fondo); border-right: 1px solid var(--borde-lateral);
+  padding: calc(env(safe-area-inset-top) + 14px) 12px calc(12px + env(safe-area-inset-bottom));
+  transform: translateX(-100%); visibility: hidden; transition: transform .22s ease-out, visibility .22s;
+}
+.lateral.abierta { transform: none; visibility: visible; }
+.lateral-velo { position: fixed; inset: 0; z-index: 39; background: rgba(0, 0, 0, .55); }
+.lateral-cab { display: flex; align-items: center; gap: 8px; padding: 2px 9px 30px; min-height: 60px; }
+.lateral-marca { display: flex; align-items: center; gap: 8px; margin-right: auto; font-size: 13px; font-weight: 500; color: var(--suave); }
+.lateral-marca svg { width: 24px; height: 24px; }
+.lateral-cerrar {
+  display: grid; place-items: center; width: 26px; height: 22px; cursor: pointer;
+  color: var(--texto-medio); background: none; border: 1px solid var(--control-borde); border-radius: 6px;
+}
+.lateral-cerrar svg { width: 14px; height: 14px; stroke-width: 2.2; }
+.lateral-titulo { font-size: 21px; font-weight: 700; color: var(--texto); padding: 0 9px; line-height: 24px; }
+.lateral-cuenta {
+  display: flex; align-items: center; gap: 8px; width: 100%; margin: 22px 0 15px; padding: 4px 9px; height: 28px; line-height: 20px;
+  font: inherit; font-size: 14.2px; font-weight: 500; color: var(--texto-medio); background: none; border: 0; border-radius: 8px; cursor: pointer; text-align: left;
+}
+.lateral-cuenta:hover { background: var(--campo); color: var(--texto); }
+.lateral-cuenta-nombre { flex: 1; min-width: 0; color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.lateral-cuenta svg { width: 14px; height: 14px; stroke-width: 2; color: var(--suave); }
+.lateral-seccion { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); padding: 0 9px; margin: 18px 0 8px; }
+.lateral-nav { display: flex; flex-direction: column; gap: 3px; }
+.lateral-nav a {
+  display: flex; align-items: center; gap: 8px;
+  min-height: 31px; padding: 4px 9px; border: 1px solid transparent; border-radius: 8px;
+  font-size: 13px; font-weight: 500; color: var(--suave);
+}
+.lateral-nav a svg { width: 16px; height: 16px; color: var(--icono); }
+.lateral-nav a:hover { background: var(--campo); color: var(--texto); }
+.lateral-nav a.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
+.lateral-nav a.activo svg { color: var(--acento); }
+.lateral-nav a .punto { margin-left: auto; }
+.lateral-pie {
+  margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  padding: 18px 9px 2px; line-height: normal;
+}
+.version { color: var(--suave); font-size: 11.5px; }
+.avatar {
+  flex: none; width: 20px; height: 20px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 8.5px; font-weight: 800; text-transform: uppercase; color: #fff; background: #369f9d;
+}
+@media (min-width: 1024px) {
+  #suite { display: grid; grid-template-columns: var(--lateral) 1fr; }
+  #suite.con-curvas::before { left: var(--lateral); }
+  .barra-sup, .lateral-velo, .lateral-cerrar { display: none !important; }
+  main { width: 100%; padding: 44px 48px 80px; max-width: calc(760px + 96px); grid-column: 2; }
+  .lateral { position: sticky; grid-column: 1; grid-row: 1; transform: none; visibility: visible; max-width: none; transition: none; }
+}
+
+/* ── Estado: un punto y una palabra ── */
+.estado-texto { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 11.5px; font-weight: 600; color: var(--suave); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.punto { flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--suave); }
+.punto.ok { background: var(--ok); }
+.punto.pendiente { background: var(--aviso); }
+.punto.subiendo { background: var(--acento); animation: latido .9s infinite alternate; }
+.punto.error { background: var(--peligro); }
+@keyframes latido { to { opacity: .25; } }
+
+/* ── Botones ── */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  font: inherit; font-size: 14px; font-weight: 500; line-height: 1.2;
+  min-height: 38px; padding: 8px 16px;
+  color: var(--texto); background: var(--control);
+  border: 1px solid var(--control-borde); border-radius: var(--radio-control); cursor: pointer; white-space: nowrap;
+}
+.btn:hover { border-color: color-mix(in srgb, var(--control-borde) 60%, var(--suave)); }
+.btn:active { transform: scale(.98); }
+.btn:disabled { opacity: .45; cursor: default; transform: none; }
+.btn.primario { background: var(--boton); color: var(--boton-texto); border-color: var(--boton); border-radius: 8px; font-weight: 600; }
+.btn.primario:hover { filter: brightness(1.08); }
+.btn.primario.peligro { background: var(--peligro); border-color: var(--peligro); color: #fff; }
+.btn.texto-peligro { background: transparent; border-color: transparent; color: var(--peligro); }
+.botones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
+.botones .btn { flex: 1 1 140px; }
+
+/* ── Tarjetas y filas ── */
+.tarjeta { position: relative; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: var(--radio); padding: 16px; margin-bottom: 12px; }
+.filas { padding: 0; overflow: hidden; }
+.fila { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; padding: 14px 16px; min-height: 62px; }
+.fila + .fila { border-top: 1px solid var(--separador); }
+.fila-texto { flex: 1 1 220px; min-width: 0; }
+.fila-texto > b { display: block; font-size: 15px; font-weight: 500; line-height: 1.35; }
+.fila-texto > span { display: block; font-size: 13px; color: var(--suave); line-height: 1.35; margin-top: 1px; }
+.fila-control { flex: none; display: flex; align-items: center; gap: 8px; }
+@media (max-width: 520px) {
+  .fila.apilar { flex-direction: column; align-items: stretch; }
+  .fila.apilar .fila-texto { flex: none; }
+}
+
+/* Las apps en el inicio */
+.apps { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
+.app-tarjeta {
+  display: flex; flex-direction: column; gap: 12px; text-align: left; cursor: pointer;
+  font: inherit; color: var(--texto); background: var(--tarjeta); border: 1px solid var(--borde); border-radius: var(--radio);
+  padding: 18px; min-height: 168px;
+}
+.app-tarjeta:hover { border-color: color-mix(in srgb, var(--borde) 55%, var(--suave)); }
+.app-icono { width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; background: var(--acento-suave); border: 1px solid var(--acento-linea); color: var(--acento); }
+.app-icono svg { width: 24px; height: 24px; stroke-width: 1.8; }
+.app-texto { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.app-tarjeta b { font-size: 17px; font-weight: 700; }
+.app-tarjeta .desc { font-size: 13px; color: var(--suave); line-height: 1.4; }
+.app-tarjeta .estado-texto { margin-top: auto; padding-top: 8px; font-size: 12.5px; font-weight: 500; white-space: normal; }
+@media (max-width: 640px) {
+  .app-tarjeta { flex-direction: row; align-items: flex-start; gap: 14px; min-height: 0; padding: 16px; }
+  .app-tarjeta .estado-texto { padding-top: 6px; }
+}
+
+/* ── Campos ── */
+.form { display: flex; flex-direction: column; gap: 12px; }
+.form label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; font-weight: 500; color: var(--texto-medio); }
+.form input, .campo {
+  width: 100%; min-height: 38px; padding: 8px 12px; font: inherit; font-size: 14px; color: var(--texto);
+  background: var(--campo); border: 1px solid var(--borde); border-radius: 8px; outline: none;
+}
+.form input:focus, .campo:focus { border-color: var(--enfoque); }
+@media (pointer: coarse) { .form input, .campo { font-size: 16px; } }
+.error { color: var(--peligro); font-size: 13px; font-weight: 600; margin: 0; }
+.error:empty { display: none; }
+
+/* Selector segmentado (Tema) */
+.segmentado { display: inline-flex; padding: 3px; gap: 2px; background: var(--pista); border: 1px solid var(--borde); border-radius: 10px; }
+.segmentado button { font: inherit; font-size: 13px; font-weight: 500; padding: 6px 12px; color: var(--suave); background: none; border: 0; border-radius: 7px; cursor: pointer; }
+.segmentado button[aria-checked="true"] { background: var(--tarjeta); color: var(--texto); box-shadow: 0 1px 2px rgba(0, 0, 0, .25); }
+
+/* Muestras de acento */
+.muestras { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; }
+.muestra {
+  position: relative; width: 36px; height: 36px; border-radius: 50%; border: 0; padding: 0; cursor: pointer;
+  background: var(--c); display: grid; place-items: center; color: var(--fondo);
+}
+.muestra.elegida { box-shadow: 0 0 0 2px var(--tarjeta), 0 0 0 4px var(--c); }
+.muestra svg { width: 18px; height: 18px; stroke-width: 2.6; }
+.muestra input { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; border: 0; padding: 0; }
+
+/* ── Ajustes de la cuenta: la estructura de Ironrack y Solvento ── */
+.aj-layout { display: grid; grid-template-columns: 200px 1fr; gap: 32px; align-items: start; }
+.aj-nav { display: flex; flex-direction: column; gap: 2.4px; position: sticky; top: 80px; }
+.aj-tab { display: block; padding: 6px 10px; border: 1px solid transparent; border-radius: 8px; white-space: nowrap; font-size: 13px; font-weight: 500; color: var(--suave); }
+.aj-tab:hover { background: var(--campo); color: var(--texto); }
+.aj-tab.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
+.aj-body { min-width: 0; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; padding: 17px 20px; }
+.aj-body > h3 { font-size: 21px; font-weight: 700; color: var(--acento-tinta); margin: 0 0 5.6px; }
+.aj-body > p { font-size: 12.5px; color: var(--suave); margin: 0 0 17.6px; }
+.aj-body h2 { margin: 26px 0 8px; }
+.aj-body > p + h2 { margin-top: 0; }
+.aj-body .tarjeta { background: transparent; margin-bottom: 0; }
+.aj-body .fila { padding-left: 14px; padding-right: 14px; }
+.version-pie { text-align: center; color: var(--suave); margin: 3rem 0 1rem; font-family: var(--mono); font-size: 12.5px; }
+@media (max-width: 720px) {
+  .aj-layout { grid-template-columns: 1fr; gap: 16px; }
+  .aj-nav { flex-direction: row; overflow-x: auto; position: static; gap: 5.6px; padding-bottom: 5.6px; scrollbar-width: none; }
+  .aj-nav::-webkit-scrollbar { display: none; }
+  .aj-body { padding: 20px; }
+}
+@media (min-width: 1024px) { body.vista-cuenta main { max-width: calc(1040px + 96px); } }
+
+/* ── La clave de recuperación ── */
+.clave-recuperacion {
+  font-family: var(--mono); font-size: 17px; font-weight: 600; letter-spacing: .04em; line-height: 1.6;
+  text-align: center; word-spacing: .2em; color: var(--texto);
+  background: var(--campo); border: 1px dashed var(--enfoque); border-radius: 10px; padding: 14px 12px; margin: 4px 0 12px;
+  user-select: all; -webkit-user-select: all;
+}
+
+/* ── Entrada: la de Solvento e Ironrack, valor a valor ── */
+.entrada-fondo {
+  position: fixed; inset: 0; z-index: 1000; overflow-y: auto;
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+  background: var(--fondo);
+}
+.entrada { line-height: normal; position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
+.entrada-logo svg { display: block; width: 56px; height: 56px; }
+.entrada-titulo { font-size: 26px; font-weight: 700; color: var(--acento-tinta); margin: 16px 0 5.6px; }
+.entrada-sub { font-size: 12.5px; color: var(--suave); margin-bottom: 28px; text-align: center; line-height: 1.45; }
+.entrada input:not([type="checkbox"]) {
+  width: 100%; background: var(--campo); border: 1px solid var(--borde); border-radius: 8px;
+  color: var(--texto); font: inherit; font-size: 15px; padding: 9px 12px; outline: none;
+  margin-bottom: 12px; transition: border-color .15s;
+}
+.entrada input::placeholder { color: var(--suave); }
+.entrada input:focus { border-color: var(--enfoque); }
+@media (pointer: coarse) { .entrada input:not([type="checkbox"]) { font-size: 16px; } }
+.entrada-clave { position: relative; width: 100%; }
+.entrada-clave input { padding-right: 41.6px; }
+.entrada-ojo {
+  position: absolute; right: 8.8px; top: calc(50% - 6px); transform: translateY(-50%);
+  display: flex; align-items: center; padding: 3.2px; border: 0; background: none; color: var(--suave); cursor: pointer;
+}
+.entrada-ojo svg { width: 18px; height: 18px; stroke-width: 2; }
+.entrada-boton {
+  width: 100%; border: 0; border-radius: 10px; cursor: pointer;
+  background: var(--boton); color: var(--boton-texto);
+  font: inherit; font-size: 15px; font-weight: 600; padding: 10px 14px;
+}
+.entrada-boton:hover { opacity: .85; }
+.entrada-boton:disabled { opacity: .6; cursor: default; }
+.entrada-boton.secundario { background: var(--control); color: var(--texto); border: 1px solid var(--control-borde); margin-top: 10px; }
+.entrada-enlace { margin-top: 18px; font: inherit; font-size: 12.5px; color: var(--suave); background: none; border: 0; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+.entrada-enlace:hover { color: var(--texto); }
+.entrada-error { font-size: 13.12px; font-weight: 600; margin-top: 16px; text-align: center; color: var(--peligro); }
+.entrada-error:empty { display: none; }
+.entrada-check { display: flex; gap: 9px; align-items: flex-start; width: 100%; font-size: 13px; color: var(--texto-medio); margin: 0 0 14px; cursor: pointer; text-align: left; }
+.entrada-check input { margin: 2px 0 0; accent-color: var(--acento); }
+
+/* ── Las apps, a pantalla completa ── */
+#marcos { position: fixed; inset: 0; z-index: 50; background: var(--fondo); }
+#marcos:empty, #marcos.oculto { display: none; }
+#marcos iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--fondo); }
+#marcos iframe:not(.activo) { visibility: hidden; }
+
+/* ── Diálogo (en el móvil sube desde abajo) ── */
+.velo { position: fixed; inset: 0; z-index: 900; background: rgba(0, 0, 0, .6); }
+.hoja {
+  position: fixed; z-index: 901; left: 0; right: 0; bottom: 0;
+  max-width: 480px; margin: 0 auto; max-height: 88vh; overflow-y: auto;
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 16px 16px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, .5);
+  padding: 8px 18px calc(env(safe-area-inset-bottom) + 20px);
+}
+.hoja::before { content: ""; display: block; width: 36px; height: 4px; border-radius: 2px; background: var(--control-borde); margin: 2px auto 14px; }
+.hoja h3 { font-size: 18px; font-weight: 700; letter-spacing: -.01em; margin: 0 0 8px; }
+.hoja p { font-size: 13.5px; color: var(--suave); }
+@media (min-width: 641px) {
+  .hoja { bottom: auto; top: 50%; transform: translateY(-50%); border-radius: 16px; padding-bottom: 20px; }
+  .hoja::before { display: none; }
+}
+
+/* ── Aviso breve ── */
+.aviso {
+  position: fixed; z-index: 1100; left: 50%; top: calc(env(safe-area-inset-top) + 74px);
+  transform: translate(-50%, -8px); opacity: 0; transition: .2s;
+  display: flex; align-items: center; gap: 8px;
+  background: var(--tarjeta); color: var(--texto); border: 1px solid var(--borde); font-size: 14px; font-weight: 500;
+  padding: 10px 16px; border-radius: var(--radio-control); box-shadow: var(--sombra);
+  max-width: calc(100% - 32px); text-align: center;
+}
+.aviso::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--punto, var(--acento)); }
+.aviso.visible { opacity: 1; transform: translate(-50%, 0); }
+@media (min-width: 1024px) { .aviso { top: 24px; } }
+
+/* El menú de la cuenta */
+.menu-flotante {
+  position: fixed; z-index: 950; min-width: 220px; padding: 5px;
+  background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; box-shadow: var(--sombra);
+}
+.menu-flotante button { display: block; width: 100%; text-align: left; font: inherit; font-size: 13.5px; font-weight: 500; color: var(--texto); background: none; border: 0; border-radius: 8px; padding: 8px 10px; cursor: pointer; }
+.menu-flotante button:hover, .menu-flotante button:focus-visible { background: var(--campo); }
+
+.banda-entorno {
+  position: fixed; top: 0; left: 50%; transform: translateX(-50%); z-index: 5000; pointer-events: none;
+  background: #b45309; color: #fff; font: 700 11px/1 system-ui, sans-serif; letter-spacing: .08em;
+  padding: 4px 10px; border-radius: 0 0 8px 8px; white-space: nowrap;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+}

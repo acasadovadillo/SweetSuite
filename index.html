@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>SweetSuite</title>
+  <meta name="description" content="Tus apps en un sitio: Solvento e Ironrack, con una sola contraseña.">
+  <meta name="theme-color" content="#0e1015">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="SweetSuite">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="img/icono.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="img/icono-180.png">
+  <!-- El tema antes que el CSS, para que no haya un fogonazo del otro -->
+  <script src="src/js/tema.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="src/css/suite.css">
+</head>
+<body>
+  <div id="entrada" class="entrada-fondo" hidden></div>
+
+  <div id="suite" hidden>
+    <aside class="lateral" id="lateral" aria-label="Menú">
+      <div class="lateral-cab">
+        <a href="#inicio" class="lateral-marca" id="marca-lateral"><span>SweetSuite</span></a>
+        <button type="button" class="lateral-cerrar" data-a="cerrarLateral" aria-label="Cerrar el menú" title="Cerrar">
+          <svg viewBox="0 0 24 24"><path d="M14.5 5.5 8 12l6.5 6.5"/></svg>
+        </button>
+      </div>
+      <div class="lateral-titulo">Tus apps</div>
+      <button type="button" class="lateral-cuenta" data-a="menuCuenta" aria-haspopup="true">
+        <span class="avatar" id="avatar" aria-hidden="true"></span>
+        <span class="lateral-cuenta-nombre" id="nombre-usuario"></span>
+        <svg viewBox="0 0 24 24"><path d="m6 9 6 6 6-6"/></svg>
+      </button>
+      <nav class="lateral-nav" id="nav-principal"></nav>
+      <div class="lateral-seccion">Apps</div>
+      <nav class="lateral-nav" id="nav-apps"></nav>
+      <div class="lateral-seccion">Cuenta</div>
+      <nav class="lateral-nav">
+        <a href="#cuenta" data-vista="cuenta"><svg viewBox="0 0 24 24"><use href="#i-ajustes"/></svg>Ajustes de la cuenta</a>
+        <a href="#" data-a="bloquear"><svg viewBox="0 0 24 24"><use href="#i-candado"/></svg>Bloquear</a>
+        <a href="#" data-a="cerrarSesion"><svg viewBox="0 0 24 24"><use href="#i-salir"/></svg>Cerrar sesión</a>
+      </nav>
+      <div class="lateral-pie">
+        <span id="estado-lateral" class="estado-texto"></span>
+        <span class="version mono" id="version"></span>
+      </div>
+    </aside>
+    <div class="lateral-velo" id="lateral-velo" data-a="cerrarLateral" hidden></div>
+
+    <header class="barra-sup">
+      <button type="button" class="hamburguesa" data-a="abrirLateral" aria-label="Abrir el menú" aria-controls="lateral" aria-expanded="false">
+        <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
+      </button>
+      <a href="#inicio" class="marca" id="marca"><span id="marca-nombre">SweetSuite</span></a>
+    </header>
+
+    <main id="vista"></main>
+
+    <nav class="tabs" id="tabs"></nav>
+  </div>
+
+  <!-- Las apps, cada una en su marco y a pantalla completa. Se quedan abiertas
+       mientras dura la sesión: volver a una es instantáneo. -->
+  <div id="marcos"></div>
+
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-ajustes" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
+    <symbol id="i-candado" viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></symbol>
+    <symbol id="i-salir" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="m16 17 5-5-5-5"/><path d="M21 12H9"/></symbol>
+    <symbol id="i-inicio" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></symbol>
+    <symbol id="i-solvento" viewBox="0 0 24 24"><circle cx="9" cy="9" r="5.5"/><path d="M14.6 9.6a5.5 5.5 0 1 1-5 6.8"/><path d="M9 6.8v4.4M7.2 9h3.6"/></symbol>
+    <symbol id="i-ironrack" viewBox="0 0 24 24"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/></symbol>
+  </svg>
+
+  <div id="velo" class="velo" hidden></div>
+  <div id="dialogo" class="hoja" role="dialog" aria-modal="true" hidden></div>
+  <div id="aviso" class="aviso" role="status" hidden></div>
+
+  <script src="src/js/entorno.js"></script>
+  <script src="src/js/llavero.js"></script>
+  <script src="src/js/suite.js"></script>
+</body>
+</html>
