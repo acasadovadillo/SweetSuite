@@ -8,9 +8,6 @@
  *
  * Dónde está cada cosa lo dice SweetSuite (entorno.js): en desarrollo, todo va
  * a su servidor local, que hace de GitHub con datos de prueba.
- *
- * Antes de SweetSuite, los datos estaban en datos-cifrados/Ironrack/: de ahí
- * solo se lee, para traerlos la primera vez (leerAntiguo).
  */
 (function () {
   "use strict";
@@ -18,11 +15,9 @@
   const E = IR.suite ? IR.suite.entorno : null;
 
   const REPO = E ? E.repos.ironrack : { owner: "-", repo: "Ironrack-Data", branch: "main" };
-  const ANTIGUO = E ? E.antiguo : null;
   const API = E ? E.api : "";
 
   const ruta = (usuario) => `${usuario}-ironrack.enc`;
-  const rutaAntigua = (usuario) => `Ironrack/${usuario}-ironrack.enc`;
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
   const cabeceras = (token, accept) => ({
     Accept: accept || "application/vnd.github+json",
@@ -75,8 +70,7 @@
   }
 
   IR.github = {
-    ruta, rutaAntigua, REPO, ANTIGUO, DEV: !E || !E.prod,
+    ruta, REPO, DEV: !E || !E.prod,
     acceso, leer, escribir,
-    leerAntiguo: (token, r) => leer(token, r, ANTIGUO),
   };
 })();

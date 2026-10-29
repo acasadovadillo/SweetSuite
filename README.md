@@ -18,7 +18,7 @@ Web: <https://acasadovadillo.github.io/SweetSuite/> (se instala en el móvil con
 - **Un token por cuenta y app.** *Fine-grained*, con *Contents: Read and write* solo sobre su repositorio (el de Solvento, además, sobre `Solvento`, donde publica la lista de precios). Se pega en los Ajustes de cada app, nunca al entrar, y se guarda cifrado en el dispositivo. Cambiarlo no toca los datos.
 - **Guardado.** Cada cambio se guarda al momento en el dispositivo, cifrado. El **autoguardado** (encendido de serie) lo sube a GitHub; también **Guardar**, **⌘S / Ctrl+S** y **volver al inicio de SweetSuite**, que sube lo pendiente de la app de la que sales.
 - **Otro dispositivo.** Se entra con «Ya uso SweetSuite en otro dispositivo». Al pegar el token de una app, SweetSuite trae el llavero de GitHub; si allí la contraseña es otra, la pide (o la clave de recuperación).
-- **Los datos de antes.** En los Ajustes de cada app, «Traer de la app de antes» abre con la contraseña de entonces lo que la app guardaba en este dispositivo y en `datos-cifrados`, y lo pasa a SweetSuite. `datos-cifrados` solo se lee.
+- **Los datos de antes.** En los Ajustes de Solvento, «Traer tus datos del Solvento de antes» abre con la contraseña de entonces lo que guardaba en este dispositivo y en `datos-cifrados`, y lo pasa a SweetSuite. `datos-cifrados` solo se lee. Ironrack no lo necesita: nadie tenía entrenos.
 
 ## Estructura
 
@@ -39,7 +39,7 @@ Cada app se carga en su marco (`apps/<id>/index.html`) y pide a `window.SweetSui
 python3 tools/dev/servidor.py --reiniciar
 ```
 
-Abre <http://localhost:4500>. Nada sale del ordenador: el servidor hace de GitHub (`dev-data/`, que git ignora). El token de prueba es `dev`. Hay datos ficticios de las apps antiguas en `datos-cifrados-dev`, con la contraseña `desarrollo`, para probar «Traer de la app de antes». `localhost` y `127.0.0.1` son dos dispositivos distintos.
+Abre <http://localhost:4500>. Nada sale del ordenador: el servidor hace de GitHub (`dev-data/`, que git ignora). El token de prueba es `dev`. Hay datos ficticios del Solvento de antes en `datos-cifrados-dev`, con la contraseña `desarrollo`, para probar «Traer tus datos del Solvento de antes». `localhost` y `127.0.0.1` son dos dispositivos distintos.
 
 Pruebas de Solvento (necesitan la carpeta `../solvento` al lado para los precios):
 

@@ -13,8 +13,8 @@ de este ordenador (adaptado del de Solvento):
 
 Los repositorios son carpetas de dev-data/ (que git ignora), todos privados:
   solvento-data-dev, ironrack-data-dev   los de SweetSuite
-  datos-cifrados-dev                      el de antes, con datos FICTICIOS de las
-                                          apps antiguas (contraseña «desarrollo»)
+  datos-cifrados-dev                      el de antes, con datos FICTICIOS del
+                                          Solvento antiguo (contraseña «desarrollo»)
                                           para probar la mudanza
 
 Imita lo que importa de GitHub: sin token no se lee nada de un repositorio
@@ -34,7 +34,6 @@ import posixpath
 import shutil
 import subprocess
 import sys
-import time
 from datetime import datetime, timezone
 from http.server import SimpleHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import unquote, urlparse
@@ -86,29 +85,14 @@ def doc_finanzas(nombre):
     }
 
 
-def doc_gimnasio():
-    """Un entreno de mentira."""
-    t = int(time.time() * 1000) - 3 * 86400000
-    return {
-        "v": 1, "creado": t, "mod": t, "ejercicios": [], "rutinas": [],
-        "sesiones": [{"id": "s-prueba", "nombre": "Pierna (ficticio)", "inicio": t, "fin": t + 3600000, "rutina": None,
-                      "notas": "", "creado": t, "mod": t,
-                      "ejercicios": [{"ej": "sentadilla", "series": [
-                          {"kg": 60, "reps": 8, "tipo": "normal"}, {"kg": 62.5, "reps": 6, "tipo": "normal"}]}]}],
-        "actual": None, "actualMod": 0, "ajustes": {"descanso": 90, "sonido": True, "mod": 0}, "borrados": {},
-    }
-
-
 def sembrar():
-    """El repositorio de antes, con datos ficticios de las apps antiguas."""
+    """El repositorio de antes, con datos ficticios del Solvento antiguo."""
     hechas = []
     antiguos = {
         "Solvento/alberto-solvento.enc": doc_finanzas("Alberto"),
         "Solvento/abies-solvento.enc": doc_finanzas("ABIES"),
         "Solvento/hafsa-solvento.enc": doc_finanzas("Hafsa"),
         "Solvento/paula-solvento.enc": doc_finanzas("Paula"),
-        "Ironrack/alberto-ironrack.enc": doc_gimnasio(),
-        "Ironrack/hafsa-ironrack.enc": doc_gimnasio(),
     }
     for ruta, doc in antiguos.items():
         destino = ruta_datos("datos-cifrados-dev", ruta)
@@ -304,7 +288,7 @@ def main():
     print(f"SweetSuite · DESARROLLO en http://localhost:{args.puerto}" + ("  (también en la wifi)" if args.red else ""))
     print(f"  datos: {DATOS}")
     if hechas:
-        print(f"  datos de las apps antiguas sembrados ({len(hechas)}), contraseña «{CLAVE_DEV}»")
+        print(f"  datos del Solvento antiguo sembrados ({len(hechas)}), contraseña «{CLAVE_DEV}»")
     print("  token de GitHub para probar: «dev» (y «malo» para probar uno que no vale)")
     try:
         srv.serve_forever()

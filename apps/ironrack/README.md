@@ -26,7 +26,6 @@ Ironrack vive dentro de **SweetSuite** (ver el README de la raíz): la entrada, 
 - El token (*fine-grained*, solo sobre `Ironrack-Data`, *Contents: Read and write*) se pega en Ajustes → Sincronización, no al entrar.
 - Cada cambio se guarda al momento en el dispositivo y se sube a GitHub con el autoguardado (encendido de serie), con Guardar, con ⌘S o al volver a SweetSuite.
 - **Varios dispositivos**: los documentos se fusionan elemento a elemento (gana la versión más reciente de cada entreno, rutina o ejercicio; lo borrado no resucita).
-- **Traer de la app de antes**: en Ajustes → Sincronización, con la contraseña de la Ironrack de antes, se traen y se fusionan los entrenos que guardaba en este dispositivo y en `datos-cifrados/Ironrack/`.
 - En Ajustes se puede descargar una copia en JSON **sin cifrar**, e importarla (se fusiona, no pisa).
 
 ## Estructura
@@ -42,8 +41,8 @@ src/js/
   util.js             formato, 1RM (Epley), volumen
   tema.js             color de acento (Ajustes › Apariencia)
   cripto.js           cifrado y sesión en memoria
-  github.js           leer/escribir el bloque en Ironrack-Data (y leer el de antes en datos-cifrados)
-  almacen.js          el documento, fusión, copia local, sincronización, llavero, traer lo de antes
+  github.js           leer/escribir el bloque en Ironrack-Data
+  almacen.js          el documento, fusión, copia local, sincronización, llavero
   biblioteca.js       catálogo de ejercicios (los id no se cambian nunca)
   analisis.js         historial por ejercicio, récords, semanas
   ui.js               hoja inferior, menús, selector de ejercicios, gráficas SVG

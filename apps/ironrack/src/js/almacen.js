@@ -28,7 +28,7 @@
 
   const S = { usuario: null, nombre: null, secreto: null, cripto: null, anteriores: [], token: null, doc: null, sha: null, estado: "local", error: null };
   // Con el prefijo de SweetSuite: en el mismo dominio vive todavía la app de
-  // antes, con sus llaves «ironrack_…», que no se tocan (se leen al traer).
+  // antes, con sus llaves «ironrack_…», que no se tocan.
   const clave = (n, u) => `sweetsuite_ironrack_${n}_${u || S.usuario}`;
   const ls = {
     get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
@@ -353,37 +353,6 @@
     return { estado: PARA_SUITE[S.estado] || "", texto: IR.app ? IR.app.textoEstado() : "" };
   }
 
-  // ── Traer de la app de antes ──
-  // Ironrack guardaba en este mismo dominio (llaves «ironrack_…») y en
-  // datos-cifrados/Ironrack/, cifrado con la contraseña de entonces. Con ella
-  // se abre lo de aquí y, con el token de entonces (el guardado aquí o el que
-  // se pegue), lo de GitHub; todo se fusiona con lo que ya hay.
-  async function traerAntigua({ password, token }) {
-    const u = S.usuario;
-    const viejo = IR.cripto.sesion({ password });
-    const docs = [];
-    const lt = ls.get("ironrack_doc_" + u);
-    if (lt) docs.push(await viejo.descifrar(JSON.parse(lt)));      // contraseña mala → BAD_PASSWORD
-    let tok = (token || "").trim();
-    if (!tok && ls.get("ironrack_token_" + u)) {
-      try { tok = await viejo.descifrarTexto(JSON.parse(ls.get("ironrack_token_" + u))); } catch (e) { tok = ""; }
-    }
-    let remoto = false;
-    if (tok && G.ANTIGUO) {
-      const res = await G.leerAntiguo(tok, G.rutaAntigua(u));
-      if (res) { docs.push(await viejo.descifrar(JSON.parse(res.texto))); remoto = true; }
-    }
-    if (!docs.length) {
-      throw fallo(tok ? "No hay entrenos tuyos en la app de antes"
-        : "En este dispositivo no hay datos de la app de antes: pega el token que usabas en ella", "SIN_DATOS");
-    }
-    const doc = docs.reduce((a, b) => fusionar(a, b));
-    importar(doc);
-    return { sesiones: doc.sesiones.length, rutinas: doc.rutinas.length, remoto, local: !!lt };
-  }
-
-  const tieneAntigua = (u) => !!ls.get("ironrack_doc_" + (u || S.usuario));
-
   // Una copia de seguridad importada se fusiona: no pisa lo que ya hay
   function importar(doc) {
     cambiar((d) => { Object.assign(d, fusionar(d, doc)); }, { subirYa: true });
@@ -400,6 +369,6 @@
     cambiar, cambiarActual, cambiarAjustes, cambiarItem, anadir, borrar,
     guardarLocal, subir, subirAhora, guardarAlSalir, sincronizar, pendiente,
     entrar, cambiarToken, importar, refrescarClaves,
-    autoguardado, ponerAutoguardado, traerAntigua, tieneAntigua,
+    autoguardado, ponerAutoguardado,
   };
 })();

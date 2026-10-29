@@ -158,12 +158,6 @@
           ${fila("Sincronizar ahora", "Trae lo de tus otros dispositivos y sube lo de este.",
             `<button class="btn" data-a="ajSincronizar" ${S.token ? "" : "disabled"}>Sincronizar</button>`)}
         </div>
-        <h2>La app de antes</h2>
-        <div class="tarjeta filas">
-          ${fila("Traer tus entrenos de la app de antes", (A.tieneAntigua() ? "Este dispositivo tiene datos de la Ironrack de antes. " : "") +
-            "Con la contraseña que usabas en ella. Se mezclan con los de ahora, sin borrar nada.",
-            '<button class="btn" data-a="ajTraerAntigua">Traer</button>', "apilar")}
-        </div>
         ${IR.github.DEV ? '<p class="nota">Entorno de desarrollo: GitHub es el servidor local, con datos de prueba.</p>' : ""}`;
     },
 
@@ -209,35 +203,6 @@
     ajGuardar: () => guardarAhora(),
     irCuenta: () => IR.suite.cuenta(),
     volverSuite: () => { cerrarLateral(); IR.suite.volver(); },
-    ajTraerAntigua() {
-      IR.ui.hoja(`<h3>Traer de la app de antes</h3>
-        <form class="form" id="f-antigua">
-          <p class="suave">Escribe la contraseña que usabas en la Ironrack de antes. Se traen tus entrenos de este dispositivo y de
-            <code>datos-cifrados</code>, y se mezclan con los de ahora.</p>
-          <label>Contraseña de antes <input type="password" name="password" autocomplete="off" required></label>
-          <details class="ayuda"><summary>¿Y si no estaba en este dispositivo?</summary>
-            <p>Pega también el token que usabas en la app de antes (el que daba acceso a <code>datos-cifrados</code>).</p>
-            <label>Token de antes (opcional) <input name="token" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…"></label></details>
-          <p class="error" id="antigua-error"></p>
-          <div class="botones"><button type="button" class="btn" data-a="_cerrar">Cancelar</button><button class="btn primario">Traer</button></div>
-        </form>`);
-      IR.acc._cerrar = () => IR.ui.cerrarHoja();
-      $("#f-antigua").addEventListener("submit", async (ev) => {
-        ev.preventDefault();
-        const btn = ev.target.querySelector(".primario");
-        btn.disabled = true;
-        $("#antigua-error").textContent = "";
-        try {
-          const r = await A.traerAntigua({ password: ev.target.password.value, token: ev.target.token.value });
-          IR.ui.cerrarHoja();
-          IR.ui.aviso(`Traídos ${r.sesiones} entrenos y ${r.rutinas} rutinas`);
-          render(true);
-        } catch (e) {
-          $("#antigua-error").textContent = e.code === "BAD_PASSWORD" ? "Esa no es la contraseña de la app de antes" : e.message;
-          btn.disabled = false;
-        }
-      });
-    },
     ajToken() {
       IR.ui.hoja(`<h3>Token de GitHub</h3>
         <form class="form" id="f-token">
