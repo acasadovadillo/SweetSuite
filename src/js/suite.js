@@ -20,7 +20,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.4.0";
+  const VERSION = "1.5.0";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -35,16 +35,21 @@
   // La sesión, solo en memoria
   // (en una empresa, «contrasena» es la del representante y «empresaPw» la de la empresa)
   const S = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-              representante: null, empresaPw: null, resumenes: {} };
+              representante: null, empresaPw: null, resumenes: {}, admin: null };
   const SIN_SESION = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-                       representante: null, empresaPw: null, resumenes: {} };
+                       representante: null, empresaPw: null, resumenes: {}, admin: null };
 
   const limpiar = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const cuentaDe = (u) => CAT.cuentas.find((c) => c.usuario === limpiar(u));
-  const appDe = (id) => CAT.apps.find((a) => a.id === id);
+  // (la cuenta Admin no tiene apps: su «app» es la Administración)
+  const appDe = (id) => CAT.apps.find((a) => a.id === id) || (id === "admin" ? { id: "admin", nombre: "Administración" } : undefined);
   const misAppsDe = (c) => (c ? CAT.apps.filter((a) => c.apps.indexOf(a.id) >= 0) : []);
   const misApps = () => misAppsDe(S.cuenta);
   const esEmpresa = (c) => !!c && c.tipo === "organizacion";
+  // La cuenta Admin: una y solo una (si hubiera dos en cuentas.json, ninguna vale)
+  const esAdmin = (c) => !!c && c.tipo === "admin" && CAT.cuentas.filter((x) => x.tipo === "admin").length === 1;
+  // Los tokens de la cuenta: los de sus apps y, para el Admin, el suyo
+  const conToken = (c) => misAppsDe(c).concat(esAdmin(c) ? [{ id: "admin", nombre: "Admin" }] : []);
   // El usuario con el que cada app guarda el token: en una empresa, uno por representante
   const usuarioToken = () => S.cuenta.usuario + (S.representante ? "@" + S.representante.usuario : "");
   const iniciales = (n) => String(n || "").split(/\s+/).filter(Boolean).slice(0, 2).map((w) => w[0]).join("").toUpperCase();
@@ -189,6 +194,7 @@
       if (!limpiar(f.usuario.value)) { errorEntrada("Escribe tu usuario"); f.usuario.focus(); return; }
       if (!pw) { errorEntrada("Escribe tu contraseña"); f.contrasena.focus(); return; }
       if (esEmpresa(cuenta)) { errorEntrada(cuenta.nombre + " es una empresa: elige «Empresa» arriba"); return; }
+      if (cuenta && cuenta.tipo === "admin" && !esAdmin(cuenta)) { errorEntrada("En cuentas.json hay más de una cuenta Admin: no entra ninguna"); return; }
       // Usuario que no existe o contraseña que no vale: el mismo aviso, para
       // no decirle a nadie qué cuentas hay
       if (!cuenta) { errorEntrada("Usuario o contraseña incorrectos"); f.contrasena.value = ""; return; }
@@ -462,12 +468,13 @@
     T.aplicarAcento(S.prefs.acento);
     marcarActividad();
     await cargarResumenes();
-    const caducan = misAppsDe(cuenta).filter((a) => avisoToken(a.id));
+    const caducan = conToken(cuenta).filter((a) => avisoToken(a.id));
     if (caducan.length) setTimeout(() => aviso(caducan.map((a) => a.nombre + ": " + avisoToken(a.id).toLowerCase()).join(" · "), "pendiente"), 600);
     $("#avatar").textContent = iniciales(cuenta.nombre);
     $("#nombre-usuario").textContent = cuenta.nombre + (S.representante ? " · " + S.representante.nombre : "");
     $("#marca-nombre").textContent = cuenta.nombre;
     pintarMenus();
+    if (esAdmin(cuenta)) S.admin = window.SweetAdmin.crearVista(ctxAdmin);
     const apps = misApps();
     // Con una sola app no hay nada que elegir: se entra en ella
     // Si se llegó con una app en la dirección (#app/ironrack, desde la dirección
@@ -762,10 +769,13 @@
   // ── Pintar ──
   const ICONO = (id) => `<svg viewBox="0 0 24 24"><use href="#i-${id}"/></svg>`;
   function pintarMenus() {
-    const apps = misApps();
-    $("#nav-principal").innerHTML = `<a href="#inicio" data-vista="inicio">${ICONO("inicio")}Inicio</a>`;
+    const apps = misApps(), admin = esAdmin(S.cuenta);
+    $("#nav-principal").innerHTML = admin
+      ? `<a href="#inicio" data-vista="inicio">${ICONO("admin")}Administración</a>`
+      : `<a href="#inicio" data-vista="inicio">${ICONO("inicio")}Inicio</a>`;
+    $("#nav-apps").previousElementSibling.hidden = !apps.length;   // la etiqueta «Apps»
     $("#nav-apps").innerHTML = apps.map((a) => `<a href="#app/${a.id}" data-app="${a.id}">${ICONO(a.id)}${esc(a.nombre)}<i class="punto" data-punto="${a.id}"></i></a>`).join("");
-    $("#tabs").innerHTML = `<a href="#inicio" data-vista="inicio">${ICONO("inicio")}Inicio</a>` +
+    $("#tabs").innerHTML = (admin ? `<a href="#inicio" data-vista="inicio">${ICONO("admin")}Administración</a>` : `<a href="#inicio" data-vista="inicio">${ICONO("inicio")}Inicio</a>`) +
       apps.map((a) => `<a href="#app/${a.id}" data-app="${a.id}">${ICONO(a.id)}${esc(a.nombre)}</a>`).join("") +
       `<a href="#cuenta" data-vista="cuenta">${ICONO("ajustes")}Cuenta</a>`;
     $("#version").textContent = VERSION;
@@ -952,6 +962,10 @@
   }
 
   function vistaInicio() {
+    if (S.admin) {
+      if (!S.admin.cargado()) S.admin.cargar().then(() => { if (vistaActual === "inicio") pintar(); });
+      return S.admin.html();
+    }
     const apps = misApps();
     const provisional = S.llavero.provisional
       ? `<div class="tarjeta" style="border-color:var(--acento-linea);background:var(--acento-suave)">
@@ -997,7 +1011,8 @@
         ${fila("Contraseñas", "Hacen falta la de la empresa y la tuya. Para cambiar la de la empresa, o si un representante cambia la suya, se entra con la clave de recuperación de la empresa («¿Has olvidado una contraseña?» en la entrada).", "", "apilar")}
       </div>` : `<div class="tarjeta filas">
         ${fila("Usuario", "Con el que entras en SweetSuite.", `<code>${esc(S.cuenta.usuario)}</code>`)}
-        ${fila("Tus apps", misApps().map((a) => esc(a.nombre)).join(" · "), "")}
+        ${esAdmin(S.cuenta) ? fila("Tipo de cuenta", "Administración: da de alta y de baja las demás cuentas. No tiene apps ni datos.", "")
+          : fila("Tus apps", misApps().map((a) => esc(a.nombre)).join(" · "), "")}
         ${fila("Contraseña", "La misma para todas tus apps. Cambiarla no toca tus datos.", '<button class="btn" data-a="cambiarContrasena">Cambiar</button>')}
       </div>`,
     recuperacion: () => `<div class="tarjeta filas">
@@ -1033,7 +1048,7 @@
         </div>
         <h2>${S.representante ? "Tus tokens en " + esc(S.cuenta.nombre) : "Tus tokens"}</h2>
         <p class="nota" style="margin:-2px 0 10px">GitHub no deja que SweetSuite lea cuándo caduca un token: apúntalo aquí y te avisaré ${AVISO_DIAS} días antes, en el inicio.</p>
-        <div class="tarjeta filas">${misApps().map((a) => {
+        <div class="tarjeta filas">${conToken(S.cuenta).map((a) => {
           const tk = avisoToken(a.id);
           return fila("Token de " + esc(a.nombre), tk ? esc(tk) : caducidad(a.id) ? "Caduca el " + new Date(caducidad(a.id) + "T00:00:00").toLocaleDateString("es-ES") : "Sin fecha apuntada",
             `<input class="campo" type="date" data-cambio="caducidad" data-app="${a.id}" value="${esc(caducidad(a.id))}" aria-label="Caducidad del token de ${esc(a.nombre)}">`, "apilar");
@@ -1199,6 +1214,8 @@
     },
   };
   document.addEventListener("click", (ev) => {
+    const adm = ev.target.closest("[data-adm]");
+    if (adm && S.admin) { ev.preventDefault(); S.admin.accion(adm); return; }
     const el = ev.target.closest("[data-a]");
     if (!el || !ACC[el.dataset.a]) return;
     ev.preventDefault();
@@ -1216,8 +1233,18 @@
 
   // Cerrar la pestaña con cambios sin subir: el navegador pregunta
   window.addEventListener("beforeunload", (ev) => {
-    if (Object.keys(S.apis).some((id) => S.apis[id].pendiente && S.apis[id].pendiente())) { ev.preventDefault(); ev.returnValue = ""; }
+    if (Object.keys(S.apis).some((id) => S.apis[id].pendiente && S.apis[id].pendiente()) ||
+        (S.admin && S.admin.avisoSalir())) { ev.preventDefault(); ev.returnValue = ""; }
   });
+
+  // Lo que la Administración (admin.js) usa de aquí
+  const ctxAdmin = {
+    E, L, esc, ls, aviso, dialogo, cerrarDialogo, confirmar, reconciliar, preguntarCaducidad,
+    fila: (...a) => fila(...a),
+    cuenta: () => S.cuenta, maestra: () => S.maestra,
+    catalogo: () => CAT, ponerCatalogo: (c) => { CAT = c; },
+    repintar: () => { if (S.cuenta && vistaActual === "inicio") pintar(); },
+  };
 
   // ── Lo que las apps ven: window.SweetSuite ──
   window.SweetSuite = {
@@ -1260,7 +1287,14 @@
   // ── Arranque ──
   async function iniciar() {
     try {
-      const r = await fetch("cuentas.json?" + Date.now(), { cache: "no-store" });
+      let r = null;
+      // En desarrollo, la que haya guardado el Admin en el GitHub de pruebas, si la hay
+      if (!E.prod) {
+        const c = E.admin.cuentas;
+        r = await fetch(`/__dev/raw/${c.owner}/${c.repo}/${c.branch}/${c.ruta}?${Date.now()}`, { cache: "no-store" }).catch(() => null);
+        if (r && !r.ok) r = null;
+      }
+      if (!r) r = await fetch("cuentas.json?" + Date.now(), { cache: "no-store" });
       CAT = await r.json();
     } catch (e) {
       $("#entrada").hidden = false;

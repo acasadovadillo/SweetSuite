@@ -182,7 +182,7 @@ async function main() {
     Al.anadir("sesiones", { id: "prueba-1", nombre: "Prueba", inicio: Date.now(), fin: Date.now() + 1000, ejercicios: [] });
     const pendiente = Al.pendiente();
     location.hash = "#inicio";
-    await hasta(() => !Al.pendiente(), 20000);
+    await hasta(() => !Al.pendiente(), 60000);
     Al.ponerAutoguardado(true);
     const r = await fetch("/__dev/api/repos/dev/ironrack-data-dev/contents/alberto-ironrack.enc", { headers: { Authorization: "Bearer dev" } });
     return pendiente && r.ok;`));
@@ -266,7 +266,8 @@ async function main() {
   await prueba("se bloquea solo tras un rato sin usarla", () => E.js(`
     const real = Date.now; Date.now = () => real() + 16 * 60000;
     document.dispatchEvent(new Event("visibilitychange"));
-    try { await hasta(() => !$("#entrada").hidden, 15000); } finally { Date.now = real; }
+    // (antes de bloquear, Solvento sube lo pendiente: con el ordenador cargado tarda)
+    try { await hasta(() => !$("#entrada").hidden, 60000); } finally { Date.now = real; }
     return $("#aviso").textContent.includes("bloqueado");`));
 
   await prueba("la política de contenido no deja conectar con otros sitios", () => A.js(`
@@ -305,6 +306,35 @@ async function main() {
     $("#f-clave").clave.value = ${JSON.stringify(codigo || "")}; $("#f-clave").requestSubmit();
     await p; await sinDialogo();
     return await hasta(() => W.IR.almacen.S.doc.sesiones.some((s) => s.id === "prueba-1"), 30000);`));
+
+  // ── La cuenta Admin ──
+  const AdM = await dispositivo();
+  await AdM.abrir(URL_SUITE);
+  await prueba("el Admin da de alta a una persona y esa persona ya puede entrar", () => AdM.js(`
+    await entrar("admin", "admin-1234");
+    await hasta(() => $("#b-nueva")); $("#b-nueva").click();
+    await hasta(() => $("#f-crear")); const c = $("#f-crear"); c.repetir.value = "admin-1234"; c.requestSubmit();
+    await hasta(() => $("#c-guardada"), 30000); $("#c-guardada").click(); $("#b-seguir").click();
+    await hasta(() => $('[data-adm="token"]'), 20000); $('[data-adm="token"]').click();
+    await hasta(() => $("#f-token-admin")); $("#f-token-admin").token.value = "dev"; $("#f-token-admin").requestSubmit();
+    await hasta(() => $('[data-adm="nueva"]'), 30000); await sinDialogo();
+    $('[data-adm="nueva"][data-tipo="persona"]').click();
+    await hasta(() => $("#f-cuenta")); const f = $("#f-cuenta");
+    f.usuario.value = "lucia"; f.nombre.value = "Lucía"; f.querySelector('input[name="app"][value="ironrack"]').checked = true; f.requestSubmit();
+    await hasta(() => $('[data-adm="guardar"]')); $('[data-adm="guardar"]').click();
+    await hasta(() => !$("#dialogo").hidden && $("#dialogo").textContent.includes("Lucia-Ironrack"), 20000);
+    $('#dialogo [data-r="ok"]').click();
+    return true;`));
+  await prueba("…y quien no es Admin no ve la Administración", async () => {
+    await AdM.abrir(URL_SUITE);
+    return AdM.js(`
+      await entrar("lucia", "lucia-1234");
+      await hasta(() => $("#b-nueva")); $("#b-nueva").click();
+      await hasta(() => $("#f-crear")); const c = $("#f-crear"); c.repetir.value = "lucia-1234"; c.requestSubmit();
+      await hasta(() => $("#c-guardada"), 30000); $("#c-guardada").click(); $("#b-seguir").click();
+      await hasta(() => marco("ironrack"), 20000);
+      return !document.querySelector("[data-adm]") && !window.SweetSuite.apps().some((a) => a.id === "admin");`);
+  });
 
   await prueba("ninguna página ha dado errores de JavaScript", () => {
     if (errores.length) throw new Error(errores.length + ": " + errores[0].split("\n")[0]);

@@ -128,6 +128,48 @@ await prueba("las preferencias y los datos pequeños van cifrados y se leen", as
     !JSON.stringify(conP).includes("599cf3");
 });
 
+// ── La Administración (src/js/admin.js) ─────────────────────────────────────
+console.log("\nAdministración");
+const ca = contexto();
+vm.runInContext(leer("src/js/admin.js"), ca);
+const AD = ca.SweetAdmin;
+const cat = JSON.parse(leer("cuentas.json"));
+await prueba("la lista de cuentas de verdad es válida y tiene un solo Admin", () => {
+  const e = AD.validar(cat);
+  if (e.length) throw new Error(e[0]);
+  return cat.cuentas.filter((c) => c.tipo === "admin").length === 1;
+});
+await prueba("dos cuentas Admin no valen", () => {
+  const otro = JSON.parse(JSON.stringify(cat)); otro.cuentas.push({ usuario: "admin2", nombre: "Otro", tipo: "admin", apps: [] });
+  return AD.validar(otro).some((e) => e.includes("Admin"));
+});
+await prueba("dar de alta una persona; no se puede repetir usuario ni llamarse «admin»", async () => {
+  const c = AD.alta(cat, { usuario: "Lucía", nombre: "Lucía", tipo: "persona", apps: ["solvento"] });
+  const nueva = c.cuentas.find((x) => x.usuario === "lucia");
+  return !!nueva && c.cuentas[c.cuentas.length - 1].tipo === "admin" && AD.validar(c).length === 0 &&
+    (await falla(Promise.resolve().then(() => AD.alta(c, { usuario: "lucia", nombre: "Otra", tipo: "persona" })), "REPETIDA")) &&
+    (await falla(Promise.resolve().then(() => AD.alta(cat, { usuario: "admin", nombre: "X", tipo: "persona" })), "ADMIN"));
+});
+await prueba("un representante tiene que ser una persona dada de alta", () => {
+  const c = AD.alta(cat, { usuario: "club", nombre: "Club", tipo: "organizacion", apps: ["solvento"], representantes: ["nadie"] });
+  return AD.validar(c).some((e) => e.includes("no es una persona"));
+});
+await prueba("dar de baja quita también de las empresas que representaba; al Admin no se le da de baja", async () => {
+  const c = AD.baja(cat, "alberto");
+  return !c.cuentas.some((x) => x.usuario === "alberto") && c.cuentas.find((x) => x.usuario === "abies").representantes.length === 0 &&
+    (await falla(Promise.resolve().then(() => AD.baja(cat, "admin")), "ADMIN"));
+});
+await prueba("dice qué tokens crear para lo nuevo, sin tildes y solo sobre su repositorio", () => {
+  let c = AD.alta(cat, { usuario: "lucia", nombre: "Lucía", tipo: "persona", apps: ["solvento"] });
+  c = AD.editar(c, "abies", { representantes: ["alberto", "lucia"] });
+  const t = AD.tokensQueCrear(cat, c, { solvento: { repo: "Solvento-Data" }, ironrack: { repo: "Ironrack-Data" } });
+  return t.map((x) => x.nombre).sort().join() === "ABIES-Lucia-Solvento,Lucia-Solvento" && t.every((x) => x.acceso.join() === "Solvento-Data,Solvento");
+});
+await prueba("cuentas.json se escribe como a mano y se vuelve a leer igual", () => {
+  const txt = AD.formatear(cat);
+  return JSON.stringify(JSON.parse(txt)) === JSON.stringify(cat) && txt.includes('\n    { "usuario": "alberto"');
+});
+
 // ── La mezcla de Ironrack ───────────────────────────────────────────────────
 console.log("\nIronrack: dos dispositivos");
 const nada = () => {};

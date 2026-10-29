@@ -11,11 +11,11 @@
  * Al instalarse se guarda todo lo que hace falta para abrir sin conexión: lo
  * de SweetSuite y lo que piden los index.html de cada app.
  */
-const VERSION = "sweetsuite-1.4.0";
+const VERSION = "sweetsuite-1.5.0";
 const FUENTES = "sweetsuite-fuentes";
 const BASE = [
   "./", "./index.html", "./manifest.json", "./cuentas.json", "./version.json",
-  "./src/css/suite.css", "./src/js/tema.js", "./src/js/entorno.js", "./src/js/llavero.js", "./src/js/suite.js",
+  "./src/css/suite.css", "./src/js/tema.js", "./src/js/entorno.js", "./src/js/llavero.js", "./src/js/admin.js", "./src/js/suite.js",
   "./img/icono.svg", "./img/icono-180.png", "./img/icono-192.png", "./img/icono-512.png", "./img/contornos.svg",
 ];
 const APPS = ["./apps/solvento/", "./apps/ironrack/"];

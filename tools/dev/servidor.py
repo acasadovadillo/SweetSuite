@@ -102,7 +102,7 @@ def sembrar():
         with open(destino, "w", encoding="utf-8") as f:
             json.dump(cifrar(doc, CLAVE_DEV), f)
         hechas.append(ruta)
-    for repo in ("solvento-data-dev", "ironrack-data-dev", "solvento-dev"):
+    for repo in ("solvento-data-dev", "ironrack-data-dev", "solvento-dev", "sweetsuite-dev", "sweetsuite-admin-dev"):
         os.makedirs(os.path.join(DATOS, repo), exist_ok=True)
     return hechas
 
@@ -216,8 +216,8 @@ class Manejador(SimpleHTTPRequestHandler):
                 f = ruta_datos(partes[4], "/".join(partes[6:]))
             except ValueError:
                 return self._bytes(404, b"404: Not Found")
-            # El repositorio de la app de Solvento (solvento-dev) es público, como el de verdad
-            if partes[4].lower() != "solvento-dev" and not self._token_valido():
+            # Los repositorios de las apps (solvento-dev, sweetsuite-dev) son públicos, como los de verdad
+            if partes[4].lower() not in ("solvento-dev", "sweetsuite-dev") and not self._token_valido():
                 return self._bytes(404, b"404: Not Found")
             if not os.path.isfile(f):
                 return self._bytes(404, b"404: Not Found")

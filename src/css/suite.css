@@ -437,6 +437,15 @@ select.campo, input[type="date"].campo { width: auto; min-width: 160px; cursor: 
 .version-nueva .btn { min-height: 32px; padding: 6px 12px; font-size: 13px; }
 @media (max-width: 640px) { .version-nueva { bottom: calc(env(safe-area-inset-bottom) + var(--tabs) + 12px); } }
 
+/* Administración */
+.admin-cambios { display: flex; align-items: center; justify-content: space-between; gap: 10px 16px; flex-wrap: wrap; border-color: var(--acento-linea); background: var(--acento-suave); }
+.admin-cambios .botones { margin: 0; }
+.usuario-admin { font-family: var(--mono); font-size: 12px; font-weight: 400; color: var(--suave); margin-left: 6px; }
+.marcas { border: 1px solid var(--borde); border-radius: 10px; padding: 8px 12px 10px; margin: 0; display: flex; flex-wrap: wrap; gap: 6px 16px; }
+.marcas legend { font-size: 13px; font-weight: 500; color: var(--texto-medio); padding: 0 4px; }
+.marcas label { flex-direction: row; align-items: center; gap: 7px; font-size: 14px; color: var(--texto); }
+.marcas input { accent-color: var(--acento); }
+
 /* El menú de la cuenta */
 .menu-flotante {
   position: fixed; z-index: 950; min-width: 220px; padding: 5px;

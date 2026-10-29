@@ -25,6 +25,13 @@
           ironrack: { owner: "acasadovadillo", repo: "Ironrack-Data", branch: "main" } }
       : { solvento: { owner: "dev", repo: "solvento-data-dev", branch: "main" },
           ironrack: { owner: "dev", repo: "ironrack-data-dev", branch: "main" } },
+    // La cuenta Admin: su llavero, en un repositorio privado aparte, y la lista
+    // de cuentas, que es este mismo repositorio (cuentas.json)
+    admin: prod
+      ? { llavero: { owner: "acasadovadillo", repo: "SweetSuite-Admin", branch: "main" },
+          cuentas: { owner: "acasadovadillo", repo: "SweetSuite", branch: "main", ruta: "cuentas.json" } }
+      : { llavero: { owner: "dev", repo: "sweetsuite-admin-dev", branch: "main" },
+          cuentas: { owner: "dev", repo: "sweetsuite-dev", branch: "main", ruta: "cuentas.json" } },
     // Donde guardaban las apps antes de SweetSuite. Solo se lee, para traer
     // los datos de cada cuenta la primera vez.
     antiguo: prod
