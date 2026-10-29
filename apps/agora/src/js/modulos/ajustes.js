@@ -14,7 +14,7 @@
     { id: "cuenta", titulo: "Mi cuenta", sub: "Con quién has entrado y qué puedes modificar." },
     { id: "apariencia", titulo: "Apariencia", sub: "El tema de este ordenador y tu color de acento." },
     { id: "sincronizacion", titulo: "Sincronización", sub: "La copia cifrada de la asociación en GitHub, la que comparte la junta." },
-    { id: "seguridad", titulo: "Seguridad", sub: "Tu cuenta de SweetSuite: contraseña, clave de recuperación y bloqueo." },
+    { id: "seguridad", titulo: "Seguridad", sub: "Tu cuenta de SweetSuite y los datos de la app de antes." },
     { id: "privacidad", titulo: "Privacidad", sub: "Dónde están los datos y buenas prácticas con los de los socios." },
     { id: "acerca", titulo: "Acerca de", sub: "La versión y la autoría de la aplicación." },
   ];
@@ -121,7 +121,64 @@
         '<button type="button" class="btn btn-secundario" id="a-cuenta">Abrir</button>') +
       fila("Bloquear", "Vuelve a la entrada de SweetSuite. También se bloquea sola tras un rato sin usarla (lo eliges en tu cuenta).",
         '<button type="button" class="btn btn-secundario" id="a-bloquear">Bloquear</button>') +
+      "</div>" +
+      "<h3>La app de antes</h3>" +
+      '<div class="filas">' +
+      fila("Traer una copia de antes", WA.Sesion.esAdmin
+          ? "El archivo .json que descargabas en «ABIES · Gestión». Se abre con lo de entonces y se junta con lo que ya haya aquí; la asociación y la configuración, las de la copia."
+          : "Lo hace Presidencia, una sola vez.",
+        WA.Sesion.esAdmin ? '<button type="button" class="btn btn-secundario" id="a-traer">Elegir copia…</button>' : "") +
       "</div>";
+  }
+
+  /** Traer la copia de antes: elegir el archivo, pedir lo de entonces y juntarla. */
+  async function traerCopia() {
+    var archivo = await UI.elegirArchivo(".json,application/json");
+    if (!archivo) return;
+    var lectura;
+    try { lectura = WA.Copia.leer(archivo.texto); } catch (e) { UI.aviso(e.message, "error"); return; }
+    var pide = WA.Traer.quePide(lectura);
+    var fecha = lectura.creada ? " del " + esc(WA.Fechas.corta(lectura.creada.slice(0, 10))) : "";
+    var clave = function (nombre, etiqueta) {
+      return UI.campo({ nombre: nombre, etiqueta: etiqueta, tipo: "password", requerido: true, atributos: 'autocomplete="off"' });
+    };
+    var campos = pide === "usuario"
+      ? "<p>Copia de ABIES" + fecha + ". Ábrela con <strong>tu</strong> nombre, cargo y contraseñas de la app de antes (vale la cuenta de administración o cualquier usuario de entonces).</p>" +
+        '<form class="formulario" novalidate><div class="rejilla">' + UI.campo({ nombre: "nombre", etiqueta: "Nombre", requerido: true }) +
+        UI.campo({ nombre: "cargo", etiqueta: "Cargo", requerido: true }) + "</div>" +
+        clave("contrasena", "Contraseña personal") + clave("contrasenaArchivo", "Contraseña del archivo") + "</form>"
+      : pide === "contrasena"
+        ? "<p>Copia antigua" + fecha + ", cifrada con una sola contraseña.</p>" + '<form class="formulario" novalidate>' + clave("contrasenaCopia", "Contraseña de la copia") + "</form>"
+        : "<p>Copia <strong>sin cifrar</strong>" + fecha + ". Cuando termines, bórrala: lleva los datos de los socios en claro.</p><form class=\"formulario\" novalidate></form>";
+    var d = null, hecho = null;
+    await UI.dialogo({
+      titulo: "Traer una copia de antes",
+      contenido: campos + '<p class="campo-ayuda">Los registros se juntan con los que ya haya; nada se borra. Los usuarios de entonces no se traen: quién entra lo dice SweetSuite.</p>',
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Traer", valor: "enviar", estilo: "btn-primario" }],
+      alAbrir: function (dlg) { d = dlg; },
+      // Se abre antes de cerrar: si lo de entonces no vale, se dice y sigue abierta
+      validar: function (form) {
+        var btn = d.querySelector('[data-valor="enviar"]'), error = d.querySelector(".traer-error");
+        if (!error) { error = document.createElement("p"); error.setAttribute("role", "status"); form.appendChild(error); }
+        error.className = "campo-ayuda traer-error";
+        error.textContent = "Abriendo la copia…";
+        btn.disabled = true;
+        WA.Sesion.traerCopia(lectura, UI.leerFormulario(form)).then(function (r) {
+          hecho = r;
+          d.querySelector('.dialogo-botones [data-valor="cancelar"]').click();
+        }).catch(function (e) {
+          error.className = "campo-error traer-error";
+          error.textContent = e.codigo === "ACCESO" ? "No se abre: revisa el nombre, el cargo y las dos contraseñas de entonces."
+            : e.codigo === "CONTRASENA" ? "La contraseña de la copia no es correcta." : (e.message || String(e));
+          btn.disabled = false;
+        });
+        return false;
+      },
+    });
+    if (!hecho) return;
+    UI.aviso("Copia traída: " + hecho.socios + (hecho.socios === 1 ? " socio" : " socios") + " y " + hecho.archivos +
+      (hecho.archivos === 1 ? " adjunto" : " adjuntos") + (hecho.faltan ? ". Faltan " + hecho.faltan + " adjuntos que no venían en la copia." : "."));
+    location.hash = "#/inicio";
   }
 
   function privacidad() {
@@ -196,6 +253,8 @@
       UI.aviso(WA.Nube.estado === "ok" ? "Al día con GitHub." : WA.Nube.textoEstado(), WA.Nube.estado === "ok" ? "" : "error");
       await WA.App.repintar();
     });
+    var btr = cont.querySelector("#a-traer");
+    if (btr) btr.addEventListener("click", traerCopia);
     var bc = cont.querySelector("#a-cuenta"), bb = cont.querySelector("#a-bloquear");
     if (bc) bc.addEventListener("click", function () { WA.Suite.cuenta(); });
     if (bb) bb.addEventListener("click", function () { WA.Suite.bloquear(); });

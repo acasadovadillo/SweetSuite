@@ -224,6 +224,33 @@
         reemplazar: function (otro) { return reemplazar(abierto, otro); },
       }, { nuevo: nuevo });
     },
+    /**
+     * Trae una copia de la app de antes (datos/traer.js) y la junta con lo de
+     * ahora. Solo Presidencia. Primero se abre (si las credenciales no valen,
+     * no se toca nada); después, sus adjuntos pasan a este dispositivo, cifrados
+     * con la llave de ahora y pendientes de subir, y el documento se mezcla.
+     */
+    traerCopia: async function (lectura, o) {
+      exigirAbierta();
+      if (!estado.cuentas.suite) throw new Error("Solo dentro de SweetSuite.");
+      if (!Sesion.esAdmin) throw new Error("Traer la copia de antes es cosa de Presidencia.");
+      var abierta = await WA.Traer.abrir(lectura, o);
+      await cola;
+      var llave = estado.cuentas.llaveDatos;
+      for (var i = 0; i < abierta.adjuntos.length; i++) {
+        var id = abierta.adjuntos[i][0];
+        await WA.Boveda.escribirArchivo(id, await WA.Cripto.cifrarBytes(abierta.adjuntos[i][1], llave));
+        WA.Nube.adjuntoNuevo(id);
+      }
+      var doc = estado.doc, mezcla = WA.Traer.aplicar(doc, abierta.doc);
+      Object.keys(doc).forEach(function (k) { delete doc[k]; });
+      Object.assign(doc, mezcla);
+      var socios = abierta.doc.socios.length;
+      await estado.repo.anotar("alta", "copias", "Copia de antes: " + socios + (socios === 1 ? " socio" : " socios") +
+        " y " + abierta.adjuntos.length + (abierta.adjuntos.length === 1 ? " adjunto" : " adjuntos"));
+      return { socios: socios, archivos: abierta.adjuntos.length, faltan: abierta.faltan };
+    },
+
     /** Espera a que acaben los guardados en curso (SweetSuite, antes de salir). */
     esperar: function () { return cola; },
 

@@ -331,6 +331,28 @@ async function main() {
       return sinAdjunto;`);
   });
 
+  await prueba("Agora: Presidencia trae la copia de antes y le llega al resto de la junta", async () => {
+    const traida = await E.js(`
+      const WA = marco("agora").WA;
+      // Una copia como las de «ABIES · Gestión», con su cuenta de administración de entonces
+      const est = await WA.Cuentas.crear({ contrasenaArchivo: "archivo-antes", contrasenaAdmin: "admin-antes",
+        doc: WA.Esquema.documentoVacio(new Date("2025-01-10T10:00:00Z")) }, 1000);
+      est.doc.asociacion.nif = "G11111111";
+      est.doc.socios = [{ id: "antes-1", numero: 7, nombre: "Socia", apellidos: "De antes", fechaAlta: "2025-02-01",
+        creado: "2025-02-01T10:00:00.000Z", modificado: "2025-02-01T10:00:00.000Z" }];
+      const lectura = WA.Copia.leer(JSON.stringify(WA.Copia.sobreBoveda(await WA.Cuentas.sellar(est), {})));
+      let mal = false;
+      try { await WA.Sesion.traerCopia(lectura, { nombre: "ABIES", cargo: "Administración", contrasena: "mala", contrasenaArchivo: "archivo-antes" }); }
+      catch (e) { mal = e.codigo === "ACCESO"; }
+      const r = await WA.Sesion.traerCopia(lectura, { nombre: "ABIES", cargo: "Administración", contrasena: "admin-antes", contrasenaArchivo: "archivo-antes" });
+      await WA.Sesion.esperar(); await WA.Nube.subir();
+      return mal && r.socios === 1 && WA.Nube.estado === "ok";`);
+    if (!traida) throw new Error("no se trajo la copia en E");
+    return F.js(`const W = marco("agora"); await W.WA.Nube.sincronizar({ forzar: true });
+      return (await W.WA.Sesion.datos.leer("asociacion")).nif === "G11111111" &&
+        (await W.WA.Sesion.datos.listar("socios")).some((s) => s.id === "antes-1");`);
+  });
+
   await prueba("se bloquea solo tras un rato sin usarla", () => E.js(`
     const real = Date.now; Date.now = () => real() + 16 * 60000;
     document.dispatchEvent(new Event("visibilitychange"));
