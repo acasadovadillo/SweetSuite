@@ -8,8 +8,10 @@
  *   #/facturas/imprimir/<id>          versión para imprimir o guardar en PDF
  *
  * Las emitidas nacen como BORRADOR (sin número) y al «Emitir» reciben el
- * siguiente número correlativo y quedan bloqueadas. Corregir una factura ya
- * emitida suele requerir una factura rectificativa: verificar con asesoría.
+ * siguiente número correlativo y quedan bloqueadas. Para corregir una ya
+ * emitida se hace una RECTIFICATIVA («Más…» → «Hacer rectificativa»): otra
+ * factura, con su serie (R-2026-0001), que dice cuál corrige y por qué.
+ * Requisitos: verificar con asesoría.
  * La lógica está en logica/facturas.js (con tests).
  */
 (function (raiz) {
@@ -20,6 +22,14 @@
   var ESTADO = { borrador: ["estado-neutro", "Borrador"], pendiente: ["estado-aviso", "Pendiente"], parcial: ["estado-aviso", "Cobro parcial"],
     cobrada: ["estado-ok", "Cobrada"], pagada: ["estado-ok", "Pagada"], anulada: ["estado-neutro", "Anulada"] };
   var TRAT = {}; Fac.TRATAMIENTOS.forEach(function (t) { TRAT[t[0]] = t[1]; });
+  // Una rectificativa en negativo no se cobra: se devuelve
+  function estadoDe(f, e) {
+    if (Fac.totales(f).total < 0 && f.estado === "emitida") {
+      if (e.estado === "pendiente" || e.estado === "parcial") return ["estado-aviso", "Por devolver"];
+      if (e.estado === "cobrada") return ["estado-ok", "Devuelta"];
+    }
+    return ESTADO[e.estado];
+  }
 
   function pestanas(actual) {
     return '<nav class="pestanas" aria-label="Tipo de facturas"><a href="#/facturas"' + (actual === "emitida" ? ' aria-current="page"' : "") + ">Emitidas</a>" +
@@ -53,7 +63,7 @@
       var filas = lista.map(function (f) {
         var tot = Fac.totales(f), e = Fac.estadoPago(f, c.movimientos, c.anticipos);
         if (f.estado !== "anulada" && f.estado !== "borrador") { sumas.base += tot.base; sumas.cuota += tot.cuota; sumas.total += tot.total; sumas.pendiente += Math.max(e.pendiente, 0); }
-        var est = ESTADO[e.estado];
+        var est = estadoDe(f, e);
         return "<tr><td>" + esc(F.corta(f.fecha)) + '</td><th scope="row"><a href="#/facturas/ver/' + encodeURIComponent(f.id) + '">' + esc(f.numero || "(borrador)") + "</a></th>" +
           "<td>" + esc((f.tercero || {}).nombre) + '</td><td class="importe solo-ancho">' + esc(D.formatear(tot.base)) + '</td><td class="importe solo-ancho">' + esc(D.formatear(tot.cuota)) + "</td>" +
           '<td class="importe">' + esc(D.formatear(tot.total)) + '</td><td><span class="estado ' + est[0] + '">' + est[1] + "</span></td></tr>";
@@ -122,6 +132,7 @@
       tercero: { nombre: d.terceroNombre, nif: WA.Validar.normalizar(d.terceroNif), direccion: d.terceroDireccion, email: d.terceroEmail },
       lineas: lineas, retencionPct: Number(String(d.retencionPct || "0").replace(",", ".")) || 0, motivoExencion: d.motivoExencion || "",
       categoriaId: d.categoriaId, proyectoId: d.proyectoId, notas: d.notas, deducible: f.tipo === "recibida" ? !!d.deducible : f.deducible,
+      motivoRectificacion: f.rectifica ? d.motivoRectificacion || "" : f.motivoRectificacion,
     });
   }
 
@@ -134,13 +145,22 @@
     var e = f.id ? Fac.estadoPago(f, c.movimientos, c.anticipos) : null;
     var pagos = f.id ? c.movimientos.filter(function (m) { return m.facturaId === f.id; }) : [];
     var dis = bloqueada ? " disabled" : "";
+    var devolver = esEmitida && Fac.totales(f).total < 0;
+    var rectificadaPor = f.id ? Fac.rectificativasDe(f, c.facturas) : [];
+    var enlace = function (x) { return '<a href="#/facturas/ver/' + encodeURIComponent(x.id) + '">' + esc(x.numero || "(borrador)") + "</a>"; };
 
     cont.innerHTML =
       '<p class="miga"><a href="#/facturas' + (esEmitida ? "" : "/recibidas") + '">Facturas ' + (esEmitida ? "emitidas" : "recibidas") + "</a> › " + esc(f.numero || (nueva ? "Nueva" : "Borrador")) + "</p>" +
-      '<div class="cabecera-pagina"><h1>' + (esEmitida ? "Factura " : "Factura recibida ") + esc(f.numero || (esEmitida ? "(borrador)" : "")) + "</h1>" +
-      (e ? '<span class="estado ' + ESTADO[e.estado][0] + '">' + ESTADO[e.estado][1] + "</span>" : "") + "</div>" + WA.UI.firma(f) +
-      (bloqueada && f.estado === "emitida" ? '<div class="caja-aviso">Factura emitida: está bloqueada. Para corregirla lo habitual es hacer una factura rectificativa (verificar con asesoría).</div>' : "") +
+      '<div class="cabecera-pagina"><h1>' + (f.rectifica ? "Factura rectificativa " : esEmitida ? "Factura " : "Factura recibida ") + esc(f.numero || (esEmitida ? "(borrador)" : "")) + "</h1>" +
+      (e ? '<span class="estado ' + estadoDe(f, e)[0] + '">' + estadoDe(f, e)[1] + "</span>" : "") + "</div>" + WA.UI.firma(f) +
+      (bloqueada && f.estado === "emitida" && !f.rectifica ? '<div class="caja-aviso">Factura emitida: está bloqueada. Para corregirla, «Más…» → «Hacer rectificativa» (verificar con asesoría).</div>' : "") +
+      (rectificadaPor.length ? '<div class="caja-aviso">Rectificada por ' + rectificadaPor.map(enlace).join(", ") + ".</div>" : "") +
       '<form id="f-editor" class="formulario" novalidate><fieldset' + dis + ">" +
+      (f.rectifica ? '<section class="tarjeta"><h2>Qué rectifica</h2><p>Corrige la factura ' +
+        (U.buscar(c.facturas, f.rectifica.id) ? enlace(U.buscar(c.facturas, f.rectifica.id)) : esc(f.rectifica.numero)) + " del " + esc(F.corta(f.rectifica.fecha)) + ".</p>" +
+        UI.campo({ nombre: "motivoRectificacion", etiqueta: "Motivo (aparece en la factura)", tipo: "textarea", filas: 2, valor: f.motivoRectificacion, requerido: true, ancho: "completo",
+          ayuda: "Qué estaba mal y qué se corrige. Las líneas en negativo anulan lo facturado; deja solo las diferencias, o añade las líneas buenas." }) +
+        "</section>" : "") +
       '<section class="tarjeta"><h2>' + (esEmitida ? "Cliente" : "Proveedor") + '</h2><div class="rejilla-12">' +
       UI.campo({ nombre: "terceroNombre", etiqueta: "Nombre o razón social", valor: f.tercero.nombre, requerido: true, clase: "col-7 col-movil-completo", lista: Object.keys(terceros) }) +
       UI.campo({ nombre: "terceroNif", etiqueta: "NIF", valor: f.tercero.nif, clase: "col-5", atributos: 'autocapitalize="characters"' }) +
@@ -174,7 +194,7 @@
       (bloqueada ? "" : esEmitida && f.estado === "borrador"
         ? '<button type="submit" class="btn btn-secundario" data-accion="guardar">Guardar borrador</button><button type="submit" class="btn btn-primario" data-accion="emitir">Emitir factura</button>'
         : '<button type="submit" class="btn btn-primario" data-accion="guardar">Guardar' + (esEmitida ? " cambios" : "") + "</button>") +
-      (f.id && f.estado !== "borrador" && f.estado !== "anulada" && e && e.pendiente > 0 ? '<button type="button" class="btn btn-secundario" id="f-pago">' + (esEmitida ? "Registrar cobro" : "Registrar pago") + "</button>" : "") +
+      (f.id && f.estado !== "borrador" && f.estado !== "anulada" && e && e.pendiente > 0 ? '<button type="button" class="btn btn-secundario" id="f-pago">' + (devolver ? "Registrar devolución" : esEmitida ? "Registrar cobro" : "Registrar pago") + "</button>" : "") +
       (f.id && esEmitida && f.estado !== "borrador" ? '<a class="btn btn-secundario" href="#/facturas/imprimir/' + encodeURIComponent(f.id) + '">Imprimir o PDF</a>' : "") +
       (f.id ? '<button type="button" class="btn btn-peligro-suave" id="f-mas">Más…</button>' : "") +
       "</div></form>" +
@@ -246,7 +266,7 @@
         }
       }
       if (accion === "emitir") {
-        var numero = Fac.siguienteNumero(c.facturas, f.fecha.slice(0, 4), c.config.facturacion.serie);
+        var numero = Fac.siguienteNumero(c.facturas, f.fecha.slice(0, 4), Fac.serieDe(f, c.config.facturacion));
         var ok = await UI.confirmar("Se emitirá con el número " + numero + " y fecha " + F.corta(f.fecha) + ". Después no se podrá editar.",
           { titulo: "Emitir factura", aceptar: "Emitir" });
         if (!ok) return;
@@ -254,14 +274,14 @@
       }
       delete f._desbloqueada;
       var g = await datos.guardar("facturas", f);
-      UI.aviso(accion === "emitir" ? "Factura " + g.numero + " emitida." : "Factura guardada.");
+      UI.aviso(accion === "emitir" ? (f.rectifica ? "Rectificativa " : "Factura ") + g.numero + " emitida." : "Factura guardada.");
       if (nueva || accion === "emitir") location.hash = "#/facturas/ver/" + encodeURIComponent(g.id); else WA.App.repintar();
     });
 
     var bPago = cont.querySelector("#f-pago");
     if (bPago) bPago.addEventListener("click", async function () {
-      if (await U.editarMovimiento(datos, c, null, { tipo: esEmitida ? "ingreso" : "gasto", importe: e.pendiente, facturaId: f.id, categoriaId: f.categoriaId,
-        proyectoId: f.proyectoId, concepto: (esEmitida ? "Cobro factura " : "Pago factura ") + f.numero + " · " + f.tercero.nombre })) WA.App.repintar();
+      if (await U.editarMovimiento(datos, c, null, { tipo: esEmitida && !devolver ? "ingreso" : "gasto", importe: e.pendiente, facturaId: f.id, categoriaId: f.categoriaId,
+        proyectoId: f.proyectoId, concepto: (devolver ? "Devolución factura " : esEmitida ? "Cobro factura " : "Pago factura ") + f.numero + " · " + f.tercero.nombre })) WA.App.repintar();
     });
     var bMas = cont.querySelector("#f-mas");
     if (bMas) bMas.addEventListener("click", async function () {
@@ -269,6 +289,7 @@
       if (f.estado === "borrador" || f.tipo === "recibida") botones.unshift({ texto: "Borrar", valor: "borrar", estilo: "btn-peligro-suave" });
       if (esEmitida && f.estado === "emitida") botones.unshift({ texto: "Anular", valor: "anular", estilo: "btn-peligro-suave" }, { texto: "Desbloquear para corregir", valor: "desbloquear" });
       if (esEmitida && f.estado === "emitida") botones.unshift({ texto: "Duplicar como borrador", valor: "duplicar" });
+      if (esEmitida && f.estado === "emitida" && !f.rectifica) botones.unshift({ texto: "Hacer rectificativa", valor: "rectificar", estilo: "btn-primario" });
       var r = await UI.dialogo({ titulo: "Factura " + (f.numero || ""), contenido: "<p>¿Qué quieres hacer?</p>", botones: botones });
       if (r.valor === "borrar") {
         if (pagos.length) { UI.aviso("Tiene cobros o pagos enlazados: bórralos antes en Tesorería.", "error"); return; }
@@ -286,9 +307,21 @@
           { titulo: "Desbloquear factura", aceptar: "Desbloquear" }))) return;
         f._desbloqueada = true;
         pintarEditor(cont, datos, f, c);
+      } else if (r.valor === "rectificar") {
+        var m = await UI.dialogo({
+          titulo: "Rectificar la factura " + f.numero,
+          contenido: "<p>Se crea un borrador de factura rectificativa, con su propia serie, que dice que corrige esta. Nace con las líneas en negativo: anula la factura entera. Puedes dejar solo las diferencias o añadir las líneas buenas antes de emitirla.</p>" +
+            '<form class="formulario" novalidate>' + UI.campo({ nombre: "motivo", etiqueta: "Motivo", tipo: "textarea", filas: 2, requerido: true, ancho: "completo",
+              ayuda: "Por ejemplo: «Error en el NIF del cliente» o «Se cobró una plaza de más»." }) + "</form>",
+          botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Crear la rectificativa", valor: "enviar", estilo: "btn-primario" }],
+          validar: function (form) { var ok = !!form.elements.motivo.value.trim(); UI.marcarError(form, "motivo", ok ? "" : "Escribe el motivo."); return ok; },
+        });
+        if (m.valor !== "enviar") return;
+        var rect = await datos.guardar("facturas", Fac.rectificativa(f, m.datos.motivo, F.hoy()));
+        location.hash = "#/facturas/ver/" + encodeURIComponent(rect.id);
       } else if (r.valor === "duplicar") {
         var copia = JSON.parse(JSON.stringify(f));
-        delete copia.id; delete copia.creado; delete copia.modificado;
+        delete copia.id; delete copia.creado; delete copia.modificado; delete copia.rectifica; delete copia.motivoRectificacion;
         Object.assign(copia, { estado: "borrador", numero: "", fecha: F.hoy() });
         var g = await datos.guardar("facturas", copia);
         location.hash = "#/facturas/ver/" + encodeURIComponent(g.id);
@@ -308,8 +341,10 @@
       '<article class="factura-impresa">' +
       '<header class="fi-cabecera"><div><h1>' + esc(a.nombre || "Asociación") + "</h1><p>NIF " + esc(a.nif) + "<br>" + esc(dom.linea1) + "<br>" + esc(dom.linea2) +
       (a.email ? "<br>" + esc(a.email) : "") + (a.telefono ? " · " + esc(a.telefono) : "") + "</p></div>" +
-      '<div class="fi-datos"><h2>' + (f.estado === "anulada" ? "FACTURA ANULADA" : "FACTURA") + "</h2><p>Número <strong>" + esc(f.numero) + "</strong><br>Fecha " + esc(F.corta(f.fecha)) +
+      '<div class="fi-datos"><h2>' + (f.estado === "anulada" ? "FACTURA ANULADA" : f.rectifica ? "FACTURA RECTIFICATIVA" : "FACTURA") + "</h2><p>Número <strong>" + esc(f.numero) + "</strong><br>Fecha " + esc(F.corta(f.fecha)) +
       (f.vencimiento ? "<br>Vencimiento " + esc(F.corta(f.vencimiento)) : "") + "</p></div></header>" +
+      (f.rectifica ? '<p class="fi-nota fi-rectifica"><strong>Rectifica la factura ' + esc(f.rectifica.numero) + " del " + esc(F.corta(f.rectifica.fecha)) + ".</strong> Motivo: " +
+        esc(f.motivoRectificacion) + "</p>" : "") +
       '<section class="fi-cliente"><h3>Cliente</h3><p><strong>' + esc(f.tercero.nombre) + "</strong>" + (f.tercero.nif ? "<br>NIF " + esc(f.tercero.nif) : "") +
       (f.tercero.direccion ? "<br>" + esc(f.tercero.direccion) : "") + "</p></section>" +
       '<div class="tabla-envoltorio"><table class="tabla fi-lineas"><thead><tr><th scope="col">Concepto</th><th scope="col" class="importe">Cantidad</th><th scope="col" class="importe">Precio</th><th scope="col">IVA</th><th scope="col" class="importe">Importe</th></tr></thead><tbody>' +

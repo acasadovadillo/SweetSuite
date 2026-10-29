@@ -353,6 +353,33 @@ async function main() {
         (await W.WA.Sesion.datos.listar("socios")).some((s) => s.id === "antes-1");`);
   });
 
+  await prueba("Agora: remesa SEPA, rectificativa y convocatoria con su acta", () => E.js(`
+    const W = marco("agora"), WA = W.WA, d = WA.Sesion.datos, ir = async (h) => { W.location.hash = h; await espera(500); };
+    await ir("#/asociacion");
+    await d.escribir("asociacion", Object.assign(await d.leer("asociacion"), { nombre: "ABIES", nif: "G12345678", iban: "ES9121000418450200051332",
+      identificadorAcreedor: WA.Sepa.identificadorAcreedor("G12345678") }));
+    await ir("#/socios");
+    const s = await d.guardar("socios", { numero: 9, nombre: "Ana", apellidos: "Domiciliada", fechaAlta: "2020-01-01", formaPago: "Domiciliación",
+      iban: "ES9121000418450200051332", mandatoReferencia: "ABIES-0009", mandatoFecha: "2024-01-01" });
+    await ir("#/cuotas");
+    const q = await d.guardar("cuotas", { socioId: s.id, socioNumero: 9, socioNombre: "Ana Domiciliada", periodo: "2026", concepto: "Cuota socio · año 2026", importe: 2400, estado: "pendiente" });
+    const sel = WA.Sepa.seleccionar([q], await d.listar("socios"), "2026-12-01");
+    const xml = WA.Sepa.fichero({ asociacion: await d.leer("asociacion"), incluidas: sel.incluidas, fechaCobro: "2026-12-01" });
+    await ir("#/facturas");
+    const f = await d.guardar("facturas", { tipo: "emitida", estado: "emitida", numero: "2026-0001", fecha: "2026-10-01", tercero: { nombre: "Cliente" },
+      lineas: [{ concepto: "Taller", cantidad: 1, precio: 10000, tratamiento: "sujeto", tipoIva: 21 }] });
+    const r = await d.guardar("facturas", WA.Facturas.rectificativa(f, "Error de importe", "2026-10-29"));
+    await ir("#/facturas/ver/" + r.id);
+    const rect = await hasta(() => W.document.querySelector("h1").textContent.includes("rectificativa"));
+    await ir("#/actas/convocatoria-nueva/junta");
+    const form = await hasta(() => W.document.getElementById("conv")); form.elements.lugar.value = "Local"; form.requestSubmit();
+    await hasta(() => W.location.hash.indexOf("#/actas/convocatoria/") === 0);
+    const conv = (await d.listar("convocatorias"))[0];
+    await ir("#/actas/desde/" + conv.id);
+    (await hasta(() => W.document.getElementById("acta"))).requestSubmit();
+    await hasta(async () => (await d.listar("convocatorias"))[0].actaId);
+    return xml.includes("<NbOfTxs>1</NbOfTxs><CtrlSum>24.00</CtrlSum>") && rect && (await d.listar("actas")).some((a) => a.convocatoriaId === conv.id);`));
+
   await prueba("se bloquea solo tras un rato sin usarla", () => E.js(`
     const real = Date.now; Date.now = () => real() + 16 * 60000;
     document.dispatchEvent(new Event("visibilitychange"));

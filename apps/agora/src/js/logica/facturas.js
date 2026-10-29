@@ -11,7 +11,16 @@
  *                tratamiento: "sujeto" | "exento" | "no_sujeto", tipoIva (21, 10, 4, 0) }],
  *     retencionPct (IRPF, p. ej. 15), deducible (recibidas: si su IVA se deduce),
  *     motivoExencion (texto que debe figurar si hay líneas exentas),
- *     categoriaId, proyectoId, notas }
+ *     categoriaId, proyectoId, notas,
+ *     rectifica: { id, numero, fecha } y motivoRectificacion  (solo las rectificativas) }
+ *
+ * RECTIFICATIVAS: para corregir una factura ya emitida no se toca: se emite
+ * otra, «rectificativa», con su propia serie (R-2026-0001), que dice qué
+ * factura corrige y por qué. Nace con las líneas de la original en negativo
+ * (la anula entera); si solo cambia una parte, se dejan las diferencias, y si
+ * hay que volver a facturar, se añaden las líneas buenas. Su total puede ser
+ * negativo: es lo que hay que devolver al cliente. Requisitos (art. 15 del
+ * Real Decreto 1619/2012): verificar con asesoría.
  *
  * CÁLCULO (todo en céntimos):
  *   · base de cada línea = cantidad × precio, redondeada al céntimo;
@@ -94,6 +103,32 @@
     return prefijo + String(max + 1).padStart(4, "0");
   }
 
+  var SERIE_RECTIFICATIVAS = "R";
+  /** La serie con la que se numera: la de las rectificativas o la normal. */
+  function serieDe(f, facturacion) {
+    var fc = facturacion || {};
+    return f.rectifica ? fc.serieRectificativas || SERIE_RECTIFICATIVAS : fc.serie || "";
+  }
+
+  /** Borrador de rectificativa de una factura emitida: sus líneas en negativo. */
+  function rectificativa(original, motivo, hoy) {
+    if (original.tipo !== "emitida" || original.estado !== "emitida") throw new Error("Solo se rectifica una factura emitida.");
+    var copiaLineas = JSON.parse(JSON.stringify(original.lineas || []));
+    return {
+      tipo: "emitida", estado: "borrador", serie: "", numero: "", fecha: hoy || F.hoy(), fechaOperacion: "", vencimiento: "",
+      tercero: JSON.parse(JSON.stringify(original.tercero || {})),
+      lineas: copiaLineas.map(function (l) { return Object.assign(l, { cantidad: -(Number(l.cantidad) || 0) }); }),
+      retencionPct: original.retencionPct || 0, deducible: original.deducible, motivoExencion: original.motivoExencion || "",
+      categoriaId: original.categoriaId || "", proyectoId: original.proyectoId || "", notas: "",
+      rectifica: { id: original.id, numero: original.numero, fecha: original.fecha }, motivoRectificacion: motivo || "",
+    };
+  }
+
+  /** Las rectificativas (no borradas) de una factura. */
+  function rectificativasDe(f, facturas) {
+    return (facturas || []).filter(function (x) { return x.rectifica && x.rectifica.id === f.id; });
+  }
+
   /** ¿Se puede emitir? Devuelve la lista de problemas (vacía si está bien). */
   function revisar(f) {
     var p = [];
@@ -109,6 +144,8 @@
       p.push("Hay líneas exentas: indica el motivo de la exención (el artículo de la ley que la ampara).");
     }
     if (f.tipo === "recibida" && !String(f.numero || "").trim()) p.push("Falta el número de la factura del proveedor.");
+    if (f.rectifica && !String(f.motivoRectificacion || "").trim()) p.push("Di qué se corrige y por qué (el motivo de la rectificación).");
+    if (f.rectifica && f.fecha && f.rectifica.fecha && f.fecha < f.rectifica.fecha) p.push("La rectificativa no puede ser anterior a la factura que corrige.");
     return p;
   }
 
@@ -123,7 +160,8 @@
     (anticipos || []).forEach(function (a) {
       (a.gastos || []).forEach(function (g) { if (g.facturaId === f.id) pagado += g.importe; });
     });
-    var pendiente = t - pagado;
+    // Una rectificativa en negativo se «cobra» devolviendo: cuenta en positivo
+    var pendiente = Math.abs(t) - pagado;
     return {
       total: t, pagado: pagado, pendiente: pendiente,
       estado: f.estado === "anulada" ? "anulada" : f.estado === "borrador" ? "borrador"
@@ -140,5 +178,6 @@
   return {
     TIPOS_IVA: TIPOS_IVA, TRATAMIENTOS: TRATAMIENTOS, lineaVacia: lineaVacia, baseLinea: baseLinea,
     totales: totales, siguienteNumero: siguienteNumero, revisar: revisar, estadoPago: estadoPago, trimestre: trimestre,
+    SERIE_RECTIFICATIVAS: SERIE_RECTIFICATIVAS, serieDe: serieDe, rectificativa: rectificativa, rectificativasDe: rectificativasDe,
   };
 });

@@ -56,7 +56,7 @@
       email: "junta@example.org",
       telefono: "600 000 000",
       web: "https://example.org",
-      iban: "ES9121000418450200051332",
+      iban: "ES9121000418450200051332", bic: "", identificadorAcreedor: "",
     };
     var junta = [
       ["Presidencia", "Lucía Ficticia Ejemplo", "presidencia@example.org", "600 000 001", "2024-03-16"],

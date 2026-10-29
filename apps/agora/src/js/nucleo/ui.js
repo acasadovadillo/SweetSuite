@@ -175,6 +175,29 @@
     setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
   }
 
+  /** Lee un File como { nombre, tipo, bytes }. */
+  function leerArchivoBinario(f) {
+    return new Promise(function (resolver, rechazar) {
+      var lector = new FileReader();
+      lector.onload = function () { resolver({ nombre: f.name, tipo: f.type || "", bytes: new Uint8Array(lector.result) }); };
+      lector.onerror = function () { rechazar(lector.error || new Error("No se ha podido leer «" + f.name + "».")); };
+      lector.readAsArrayBuffer(f);
+    });
+  }
+  /** Elige uno o varios archivos: [{ nombre, tipo, bytes }] (vacío si se cancela). */
+  function elegirArchivos(accept) {
+    return new Promise(function (resolver) {
+      var input = document.createElement("input");
+      input.type = "file";
+      input.multiple = true;
+      input.accept = accept || "";
+      input.addEventListener("change", function () {
+        Promise.all(Array.prototype.map.call(input.files || [], leerArchivoBinario)).then(resolver, function () { resolver([]); });
+      });
+      input.click();
+    });
+  }
+
   /**
    * Abre el selector de archivos. Devuelve { nombre, texto } o, con binario = true,
    * { nombre, bytes: Uint8Array } (para leer un Excel). null si se cancela.
@@ -201,5 +224,6 @@
   (raiz.WA = raiz.WA || {}).UI = {
     esc: esc, campo: campo, leerFormulario: leerFormulario, marcarError: marcarError,
     aviso: aviso, dialogo: dialogo, confirmar: confirmar, firma: firma, descargar: descargar, elegirArchivo: elegirArchivo,
+    elegirArchivos: elegirArchivos, leerArchivoBinario: leerArchivoBinario,
   };
 })(typeof self !== "undefined" ? self : this);

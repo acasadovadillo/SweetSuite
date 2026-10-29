@@ -39,6 +39,15 @@ Siempre cifrados (AES-256-GCM, PBKDF2-SHA256) con el secreto de Agora de la cuen
 
 El estado se ve en el pie de la barra lateral («Sincronizado», «Sin subir»…; pulsándolo se sube lo pendiente) y en la tarjeta de Agora del inicio de SweetSuite, con su resumen: socios activos, cuotas pendientes y próxima actividad.
 
+## Novedades en SweetSuite
+
+- **Remesas SEPA:** en Cuotas, «Fichero SEPA para el banco…» hace el XML (pain.008) para cobrar las cuotas domiciliadas. Hace falta el identificador de acreedor SEPA de la asociación (en Asociación) y, de cada socio, su IBAN y su mandato (referencia y fecha). Al emitir las cuotas se puede prorratear a quien entra a mitad de periodo.
+- **Facturas rectificativas:** una factura emitida no se toca; se corrige con una rectificativa (serie R), que dice cuál corrige y por qué.
+- **Convocatorias:** en Actas › Convocatorias, con orden del día, carta para imprimir, correo (desde tu correo), evento para el calendario y, celebrada la reunión, su acta.
+- **Adjuntos:** varios a la vez, arrastrándolos, y vista previa sin descargarlos.
+
+Formato SEPA, plazos de cobro, requisitos de las rectificativas y forma de convocar: verificar con el banco, con asesoría y con los estatutos.
+
 ## Traer los datos de antes
 
 En **Ajustes › Seguridad › Traer una copia de antes** (solo Presidencia), el archivo `.json` que descargabas en «ABIES · Gestión». Se abre con lo que pedía entonces (nombre, cargo y las dos contraseñas, o la contraseña de una copia antigua) y se junta con lo que ya haya: no se borra nada, y en la asociación y la configuración manda la copia. Basta con hacerlo una vez: llega al resto de la junta por GitHub.

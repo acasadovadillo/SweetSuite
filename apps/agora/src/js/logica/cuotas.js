@@ -98,11 +98,19 @@
     yaTiene: "Ya tiene la cuota de ese periodo",
   };
 
+  /** Meses de un periodo que tocan a quien se da de alta en él (desde el mes del alta): { meses, de }. */
+  function mesesDesde(p, fechaAlta) {
+    var mes = function (iso) { return +iso.slice(0, 4) * 12 + +iso.slice(5, 7); };
+    var de = mes(p.fin) - mes(p.inicio) + 1;
+    return { meses: fechaAlta > p.inicio ? Math.max(1, mes(p.fin) - mes(fechaAlta) + 1) : de, de: de };
+  }
+
   /**
    * Prepara las cuotas de un periodo para todos los socios a los que les toca.
    * No guarda nada: devuelve { periodo, nuevas: [cuotas], omitidos: [{ socio, motivo }], total }.
-   * Se incluye a quien fue socio en algún momento del periodo (sin prorratear:
-   * si alguien entra a mitad de año, el importe se puede ajustar a mano).
+   * Se incluye a quien fue socio en algún momento del periodo. Con
+   * o.prorratear, quien se dio de alta a mitad de periodo paga solo los meses
+   * que le tocan, contando el del alta (la baja no se prorratea).
    */
   function generar(o) {
     var p = periodo(o.periodo);
@@ -121,10 +129,11 @@
       else if (!(t.cuota > 0)) motivo = "cuotaCero";
       else if (tienen[s.id]) motivo = "yaTiene";
       if (motivo) { omitidos.push({ socio: s, motivo: motivo, texto: MOTIVOS[motivo] }); return; }
+      var m = mesesDesde(p, s.fechaAlta), parte = o.prorratear && m.meses < m.de;
       nuevas.push({
         socioId: s.id, socioNumero: s.numero, socioNombre: S.nombreCompleto(s), tipoSocioId: t.id,
-        periodo: p.clave, concepto: "Cuota " + t.nombre.toLowerCase() + " · " + p.etiqueta,
-        importe: t.cuota, fechaEmision: o.fechaEmision || F.hoy(), remesaId: o.remesaId || "",
+        periodo: p.clave, concepto: "Cuota " + t.nombre.toLowerCase() + " · " + p.etiqueta + (parte ? " (" + m.meses + " de " + m.de + " meses)" : ""),
+        importe: parte ? Math.round(t.cuota * m.meses / m.de) : t.cuota, fechaEmision: o.fechaEmision || F.hoy(), remesaId: o.remesaId || "",
         estado: "pendiente", pago: null, historial: [],
       });
     });
@@ -245,7 +254,7 @@
   return {
     PERIODICIDADES: PERIODICIDADES, ESTADOS: ESTADOS, MOTIVOS: MOTIVOS, CATEGORIA_CONTABLE: CATEGORIA_CONTABLE,
     periodo: periodo, periodosDelAnio: periodosDelAnio, periodoDeFecha: periodoDeFecha, tipoPorDefecto: tipoPorDefecto,
-    generar: generar, registrarPago: registrarPago, deshacerPago: deshacerPago, devolver: devolver,
+    generar: generar, mesesDesde: mesesDesde, registrarPago: registrarPago, deshacerPago: deshacerPago, devolver: devolver,
     anular: anular, reactivar: reactivar, debe: debe,
     resumen: resumen, deudores: deudores, alCorriente: alCorriente, cuentaPorDefecto: cuentaPorDefecto, aMovimientos: aMovimientos,
   };

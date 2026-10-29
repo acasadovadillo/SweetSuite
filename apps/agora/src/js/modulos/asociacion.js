@@ -32,6 +32,10 @@
       UI.campo({ nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: a.telefono }) +
       UI.campo({ nombre: "web", etiqueta: "Web", tipo: "url", valor: a.web, ayuda: "Con https://" }) +
       UI.campo({ nombre: "iban", etiqueta: "IBAN de la cuenta", valor: a.iban, ayuda: "Se usará para las remesas de cuotas.", atributos: 'autocapitalize="characters"' }) +
+      UI.campo({ nombre: "bic", etiqueta: "BIC del banco", valor: a.bic, ayuda: "Opcional. Ocho u once letras y cifras.", atributos: 'autocapitalize="characters"' }) +
+      UI.campo({ nombre: "identificadorAcreedor", etiqueta: "Identificador de acreedor SEPA", valor: a.identificadorAcreedor, atributos: 'autocapitalize="characters"',
+        ayuda: "Para cobrar las cuotas domiciliadas con una remesa. Te lo da el banco al contratar el servicio" +
+          (a.nif ? "; con vuestro NIF y el sufijo 000 sería " + WA.Sepa.identificadorAcreedor(a.nif) + "." : ".") }) +
       "</div></fieldset>" +
       '<div class="acciones"><button type="submit" class="btn btn-primario">Guardar datos</button></div></form>';
   }
@@ -47,6 +51,8 @@
     UI.marcarError(form, "nombre", datos.nombre ? "" : "El nombre es obligatorio.");
     if (datos.nif) comprobar("nif", V.nifEntidad(datos.nif)); else UI.marcarError(form, "nif", "");
     if (datos.iban) comprobar("iban", V.iban(datos.iban)); else UI.marcarError(form, "iban", "");
+    if (datos.identificadorAcreedor) comprobar("identificadorAcreedor", WA.Sepa.validarIdentificador(datos.identificadorAcreedor));
+    else UI.marcarError(form, "identificadorAcreedor", "");
     if (datos.email) comprobar("email", V.email(datos.email)); else UI.marcarError(form, "email", "");
     avisos += WA.FormDireccion.revisar(form, datos);
     return avisos;
@@ -147,6 +153,7 @@
         numeroRegistro: d.numeroRegistro, fechaConstitucion: d.fechaConstitucion,
         domicilio: WA.FormDireccion.leer(d),
         email: d.email, telefono: d.telefono, web: d.web, iban: V.normalizar(d.iban),
+        bic: V.normalizar(d.bic), identificadorAcreedor: V.normalizar(d.identificadorAcreedor),
       }));
       UI.aviso(avisos ? "Guardado. Revisa los campos marcados: puede haber algún error al copiarlos." : "Datos guardados.", avisos ? "info" : "ok");
     });

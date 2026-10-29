@@ -36,7 +36,8 @@
  *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5)
  *            · v7 textos de la memoria anual; partida del modelo ESFL en cada categoría (fase 6)
  *            · v8 registro de cambios (quién, cuándo, qué) y firma creadoPor / modificadoPor (fase 7a)
- *            · v9 «borrados» y meta.cambios, para mezclar las versiones de cada miembro de la junta (ver datos/mezcla.js).
+ *            · v9 «borrados» y meta.cambios, para mezclar las versiones de cada miembro de la junta (ver datos/mezcla.js)
+ *            · v10 convocatorias de asambleas y reuniones (ver logica/convocatorias.js).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -51,10 +52,10 @@
   // El identificador del documento no cambia con el nombre (Agora): así se
   // siguen abriendo los datos y las copias de antes.
   var APP = "webkit_asociaciones";
-  var VERSION = 9;
+  var VERSION = 10;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos", "registro"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos", "registro", "convocatorias"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -69,6 +70,8 @@
       domicilio: Direccion.vacia(),   // por partes: ver nucleo/direccion.js
       email: "", telefono: "", web: "",
       iban: "",              // cuenta de la asociación (se usará en las remesas de cuotas)
+      bic: "",               // el de su banco (opcional en las remesas)
+      identificadorAcreedor: "",   // para cobrar remesas SEPA: lo da el banco (ver logica/sepa.js)
     };
   }
 
@@ -175,6 +178,13 @@
       });
       ["movimientos", "facturas", "anticipos", "proyectos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
       doc.esquema = 4;
+      return doc;
+    },
+
+    // 9 → 10: convocatorias de asambleas y reuniones (SweetSuite, fase E).
+    9: function (doc) {
+      if (!Array.isArray(doc.convocatorias)) doc.convocatorias = [];
+      doc.esquema = 10;
       return doc;
     },
 

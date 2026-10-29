@@ -217,6 +217,7 @@
         return '<option value="' + o[0] + '"' + (estadoVista.estado === o[0] ? " selected" : "") + ">" + o[1] + "</option>";
       }).join("") + "</select></label>" +
       '<button type="button" class="btn btn-secundario" id="q-cobrar-sel" disabled>Cobrar seleccionadas</button>' +
+      '<button type="button" class="btn btn-secundario" id="q-sepa"' + (res.nPendientes ? "" : " disabled") + ">Fichero SEPA para el banco…</button>" +
       '<button type="button" class="btn btn-secundario lectura-ok" id="q-exportar">Exportar (CSV)</button></div>' +
       '<div id="q-tabla"></div>';
 
@@ -259,6 +260,63 @@
     cont.querySelector("#q-estado").addEventListener("change", function (e) { estadoVista.estado = e.target.value; refrescar(); });
     cont.querySelector("#q-emitir").addEventListener("click", function () { emitir(datos, c, p); });
     cont.querySelector("#q-exportar").addEventListener("click", function () { exportarCuotas(visibles(), c.config, "cuotas-" + p.clave); });
+    cont.querySelector("#q-sepa").addEventListener("click", function () { remesaSepa(datos, c, delPeriodo, p); });
+  }
+
+  /**
+   * El fichero de la remesa para el banco (logica/sepa.js): las cuotas
+   * pendientes del periodo de quien paga por domiciliación. Se elige la fecha
+   * de cobro, se ve qué entra y qué no (y por qué) y se descarga el XML. Las
+   * cuotas siguen pendientes hasta que el banco las cobra: entonces se marcan
+   * como pagadas, y las que el banco devuelva, como devueltas.
+   */
+  async function remesaSepa(datos, c, delPeriodo, p) {
+    var a = await datos.leer("asociacion"), hoy = F.hoy();
+    var estado = { fecha: F.sumarDias(hoy, 7) };
+    function calcular() {
+      estado.sel = WA.Sepa.seleccionar(delPeriodo, c.socios, estado.fecha);
+      estado.problemas = WA.Sepa.revisar({ asociacion: a, fechaCobro: estado.fecha, hoy: hoy, incluidas: estado.sel.incluidas });
+    }
+    function cuerpo() {
+      var s = estado.sel, porMotivo = {};
+      s.excluidas.forEach(function (x) { (porMotivo[x.texto] = porMotivo[x.texto] || []).push(x.cuota.socioNombre); });
+      return "<p><strong>" + s.incluidas.length + (s.incluidas.length === 1 ? " recibo" : " recibos") + "</strong> por <strong>" + esc(D.formatear(s.total)) + "</strong>" +
+        " a cobrar en la cuenta " + esc(a.iban || "(sin IBAN)") + ".</p>" +
+        (s.excluidas.length ? '<details class="historico"><summary>' + s.excluidas.length + (s.excluidas.length === 1 ? " pendiente no entra" : " pendientes no entran") + "</summary><ul class=\"lista\">" +
+          Object.keys(porMotivo).map(function (m) {
+            return "<li><strong>" + esc(m) + "</strong>: " + esc(porMotivo[m].slice(0, 8).join(", ")) + (porMotivo[m].length > 8 ? "…" : "") + "</li>";
+          }).join("") + "</ul></details>" : "") +
+        (estado.problemas.length ? '<div class="caja-aviso"><ul class="lista">' + estado.problemas.map(function (x) { return "<li>" + esc(x) + "</li>"; }).join("") + "</ul></div>" : "");
+    }
+    calcular();
+    var d = null;
+    var r = await UI.dialogo({
+      titulo: "Remesa SEPA · " + p.etiqueta,
+      contenido: '<form class="formulario" novalidate>' +
+        UI.campo({ nombre: "fechaCobro", etiqueta: "Fecha de cobro", tipo: "date", valor: estado.fecha, requerido: true,
+          ayuda: "El día que el banco cargará los recibos. Pide unos días de margen: pregunta a tu banco cuántos." }) +
+        '</form><div id="sepa-resumen">' + cuerpo() + "</div>" +
+        '<p class="detalle">Sube el archivo en la banca de empresa (remesas o adeudos SEPA, formato XML). Cuando el banco las cobre, márcalas como pagadas; si devuelve alguna, «Más…» → «Devuelta».</p>',
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Descargar el fichero", valor: "descargar", estilo: "btn-primario" }],
+      alAbrir: function (dlg) {
+        d = dlg;
+        var boton = d.querySelector('[data-valor="descargar"]');
+        boton.disabled = estado.problemas.length > 0;
+        d.querySelector('[name="fechaCobro"]').addEventListener("change", function (e) {
+          estado.fecha = e.target.value;
+          calcular();
+          d.querySelector("#sepa-resumen").innerHTML = cuerpo();
+          boton.disabled = estado.problemas.length > 0;
+        });
+      },
+    });
+    if (r.valor !== "descargar" || estado.problemas.length) return;
+    var s = estado.sel;
+    var xml = WA.Sepa.fichero({ asociacion: a, incluidas: s.incluidas, fechaCobro: estado.fecha, concepto: a.siglas || "" });
+    UI.descargar("remesa-sepa-" + p.clave + "-" + estado.fecha + ".xml", xml, "application/xml");
+    await datos.guardar("remesas", { periodo: p.clave, fechaEmision: hoy, concepto: "Fichero SEPA " + p.etiqueta + ", cobro el " + F.corta(estado.fecha),
+      nCuotas: s.incluidas.length, total: s.total, sepa: { fechaCobro: estado.fecha, cuotas: s.incluidas.map(function (x) { return x.cuota.id; }) } });
+    UI.aviso("Fichero de la remesa descargado: " + s.incluidas.length + " recibos.");
   }
 
   function cifra(titulo, centimos, detalle) {
@@ -267,7 +325,11 @@
 
   async function emitir(datos, c, p) {
     var remesaId = WA.Esquema.nuevoId();
-    var r = C.generar({ periodo: p.clave, socios: c.socios, tipos: c.config.tiposSocio, cuotas: c.cuotas, fechaEmision: F.hoy(), remesaId: remesaId });
+    var opciones = { periodo: p.clave, socios: c.socios, tipos: c.config.tiposSocio, cuotas: c.cuotas, fechaEmision: F.hoy(), remesaId: remesaId };
+    var r = C.generar(opciones);
+    // Con prorrateo, quien entró a mitad de periodo paga solo sus meses
+    var rp = C.generar(Object.assign({}, opciones, { prorratear: true }));
+    var prorrateadas = rp.nuevas.filter(function (q, i) { return q.importe !== r.nuevas[i].importe; }).length;
     // Los omitidos se agrupan por motivo; «otra periodicidad» no se enseña, no aporta.
     var porMotivo = {};
     r.omitidos.forEach(function (o) {
@@ -283,14 +345,24 @@
         (omitidosHtml ? '<ul class="lista">' + omitidosHtml + "</ul>" : ""), botones: [{ texto: "Entendido", valor: "cancelar", estilo: "btn-primario" }] });
       return;
     }
+    var texto = function (x) {
+      return "Se emitirán <strong>" + x.nuevas.length + " cuotas</strong> por un total de <strong>" + esc(D.formatear(x.total)) + "</strong>, todas pendientes de cobro.";
+    };
+    var casilla = null;
     var res = await UI.dialogo({
       titulo: "Emitir cuotas del " + p.etiqueta,
-      contenido: "<p>Se emitirán <strong>" + r.nuevas.length + " cuotas</strong> por un total de <strong>" + esc(D.formatear(r.total)) + "</strong>, todas pendientes de cobro.</p>" +
-        (omitidosHtml ? '<details class="historico"><summary>Socios a los que no se emite</summary><ul class="lista">' + omitidosHtml + "</ul></details>" : "") +
-        '<p class="detalle">A quien entra a mitad de periodo se le emite la cuota entera; si queréis prorratear, cambiad su importe después («Más…» → «Cambiar importe»).</p>',
+      contenido: '<p id="q-texto-emitir">' + texto(r) + "</p>" +
+        (prorrateadas ? '<label class="casilla"><input type="checkbox" id="q-prorratear"><span>Prorratear: ' + prorrateadas +
+          (prorrateadas === 1 ? " socio entró a mitad de periodo y pagaría" : " socios entraron a mitad de periodo y pagarían") + " solo los meses desde su alta</span></label>" : "") +
+        (omitidosHtml ? '<details class="historico"><summary>Socios a los que no se emite</summary><ul class="lista">' + omitidosHtml + "</ul></details>" : ""),
       botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Emitir " + r.nuevas.length + " cuotas", valor: "emitir", estilo: "btn-primario" }],
+      alAbrir: function (d) {
+        casilla = d.querySelector("#q-prorratear");
+        if (casilla) casilla.addEventListener("change", function () { d.querySelector("#q-texto-emitir").innerHTML = texto(casilla.checked ? rp : r); });
+      },
     });
     if (res.valor !== "emitir") return;
+    if (casilla && casilla.checked) r = rp;
     await datos.guardarVarios("cuotas", r.nuevas);
     await datos.guardar("remesas", { id: remesaId, periodo: p.clave, fechaEmision: F.hoy(), concepto: "Cuotas " + p.etiqueta, nCuotas: r.nuevas.length, total: r.total });
     UI.aviso(r.nuevas.length + " cuotas emitidas.");

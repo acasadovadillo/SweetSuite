@@ -7,25 +7,30 @@
  *   #/actas/imprimir/<id>       versión para firmar (imprimir o PDF)
  *   #/actas/acuerdos            libro de acuerdos (todos, con buscador)
  *   #/actas/organos             órganos que levantan actas y numeración
+ *   #/actas/convocatorias       convocatorias de asambleas y reuniones
+ *   #/actas/convocatoria/<id>   (o convocatoria-nueva/<organoId>) editarla, enviarla por
+ *                               correo, al calendario, imprimirla y, celebrada, su acta
+ *   #/actas/desde/<id>          nueva acta a partir de una convocatoria
  *
  * La lógica está en logica/actas.js (con tests). Contenido, firma y aprobación
  * de las actas según vuestros estatutos: verificar con asesoría.
  */
 (function (raiz) {
   "use strict";
-  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, Ac = WA.Actas, S = WA.Socios;
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, Ac = WA.Actas, S = WA.Socios, Conv = WA.Convocatorias;
 
   var filtro = { organo: "", anio: "", texto: "" };
 
   function pestanas(actual) {
-    var p = [["", "Actas"], ["acuerdos", "Libro de acuerdos"], ["organos", "Órganos"]];
+    var p = [["", "Actas"], ["convocatorias", "Convocatorias"], ["acuerdos", "Libro de acuerdos"], ["organos", "Órganos"]];
     return '<nav class="pestanas" aria-label="Apartados de actas">' + p.map(function (x) {
       return '<a href="#/actas' + (x[0] ? "/" + x[0] : "") + '"' + (actual === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>";
     }).join("") + "</nav>";
   }
   async function cargar(datos) {
-    var r = await Promise.all([datos.leer("config"), datos.listar("actas"), datos.listar("junta"), datos.listar("socios"), datos.leer("asociacion"), datos.listar("documentos")]);
-    return { config: r[0], actas: r[1], junta: r[2], socios: r[3].map(S.completar), asociacion: r[4], documentos: r[5] };
+    var r = await Promise.all([datos.leer("config"), datos.listar("actas"), datos.listar("junta"), datos.listar("socios"), datos.leer("asociacion"), datos.listar("documentos"),
+      datos.listar("convocatorias")]);
+    return { config: r[0], actas: r[1], junta: r[2], socios: r[3].map(S.completar), asociacion: r[4], documentos: r[5], convocatorias: r[6] };
   }
   var organoDe = function (c, id) { return (c.config.organos || []).filter(function (o) { return o.id === id; })[0] || { id: id, nombre: "(órgano borrado)", prefijo: "ACTA", tipo: "otro" }; };
 
@@ -156,13 +161,14 @@
     return true;
   }
 
-  async function pintarFicha(cont, datos, id, organoNuevo) {
+  async function pintarFicha(cont, datos, id, organoNuevo, desdeConvocatoria) {
     var c = await cargar(datos);
     var a;
+    var conv = desdeConvocatoria ? c.convocatorias.filter(function (x) { return x.id === desdeConvocatoria; })[0] : null;
     if (id) a = c.actas.filter(function (x) { return x.id === id; })[0];
     else {
-      var org = organoDe(c, organoNuevo || (c.config.organos[0] || {}).id);
-      a = Ac.vacia(org);
+      var org = organoDe(c, conv ? conv.organoId : organoNuevo || (c.config.organos[0] || {}).id);
+      a = conv ? Conv.aActa(conv, org) : Ac.vacia(org);
       // Presidencia y secretaría vigentes, para empezar.
       var hoy = F.hoy();
       c.junta.forEach(function (j) {
@@ -180,6 +186,7 @@
       '<p class="miga"><a href="#/actas">Actas</a> › ' + esc(a.numero || "Nueva") + "</p>" +
       '<div class="cabecera-pagina"><h1>' + (a.numero ? "Acta " + esc(a.numero) : "Nueva acta") + "</h1>" +
       (nueva ? "" : a.estado === "aprobada" ? '<span class="estado estado-ok">Aprobada</span>' : '<span class="estado estado-aviso">Borrador</span>') + "</div>" + WA.UI.firma(a) +
+      (a.convocatoriaId ? '<p class="detalle">Reunión convocada: <a href="#/actas/convocatoria/' + encodeURIComponent(a.convocatoriaId) + '">ver la convocatoria</a>.</p>' : "") +
       '<form id="acta" class="formulario" novalidate>' +
       '<section class="tarjeta"><h2>Sesión</h2><div class="rejilla-12">' +
       UI.campo({ nombre: "organoId", etiqueta: "Órgano", tipo: "select", valor: a.organoId, opciones: c.config.organos.map(function (o) { return [o.id, o.nombre]; }), clase: "col-4 col-movil-completo",
@@ -271,6 +278,9 @@
         return;
       }
       var g = await datos.guardar("actas", a);
+      // La convocatoria de la que sale, enlazada con su acta
+      var deConv = nueva && a.convocatoriaId ? c.convocatorias.filter(function (x) { return x.id === a.convocatoriaId; })[0] : null;
+      if (deConv && !deConv.actaId) await datos.guardar("convocatorias", Object.assign(deConv, { actaId: g.id }));
       UI.aviso("Acta " + g.numero + " guardada." + (problemas.length ? " Falta: " + problemas.join(" ") : ""), problemas.length ? "info" : "ok");
       if (nueva) location.hash = "#/actas/ficha/" + encodeURIComponent(g.id); else WA.App.repintar();
     });
@@ -400,7 +410,178 @@
     });
   }
 
+  // ── Convocatorias ───────────────────────────────────────────────────────
+  var ESTADO_CONV = { borrador: ["estado-aviso", "Sin enviar"], enviada: ["estado-ok", "Enviada"] };
+
+  async function pintarConvocatorias(cont, datos) {
+    var c = await cargar(datos);
+    var lista = c.convocatorias.slice().sort(function (x, y) { return String(y.fecha).localeCompare(String(x.fecha)); });
+    var hoy = F.hoy();
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Actas</h1><div class="acciones-cabecera"><label class="sr" for="n-organo">Órgano de la convocatoria</label>' +
+      '<select id="n-organo" class="select-pequeno">' + c.config.organos.map(function (o) { return '<option value="' + esc(o.id) + '">' + esc(o.nombre) + "</option>"; }).join("") + "</select>" +
+      '<button type="button" class="btn btn-primario" id="n-crear">Nueva convocatoria</button></div></div>' + pestanas("convocatorias") +
+      '<p class="intro">Asambleas y reuniones: el orden del día, la carta para imprimir, el correo a quien corresponda y el evento para el calendario. Celebrada la reunión, de aquí sale su acta.</p>' +
+      (!lista.length ? '<p class="vacio">No hay convocatorias.</p>' :
+        '<div class="tabla-envoltorio"><table class="tabla"><caption class="sr">Convocatorias</caption><thead><tr><th scope="col">Fecha</th><th scope="col">Órgano</th>' +
+        '<th scope="col" class="solo-ancho">Lugar</th><th scope="col">Estado</th><th scope="col">Acta</th></tr></thead><tbody>' + lista.map(function (v) {
+          var e = ESTADO_CONV[v.estado] || ESTADO_CONV.borrador, acta = v.actaId ? c.actas.filter(function (x) { return x.id === v.actaId; })[0] : null;
+          return '<tr><th scope="row"><a href="#/actas/convocatoria/' + encodeURIComponent(v.id) + '">' + esc(F.corta(v.fecha)) + " · " + esc(v.hora) + "</a></th>" +
+            "<td>" + esc(organoDe(c, v.organoId).nombre) + (v.tipoSesion === "extraordinaria" ? " (extraordinaria)" : "") + '</td><td class="solo-ancho">' +
+            esc(v.modalidad === "en línea" ? "En línea" : v.lugar) + '</td><td><span class="estado ' + e[0] + '">' + e[1] + "</span></td><td>" +
+            (acta ? '<a href="#/actas/ficha/' + encodeURIComponent(acta.id) + '">' + esc(acta.numero) + "</a>" : v.fecha <= hoy ? '<a href="#/actas/desde/' + encodeURIComponent(v.id) + '">Hacer el acta</a>' : "—") + "</td></tr>";
+        }).join("") + "</tbody></table></div>");
+    cont.querySelector("#n-crear").addEventListener("click", function () { location.hash = "#/actas/convocatoria-nueva/" + encodeURIComponent(cont.querySelector("#n-organo").value); });
+  }
+
+  async function pintarConvocatoria(cont, datos, id, organoNuevo) {
+    var c = await cargar(datos);
+    var v = id ? c.convocatorias.filter(function (x) { return x.id === id; })[0] : null;
+    if (id && !v) { cont.innerHTML = '<h1>Convocatoria no encontrada</h1><p><a href="#/actas/convocatorias">Volver</a></p>'; return; }
+    var nueva = !v;
+    if (nueva) {
+      v = Conv.vacia(organoDe(c, organoNuevo || (c.config.organos[0] || {}).id));
+      var presi = c.junta.filter(function (j) { return j.cargo === "Presidencia" && (!j.hasta || j.hasta >= F.hoy()); })[0];
+      v.convoca = "La Presidencia" + (presi ? ", " + presi.nombre : "");
+    }
+    var org = organoDe(c, v.organoId), acta = v.actaId ? c.actas.filter(function (x) { return x.id === v.actaId; })[0] : null;
+    var firmantes = c.junta.filter(function (j) { return !j.hasta || j.hasta >= F.hoy(); }).map(function (j) { return "La " + (j.cargo === "Otro" && j.cargoOtro ? j.cargoOtro : j.cargo) + ", " + j.nombre; });
+    var e = ESTADO_CONV[v.estado] || ESTADO_CONV.borrador;
+    cont.innerHTML =
+      '<p class="miga"><a href="#/actas/convocatorias">Convocatorias</a> › ' + (nueva ? "Nueva" : esc(F.corta(v.fecha))) + "</p>" +
+      '<div class="cabecera-pagina"><h1>' + (nueva ? "Nueva convocatoria" : "Convocatoria · " + esc(org.nombre)) + "</h1>" +
+      (nueva ? "" : '<span class="estado ' + e[0] + '">' + e[1] + (v.enviada ? " el " + esc(F.corta(v.enviada)) : "") + "</span>") + "</div>" + WA.UI.firma(v) +
+      '<form id="conv" class="formulario" novalidate>' +
+      '<section class="tarjeta"><h2>La reunión</h2><div class="rejilla-12">' +
+      UI.campo({ nombre: "organoId", etiqueta: "Órgano", tipo: "select", valor: v.organoId, opciones: c.config.organos.map(function (o) { return [o.id, o.nombre]; }), clase: "col-4 col-movil-completo" }) +
+      UI.campo({ nombre: "tipoSesion", etiqueta: "Sesión", tipo: "select", valor: v.tipoSesion, opciones: [["ordinaria", "Ordinaria"], ["extraordinaria", "Extraordinaria"]], clase: "col-4" }) +
+      UI.campo({ nombre: "fecha", etiqueta: "Fecha", tipo: "date", valor: v.fecha, requerido: true, clase: "col-4" }) +
+      UI.campo({ nombre: "hora", etiqueta: "Hora", tipo: "time", valor: v.hora, requerido: true, clase: "col-4" }) +
+      UI.campo({ nombre: "horaSegunda", etiqueta: "Segunda convocatoria", tipo: "time", valor: v.horaSegunda, clase: "col-4", ayuda: "Si vuestros estatutos la prevén." }) +
+      UI.campo({ nombre: "modalidad", etiqueta: "Modalidad", tipo: "select", valor: v.modalidad, opciones: [["presencial", "Presencial"], ["en línea", "En línea"], ["mixta", "Mixta"]], clase: "col-4" }) +
+      UI.campo({ nombre: "lugar", etiqueta: "Lugar", valor: v.lugar, clase: "col-6 col-movil-completo" }) +
+      UI.campo({ nombre: "enlace", etiqueta: "Enlace (si es en línea)", tipo: "url", valor: v.enlace, clase: "col-6 col-movil-completo" }) +
+      "</div></section>" +
+      '<section class="tarjeta"><h2>Orden del día</h2>' +
+      UI.campo({ nombre: "ordenDelDia", etiqueta: "Un punto por línea", tipo: "textarea", filas: 7, valor: (v.ordenDelDia || []).join("\n"), ancho: "completo" }) +
+      UI.campo({ nombre: "notas", etiqueta: "Texto añadido (sale en la convocatoria)", tipo: "textarea", filas: 2, valor: v.notas, ancho: "completo",
+        ayuda: "Por ejemplo: que las cuentas están a disposición de los socios, o cómo delegar el voto." }) +
+      UI.campo({ nombre: "convoca", etiqueta: "Quién convoca (firma)", valor: v.convoca, lista: firmantes, ancho: "completo" }) +
+      '<p class="letra-pequena">Con cuánta antelación, por qué medio y quién debe convocar lo dicen vuestros estatutos (verificar con asesoría).</p></section>' +
+      '<div class="acciones barra-guardar"><button type="submit" class="btn btn-primario">Guardar</button>' +
+      (nueva ? "" : '<button type="button" class="btn btn-secundario" id="v-correo">Enviar por correo…</button>' +
+        '<button type="button" class="btn btn-secundario lectura-ok" id="v-ics">Añadir al calendario</button>' +
+        '<a class="btn btn-secundario" href="#/actas/convocatoria-imprimir/' + encodeURIComponent(v.id) + '">Imprimir o PDF</a>' +
+        (acta ? '<a class="btn btn-secundario" href="#/actas/ficha/' + encodeURIComponent(acta.id) + '">Ver el acta ' + esc(acta.numero) + "</a>"
+          : '<a class="btn btn-secundario" href="#/actas/desde/' + encodeURIComponent(v.id) + '">Hacer el acta</a>') +
+        '<button type="button" class="btn btn-peligro-suave" id="v-borrar">Borrar</button>') +
+      "</div></form>";
+
+    var form = cont.querySelector("#conv");
+    function leerConv() {
+      var d = UI.leerFormulario(form);
+      return Object.assign(v, {
+        organoId: d.organoId, tipoSesion: d.tipoSesion, fecha: d.fecha, hora: d.hora, horaSegunda: d.horaSegunda, modalidad: d.modalidad,
+        lugar: d.lugar, enlace: d.enlace, notas: d.notas, convoca: d.convoca,
+        ordenDelDia: String(d.ordenDelDia || "").split("\n").map(function (x) { return x.trim(); }).filter(Boolean),
+      });
+    }
+    // Otro órgano o tipo de sesión en una nueva: su plantilla, si no se ha tocado
+    var plantilla = function () { return Ac.plantilla(organoDe(c, form.elements.organoId.value), form.elements.tipoSesion.value).map(function (p) { return p.titulo; }).join("\n"); };
+    var original = form.elements.ordenDelDia.value;
+    ["organoId", "tipoSesion"].forEach(function (n) {
+      form.elements[n].addEventListener("change", function () {
+        if (!nueva || form.elements.ordenDelDia.value !== original) return;
+        original = form.elements.ordenDelDia.value = plantilla();
+      });
+    });
+    form.addEventListener("submit", async function (ev) {
+      ev.preventDefault();
+      leerConv();
+      if (!F.esValida(v.fecha)) { UI.marcarError(form, "fecha", "Pon la fecha."); return; }
+      UI.marcarError(form, "fecha", "");
+      var g = await datos.guardar("convocatorias", v);
+      var falta = Conv.revisar(g);
+      UI.aviso("Convocatoria guardada." + (falta.length ? " Antes de enviarla: " + falta.join(" ") : ""), falta.length ? "info" : "ok");
+      if (nueva) location.hash = "#/actas/convocatoria/" + encodeURIComponent(g.id); else WA.App.repintar();
+    });
+    if (nueva) return;
+
+    cont.querySelector("#v-ics").addEventListener("click", function () {
+      leerConv();
+      UI.descargar("convocatoria-" + v.fecha + ".ics", WA.Actividades.ics([Conv.aEvento(v, organoDe(c, v.organoId))], { zona: c.config.zonaHoraria }), "text/calendar;charset=utf-8");
+    });
+    cont.querySelector("#v-borrar").addEventListener("click", async function () {
+      if (!(await UI.confirmar("Se borrará la convocatoria" + (acta ? " (su acta se queda)" : "") + ".", { titulo: "Borrar convocatoria", aceptar: "Borrar", peligro: true }))) return;
+      await datos.borrar("convocatorias", v.id);
+      location.hash = "#/actas/convocatorias";
+    });
+    cont.querySelector("#v-correo").addEventListener("click", async function () {
+      leerConv();
+      var falta = Conv.revisar(v);
+      if (falta.length) {
+        await UI.dialogo({ titulo: "Falta algo", contenido: '<ul class="lista">' + falta.map(function (p) { return "<li>" + esc(p) + "</li>"; }).join("") + "</ul>",
+          botones: [{ texto: "Entendido", valor: "cancelar", estilo: "btn-primario" }] });
+        return;
+      }
+      var o = organoDe(c, v.organoId), dest = Conv.destinatarios(v, o, c.socios, c.junta);
+      var asunto = Conv.asunto(v, o), cuerpo = Conv.texto(v, o, c.asociacion), m = Conv.mailto(asunto, cuerpo, dest.correos);
+      var copiar = async function (t, que) {
+        try { await navigator.clipboard.writeText(t); UI.aviso(que + " copiado."); } catch (err) { UI.aviso("No se ha podido copiar.", "error"); }
+      };
+      var r = await UI.dialogo({
+        titulo: "Enviar la convocatoria",
+        contenido: "<p>Va a <strong>" + dest.correos.length + (dest.correos.length === 1 ? " persona" : " personas") + "</strong> (" +
+          (o.tipo === "asamblea" ? "los socios activos" : "la junta vigente") + "), en copia oculta, desde <strong>tu</strong> programa de correo: Agora no envía nada.</p>" +
+          (m.conDestinatarios ? "" : '<div class="caja-aviso">Son demasiados para ponerlos en el enlace: copia las direcciones y pégalas en «CCO».</div>') +
+          (dest.sinCorreo.length ? '<details class="historico"><summary>' + dest.sinCorreo.length + " sin correo (convócalos de otra forma)</summary><p>" +
+            esc(dest.sinCorreo.join(", ")) + "</p></details>" : "") +
+          '<div class="acciones"><a class="btn btn-primario" id="v-abrir" href="' + esc(m.url) + '">Abrir el correo</a>' +
+          '<button type="button" class="btn btn-secundario" id="v-dir">Copiar direcciones</button><button type="button" class="btn btn-secundario" id="v-txt">Copiar texto</button></div>',
+        botones: [{ texto: "Cerrar", valor: "cancelar" }, { texto: "Marcar como enviada", valor: "enviada", estilo: "btn-primario" }],
+        alAbrir: function (d) {
+          d.querySelector("#v-dir").addEventListener("click", function () { copiar(dest.correos.join(", "), "Direcciones"); });
+          d.querySelector("#v-txt").addEventListener("click", function () { copiar(asunto + "\n\n" + cuerpo, "Texto"); });
+        },
+      });
+      if (r.valor !== "enviada") return;
+      await datos.guardar("convocatorias", Object.assign(v, { estado: "enviada", enviada: F.hoy() }));
+      UI.aviso("Convocatoria marcada como enviada.");
+      WA.App.repintar();
+    });
+  }
+
+  async function pintarConvocatoriaImpresa(cont, datos, id) {
+    var c = await cargar(datos);
+    var v = c.convocatorias.filter(function (x) { return x.id === id; })[0];
+    if (!v) { cont.innerHTML = "<h1>No encontrada</h1>"; return; }
+    var o = organoDe(c, v.organoId), as = c.asociacion;
+    // (quien convoca firma abajo: no se repite en el texto)
+    var parrafos = Conv.texto(Object.assign({}, v, { convoca: "" }), o, {}).trim().split("\n\n");
+    cont.innerHTML =
+      '<div class="acciones no-imprimir"><button type="button" class="btn btn-primario lectura-ok" id="i-imprimir">Imprimir o guardar en PDF</button>' +
+      '<a class="btn btn-secundario" href="#/actas/convocatoria/' + encodeURIComponent(v.id) + '">Volver</a></div>' +
+      '<article class="documento-impreso">' +
+      '<p class="di-entidad">' + esc(as.nombre || "") + (as.nif ? " · NIF " + esc(as.nif) : "") + "</p>" +
+      "<h1>Convocatoria</h1><h2>" + esc(o.nombre) + " " + (v.tipoSesion === "extraordinaria" ? "extraordinaria" : "ordinaria") + "</h2>" +
+      parrafos.map(function (p) {
+        if (/^ORDEN DEL DÍA\n/.test(p)) {
+          return "<h3>Orden del día</h3><ol>" + p.split("\n").slice(1).map(function (x) { return "<li>" + esc(x.replace(/^\d+\.\s*/, "")) + "</li>"; }).join("") + "</ol>";
+        }
+        return "<p>" + esc(p).replace(/\n/g, "<br>") + "</p>";
+      }).join("") +
+      '<p class="detalle">En ' + esc((as.domicilio && as.domicilio.municipio) || "…") + ", a " + esc(F.larga(F.hoy())) + ".</p>" +
+      '<div class="di-firmas"><div><div class="di-firma"></div><p>' + esc(v.convoca) + "</p></div></div>" +
+      "</article>";
+    cont.querySelector("#i-imprimir").addEventListener("click", function () { window.print(); });
+  }
+
   async function pintar(cont, datos, ruta) {
+    if (ruta[0] === "convocatorias") return pintarConvocatorias(cont, datos);
+    if (ruta[0] === "convocatoria") return pintarConvocatoria(cont, datos, ruta[1]);
+    if (ruta[0] === "convocatoria-nueva") return pintarConvocatoria(cont, datos, null, ruta[1]);
+    if (ruta[0] === "convocatoria-imprimir") return pintarConvocatoriaImpresa(cont, datos, ruta[1]);
+    if (ruta[0] === "desde") return pintarFicha(cont, datos, null, null, ruta[1]);
     if (ruta[0] === "nueva") return pintarFicha(cont, datos, null, ruta[1]);
     if (ruta[0] === "ficha") return pintarFicha(cont, datos, ruta[1]);
     if (ruta[0] === "imprimir") return pintarImprimir(cont, datos, ruta[1]);

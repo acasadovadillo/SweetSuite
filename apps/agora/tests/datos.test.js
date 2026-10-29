@@ -310,9 +310,17 @@ test("migración v8 → v9: aparecen las marcas de borrado y de cambios, vacías
   const v8 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
   delete v8.borrados; delete v8.meta.cambios; v8.esquema = 8;
   const doc = Esquema.migrar(v8);
-  assert.equal(doc.esquema, 9);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.deepEqual(doc.borrados, {});
   assert.deepEqual(doc.meta.cambios, {});
+});
+
+test("migración v9 → v10: aparecen las convocatorias, vacías", () => {
+  const v9 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  delete v9.convocatorias; v9.esquema = 9;
+  const doc = Esquema.migrar(v9);
+  assert.equal(doc.esquema, 10);
+  assert.deepEqual(doc.convocatorias, []);
 });
 
 test("repositorio con usuario: firma cada cambio, lo apunta en el registro y respeta los permisos", async () => {

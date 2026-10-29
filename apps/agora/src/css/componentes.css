@@ -93,7 +93,7 @@
    dirección). En el móvil pasa a 2 columnas; .col-movil-completo ocupa las dos. */
 .rejilla-12 { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 0.25rem 1rem; }
 .col-2 { grid-column: span 2; } .col-3 { grid-column: span 3; } .col-4 { grid-column: span 4; }
-.col-5 { grid-column: span 5; } .col-7 { grid-column: span 7; } .col-12 { grid-column: 1 / -1; }
+.col-5 { grid-column: span 5; } .col-6 { grid-column: span 6; } .col-7 { grid-column: span 7; } .col-8 { grid-column: span 8; } .col-12 { grid-column: 1 / -1; }
 @media (max-width: 760px) {
   .rejilla-12 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .rejilla-12 > .campo { grid-column: span 1; }
@@ -581,3 +581,14 @@ details.ayuda { margin: 0 0 14px; font-size: 13px; color: var(--texto-2); }
 details.ayuda summary { cursor: pointer; width: fit-content; color: var(--acento); font-weight: 500; }
 details.ayuda summary:focus-visible { outline: 2px solid var(--acento-linea); outline-offset: 2px; border-radius: 4px; }
 details.ayuda p { margin: 8px 0 0; line-height: 1.5; }
+
+/* Ver un adjunto sin descargarlo (Documentos) */
+.dialogo.dialogo-ancho { width: min(900px, calc(100vw - 2rem)); }
+.vista-adjunto { display: flex; justify-content: center; background: var(--hundido); border: 1px solid var(--borde-suave); border-radius: 10px; overflow: auto; max-height: 70vh; }
+.vista-adjunto img { display: block; max-width: 100%; max-height: 70vh; object-fit: contain; }
+.vista-adjunto iframe { width: 100%; height: 70vh; border: 0; background: #fff; }
+.vista-adjunto pre { margin: 0; padding: 14px 16px; width: 100%; white-space: pre-wrap; font: 13px/1.5 var(--fuente-mono); color: var(--texto); }
+@media (max-width: 640px) { .dialogo.dialogo-ancho { width: 100%; } .vista-adjunto, .vista-adjunto img { max-height: 60vh; } .vista-adjunto iframe { height: 60vh; } }
+/* Arrastrar archivos a la lista para adjuntarlos */
+.zona-soltar { border-radius: 10px; transition: background-color .15s, box-shadow .15s; }
+.zona-soltar.soltando { background: var(--acento-suave); box-shadow: 0 0 0 2px var(--acento-linea); }
