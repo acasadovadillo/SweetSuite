@@ -25,9 +25,19 @@ Agora vive dentro de **SweetSuite** y solo la tiene la cuenta de empresa **ABIES
 
 ## Dónde están los datos
 
-De momento, **en este dispositivo**: un bloque cifrado (AES-256-GCM, PBKDF2-SHA256) con el secreto de Agora de la cuenta, en IndexedDB, y los adjuntos aparte, cifrados con la misma llave. Agora no se conecta a ningún servidor.
+Siempre cifrados (AES-256-GCM, PBKDF2-SHA256) con el secreto de Agora de la cuenta, en dos sitios:
 
-Lo siguiente (fase B de `AGORA.md`) es guardarlo en el repositorio privado `Agora-Data`, con un token por representante y mezclando registro a registro, como Solvento e Ironrack.
+1. **En este dispositivo** (IndexedDB), en cuanto cambia algo.
+2. **En GitHub**, en el repositorio privado `Agora-Data`, unos segundos después (autoguardado, encendido de serie), con Guardar o ⌘S, o al volver a SweetSuite:
+   - `abies-agora.enc`: el documento;
+   - `adjuntos/<id>.enc`: cada adjunto, aparte (se baja la primera vez que alguien lo abre);
+   - `abies.llavero.json`: el llavero de la cuenta, que lleva SweetSuite.
+
+**Cada representante usa su token** (`ABIES-Nombre-Agora`, fine-grained, solo `Agora-Data`, *Contents: Read and write*), que se pega en Ajustes › Sincronización y se guarda cifrado en su dispositivo.
+
+**Varios a la vez:** si otro miembro de la junta guardó entre medias, se trae lo suyo y se **mezcla registro a registro** (`src/js/datos/mezcla.js`): en cada socio, cuota o factura gana el cambio más reciente; lo borrado deja marca para que no vuelva; la asociación y la configuración se mezclan campo a campo. Así nadie pisa a nadie.
+
+El estado se ve en el pie de la barra lateral («Sincronizado», «Sin subir»…; pulsándolo se sube lo pendiente) y en la tarjeta de Agora del inicio de SweetSuite, con su resumen: socios activos, cuotas pendientes y próxima actividad.
 
 ## Limitaciones (léelas)
 
@@ -38,6 +48,7 @@ Lo siguiente (fase B de `AGORA.md`) es guardarlo en el repositorio privado `Agor
 - **La ayuda del IVA es orientativa.** Suma lo que hay en las facturas; no calcula la prorrata ni presenta nada.
 - **Extractos del banco:** se leen CSV y Excel moderno (.xlsx). Los .xls antiguos hay que guardarlos antes como .xlsx o .csv.
 - **Documentos adjuntos:** máximo 10 MB por archivo (configurable). Necesitan IndexedDB.
+- **Dos cambios al mismo registro a la vez:** se queda el más reciente (el otro sigue en el registro de cambios, pero no se fusionan campo a campo dentro de un socio o una factura).
 
 ## Privacidad y RGPD
 

@@ -38,6 +38,10 @@
  * Cada cambio queda FIRMADO en el registro (creadoPor / modificadoPor) y apuntado
  * en la colección «registro» (quién, cuándo, qué). El registro guarda los
  * últimos MAX_REGISTRO apuntes.
+ *
+ * Para mezclar lo que guarda cada miembro de la junta (ver datos/mezcla.js), lo
+ * borrado deja una marca en doc.borrados y, al escribir un objeto suelto, se
+ * apunta en doc.meta.cambios cuándo cambió cada uno de sus campos.
  */
 (function (raiz, fabrica) {
   var Esquema = typeof require === "function" ? require("./esquema.js") : raiz.WA.Esquema;
@@ -124,6 +128,19 @@
       r._nuevo = i < 0; // solo para el registro; se quita antes de devolver
       return r;
     }
+    /** Apunta qué campos de un objeto suelto han cambiado, y cuándo (para mezclar). */
+    function marcarCampos(clave, antes, nuevo, t) {
+      if (!nuevo || typeof nuevo !== "object") return;
+      doc.meta.cambios = doc.meta.cambios || {};
+      Object.keys(antes).concat(Object.keys(nuevo)).forEach(function (k) {
+        if (JSON.stringify(antes[k]) !== JSON.stringify(nuevo[k])) doc.meta.cambios[clave + "." + k] = t;
+      });
+    }
+    /** Lo borrado deja marca: así otra copia sin el borrado no lo resucita al mezclar. */
+    function marcarBorrado(id, t) {
+      if (!doc.borrados || typeof doc.borrados !== "object") doc.borrados = {};
+      doc.borrados[id] = t;
+    }
     function cambiado() {
       doc.meta.modificado = ahora();
       doc.meta.cambiosDesdeCopia = (doc.meta.cambiosDesdeCopia || 0) + 1;
@@ -134,12 +151,14 @@
       leer: async function (clave) { return copiar(doc[clave]); },
 
       escribir: async function (clave, valor) {
-        if (clave === "meta" || clave === "app" || clave === "esquema" || Esquema.COLECCIONES.indexOf(clave) >= 0) {
+        if (clave === "meta" || clave === "app" || clave === "esquema" || clave === "borrados" || Esquema.COLECCIONES.indexOf(clave) >= 0) {
           throw new Error("«" + clave + "» no se escribe con escribir().");
         }
         exigirPermiso();
-        doc[clave] = copiar(valor);
-        apuntar("cambio", clave, null, clave === "config" ? "Configuración" : clave === "asociacion" ? "Datos de la asociación" : clave, ahora());
+        var t = ahora(), antes = doc[clave] || {}, nuevo = copiar(valor);
+        marcarCampos(clave, antes, nuevo, t);
+        doc[clave] = nuevo;
+        apuntar("cambio", clave, null, clave === "config" ? "Configuración" : clave === "asociacion" ? "Datos de la asociación" : clave, t);
         await cambiado();
       },
 
@@ -176,8 +195,9 @@
         var lista = coleccion(nombre, true);
         var i = lista.findIndex(function (x) { return x.id === id; });
         if (i < 0) return false;
-        var quitado = lista.splice(i, 1)[0];
-        apuntar("baja", nombre, quitado, null, ahora());
+        var quitado = lista.splice(i, 1)[0], t = ahora();
+        marcarBorrado(id, t);
+        apuntar("baja", nombre, quitado, null, t);
         await cambiado();
         return true;
       },
@@ -205,7 +225,7 @@
         await bytes.borrar(id);
         var lista = coleccion("documentos");
         var i = lista.findIndex(function (x) { return x.id === id; });
-        if (i >= 0) { apuntar("baja", "documentos", lista.splice(i, 1)[0], null, ahora()); await cambiado(); }
+        if (i >= 0) { var t = ahora(); marcarBorrado(id, t); apuntar("baja", "documentos", lista.splice(i, 1)[0], null, t); await cambiado(); }
         return i >= 0;
       },
 

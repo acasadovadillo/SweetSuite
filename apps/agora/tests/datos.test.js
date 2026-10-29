@@ -302,8 +302,17 @@ test("migración v7 → v8: aparece el registro de cambios vacío", () => {
   const v7 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
   delete v7.registro; v7.esquema = 7;
   const doc = Esquema.migrar(v7);
-  assert.equal(doc.esquema, 8);
+  assert.equal(doc.esquema, Esquema.VERSION);
   assert.deepEqual(doc.registro, []);
+});
+
+test("migración v8 → v9: aparecen las marcas de borrado y de cambios, vacías", () => {
+  const v8 = Esquema.migrar({ app: "webkit_asociaciones", esquema: 1, asociacion: {}, junta: [] });
+  delete v8.borrados; delete v8.meta.cambios; v8.esquema = 8;
+  const doc = Esquema.migrar(v8);
+  assert.equal(doc.esquema, 9);
+  assert.deepEqual(doc.borrados, {});
+  assert.deepEqual(doc.meta.cambios, {});
 });
 
 test("repositorio con usuario: firma cada cambio, lo apunta en el registro y respeta los permisos", async () => {

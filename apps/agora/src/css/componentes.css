@@ -575,3 +575,9 @@ body.solo-lectura #principal form :is(input, select, textarea) { pointer-events:
 .muestra:focus-visible, .muestra:has(input:focus-visible) { outline: 2px solid var(--texto); outline-offset: 4px; }
 /* La versión al final de Ajustes, como en Ironrack y Solvento */
 .version-pie { text-align: center; color: var(--texto-3); margin: 3rem 0 1rem; font-family: var(--fuente-mono); font-size: 12.5px; }
+
+/* La ayuda plegable del token (Ajustes › Sincronización), como en Ironrack */
+details.ayuda { margin: 0 0 14px; font-size: 13px; color: var(--texto-2); }
+details.ayuda summary { cursor: pointer; width: fit-content; color: var(--acento); font-weight: 500; }
+details.ayuda summary:focus-visible { outline: 2px solid var(--acento-linea); outline-offset: 2px; border-radius: 4px; }
+details.ayuda p { margin: 8px 0 0; line-height: 1.5; }

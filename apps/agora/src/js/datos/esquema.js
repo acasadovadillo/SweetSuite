@@ -35,7 +35,8 @@
  *            · v5 actividades e inscripciones; zona horaria para el calendario (fase 4)
  *            · v6 actas, órganos, obligaciones, documentos adjuntos (fase 5)
  *            · v7 textos de la memoria anual; partida del modelo ESFL en cada categoría (fase 6)
- *            · v8 registro de cambios (quién, cuándo, qué) y firma creadoPor / modificadoPor (fase 7a).
+ *            · v8 registro de cambios (quién, cuándo, qué) y firma creadoPor / modificadoPor (fase 7a)
+ *            · v9 «borrados» y meta.cambios, para mezclar las versiones de cada miembro de la junta (ver datos/mezcla.js).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -50,7 +51,7 @@
   // El identificador del documento no cambia con el nombre (Agora): así se
   // siguen abriendo los datos y las copias de antes.
   var APP = "webkit_asociaciones";
-  var VERSION = 8;
+  var VERSION = 9;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
   var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos", "registro"];
@@ -113,9 +114,10 @@
     var doc = {
       app: APP,
       esquema: VERSION,
-      meta: { creado: t, modificado: t, ultimaCopia: null, cambiosDesdeCopia: 0 },
+      meta: { creado: t, modificado: t, ultimaCopia: null, cambiosDesdeCopia: 0, cambios: {} },
       asociacion: asociacionVacia(),
       config: configVacia(),
+      borrados: {},          // id → cuándo se borró (ver datos/mezcla.js)
     };
     COLECCIONES.forEach(function (c) { doc[c] = []; });
     return doc;
@@ -173,6 +175,16 @@
       });
       ["movimientos", "facturas", "anticipos", "proyectos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
       doc.esquema = 4;
+      return doc;
+    },
+
+    // 8 → 9: para mezclar lo que guarda cada uno (SweetSuite, fase B): lo
+    // borrado deja marca y se apunta cuándo cambia cada campo suelto.
+    8: function (doc) {
+      if (!doc.borrados || typeof doc.borrados !== "object") doc.borrados = {};
+      doc.meta = doc.meta || {};
+      if (!doc.meta.cambios || typeof doc.meta.cambios !== "object") doc.meta.cambios = {};
+      doc.esquema = 9;
       return doc;
     },
 
@@ -240,6 +252,8 @@
     var base = documentoVacio();
     doc.app = APP;
     doc.meta = Object.assign(base.meta, doc.meta || {});
+    if (!doc.meta.cambios || typeof doc.meta.cambios !== "object") doc.meta.cambios = {};
+    if (!doc.borrados || typeof doc.borrados !== "object" || Array.isArray(doc.borrados)) doc.borrados = {};
     doc.asociacion = Object.assign(asociacionVacia(), doc.asociacion || {});
     doc.asociacion.domicilio = Object.assign(Direccion.vacia(), doc.asociacion.domicilio || {});
     doc.config = Object.assign(configVacia(), doc.config || {});

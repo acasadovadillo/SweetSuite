@@ -122,6 +122,9 @@ body.menu-abierto .velo { display: block; position: fixed; inset: 0; z-index: 39
 .estado-copia { display: inline-flex; align-items: center; gap: 7px; min-width: 0; font-size: 11.5px; font-weight: 600; color: var(--texto-3); }
 .estado-copia::before { content: ""; flex-shrink: 0; width: 8px; height: 8px; border-radius: 50%; background: var(--punto, var(--texto-3)); }
 .estado-copia:empty { display: none; }
+button.estado-copia { background: none; border: 0; padding: 2px 0; font-family: inherit; cursor: pointer; text-align: left; }
+button.estado-copia span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+button.estado-copia:hover { color: var(--texto-2); }
 .version { font-family: var(--fuente-mono); font-size: 11.5px; color: var(--texto-3); }
 
 /* ── Barra de arriba (móvil y tableta) ───────────────────────────────── */

@@ -31,8 +31,13 @@
 
   function avisar() { oyentes.forEach(function (f) { try { f(estado.modo); } catch (e) { console.error(e); } }); }
 
-  /** Cifra y guarda la bóveda. Se encadena para que los guardados no se pisen. */
-  function persistir() {
+  /**
+   * Cifra y guarda la bóveda. Se encadena para que los guardados no se pisen.
+   * Dentro de SweetSuite, cada cambio queda además pendiente de subir a GitHub
+   * (datos/nube.js); soloLocal es para lo que no es un cambio (entrar, traer lo
+   * de GitHub).
+   */
+  function persistir(soloLocal) {
     if (estado.modo !== "abierta") return Promise.resolve();
     var c = estado.cuentas;
     pendientes++;
@@ -40,6 +45,8 @@
       c.doc = estado.doc;
       // Dentro de SweetSuite: un solo bloque, cifrado con el secreto de la cuenta
       return (c.suite ? WA.Cripto.cifrar(estado.doc, c.llaveDatos) : Cu().sellar(c)).then(WA.Boveda.escribir);
+    }).then(function () {
+      if (c.suite && soloLocal !== true && WA.Nube) WA.Nube.cambio();
     }).catch(function (e) {
       console.error(e);
       WA.UI && WA.UI.aviso("No se ha podido guardar en el navegador. Descarga una copia de seguridad ahora.", "error");
@@ -47,15 +54,27 @@
     return cola;
   }
 
-  /** Los bytes de los adjuntos: cifrados con la clave de datos en la bóveda del navegador. */
+  /**
+   * Los bytes de los adjuntos: cifrados con la clave de datos en la bóveda del
+   * navegador. Dentro de SweetSuite, también en GitHub: los nuevos se apuntan
+   * para subirlos y los de otros se bajan la primera vez que se abren.
+   */
   function archivosCifrados() {
+    var nube = function () { return estado.cuentas && estado.cuentas.suite && WA.Nube ? WA.Nube : null; };
     return {
-      guardar: async function (id, bytes) { await WA.Boveda.escribirArchivo(id, await WA.Cripto.cifrarBytes(bytes, estado.cuentas.llaveDatos)); },
+      guardar: async function (id, bytes) {
+        await WA.Boveda.escribirArchivo(id, await WA.Cripto.cifrarBytes(bytes, estado.cuentas.llaveDatos));
+        if (nube()) nube().adjuntoNuevo(id);
+      },
       leer: async function (id) {
         var r = await WA.Boveda.leerArchivo(id);
-        return r ? WA.Cripto.descifrarBytes(r, estado.cuentas.llaveDatos) : null;
+        if (r) return WA.Cripto.descifrarBytes(r, estado.cuentas.llaveDatos);
+        return nube() ? nube().descargarAdjunto(id) : null;
       },
-      borrar: function (id) { return WA.Boveda.borrarArchivo(id); },
+      borrar: async function (id) {
+        await WA.Boveda.borrarArchivo(id);
+        if (nube()) nube().adjuntoBorrado(id);
+      },
     };
   }
 
@@ -80,6 +99,19 @@
         permitido: function () { return puedeEditar(moduloAbierto()); },
       });
     avisar();
+  }
+
+  /**
+   * Lo de GitHub, ya mezclado, pasa a ser el documento abierto. Se cambia en el
+   * sitio (el repositorio y los módulos tienen el mismo objeto), se guarda aquí
+   * y se vuelve a pintar, salvo con un formulario abierto, que no se pierde.
+   */
+  async function reemplazar(abierto, otro) {
+    if (estado.doc !== abierto || estado.modo !== "abierta") return;
+    Object.keys(abierto).forEach(function (k) { delete abierto[k]; });
+    Object.assign(abierto, otro);
+    await persistir(true);
+    if (WA.App && !document.querySelector("dialog[open]")) await WA.App.repintar();
   }
 
   var idsDocumentos = function (doc) { return (doc.documentos || []).map(function (d) { return d.id; }); };
@@ -160,6 +192,7 @@
     entrarEnSuite: async function (s) {
       WA.Boveda.usar(s.usuario);
       var bloque = await WA.Boveda.leer(), doc = null, llave = null, vieja = null;
+      var nuevo = !(bloque && WA.Cripto.esBloque(bloque));
       if (bloque && WA.Cripto.esBloque(bloque)) {
         var secretos = [s.secreto].concat(s.anteriores || []);
         for (var i = 0; i < secretos.length && !doc; i++) {
@@ -174,6 +207,7 @@
       if (!llave) llave = await WA.Cripto.crearLlave(s.secreto);
       if (vieja) await recifrarArchivos(doc, vieja, llave);
       doc = WA.Esquema.migrar(doc || WA.Esquema.documentoVacio());
+      WA.Nube.preparar(s);
       var quien = s.representante || { usuario: s.usuario, nombre: s.nombre };
       var cargo = s.cargo || "Sin cargo";
       var u = { id: quien.usuario, nombre: quien.nombre, cargo: cargo,
@@ -181,7 +215,14 @@
         rol: WA.Permisos.normalizar(cargo).indexOf("presiden") === 0 ? "admin" : "cargo",
         permisos: WA.Permisos.porDefecto(cargo), activo: true, debeCambiar: false };
       abrirCon(doc, { suite: true, cabecera: { generacion: 1, usuarios: [u] }, usuarioId: u.id, llaveDatos: llave }, "abierta");
-      await persistir();
+      await persistir(true);
+      // Y lo de GitHub: con token, se trae y se mezcla (sin esperar)
+      var abierto = estado.doc;
+      await WA.Nube.entrar(s, {
+        doc: function () { return estado.doc; },
+        llave: function () { return estado.cuentas.llaveDatos; },
+        reemplazar: function (otro) { return reemplazar(abierto, otro); },
+      }, { nuevo: nuevo });
     },
     /** Espera a que acaben los guardados en curso (SweetSuite, antes de salir). */
     esperar: function () { return cola; },
@@ -276,6 +317,7 @@
     /** Bloquea: suelta datos y claves de la memoria. Lo guardado sigue cifrado. */
     bloquear: async function () {
       await cola;
+      if (WA.Nube) WA.Nube.salir();
       estado.doc = null; estado.cuentas = null; estado.repo = null; estado.modo = "cerrada";
       avisar();
     },

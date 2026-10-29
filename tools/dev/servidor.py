@@ -6,13 +6,14 @@ Sirve SweetSuite en http://localhost:4500 y hace de GitHub para ella, sin salir
 de este ordenador (adaptado del de Solvento):
 
   /__dev/api/repos/<owner>/<repo>                   el repositorio: si el token llega
-  /__dev/api/repos/<owner>/<repo>/contents/<ruta>  como la API de contenidos (GET y PUT)
+  /__dev/api/repos/<owner>/<repo>/contents/<ruta>  como la API de contenidos (GET, PUT y DELETE)
   /__dev/raw/<owner>/<repo>/<rama>/<ruta>           como raw.githubusercontent
   /__dev/publico/solvento/<archivo>                 prices.json y tickers.json de
                                                     ../solvento, solo para leer
 
 Los repositorios son carpetas de dev-data/ (que git ignora), todos privados:
-  solvento-data-dev, ironrack-data-dev   los de SweetSuite
+  solvento-data-dev, ironrack-data-dev,
+  agora-data-dev                          los de SweetSuite
   datos-cifrados-dev                      el de antes, con datos FICTICIOS del
                                           Solvento antiguo (contraseña «desarrollo»)
                                           para probar la mudanza
@@ -269,6 +270,34 @@ class Manejador(SimpleHTTPRequestHandler):
             "content": {"name": os.path.basename(f), "path": ruta, "sha": sha_git(nuevo)},
             "commit": {"message": cuerpo.get("message", "")},
         })
+
+    def do_DELETE(self):
+        p = unquote(urlparse(self.path).path)
+        if not p.startswith("/__dev/api/"):
+            return self._json(405, {"message": "Method Not Allowed"})
+        dest = self._api()
+        if not dest:
+            return self._json(404, {"message": "Not Found"})
+        repo, ruta = dest
+        if not self._token():
+            return self._json(401, {"message": "Requires authentication"})
+        if not self._token_valido():
+            return self._json(401 if self._token() == "malo" else 403, {"message": "En desarrollo vale el token «dev», no uno real."})
+        if repo.lower() == "datos-cifrados-dev":
+            return self._json(403, {"message": "El repositorio de antes solo se lee."})
+        try:
+            f = ruta_datos(repo, ruta)
+            largo = int(self.headers.get("Content-Length") or 0)
+            cuerpo = json.loads(self.rfile.read(largo) or b"{}")
+        except (ValueError, json.JSONDecodeError):
+            return self._json(400, {"message": "petición no válida"})
+        if not os.path.isfile(f):
+            return self._json(404, {"message": "Not Found"})
+        if cuerpo.get("sha") != sha_git(open(f, "rb").read()):
+            return self._json(409, {"message": f"{ruta} does not match {cuerpo.get('sha')}"})
+        os.remove(f)
+        apuntar(repo, ruta, cuerpo.get("message", ""), 0)
+        return self._json(200, {"content": None, "commit": {"message": cuerpo.get("message", "")}})
 
 
 def main():

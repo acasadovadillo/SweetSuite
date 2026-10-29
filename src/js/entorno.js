@@ -5,7 +5,7 @@
  * (localhost, la IP del Mac…) es desarrollo, y en desarrollo nada habla con
  * GitHub: el servidor de tools/dev/ hace de GitHub con datos de prueba.
  *
- * Las apps de dentro (apps/solvento, apps/ironrack) preguntan aquí, a través
+ * Las apps de dentro (apps/solvento, apps/ironrack, apps/agora) preguntan aquí, a través
  * de window.SweetSuite.entorno, en vez de decidirlo cada una.
  */
 (function () {
@@ -22,9 +22,11 @@
     // lado, el llavero de la cuenta (<usuario>.llavero.json)
     repos: prod
       ? { solvento: { owner: "acasadovadillo", repo: "Solvento-Data", branch: "main" },
-          ironrack: { owner: "acasadovadillo", repo: "Ironrack-Data", branch: "main" } }
+          ironrack: { owner: "acasadovadillo", repo: "Ironrack-Data", branch: "main" },
+          agora: { owner: "acasadovadillo", repo: "Agora-Data", branch: "main" } }
       : { solvento: { owner: "dev", repo: "solvento-data-dev", branch: "main" },
-          ironrack: { owner: "dev", repo: "ironrack-data-dev", branch: "main" } },
+          ironrack: { owner: "dev", repo: "ironrack-data-dev", branch: "main" },
+          agora: { owner: "dev", repo: "agora-data-dev", branch: "main" } },
     // La cuenta Admin: su llavero, en un repositorio privado aparte, y la lista
     // de cuentas, que es este mismo repositorio (cuentas.json)
     admin: prod

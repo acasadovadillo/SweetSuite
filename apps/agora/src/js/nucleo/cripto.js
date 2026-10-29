@@ -102,6 +102,25 @@
     return { objeto: JSON.parse(decodificar(plano)), llave: { clave: clave, sal: sal, iter: bloque.iter } };
   }
 
+  /** La llave de un bloque ya guardado (su sal y sus iteraciones), para abrirlo o abrir lo cifrado con ella. */
+  async function llaveConSal(contrasena, salBase64, iteraciones) {
+    var sal = desdeBase64(salBase64);
+    return { clave: await derivarClave(contrasena, sal, iteraciones), sal: sal, iter: iteraciones };
+  }
+
+  /** Abre un bloque con una llave ya derivada (la de su sal). Error con codigo "CONTRASENA" si no es la suya. */
+  async function abrirConLlave(bloque, llave) {
+    if (!esBloque(bloque)) throw new Error("No es un bloque cifrado de Agora.");
+    try {
+      var plano = await sutil().decrypt({ name: "AES-GCM", iv: desdeBase64(bloque.iv) }, llave.clave, desdeBase64(bloque.ct));
+      return JSON.parse(decodificar(plano));
+    } catch (e) {
+      var err = new Error("La contraseña no es correcta.");
+      err.codigo = "CONTRASENA";
+      throw err;
+    }
+  }
+
   /**
    * Archivos adjuntos: se cifran como bytes (sin pasar por JSON) con la llave de
    * la sesión y un iv nuevo. Devuelve { iv, ct } (Uint8Array); en las copias de
@@ -213,7 +232,7 @@
     nuevaClaveDatos: nuevaClaveDatos, cifrarConClave: cifrarConClave, descifrarConClave: descifrarConClave,
     nuevoParUsuario: nuevoParUsuario, protegerPrivada: protegerPrivada, abrirPrivada: abrirPrivada,
     envolverClave: envolverClave, desenvolverClave: desenvolverClave,
-    descifrar: descifrar, esBloque: esBloque, cifrarBytes: cifrarBytes, descifrarBytes: descifrarBytes,
+    descifrar: descifrar, esBloque: esBloque, llaveConSal: llaveConSal, abrirConLlave: abrirConLlave, cifrarBytes: cifrarBytes, descifrarBytes: descifrarBytes,
     archivoABase64: archivoABase64, archivoDesdeBase64: archivoDesdeBase64, aBase64: aBase64, desdeBase64: desdeBase64,
   };
 });

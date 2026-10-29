@@ -278,6 +278,59 @@ async function main() {
     W = await hasta(abierta, 40000);
     return cargo && (await W.WA.Sesion.datos.leer("asociacion")).nombre === "ABIES de prueba";`));
 
+  await prueba("Agora: con el token se sube a Agora-Data, con sus adjuntos aparte", () => E.js(`
+    const W = marco("agora");
+    await W.WA.Nube.cambiarToken("dev"); await sinDialogo();
+    const datos = W.WA.Sesion.datos;
+    const ficha = await datos.guardarArchivo({ nombre: "estatutos.txt", tipoMime: "text/plain", categoria: "Estatutos", fecha: "2026-10-29" }, new TextEncoder().encode("Estatutos de prueba"));
+    await W.WA.Sesion.esperar(); await W.WA.Nube.subir();
+    const api = (r) => fetch("/__dev/api/repos/dev/agora-data-dev/contents/" + r, { headers: { Authorization: "Bearer dev" } });
+    const ok = (await api("abies-agora.enc")).ok && (await api("adjuntos/" + ficha.id + ".enc")).ok && (await api("abies.llavero.json")).ok;
+    window.__adjunto = ficha.id;
+    return ok && W.WA.Nube.estado === "ok" && !W.WA.Nube.pendiente();`));
+
+  // Otro dispositivo de ABIES: dos miembros de la junta a la vez
+  const F = await dispositivo();
+  await F.abrir(URL_SUITE);
+  const adjunto = await E.js(`return window.__adjunto;`);
+  await prueba("Agora: otro dispositivo trae lo de la junta al pegar su token, adjuntos incluidos", () => F.js(`
+    $('[data-modo="empresa"]').click();
+    await hasta(() => $("#f-empresa")); let f = $("#f-empresa"); f.empresa.value = "abies"; f.contrasena.value = "empresa-1234"; f.requestSubmit();
+    await hasta(() => $("#f-rep")); f = $("#f-rep"); f.usuario.value = "alberto"; f.contrasena.value = "prueba-1234"; f.requestSubmit();
+    await hasta(() => $("#b-yalauso")); $("#b-yalauso").click();
+    await hasta(() => location.hash === "#inicio"); location.hash = "#app/agora";
+    let W = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
+    await W.WA.Nube.cambiarToken("dev"); await sinDialogo();
+    // (si las claves de la cuenta cambian, Agora vuelve a entrar con las de GitHub)
+    W = await hasta(async () => { const w = marco("agora"); return w.WA.Sesion.modo === "abierta" &&
+      (await w.WA.Sesion.datos.leer("asociacion")).nombre === "ABIES de prueba" && w; }, 40000);
+    const bytes = await W.WA.Sesion.datos.leerArchivo(${JSON.stringify(adjunto)});
+    return new TextDecoder().decode(bytes) === "Estatutos de prueba";`));
+
+  await prueba("Agora: dos representantes guardan a la vez y los dos acaban con todo", async () => {
+    const alta = (quien) => `const W = marco("agora");
+      await W.WA.Sesion.datos.guardar("socios", { nombre: "Socio ${quien}", apellidos: "Prueba", fechaAlta: "2026-10-29" });
+      await W.WA.Sesion.esperar(); return true;`;
+    await E.js(alta("de E"));
+    await F.js(alta("de F"));
+    // Los dos suben a la vez: el segundo choca, trae lo del otro, mezcla y vuelve a subir
+    await Promise.all([E.js(`await marco("agora").WA.Nube.subir(); return true;`), F.js(`await marco("agora").WA.Nube.subir(); return true;`)]);
+    const nombres = `const W = marco("agora"); await W.WA.Nube.sincronizar({ forzar: true });
+      return (await W.WA.Sesion.datos.listar("socios")).map((s) => s.nombre).sort().join(",");`;
+    const enE = await E.js(nombres), enF = await F.js(nombres);
+    if (enE !== "Socio de E,Socio de F" || enF !== enE) throw new Error("E tiene «" + enE + "» y F «" + enF + "»");
+    // Lo que uno borra desaparece en el otro, también su adjunto en GitHub
+    await F.js(`const W = marco("agora"); await W.WA.Sesion.datos.borrarArchivo(${JSON.stringify(adjunto)}); await W.WA.Sesion.esperar(); await W.WA.Nube.subir(); return true;`);
+    return await E.js(`const W = marco("agora"); await W.WA.Nube.sincronizar({ forzar: true });
+      const r = await fetch("/__dev/api/repos/dev/agora-data-dev/contents/adjuntos/" + ${JSON.stringify(adjunto)} + ".enc", { headers: { Authorization: "Bearer dev" } });
+      const sinAdjunto = r.status === 404 && !(await W.WA.Sesion.datos.listar("documentos")).length;
+      // Y en el inicio de SweetSuite, el resumen de Agora
+      location.hash = "#inicio";
+      await hasta(() => $('[data-resumen-app="agora"]').textContent.includes("socios activos"));
+      location.hash = "#app/agora";
+      return sinAdjunto;`);
+  });
+
   await prueba("se bloquea solo tras un rato sin usarla", () => E.js(`
     const real = Date.now; Date.now = () => real() + 16 * 60000;
     document.dispatchEvent(new Event("visibilitychange"));

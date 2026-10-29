@@ -267,13 +267,41 @@
   }
 
   // ── El estado del pie: dónde está guardado ──────────────────────────────
-  function ponerEstado(texto, color) {
+  // Un punto de color y una palabra, con las palabras de Ironrack y Solvento.
+  // Pulsarlo sube lo pendiente.
+  var ESTADOS = {
+    ok: ["Sincronizado", "var(--ok)"],
+    subiendo: ["Guardando…", "var(--acento)"],
+    pendiente: ["Sin subir", "var(--aviso)"],
+    local: ["Sin sincronizar", "var(--texto-3)"],
+    auth: ["Revisa el token", "var(--peligro)"],
+    error: ["Error al sincronizar", "var(--peligro)"],
+  };
+  function ponerEstado(texto, color, titulo) {
     var e = $("estado-copia");
     e.textContent = texto;
+    e.title = titulo || "";
     e.style.setProperty("--punto", color);
   }
-  function actualizarFranjas() {
-    if (WA.Sesion.modo === "abierta") ponerEstado("En este dispositivo", "var(--aviso)");
+  function pintarEstado() {
+    if (WA.Sesion.modo !== "abierta") return;
+    var e = ESTADOS[WA.Nube.estado] || ESTADOS.local;
+    ponerEstado(e[0], e[1], WA.Nube.textoEstado());
+  }
+  var actualizarFranjas = pintarEstado;
+
+  /** Guardar ya: ⌘S, el estado del pie y el botón de Ajustes. */
+  async function guardarAhora() {
+    if (WA.Sesion.modo !== "abierta") return;
+    if (!WA.Nube.token) {
+      WA.UI.aviso("Para subir a GitHub hace falta tu token: pégalo en Ajustes.");
+      location.hash = "#/ajustes/sincronizacion";
+      return;
+    }
+    await WA.Sesion.esperar();
+    if (!WA.Nube.pendiente()) { WA.UI.aviso("No hay nada que subir: GitHub ya tiene lo último."); return; }
+    var e = await WA.Nube.subirAhora();
+    WA.UI.aviso(e === "ok" ? "Guardado en GitHub." : WA.Nube.textoEstado(), e === "ok" ? "" : "error");
   }
 
   // ── La entrada, desde SweetSuite ─────────────────────────────────────────
@@ -297,10 +325,11 @@
       return;
     }
     SS.registrar("agora", {
+      // Al volver a SweetSuite, bloquear o cerrar: lo pendiente, a GitHub
       guardarAlSalir: function () {
-        return WA.Sesion.esperar().then(function () { return { estado: "local", texto: "guardado en este dispositivo" }; });
+        return WA.Sesion.esperar().then(function () { return WA.Nube.guardarAlSalir(); });
       },
-      pendiente: function () { return WA.Sesion.hayGuardadosPendientes(); },
+      pendiente: function () { return WA.Sesion.hayGuardadosPendientes() || WA.Nube.pendiente(); },
       // La cuenta ha cambiado de llave (p. ej. en otro dispositivo): se vuelve a cifrar con la nueva
       alCambiarClaves: async function () {
         await WA.Sesion.esperar();
@@ -349,6 +378,13 @@
       } else if (e.key === "Escape") { buscador.value = ""; filtrarMenu(""); }
     });
     $("btn-apps").addEventListener("click", function () { cerrarMenuMovil(); WA.Suite.elegirApp(); });
+    $("estado-copia").addEventListener("click", function () { guardarAhora(); });
+    document.addEventListener("keydown", function (e) {
+      if ((e.metaKey || e.ctrlKey) && !e.altKey && String(e.key).toLowerCase() === "s") {
+        e.preventDefault();
+        guardarAhora();
+      }
+    });
     window.addEventListener("beforeunload", function (e) {
       if (WA.Sesion.hayGuardadosPendientes()) { e.preventDefault(); e.returnValue = ""; }
     });
@@ -384,5 +420,6 @@
   }
 
   WA.App = { registrar: registrar, iniciar: iniciar, entrarEnSuite: entrarEnSuite, navegar: navegar, repintar: repintar, actualizarFranjas: actualizarFranjas,
+    pintarEstado: pintarEstado, guardarAhora: guardarAhora,
     moduloActual: moduloActual, pintarMenu: pintarMenu, ponerAcento: ponerAcento, acentoGuardado: acentoGuardado, iniciales: iniciales };
 })(typeof self !== "undefined" ? self : this);
