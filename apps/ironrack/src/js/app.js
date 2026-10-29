@@ -1,5 +1,8 @@
 /*
- * Ironrack — Arranque, pantalla de entrada, navegación y ajustes.
+ * Ironrack — Arranque, navegación y ajustes.
+ *
+ * La entrada es la de SweetSuite: Ironrack arranca ya con la cuenta abierta,
+ * con el secreto que le da SweetSuite (suite-puente.js).
  *
  * Las vistas se eligen por el hash: #entrenar, #historial/<id>, #progreso/<ej>,
  * #rutinas/<id>, #ejercicios, #ajustes/<pestaña>. Cada vista es una función que
@@ -10,7 +13,7 @@
   const IR = (window.IR = window.IR || {});
   const U = IR.u, A = IR.almacen, esc = U.esc, $ = IR.ui.$;
   const S = A.S;
-  const VERSION = "1.6.0";
+  const VERSION = "2.0.0";
 
   // ── Pintar ──
   // Si estás escribiendo en una casilla, no se repinta debajo de ti (te
@@ -85,8 +88,10 @@
     switch (S.estado) {
       case "ok": return "Todo guardado y subido a GitHub, cifrado.";
       case "subiendo": return "Subiendo tus cambios a GitHub…";
-      case "pendiente": return "Guardado en este dispositivo. Se subirá a GitHub en cuanto haya conexión.";
-      case "local": return "Guardado solo en este dispositivo. Pega tu token de GitHub para tener una copia cifrada en datos-cifrados.";
+      case "pendiente": return A.autoguardado()
+        ? "Guardado en este dispositivo. Se subirá a GitHub en cuanto haya conexión."
+        : "Guardado en este dispositivo. Súbelo con Guardar, ⌘S o al volver a SweetSuite.";
+      case "local": return "Guardado solo en este dispositivo. Pega tu token de GitHub para tener una copia cifrada en Ironrack-Data.";
       default: return S.error || "No se ha podido sincronizar.";
     }
   }
@@ -99,7 +104,7 @@
     ["entreno", "Entreno", "Lo que pasa mientras entrenas."],
     ["apariencia", "Apariencia", ""],
     ["sincronizacion", "Sincronización", "La copia cifrada de tus entrenos en GitHub."],
-    ["seguridad", "Seguridad", "Copias de tus datos y lo que se guarda en este dispositivo."],
+    ["seguridad", "Seguridad", "Copias de tus datos y tu cuenta de SweetSuite."],
   ];
   const ALIAS_AJUSTES = { general: "entreno", datos: "seguridad" };   // los nombres de antes
   const fila = (titulo, desc, control, clase) => `<div class="fila ${clase || ""}">
@@ -144,12 +149,22 @@
         <p class="seccion-desc">${esc(textoEstado())}</p>
         <div class="tarjeta filas">
           ${fila("Archivo", "Repositorio privado. GitHub solo ve texto cifrado.", `<code>${esc(ruta)}</code>`, "apilar")}
-          ${fila("Token de GitHub", S.token ? "Guardado en este dispositivo, cifrado con tu contraseña." : "Sin token, tus entrenos solo están en este dispositivo.",
+          ${fila("Token de GitHub", S.token ? "Guardado en este dispositivo, cifrado con tu cuenta." : "Sin token, tus entrenos solo están en este dispositivo.",
             `<button class="btn ${S.token ? "" : "primario"}" data-a="ajToken">${S.token ? "Cambiar token" : "Pegar token"}</button>`)}
+          ${fila("Autoguardado", "Cada cambio se sube solo a GitHub unos segundos después.",
+            `<input type="checkbox" class="conmutador" data-cambio="ajAuto" aria-label="Autoguardado" ${A.autoguardado() ? "checked" : ""} ${S.token ? "" : "disabled"}>`)}
+          ${fila("Guardar ahora", "Sube lo que haya sin subir. También con ⌘S / Ctrl+S.",
+            `<button class="btn" data-a="ajGuardar" ${S.token ? "" : "disabled"}>Guardar</button>`)}
           ${fila("Sincronizar ahora", "Trae lo de tus otros dispositivos y sube lo de este.",
             `<button class="btn" data-a="ajSincronizar" ${S.token ? "" : "disabled"}>Sincronizar</button>`)}
         </div>
-        ${IR.github.DEV ? '<p class="nota">Modo local de pruebas: no se habla con GitHub.</p>' : ""}`;
+        <h2>La app de antes</h2>
+        <div class="tarjeta filas">
+          ${fila("Traer tus entrenos de la app de antes", (A.tieneAntigua() ? "Este dispositivo tiene datos de la Ironrack de antes. " : "") +
+            "Con la contraseña que usabas en ella. Se mezclan con los de ahora, sin borrar nada.",
+            '<button class="btn" data-a="ajTraerAntigua">Traer</button>', "apilar")}
+        </div>
+        ${IR.github.DEV ? '<p class="nota">Entorno de desarrollo: GitHub es el servidor local, con datos de prueba.</p>' : ""}`;
     },
 
     seguridad() {
@@ -159,10 +174,10 @@
           ${fila("Importar copia", "Se mezcla con lo que ya tienes, sin borrar nada.",
             '<label class="btn">Importar<input type="file" accept="application/json,.json" data-cambio="ajImportar" hidden></label>')}
         </div>
-        <h2>Este dispositivo</h2>
+        <h2>Tu cuenta</h2>
         <div class="tarjeta filas">
-          ${fila("Bloquear", "Vuelve a la entrada: la próxima vez te pedirá la contraseña.", '<button class="btn" data-a="bloquear">Bloquear</button>')}
-          ${fila("Borrar datos de este dispositivo", "Borra la copia local y el token. Lo que está en GitHub no se toca.", '<button class="btn texto-peligro" data-a="ajOlvidar">Borrar</button>')}
+          ${fila("Contraseña y clave de recuperación", "Son las de tu cuenta de SweetSuite, para todas tus apps.", '<button class="btn" data-a="irCuenta">Abrir</button>')}
+          ${fila("Bloquear", "Vuelve a la entrada de SweetSuite. Antes se sube lo pendiente.", '<button class="btn" data-a="bloquear">Bloquear</button>')}
         </div>`;
     },
   };
@@ -172,7 +187,7 @@
       const pedida = ALIAS_AJUSTES[pestana] || pestana;
       const p = SECCIONES[pedida] ? pedida : "entreno";
       const [, nombre, desc] = PESTANAS.find((x) => x[0] === p);
-      return `<section class="cabeza"><h1>Ajustes</h1><p>Todo lo tuyo se guarda cifrado con tu contraseña.</p></section>
+      return `<section class="cabeza"><h1>Ajustes</h1><p>Todo lo tuyo se guarda cifrado con tu cuenta de SweetSuite.</p></section>
         <div class="aj-layout">
           <nav class="aj-nav" aria-label="Secciones de Ajustes">${PESTANAS.map(([id, n]) =>
             `<a href="#ajustes/${id}" class="aj-tab ${id === p ? "activo" : ""}">${n}</a>`).join("")}</nav>
@@ -190,6 +205,39 @@
     ajAcentoPrevio: (el) => { if (IR.tema.valido(el.value)) IR.tema.aplicar(el.value); },
     ajAcentoPropio: (el) => { if (IR.tema.valido(el.value)) A.cambiarAjustes((a) => { a.acento = el.value.toLowerCase(); }); },
     async ajSincronizar() { await A.sincronizar({ forzar: true }); if (A.pendiente()) await A.subir(); render(true); },
+    ajAuto: (el) => { A.ponerAutoguardado(el.checked); IR.ui.aviso(el.checked ? "Autoguardado encendido" : "Autoguardado apagado: sube con Guardar o ⌘S"); render(true); },
+    ajGuardar: () => guardarAhora(),
+    irCuenta: () => IR.suite.cuenta(),
+    volverSuite: () => { cerrarLateral(); IR.suite.volver(); },
+    ajTraerAntigua() {
+      IR.ui.hoja(`<h3>Traer de la app de antes</h3>
+        <form class="form" id="f-antigua">
+          <p class="suave">Escribe la contraseña que usabas en la Ironrack de antes. Se traen tus entrenos de este dispositivo y de
+            <code>datos-cifrados</code>, y se mezclan con los de ahora.</p>
+          <label>Contraseña de antes <input type="password" name="password" autocomplete="off" required></label>
+          <details class="ayuda"><summary>¿Y si no estaba en este dispositivo?</summary>
+            <p>Pega también el token que usabas en la app de antes (el que daba acceso a <code>datos-cifrados</code>).</p>
+            <label>Token de antes (opcional) <input name="token" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="github_pat_…"></label></details>
+          <p class="error" id="antigua-error"></p>
+          <div class="botones"><button type="button" class="btn" data-a="_cerrar">Cancelar</button><button class="btn primario">Traer</button></div>
+        </form>`);
+      IR.acc._cerrar = () => IR.ui.cerrarHoja();
+      $("#f-antigua").addEventListener("submit", async (ev) => {
+        ev.preventDefault();
+        const btn = ev.target.querySelector(".primario");
+        btn.disabled = true;
+        $("#antigua-error").textContent = "";
+        try {
+          const r = await A.traerAntigua({ password: ev.target.password.value, token: ev.target.token.value });
+          IR.ui.cerrarHoja();
+          IR.ui.aviso(`Traídos ${r.sesiones} entrenos y ${r.rutinas} rutinas`);
+          render(true);
+        } catch (e) {
+          $("#antigua-error").textContent = e.code === "BAD_PASSWORD" ? "Esa no es la contraseña de la app de antes" : e.message;
+          btn.disabled = false;
+        }
+      });
+    },
     ajToken() {
       IR.ui.hoja(`<h3>Token de GitHub</h3>
         <form class="form" id="f-token">
@@ -238,25 +286,18 @@
     },
     ajSalir: () => bloquear(),
     bloquear: () => bloquear(),
-    async ajOlvidar() {
-      const aviso = A.pendiente() ? "¡Hay cambios que aún no están en GitHub y se perderán!" : "Lo que está en GitHub no se toca.";
-      if (!(await IR.ui.confirmar("¿Borrar tus datos de este dispositivo?", { detalle: aviso + " Se borran la copia local y el token.", si: "Borrar", peligro: true }))) return;
-      await A.olvidarDispositivo();
-      mostrarLogin();
-    },
-    irSincronizacion: () => { location.hash = "#ajustes/sincronizacion"; },
+    irSincronizacion: () => { if (A.pendiente() && S.token) guardarAhora(); else location.hash = "#ajustes/sincronizacion"; },
     abrirLateral: () => abrirLateral(),
     cerrarLateral: () => cerrarLateral(),
     // La cuenta de la barra lateral abre su menú, como en Solvento: Ajustes,
     // entrar con otra cuenta y Bloquear.
     menuCuenta() {
-      const cuenta = IR.github.CUENTAS.find((c) => c.usuario === S.usuario);
-      const otras = IR.github.CUENTAS.filter((c) => c.usuario !== S.usuario);
       cerrarLateral();
-      IR.ui.menu(cuenta ? cuenta.nombre : S.usuario, [
-        { texto: "Ajustes", fn: () => { location.hash = "#ajustes"; } },
-        ...otras.map((c) => ({ texto: "Entrar como " + c.nombre, fn: () => bloquear(c.usuario) })),
+      IR.ui.menu(S.nombre || S.usuario, [
+        { texto: "Ajustes de Ironrack", fn: () => { location.hash = "#ajustes"; } },
+        { texto: "Volver a SweetSuite", fn: () => IR.suite.volver() },
         { texto: "Bloquear", fn: () => bloquear() },
+        { texto: "Cerrar sesión", fn: () => { cerrarLateral(); IR.suite.cerrarSesion(); } },
       ]);
     },
     // En el ordenador filtra según se escribe; en el móvil, al pulsar Intro,
@@ -264,14 +305,26 @@
     buscarLateral(el) { if (escritorio()) IR.ejercicios.buscar(el.value.trim()); },
   });
 
-  // Bloquear: vuelve a la entrada. Con cambios sin subir, se pregunta antes;
-  // con «otra», la entrada aparece ya con ese usuario escrito.
-  async function bloquear(otra) {
-    if (A.pendiente() && S.token && !(await IR.ui.confirmar("Hay cambios sin subir", { detalle: "Se quedan guardados y cifrados en este dispositivo, y se subirán la próxima vez que entres.", si: "Salir igualmente" }))) return;
+  // Bloquear: SweetSuite sube lo pendiente de cada app y vuelve a su entrada
+  function bloquear() {
     cerrarLateral();
-    await A.salir();
-    mostrarLogin(null, otra);
+    IR.suite.bloquear();
   }
+
+  // Guardar ya (⌘S, el botón y el estado del pie)
+  async function guardarAhora() {
+    if (!S.token) { IR.ui.aviso("Para subir a GitHub hace falta el token: pégalo en Ajustes"); location.hash = "#ajustes/sincronizacion"; return; }
+    if (!A.pendiente()) { IR.ui.aviso("No hay nada que subir: GitHub ya tiene lo último"); return; }
+    const e = await A.subirAhora();
+    IR.ui.aviso(e === "ok" ? "Guardado en GitHub" : textoEstado());
+  }
+  document.addEventListener("keydown", (ev) => {
+    if ((ev.metaKey || ev.ctrlKey) && !ev.altKey && String(ev.key).toLowerCase() === "s") {
+      ev.preventDefault();
+      if (S.doc) guardarAhora();
+    }
+  });
+
   document.addEventListener("keydown", (ev) => {
     if (ev.key !== "Enter" || ev.target.id !== "buscar-lateral") return;
     IR.ejercicios.buscar(ev.target.value.trim());
@@ -281,109 +334,43 @@
   function ayudaToken() {
     return `<details class="ayuda"><summary>¿Qué token?</summary>
       <p>Uno <b>fine-grained</b> de GitHub (Settings → Developer settings → Personal access tokens → Fine-grained tokens) con acceso
-      <b>solo</b> al repositorio <code>${esc(IR.github.REPO.repo)}</code> y permiso <b>Contents: Read and write</b>. Sirve el mismo de Solvento.
-      Se guarda cifrado con tu contraseña, solo en este dispositivo.</p></details>`;
+      <b>solo</b> al repositorio <code>${esc(IR.github.REPO.repo)}</code> y permiso <b>Contents: Read and write</b>.
+      Se guarda cifrado con tu cuenta, solo en este dispositivo.</p></details>`;
   }
 
-  // ── Entrada ──
-  //
-  // Usuario y contraseña, nada más: el token se pega luego en Ajustes. La
-  // primera vez que un usuario entra en un dispositivo no hay nada que abrir,
-  // así que la contraseña se establece escribiéndola dos veces; una errata ahí
-  // dejaría el archivo cifrado con una contraseña que nadie recuerda.
-  const MIN_CONTRASENA = 6;
-  const esPrimeraVez = (u) => !A.tieneDatos(u);
-
-  // La pantalla es la de Solvento: logo, nombre, una línea gris y tres
-  // recuadros (usuario, contraseña con su ojo y el botón).
-  const OJO = '<svg class="ojo-ver" viewBox="0 0 24 24" aria-hidden="true"><path d="M1.5 12S5.5 5 12 5s10.5 7 10.5 7-4 7-10.5 7S1.5 12 1.5 12Z"/><circle cx="12" cy="12" r="3"/></svg>';
-  const OJO_TACHADO = '<svg class="ojo-tachado" viewBox="0 0 24 24" aria-hidden="true" hidden><path d="M3 3l18 18"/><path d="M10.6 6.2A9.6 9.6 0 0 1 12 6c6.5 0 10.5 6 10.5 6a17 17 0 0 1-3.4 3.9"/><path d="M6.5 7.6A17 17 0 0 0 1.5 12S5.5 18 12 18a9.9 9.9 0 0 0 4-.8"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg>';
-  const SUB_ENTRAR = "Entra con tu usuario y tu contraseña";
-
-  function mostrarLogin(error, usuario) {
-    // Siempre en el rojo de siempre: el acento es de cada cuenta, y aquí aún
-    // no se sabe quién entra (ni queda el de quien acaba de salir).
-    IR.tema.aplicar(IR.tema.PREDETERMINADO);
+  // ── Arranque desde SweetSuite ──
+  // SweetSuite da el secreto de Ironrack; con él se abre lo de este
+  // dispositivo y, con token, lo de GitHub.
+  function pantallaError(texto) {
     $("#app").hidden = true;
     $("#login").hidden = false;
-    $("#login").innerHTML = `<form class="entrada" id="f-login" autocomplete="on" novalidate>
-        <span class="entrada-logo">${LOGO}</span>
-        <div class="entrada-titulo">Ironrack</div>
-        <div class="entrada-sub" id="login-info">${SUB_ENTRAR}</div>
-        <input name="usuario" value="${esc(usuario || A.ultimoUsuario())}" placeholder="Usuario" autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
-        <div class="entrada-clave">
-          <input type="password" name="password" placeholder="Contraseña" autocomplete="current-password">
-          <button type="button" class="entrada-ojo" id="login-ver" aria-label="Ver la contraseña" title="Ver la contraseña">${OJO}${OJO_TACHADO}</button>
-        </div>
-        <input type="password" name="password2" placeholder="Repite la contraseña" autocomplete="new-password" hidden>
-        <button type="submit" class="entrada-boton" id="login-btn">Entrar</button>
-        <div class="entrada-error" id="login-error">${esc(error || "")}</div>
-        ${IR.github.DEV ? '<div class="entrada-sub" style="margin:16px 0 0">Modo local de pruebas: no se habla con GitHub.</div>' : ""}
-      </form>`;
-    const f = $("#f-login");
-    f.usuario.addEventListener("input", () => { $("#login-error").textContent = ""; modoLogin(f); });
-    $("#login-ver").addEventListener("click", () => alternarVerClave(f));
-    f.addEventListener("submit", entrar);
-    modoLogin(f);
-    setTimeout(() => (f.usuario.value ? f.password : f.usuario).focus(), 50);
+    $("#login").innerHTML = `<div class="entrada"><span class="entrada-logo">${LOGO}</span><div class="entrada-titulo">Ironrack</div>
+      <div class="entrada-error">${esc(texto)}</div>
+      <button type="button" class="entrada-boton" style="margin-top:20px" data-a="volverSuite">Volver a SweetSuite</button></div>`;
   }
-
-  // El ojo enseña u oculta lo escrito, en los dos campos de contraseña a la vez
-  function alternarVerClave(f) {
-    const ver = f.password.type === "password", btn = $("#login-ver");
-    f.password.type = f.password2.type = ver ? "text" : "password";
-    // toggleAttribute y no «.hidden = …»: un <svg> no tiene esa propiedad, y
-    // asignarla solo crea una variable suelta sin tocar el atributo.
-    btn.querySelector(".ojo-ver").toggleAttribute("hidden", ver);
-    btn.querySelector(".ojo-tachado").toggleAttribute("hidden", !ver);
-    btn.title = btn.ariaLabel = ver ? "Ocultar la contraseña" : "Ver la contraseña";
-    f.password.focus();
-  }
-
-  // Entrar con la contraseña de siempre, o establecerla si es la primera vez:
-  // entonces aparece un cuarto recuadro para repetirla.
-  function modoLogin(f) {
-    const u = A.limpiarUsuario(f.usuario.value);
-    const nueva = !!u && A.esCuenta(u) && esPrimeraVez(u);
-    f.password.placeholder = nueva ? "Elige tu contraseña" : "Contraseña";
-    f.password.autocomplete = nueva ? "new-password" : "current-password";
-    f.password2.hidden = !nueva;
-    $("#login-info").textContent = nueva
-      ? "Primera vez en este dispositivo: elige tu contraseña y repítela. Si ya usas Ironrack en otro, pon la misma."
-      : SUB_ENTRAR;
-    $("#login-btn").textContent = nueva ? "Crear contraseña y entrar" : "Entrar";
-  }
-
-  async function entrar(ev) {
-    ev.preventDefault();
-    const f = ev.target, btn = $("#login-btn"), err = $("#login-error");
-    const usuario = A.limpiarUsuario(f.usuario.value);
-    const nueva = A.esCuenta(usuario) && esPrimeraVez(usuario);
-    // Como en Solvento: el aviso va en la línea de debajo del botón, en rojo
-    // si algo falla y en gris mientras se entra.
-    const aviso = (texto, gris) => { err.textContent = texto; err.style.color = gris ? "var(--suave)" : ""; };
-    aviso("");
-    if (!usuario) { aviso("Escribe tu usuario"); f.usuario.focus(); return; }
-    if (!f.password.value) { aviso("Escribe tu contraseña"); f.password.focus(); return; }
-    if (nueva && f.password.value.length < MIN_CONTRASENA) { aviso(`La contraseña debe tener al menos ${MIN_CONTRASENA} caracteres`); return; }
-    if (nueva && f.password.value !== f.password2.value) { aviso("Las dos contraseñas no coinciden"); f.password2.focus(); return; }
-    btn.disabled = true;
-    aviso("Entrando…", true);
+  async function entrarEnSuite() {
+    const s = await IR.suite.sesion("ironrack");
+    if (!s) { pantallaError("Tu cuenta no tiene Ironrack."); return; }
     try {
-      await A.entrar({ usuario, password: f.password.value, crear: nueva });
-      arrancar();
+      await A.entrar(s);
     } catch (e) {
-      aviso(e.code === "BAD_PASSWORD" ? "Usuario o contraseña incorrectos" : e.message || String(e));
-      btn.disabled = false;
+      pantallaError("No se pueden abrir tus entrenos de este dispositivo: " + (e.message || e));
+      return;
     }
+    IR.suite.registrar("ironrack", {
+      guardarAlSalir: A.guardarAlSalir,
+      pendiente: () => A.pendiente(),
+      alCambiarClaves: async () => { await A.refrescarClaves(); render(true); },
+      llaveroCambiado: () => A.sincronizar({ forzar: true }),
+    });
+    arrancar();
   }
 
   function arrancar() {
     $("#login").hidden = true;
     $("#login").innerHTML = "";
     $("#app").hidden = false;
-    const cuenta = IR.github.CUENTAS.find((c) => c.usuario === S.usuario);
-    const nombre = cuenta ? cuenta.nombre : S.usuario;
+    const nombre = S.nombre || S.usuario;
     $("#avatar").textContent = nombre.charAt(0);
     $("#nombre-usuario").textContent = nombre;
     $("#marca-nombre").textContent = nombre;          // arriba en el móvil, como Solvento
@@ -395,18 +382,17 @@
 
   const LOGO = `<svg viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="20" width="7" height="24" rx="2"/><rect x="14" y="14" width="8" height="36" rx="2"/><rect x="42" y="14" width="8" height="36" rx="2"/><rect x="51" y="20" width="7" height="24" rx="2"/><rect x="22" y="29" width="20" height="6" rx="1"/></svg>`;
 
-  // La sesión no se guarda nunca: cada vez que se abre la app, contraseña.
   function iniciar() {
+    if (!IR.suite) return;                 // fuera de SweetSuite: suite-puente.js ya se va
     $("#marca").insertAdjacentHTML("afterbegin", LOGO);
     $("#marca-lateral").insertAdjacentHTML("afterbegin", LOGO);
     // La barra lateral del ordenador lleva los mismos enlaces que las pestañas del móvil
     $("#nav-lateral").innerHTML = [...document.querySelectorAll(".tabs a")].map((a) => a.outerHTML).join("");
     $("#version").textContent = VERSION;
     IR.cripto.borrarSesionesAntiguas();
-    mostrarLogin();
-    if ("serviceWorker" in navigator && !IR.github.DEV) navigator.serviceWorker.register("sw.js").catch(() => {});
+    entrarEnSuite();
   }
 
-  IR.app = { render, pintarEstado, VERSION };
+  IR.app = { render, pintarEstado, textoEstado, VERSION };
   iniciar();
 })();

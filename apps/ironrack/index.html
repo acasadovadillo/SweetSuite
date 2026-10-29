@@ -6,13 +6,7 @@
   <title>Ironrack</title>
   <meta name="description" content="Registro de entrenos de gimnasio: ejercicios, series, repeticiones y kilos.">
   <meta name="theme-color" content="#0e1015">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Ironrack">
-  <link rel="manifest" href="manifest.json">
   <link rel="icon" href="img/icono.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="img/icono-180.png">
   <!-- Albert Sans, como en Solvento: la usa la pantalla de entrada -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -48,6 +42,7 @@
       <div class="lateral-seccion">Cuenta</div>
       <nav class="lateral-nav">
         <a href="#ajustes" data-tab="ajustes"><svg viewBox="0 0 24 24"><use href="#i-ajustes"/></svg>Ajustes</a>
+        <a href="#" data-a="volverSuite"><svg viewBox="0 0 24 24"><use href="#i-suite"/></svg>Volver a SweetSuite</a>
         <a href="#" data-a="bloquear"><svg viewBox="0 0 24 24"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Bloquear</a>
       </nav>
       <div class="lateral-pie">
@@ -63,6 +58,9 @@
         <svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16"/></svg>
       </button>
       <a href="#entrenar" class="marca" id="marca"><span id="marca-nombre">Ironrack</span></a>
+      <button type="button" class="hamburguesa" data-a="volverSuite" aria-label="Volver a SweetSuite" title="Volver a SweetSuite">
+        <svg viewBox="0 0 24 24"><use href="#i-suite"/></svg>
+      </button>
     </header>
 
     <main id="vista"></main>
@@ -79,6 +77,7 @@
   </div>
 
   <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="i-suite" viewBox="0 0 24 24"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></symbol>
     <symbol id="i-ajustes" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></symbol>
   </svg>
 
@@ -86,6 +85,7 @@
   <div id="hoja" class="hoja" role="dialog" aria-modal="true" hidden></div>
   <div id="aviso" class="aviso" role="status" hidden></div>
 
+  <script src="src/js/suite-puente.js"></script>
   <script src="src/js/util.js"></script>
   <script src="src/js/tema.js"></script>
   <script src="src/js/cripto.js"></script>

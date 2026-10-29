@@ -21,55 +21,35 @@ En **Ajustes › Apariencia** se elige el color de acento: la paleta de OpenClaw
 
 ## Dónde están los datos
 
-Igual que Solvento: todo lo de cada usuario es **un documento cifrado en el navegador** (AES-256-GCM, clave derivada de la contraseña con PBKDF2-SHA256 y 310.000 iteraciones, mismo formato de bloque) y se guarda en el repositorio **privado** `acasadovadillo/datos-cifrados`:
+Ironrack vive dentro de **SweetSuite** (ver el README de la raíz): la entrada, la contraseña y la clave de recuperación son las de SweetSuite, que le da a Ironrack su secreto. Con él se cifra todo lo de cada usuario (AES-256-GCM, PBKDF2-SHA256 310.000), que se guarda en el repositorio **privado** `Ironrack-Data`, un archivo por cuenta (`<usuario>-ironrack.enc`).
 
-```
-datos-cifrados/Ironrack/alberto-ironrack.enc
-datos-cifrados/Ironrack/hafsa-ironrack.enc
-```
-
-Los usuarios (`alberto` y `hafsa`) están en `CUENTAS`, en `src/js/github.js`. Al entrar se escribe el usuario y la contraseña. La primera vez de un usuario en un dispositivo, la contraseña se establece escribiéndola dos veces (mínimo 6 caracteres): es la que cifra su `.enc`, así que en otro dispositivo hay que poner la misma.
-
-- La contraseña nunca se guarda ni sale del navegador. GitHub solo ve texto cifrado.
-- **El token no se pide al entrar.** Sin él la app funciona entera, pero solo en ese dispositivo, y lo avisa en Entrenar. En **Ajustes → Pegar token de GitHub** se pega un token **fine-grained** con acceso solo a `datos-cifrados` y permiso *Contents: Read and write* (vale el de Solvento); se guarda cifrado, se sube lo de ese dispositivo y se fusiona con lo que ya hubiera en GitHub. El archivo `.enc` de cada usuario se crea entonces.
-- El token no puede ir en el código: este repositorio es público y `datos-cifrados` es privado.
-- Cada cambio se guarda al momento en el dispositivo (cifrado) y se sube a GitHub unos segundos después, o en cuanto vuelve la conexión.
-- **Varios dispositivos**: si el móvil y el portátil guardan a la vez, los documentos se fusionan elemento a elemento (gana la versión más reciente de cada entreno, rutina o ejercicio; lo borrado no resucita).
-- **La sesión no se guarda nunca.** Ni la contraseña ni la clave derivada salen de la memoria: cada vez que se abre la app hay que escribir la contraseña. En el dispositivo solo quedan, cifrados con ella, los datos y el token.
+- El token (*fine-grained*, solo sobre `Ironrack-Data`, *Contents: Read and write*) se pega en Ajustes → Sincronización, no al entrar.
+- Cada cambio se guarda al momento en el dispositivo y se sube a GitHub con el autoguardado (encendido de serie), con Guardar, con ⌘S o al volver a SweetSuite.
+- **Varios dispositivos**: los documentos se fusionan elemento a elemento (gana la versión más reciente de cada entreno, rutina o ejercicio; lo borrado no resucita).
+- **Traer de la app de antes**: en Ajustes → Sincronización, con la contraseña de la Ironrack de antes, se traen y se fusionan los entrenos que guardaba en este dispositivo y en `datos-cifrados/Ironrack/`.
 - En Ajustes se puede descargar una copia en JSON **sin cifrar**, e importarla (se fusiona, no pisa).
 
 ## Estructura
 
-Sin build ni dependencias: HTML, CSS y JS que se sirven tal cual (GitHub Pages).
+Sin build ni dependencias: HTML, CSS y JS que se sirven tal cual, dentro de SweetSuite.
 
 ```
-index.html            la página
-sw.js                 caché para abrir sin conexión (subir VERSION al cambiar archivos)
-manifest.json, img/   instalación como app
+index.html            la página (SweetSuite la abre en un marco)
+img/                  logo y curvas del fondo
 src/css/app.css
 src/js/
+  suite-puente.js     el enlace con SweetSuite (fuera de ella, se va a SweetSuite)
   util.js             formato, 1RM (Epley), volumen
   tema.js             color de acento (Ajustes › Apariencia)
-  cripto.js           cifrado y clave recordada
-  github.js           leer/escribir el bloque en datos-cifrados (y repositorio de mentira en local)
-  almacen.js          el documento, fusión, copia local, sincronización, entrar/salir
+  cripto.js           cifrado y sesión en memoria
+  github.js           leer/escribir el bloque en Ironrack-Data (y leer el de antes en datos-cifrados)
+  almacen.js          el documento, fusión, copia local, sincronización, llavero, traer lo de antes
   biblioteca.js       catálogo de ejercicios (los id no se cambian nunca)
   analisis.js         historial por ejercicio, récords, semanas
   ui.js               hoja inferior, menús, selector de ejercicios, gráficas SVG
   descanso.js         temporizador
   entrenar.js, rutinas.js, historial.js, progreso.js, ejercicios.js   las vistas
-  app.js              arranque, entrada, navegación y ajustes
-tools/servir.py       servidor local sin caché
+  app.js              arranque desde SweetSuite, navegación y ajustes
 ```
 
-## Probar en local
-
-```bash
-python3 tools/servir.py
-```
-
-Abre <http://localhost:8771>. En `localhost` la app **no habla con GitHub**: usa un repositorio de mentira dentro del navegador, y cualquier texto vale como token (salvo `malo`, que simula uno caducado). Para probar contra GitHub de verdad: <http://localhost:8771/?real>.
-
-## Publicar
-
-En GitHub Pages desde la rama `main` (raíz). Al publicar cambios, sube `VERSION` en `sw.js` para que los móviles se actualicen.
+Se prueba y se publica con SweetSuite (ver su README).

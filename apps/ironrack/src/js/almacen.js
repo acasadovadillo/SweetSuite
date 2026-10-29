@@ -7,7 +7,13 @@
  *
  *   1. En este navegador (localStorage), en cuanto cambia algo. En el gimnasio
  *      no siempre hay cobertura, y una serie apuntada no puede depender de ella.
- *   2. En GitHub (datos-cifrados), unos segundos después, cuando hay conexión.
+ *   2. En GitHub (Ironrack-Data), unos segundos después, con el autoguardado
+ *      (encendido de serie), al pulsar Guardar o ⌘S, o al volver a SweetSuite.
+ *
+ * Se cifra con el secreto que SweetSuite da a Ironrack (sale de la clave
+ * maestra de la cuenta). Si la cuenta tiene claves anteriores (ver llavero.js
+ * de SweetSuite), lo que no se abra con la actual se intenta con ellas, y al
+ * guardar ya va con la actual.
  *
  * Varios dispositivos: en vez de que gane el último en escribir —que borraría
  * el entreno del móvil si el portátil guarda después—, los documentos se
@@ -20,8 +26,10 @@
   const IR = (window.IR = window.IR || {});
   const G = IR.github;
 
-  const S = { usuario: null, cripto: null, token: null, doc: null, sha: null, estado: "local", error: null };
-  const clave = (n, u) => `ironrack_${n}_${u || S.usuario}`;
+  const S = { usuario: null, nombre: null, secreto: null, cripto: null, anteriores: [], token: null, doc: null, sha: null, estado: "local", error: null };
+  // Con el prefijo de SweetSuite: en el mismo dominio vive todavía la app de
+  // antes, con sus llaves «ironrack_…», que no se tocan (se leen al traer).
+  const clave = (n, u) => `sweetsuite_ironrack_${n}_${u || S.usuario}`;
   const ls = {
     get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } },
     set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) { /* lleno o bloqueado */ } },
@@ -86,7 +94,8 @@
     S.doc.mod = Date.now();
     ls.set(clave("pendiente"), "1");
     programarGuardado();
-    programarSubida(subirYa ? 0 : 5000);
+    if (autoguardado()) programarSubida(subirYa ? 0 : 5000);
+    else estado(S.token ? "pendiente" : "local");
     if (render) IR.app.render(true);
     IR.app.pintarEstado();
   }
@@ -119,10 +128,15 @@
   const pendiente = () => ls.get(clave("pendiente")) === "1";
 
   // ── Estado de la sincronización (lo pinta la cabecera) ──
+  // Lo que se ve en la tarjeta de Ironrack en el inicio de SweetSuite
+  const PARA_SUITE = { ok: "ok", subiendo: "subiendo", pendiente: "pendiente", local: "", auth: "error", error: "error" };
+  const TEXTO_SUITE = { ok: "Guardado en GitHub", subiendo: "Guardando…", pendiente: "Cambios sin subir",
+    local: "Sin token: solo en este dispositivo", auth: "Revisa el token" };
   function estado(e, error) {
     S.estado = e;
     S.error = error || null;
     if (IR.app) IR.app.pintarEstado();
+    if (IR.suite) IR.suite.estado("ironrack", PARA_SUITE[e] || "", TEXTO_SUITE[e] || S.error || "Error al sincronizar");
   }
 
   // ── Subir ──
@@ -182,8 +196,9 @@
     if (!res) { S.sha = null; ls.del(clave("sha")); return null; }
     if (res.sha === S.sha) return null; // ya lo tenemos
     const blob = JSON.parse(res.texto);
-    const remoto = await S.cripto.descifrar(blob);
-    if (blob.salt !== S.cripto.salt) { S.cripto.adoptar(blob); await persistirCredenciales(); }
+    const { doc: remoto, actual } = await descifrarCon(blob);
+    if (!actual) ls.set(clave("pendiente"), "1");         // se vuelve a cifrar con la clave actual
+    else if (blob.salt !== S.cripto.salt) { S.cripto.adoptar(blob); await persistirCredenciales(); }
     const antes = JSON.stringify(S.doc);
     S.doc = fusionar(S.doc, remoto);
     S.sha = res.sha;
@@ -197,7 +212,8 @@
 
   function errorSync(e) {
     if (e.code === "AUTH") return estado("auth", e.message);
-    if (e.code === "BAD_PASSWORD") return estado("error", "Lo publicado en GitHub no se abre con tu contraseña");
+    if (e.code === "BAD_PASSWORD") return estado("error", "Lo publicado en GitHub no se abre con tu cuenta de SweetSuite");
+    if (e.code === "LLAVERO_PENDIENTE" || e.code === "LLAVERO") return estado("error", e.message);
     if (!navigator.onLine || e instanceof TypeError) return estado("pendiente");
     estado("error", e.message || String(e));
   }
@@ -210,6 +226,7 @@
     ultimaSync = Date.now();
     try {
       estado("subiendo");
+      await llavero();
       await traer();
       if (pendiente()) await subir();
       else estado("ok");
@@ -218,88 +235,93 @@
     }
   }
 
+  // ── Las claves ──
+  // Lo que no se abra con la clave actual se prueba con las anteriores
+  async function descifrarCon(blob) {
+    try { return { doc: await S.cripto.descifrar(blob), actual: true }; }
+    catch (e) { if (e.code !== "BAD_PASSWORD") throw e; }
+    for (const c of S.anteriores) {
+      try { return { doc: await c.descifrar(blob), actual: false }; } catch (e) { /* la siguiente */ }
+    }
+    throw fallo("No se abre con tu cuenta de SweetSuite", "BAD_PASSWORD");
+  }
+  async function textoCon(blob) {
+    try { return await S.cripto.descifrarTexto(blob); } catch (e) { /* las anteriores */ }
+    for (const c of S.anteriores) {
+      try { return await c.descifrarTexto(blob); } catch (e) { /* la siguiente */ }
+    }
+    return null;
+  }
+  const sesionesDe = (secretos) => (secretos || []).map((p) => IR.cripto.sesion({ password: p }));
+
+  // SweetSuite cambió las claves de la cuenta (unió dos llaveros): lo de aquí
+  // se vuelve a cifrar con la actual
+  async function refrescarClaves() {
+    if (!IR.suite || !S.usuario) return;
+    const s = await IR.suite.sesion("ironrack");
+    if (!s) return;
+    S.anteriores = sesionesDe(s.anteriores);
+    if (s.secreto === S.secreto) return;
+    S.secreto = s.secreto;
+    S.cripto = IR.cripto.sesion({ password: s.secreto });
+    await guardarLocal();
+    await persistirCredenciales();
+    ls.set(clave("pendiente"), "1");
+  }
+
+  // El llavero de la cuenta, al lado de los datos: SweetSuite lo pone de
+  // acuerdo con el de este dispositivo
+  async function llavero() {
+    if (!IR.suite || !S.token) return;
+    await IR.suite.reconciliar("ironrack", {
+      leer: (r) => G.leer(S.token, r),
+      escribir: (r, texto, sha, mensaje) => G.escribir(S.token, r, texto, sha, mensaje),
+    });
+    await refrescarClaves();
+  }
+
   // ── Credenciales en este dispositivo ──
-  // Solo el token, y cifrado con la contraseña: sin ella no sirve de nada. La
-  // sesión en sí no se guarda nunca.
+  // Solo el token, y cifrado: sin la cuenta no sirve de nada. La sesión en sí
+  // no se guarda nunca.
   async function persistirCredenciales() {
     if (S.token) ls.set(clave("token"), JSON.stringify(await S.cripto.cifrarTexto(S.token)));
   }
-  const tieneToken = (u) => !!ls.get(clave("token", u));
-  const tieneDatos = (u) => !!ls.get(clave("doc", limpiarUsuario(u)));
-  const esCuenta = (u) => G.CUENTAS.some((c) => c.usuario === limpiarUsuario(u));
-  const ultimoUsuario = () => ls.get("ironrack_usuario") || "";
-  const limpiarUsuario = (u) => String(u || "").trim().toLowerCase().replace(/[^a-z0-9-]/g, "");
+
+  // ── Autoguardado: encendido salvo que se apague en Ajustes ──
+  const autoguardado = () => ls.get(clave("auto")) !== "0";
+  function ponerAutoguardado(v) {
+    if (v) ls.del(clave("auto")); else ls.set(clave("auto"), "0");
+    if (v && pendiente()) subir();
+  }
 
   /*
-   * Entrar con contraseña.
-   * Devuelve { nuevo: true } si no hay datos ni aquí ni en GitHub y no se ha
-   * pedido crear: la pantalla pide entonces repetir la contraseña, para no
-   * estrenar una cuenta vacía por una errata en el usuario.
+   * Entrar: SweetSuite ya ha comprobado la contraseña y da el secreto de
+   * Ironrack. Se abre lo de este dispositivo y, con token, se trae y se
+   * fusiona lo de GitHub. Sin nada en ningún sitio, se empieza vacío: al
+   * fusionar elemento a elemento, un documento vacío no pisa nada.
    */
-  async function entrar({ usuario, password, token, crear = false }) {
-    usuario = limpiarUsuario(usuario);
-    if (!usuario) throw fallo("Escribe tu usuario", "USUARIO");
-    if (!esCuenta(usuario)) throw fallo("No existe el usuario «" + usuario + "»", "USUARIO");
-    if (!password) throw fallo("Escribe tu contraseña", "PASSWORD");
+  async function entrar({ usuario, nombre, secreto, anteriores }) {
     const k = (n) => clave(n, usuario);
     const localTxt = ls.get(k("doc"));
     const localBlob = localTxt ? JSON.parse(localTxt) : null;
-    const cripto = IR.cripto.sesion({ password, salt: localBlob && localBlob.salt, iter: localBlob && localBlob.iter });
+    Object.assign(S, { usuario, nombre, secreto, estado: "local", error: null });
+    S.cripto = IR.cripto.sesion({ password: secreto, salt: localBlob && localBlob.salt, iter: localBlob && localBlob.iter });
+    S.anteriores = sesionesDe(anteriores);
 
     let local = null;
-    if (localBlob) local = await cripto.descifrar(localBlob); // contraseña mala → BAD_PASSWORD
-
-    let tok = (token || "").trim() || null;
-    const tokenNuevo = !!tok;
-    if (!tok && ls.get(k("token"))) {
-      try { tok = await cripto.descifrarTexto(JSON.parse(ls.get(k("token")))); } catch (e) { tok = null; }
+    if (localBlob) {
+      const r = await descifrarCon(localBlob);
+      local = r.doc;
+      if (!r.actual) { S.cripto = IR.cripto.sesion({ password: secreto }); ls.set(k("pendiente"), "1"); }
     }
-
-    let remoto = null, remotoBlob = null, sha = ls.get(k("sha")), problema = null;
-    if (tok) {
-      try {
-        await G.acceso(tok);
-        const res = await G.leer(tok, G.ruta(usuario));
-        if (res) {
-          remotoBlob = JSON.parse(res.texto);
-          sha = res.sha;
-          try {
-            remoto = await cripto.descifrar(remotoBlob);
-            cripto.adoptar(remotoBlob);
-          } catch (e) {
-            if (!local) throw e; // sin copia local, es que la contraseña no es esa
-            problema = ["error", "Lo publicado en GitHub no se abre con esta contraseña"];
-          }
-        } else {
-          sha = null;
-        }
-      } catch (e) {
-        if (e.code === "BAD_PASSWORD") throw e;
-        if (e.code === "AUTH" && tokenNuevo) throw e;
-        if (e.code === "AUTH") problema = ["auth", e.message];
-        else problema = ["pendiente"]; // sin conexión: se entra con lo de aquí
-      }
-    }
-
-    if (!local && !remoto && !crear) return { nuevo: true, sinGitHub: !tok || !!problema };
-
-    S.usuario = usuario;
-    S.cripto = cripto;
-    S.token = tok;
-    S.sha = sha;
-    S.doc = fusionar(local, remoto);
-    if (sha) ls.set(k("sha"), sha); else ls.del(k("sha"));
-    ls.set("ironrack_usuario", usuario);
-    await persistirCredenciales();
-    // Lo que había aquí y no estaba publicado se sube; lo nuevo, también.
-    if (local && remoto && JSON.stringify(normalizar(remoto)) !== JSON.stringify(S.doc)) ls.set(k("pendiente"), "1");
-    if (!remoto && tok) ls.set(k("pendiente"), "1");
+    S.token = ls.get(k("token")) ? await textoCon(JSON.parse(ls.get(k("token")))) : null;
+    S.sha = ls.get(k("sha"));
+    S.doc = local ? normalizar(local) : nuevo();
     await guardarLocal();
-    ultimaSync = Date.now();
-    if (problema) estado(problema[0], problema[1]);
-    else if (!tok) estado("local");
-    else if (pendiente()) subir();
-    else estado("ok");
+    await persistirCredenciales();
+    ultimaSync = 0;
+    if (!S.token) estado("local");
+    else sincronizar({ forzar: true });
     return { ok: true };
   }
 
@@ -317,35 +339,67 @@
     if (pendiente()) await subir();
   }
 
-  async function salir() {
+  // Subir ya: ⌘S, el botón Guardar y volver a SweetSuite
+  async function subirAhora() {
     await guardarLocal();
-    Object.assign(S, { usuario: null, cripto: null, token: null, doc: null, sha: null, estado: "local", error: null });
+    if (!S.token || !pendiente()) return S.estado;
+    await subir();
+    return S.estado;
+  }
+  // Al volver a SweetSuite o bloquear: guardar aquí y subir lo pendiente
+  async function guardarAlSalir() {
+    await guardarLocal();
+    if (S.token && pendiente() && navigator.onLine) await subir();
+    return { estado: PARA_SUITE[S.estado] || "", texto: IR.app ? IR.app.textoEstado() : "" };
   }
 
-  // Borra de este navegador todo lo de este usuario (no lo de GitHub)
-  async function olvidarDispositivo() {
+  // ── Traer de la app de antes ──
+  // Ironrack guardaba en este mismo dominio (llaves «ironrack_…») y en
+  // datos-cifrados/Ironrack/, cifrado con la contraseña de entonces. Con ella
+  // se abre lo de aquí y, con el token de entonces (el guardado aquí o el que
+  // se pegue), lo de GitHub; todo se fusiona con lo que ya hay.
+  async function traerAntigua({ password, token }) {
     const u = S.usuario;
-    ["doc", "token", "sha", "pendiente"].forEach((n) => ls.del(clave(n, u)));
-    if (ultimoUsuario() === u) ls.del("ironrack_usuario");
-    Object.assign(S, { usuario: null, cripto: null, token: null, doc: null, sha: null, estado: "local", error: null });
+    const viejo = IR.cripto.sesion({ password });
+    const docs = [];
+    const lt = ls.get("ironrack_doc_" + u);
+    if (lt) docs.push(await viejo.descifrar(JSON.parse(lt)));      // contraseña mala → BAD_PASSWORD
+    let tok = (token || "").trim();
+    if (!tok && ls.get("ironrack_token_" + u)) {
+      try { tok = await viejo.descifrarTexto(JSON.parse(ls.get("ironrack_token_" + u))); } catch (e) { tok = ""; }
+    }
+    let remoto = false;
+    if (tok && G.ANTIGUO) {
+      const res = await G.leerAntiguo(tok, G.rutaAntigua(u));
+      if (res) { docs.push(await viejo.descifrar(JSON.parse(res.texto))); remoto = true; }
+    }
+    if (!docs.length) {
+      throw fallo(tok ? "No hay entrenos tuyos en la app de antes"
+        : "En este dispositivo no hay datos de la app de antes: pega el token que usabas en ella", "SIN_DATOS");
+    }
+    const doc = docs.reduce((a, b) => fusionar(a, b));
+    importar(doc);
+    return { sesiones: doc.sesiones.length, rutinas: doc.rutinas.length, remoto, local: !!lt };
   }
+
+  const tieneAntigua = (u) => !!ls.get("ironrack_doc_" + (u || S.usuario));
 
   // Una copia de seguridad importada se fusiona: no pisa lo que ya hay
   function importar(doc) {
     cambiar((d) => { Object.assign(d, fusionar(d, doc)); }, { subirYa: true });
   }
 
-  window.addEventListener("online", () => sincronizar({ forzar: true }));
+  window.addEventListener("online", () => { if (S.doc) sincronizar({ forzar: true }); });
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "hidden") { guardarLocal(); if (pendiente()) subir(); }
+    if (document.visibilityState === "hidden") { guardarLocal(); if (pendiente() && autoguardado()) subir(); }
     else sincronizar();
   });
 
   IR.almacen = {
     S, nuevo, normalizar, fusionar,
     cambiar, cambiarActual, cambiarAjustes, cambiarItem, anadir, borrar,
-    guardarLocal, subir, sincronizar, pendiente,
-    entrar, salir, olvidarDispositivo, cambiarToken, importar,
-    tieneToken, tieneDatos, esCuenta, ultimoUsuario, limpiarUsuario,
+    guardarLocal, subir, subirAhora, guardarAlSalir, sincronizar, pendiente,
+    entrar, cambiarToken, importar, refrescarClaves,
+    autoguardado, ponerAutoguardado, traerAntigua, tieneAntigua,
   };
 })();
