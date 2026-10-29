@@ -45,7 +45,7 @@ PUERTO = 4500
 CLAVE_DEV = "desarrollo"
 LIMITE_API = 1024 * 1024
 
-PERMITIDOS = {"/", "/index.html", "/manifest.json", "/sw.js", "/cuentas.json"}
+PERMITIDOS = {"/", "/index.html", "/manifest.json", "/sw.js", "/cuentas.json", "/version.json"}
 PREFIJOS = ("/src/", "/img/", "/apps/")
 PUBLICOS = {"prices.json", "tickers.json"}
 TOKENS_REALES = ("github_pat_", "ghp_", "gho_", "ghs_", "ghu_", "ghr_")

@@ -108,6 +108,8 @@
   // que pasa a oscuro al anochecer— se vuelve a mirar al volver a ella.
   document.addEventListener("visibilitychange", () => { if (!document.hidden) aplicar(); });
   window.addEventListener("focus", aplicar);
+  // Si se cambia en SweetSuite (Ajustes de la cuenta → Apariencia), aquí también
+  window.addEventListener("storage", (e) => { if (e.key === CLAVE) aplicar(); });
 
   window.SolventoTema = {
     poner, actual: guardado, efectivo: () => efectivo(guardado()), VALIDOS,

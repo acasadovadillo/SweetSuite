@@ -14,13 +14,13 @@
   <!-- Se instala SweetSuite, no Solvento: esto vive dentro de ella -->
   <meta name="theme-color" content="#12141d" />
   <meta name="description" content="Tus finanzas, cifradas y siempre contigo." />
-  <script src="src/js/suite-puente.js?v=p221"></script>
+  <script src="src/js/suite-puente.js?v=p222"></script>
   <!-- El tema, antes que el CSS: si se aplicara después de pintar, quien use
        el tema claro vería un fogonazo oscuro en cada carga. -->
-  <script src="src/js/tema.js?v=p221"></script>
-  <link rel="stylesheet" href="src/css/base.css?v=p221" />
-  <link rel="stylesheet" href="src/css/layout.css?v=p221" />
-  <link rel="stylesheet" href="src/css/components.css?v=p221" />
+  <script src="src/js/tema.js?v=p222"></script>
+  <link rel="stylesheet" href="src/css/base.css?v=p222" />
+  <link rel="stylesheet" href="src/css/layout.css?v=p222" />
+  <link rel="stylesheet" href="src/css/components.css?v=p222" />
   <style>
     /* Arranque (login / importación) — cubre todo hasta desbloquear */
     #boot-overlay input {
@@ -123,7 +123,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="src/css/openclaw.css?v=p221" />
+  <link rel="stylesheet" href="src/css/openclaw.css?v=p222" />
 </head>
 <body>
 
@@ -206,8 +206,8 @@
     <div style="display:flex;align-items:center;gap:0.85rem;">
       <!-- El menú de la cuenta. Se abre desde la cuenta del menú lateral; vive
            aquí, en la barra, para colocarse encima de todo. -->
-      <button type="button" class="nb-menu" onclick="window.SolventoBoot.volverSuite()"
-              title="Volver a SweetSuite" aria-label="Volver a SweetSuite">
+      <button type="button" class="nb-menu" onclick="window.SolventoBoot.elegirApp()"
+              title="Ir a otra app" aria-label="Ir a otra app">
         <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8"
              stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg>
       </button>
@@ -287,10 +287,12 @@
         <button class="sn-item" data-page="balance" onclick="v2Tab('balance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5v13"/><path d="M3.5 14 7 17.5 10.5 14"/><path d="M17 19.5v-13"/><path d="M13.5 10 17 6.5 20.5 10"/></svg><span>Ingresos y gastos</span></button>
         <button class="sn-item" data-page="presupuesto" onclick="v2Tab('presupuesto')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V9"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M2.5 20h19"/></svg><span>Presupuesto</span></button>
     </nav>
+    <!-- El inicio de SweetSuite y las demás apps de la cuenta (boot.js) -->
+    <div class="sn-etiqueta">SweetSuite</div>
+    <nav class="sn-list" id="sn-suite"></nav>
     <div class="sn-etiqueta">Cuenta</div>
     <nav class="sn-list sn-list-cuenta">
       <button class="sn-item" data-page="ajustes" onclick="v2UserIr('ajustes')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1Z"/></svg><span>Ajustes</span></button>
-      <button class="sn-item" onclick="window.SolventoBoot.volverSuite()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg><span>Volver a SweetSuite</span></button>
       <button class="sn-item" onclick="document.getElementById('logout-btn').click()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg><span>Bloquear</span></button>
     </nav>
     <div class="sn-pie"><span id="sn-estado"></span><span class="sn-version"></span></div>
@@ -489,21 +491,21 @@
 <!-- ══ MODAL DE SINCRONIZACIÓN ══ -->
 
 
-<script src="src/js/entorno.js?v=p221"></script>
-<script src="src/js/crypto.js?v=p221"></script>
-<script src="src/js/config.js?v=p221"></script>
-<script src="src/js/model.js?v=p221"></script>
-<script src="src/js/charts.js?v=p221"></script>
-<script src="src/js/render.js?v=p221"></script>
-<script src="src/js/db.js?v=p221"></script>
-<script src="src/js/mezcla.js?v=p221"></script>
-<script src="src/js/sync.js?v=p221"></script>
-<script src="src/js/nav.js?v=p221"></script>
-<script src="src/js/plan.js?v=p221"></script>
-<script src="src/js/forms.js?v=p221"></script>
-<script src="src/js/perfil.js?v=p221"></script>
-<script src="src/js/exportar.js?v=p221"></script>
-<script src="src/js/boot.js?v=p221"></script>
+<script src="src/js/entorno.js?v=p222"></script>
+<script src="src/js/crypto.js?v=p222"></script>
+<script src="src/js/config.js?v=p222"></script>
+<script src="src/js/model.js?v=p222"></script>
+<script src="src/js/charts.js?v=p222"></script>
+<script src="src/js/render.js?v=p222"></script>
+<script src="src/js/db.js?v=p222"></script>
+<script src="src/js/mezcla.js?v=p222"></script>
+<script src="src/js/sync.js?v=p222"></script>
+<script src="src/js/nav.js?v=p222"></script>
+<script src="src/js/plan.js?v=p222"></script>
+<script src="src/js/forms.js?v=p222"></script>
+<script src="src/js/perfil.js?v=p222"></script>
+<script src="src/js/exportar.js?v=p222"></script>
+<script src="src/js/boot.js?v=p222"></script>
   <!-- Sin service worker propio: el de SweetSuite guarda también Solvento -->
 </body>
 </html>

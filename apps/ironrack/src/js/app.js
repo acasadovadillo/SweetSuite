@@ -41,6 +41,19 @@
     if (tab && !escritorio()) tab.scrollIntoView({ block: "nearest", inline: "nearest" });
     relojes();
     IR.descanso.pintar();
+    resumenParaSuite();
+  }
+
+  // El resumen de la tarjeta de Ironrack en el inicio de SweetSuite
+  function resumenParaSuite() {
+    if (!IR.suite || !IR.suite.resumen || !S.doc) return;
+    const semana = IR.analisis.porSemana(1)[0].valor;
+    const ult = S.doc.sesiones[0];
+    const fecha = ult && new Date(ult.inicio).toLocaleDateString("es-ES", { weekday: "short", day: "numeric", month: "short" });
+    IR.suite.resumen("ironrack", { lineas: [
+      semana === 1 ? "1 entreno esta semana" : semana + " entrenos esta semana",
+      S.doc.actual ? "Entreno en curso" : ult ? "Último: " + ult.nombre + " · " + fecha : "Aún sin entrenos",
+    ] });
   }
   document.addEventListener("focusout", () => {
     if (renderPendiente) setTimeout(() => { if (renderPendiente && !escribiendo()) render(true); }, 50);
@@ -203,6 +216,8 @@
     ajGuardar: () => guardarAhora(),
     irCuenta: () => IR.suite.cuenta(),
     volverSuite: () => { cerrarLateral(); IR.suite.volver(); },
+    elegirApp: () => { cerrarLateral(); IR.suite.elegirApp(); },
+    irApp: (el) => { cerrarLateral(); IR.suite.abrir(el.dataset.app); },
     ajToken() {
       IR.ui.hoja(`<h3>Token de GitHub</h3>
         <form class="form" id="f-token">
@@ -261,7 +276,7 @@
       cerrarLateral();
       IR.ui.menu(S.nombre || S.usuario, [
         { texto: "Ajustes de Ironrack", fn: () => { location.hash = "#ajustes"; } },
-        { texto: "Volver a SweetSuite", fn: () => IR.suite.volver() },
+        { texto: "Inicio de SweetSuite", fn: () => IR.suite.volver() },
         { texto: "Bloquear", fn: () => bloquear() },
         { texto: "Cerrar sesión", fn: () => { cerrarLateral(); IR.suite.cerrarSesion(); } },
       ]);
@@ -354,6 +369,11 @@
     $("#marca-lateral").insertAdjacentHTML("afterbegin", LOGO);
     // La barra lateral del ordenador lleva los mismos enlaces que las pestañas del móvil
     $("#nav-lateral").innerHTML = [...document.querySelectorAll(".tabs a")].map((a) => a.outerHTML).join("");
+    // El inicio de SweetSuite y las demás apps de la cuenta
+    const ICONOS = { solvento: '<circle cx="9" cy="9" r="5.5"/><path d="M14.6 9.6a5.5 5.5 0 1 1-5 6.8"/><path d="M9 6.8v4.4M7.2 9h3.6"/>' };
+    $("#nav-suite").innerHTML = `<a href="#" data-a="volverSuite"><svg viewBox="0 0 24 24"><use href="#i-suite"/></svg>Inicio</a>` +
+      IR.suite.apps().filter((a) => a.id !== "ironrack").map((a) =>
+        `<a href="#" data-a="irApp" data-app="${esc(a.id)}"><svg viewBox="0 0 24 24">${ICONOS[a.id] || '<use href="#i-suite"/>'}</svg>${esc(a.nombre)}</a>`).join("");
     $("#version").textContent = VERSION;
     IR.cripto.borrarSesionesAntiguas();
     entrarEnSuite();

@@ -20,7 +20,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.3.0";
+  const VERSION = "1.4.0";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -35,9 +35,9 @@
   // La sesión, solo en memoria
   // (en una empresa, «contrasena» es la del representante y «empresaPw» la de la empresa)
   const S = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-              representante: null, empresaPw: null };
+              representante: null, empresaPw: null, resumenes: {} };
   const SIN_SESION = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-                       representante: null, empresaPw: null };
+                       representante: null, empresaPw: null, resumenes: {} };
 
   const limpiar = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const cuentaDe = (u) => CAT.cuentas.find((c) => c.usuario === limpiar(u));
@@ -461,6 +461,7 @@
     $("#suite").classList.add("con-curvas");
     T.aplicarAcento(S.prefs.acento);
     marcarActividad();
+    await cargarResumenes();
     const caducan = misAppsDe(cuenta).filter((a) => avisoToken(a.id));
     if (caducan.length) setTimeout(() => aviso(caducan.map((a) => a.nombre + ": " + avisoToken(a.id).toLowerCase()).join(" · "), "pendiente"), 600);
     $("#avatar").textContent = iniciales(cuenta.nombre);
@@ -501,6 +502,7 @@
   function mostrarApp(id) {
     const app = appDe(id);
     if (!app || S.cuenta.apps.indexOf(id) < 0) { location.hash = "#inicio"; return; }
+    if (S.abierta && S.abierta !== id) guardarAlDejar(S.abierta);    // de una app a otra
     let f = document.getElementById("marco-" + id);
     if (!f) {
       f = document.createElement("iframe");
@@ -529,6 +531,11 @@
     $("#marcos").classList.add("oculto");
     $("#suite").inert = false;
     document.title = "SweetSuite";
+    await guardarAlDejar(id);
+    pintar();
+  }
+  // Al dejar una app (al inicio o a otra app): sube lo que tenga pendiente
+  async function guardarAlDejar(id) {
     const api = S.apis[id], app = appDe(id);
     if (!api || !api.pendiente || !api.pendiente()) return;
     aviso("Guardando " + app.nombre + "…");
@@ -539,7 +546,6 @@
     } catch (e) {
       aviso(app.nombre + ": guardado en este dispositivo; se subirá en cuanto se pueda", "pendiente");
     }
-    pintar();
   }
 
   // ── El llavero en GitHub ──
@@ -770,6 +776,79 @@
     $("#marca-lateral").insertAdjacentHTML("afterbegin", logo);
   }
 
+  // ── El resumen de cada app en el inicio ──
+  // Cada app manda unas líneas (el patrimonio, los entrenos de la semana) al
+  // abrir sus datos y al guardar. Se guardan en este dispositivo, cifradas con
+  // la cuenta, para verlas en el inicio sin abrir la app.
+  const claveResumen = () => "sweetsuite_resumen_" + S.cuenta.usuario;
+  async function cargarResumenes() {
+    S.resumenes = {};
+    const t = ls.get(claveResumen());
+    if (!t) return;
+    try { S.resumenes = await L.descifrarDato(S.maestra, JSON.parse(t)) || {}; } catch (e) { S.resumenes = {}; }
+  }
+  let tResumen = null;
+  function ponerResumen(app, r) {
+    if (!S.cuenta || S.cuenta.apps.indexOf(app) < 0) return;
+    const lineas = (r && Array.isArray(r.lineas) ? r.lineas : []).map(String).slice(0, 3);
+    if (JSON.stringify((S.resumenes[app] || {}).lineas) === JSON.stringify(lineas)) return;
+    S.resumenes[app] = { lineas, fecha: Date.now() };
+    pintarEstados();
+    clearTimeout(tResumen);
+    const maestra = S.maestra, clave = claveResumen(), datos = S.resumenes;
+    tResumen = setTimeout(async () => { ls.set(clave, JSON.stringify(await L.cifrarDato(maestra, datos))); }, 400);
+  }
+
+  // ── Pasar de una app a otra sin volver al inicio ──
+  // Desde el botón de apps de cada una (arriba en el móvil) o su barra lateral
+  function elegirApp() {
+    const apps = misApps();
+    const d = dialogo(`<h3>Ir a…</h3>
+      <div class="lista-apps">
+        <button type="button" data-ir="#inicio"><span class="app-icono">${ICONO("inicio")}</span><span><b>Inicio de SweetSuite</b><small>Todas tus apps</small></span></button>
+        ${apps.map((a) => `<button type="button" data-ir="#app/${a.id}" ${a.id === S.abierta ? 'aria-current="true"' : ""}>
+          <span class="app-icono">${ICONO(a.id)}</span><span><b>${esc(a.nombre)}</b><small>${a.id === S.abierta ? "Aquí estás" : esc(a.descripcion)}</small></span></button>`).join("")}
+        <button type="button" data-ir="#cuenta"><span class="app-icono">${ICONO("ajustes")}</span><span><b>Ajustes de la cuenta</b><small>Contraseña, seguridad, apariencia</small></span></button>
+      </div>`);
+    d.querySelectorAll("[data-ir]").forEach((b) => b.addEventListener("click", () => {
+      cerrarDialogo();
+      if (location.hash !== b.dataset.ir) location.hash = b.dataset.ir;
+    }));
+  }
+
+  // ── Versión nueva ──
+  // Cada media hora (y al volver a la app) se mira version.json. Si la
+  // publicada es otra, se avisa; al actualizar, cada app sube lo pendiente
+  // antes de recargar (y hay que volver a entrar: la sesión no se guarda).
+  let ultimaMiradaVersion = 0, versionAvisada = false;
+  async function mirarVersion(forzar) {
+    if (versionAvisada || (!forzar && Date.now() - ultimaMiradaVersion < 10 * 60000)) return;
+    ultimaMiradaVersion = Date.now();
+    try {
+      const r = await fetch("version.json?" + Date.now(), { cache: "no-store" });
+      if (!r.ok) return;
+      const v = (await r.json()).version;
+      if (v && v !== VERSION) avisarVersion(v);
+    } catch (e) { /* sin conexión: ya se mirará */ }
+  }
+  function avisarVersion(v) {
+    versionAvisada = true;
+    const b = document.createElement("div");
+    b.className = "version-nueva";
+    b.setAttribute("role", "status");
+    b.innerHTML = `<span>Hay una versión nueva de SweetSuite (${esc(v)})</span>
+      <button type="button" class="btn primario" data-version="si">Actualizar</button><button type="button" class="btn" data-version="no">Luego</button>`;
+    document.body.appendChild(b);
+    b.querySelector('[data-version="no"]').onclick = () => b.remove();
+    b.querySelector('[data-version="si"]').onclick = async () => {
+      b.querySelector('[data-version="si"]').disabled = true;
+      if (S.cuenta) { aviso("Guardando antes de actualizar…"); await guardarTodas(); }
+      location.reload();
+    };
+  }
+  setInterval(() => mirarVersion(true), 30 * 60000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) mirarVersion(); });
+
   // ── Seguridad: bloqueo por inactividad y caducidad de los tokens ──
   // Las dos van en las preferencias de la cuenta (cifradas en el llavero), así
   // que acompañan a la cuenta en todos sus dispositivos.
@@ -854,6 +933,9 @@
     const apps = misApps();
     let peor = "ok";
     apps.forEach((a) => {
+      const rs = document.querySelector(`[data-resumen-app="${a.id}"]`);
+      const lineas = (S.resumenes[a.id] && S.resumenes[a.id].lineas) || [];
+      if (rs) { rs.innerHTML = lineas.map((l) => `<span>${esc(l)}</span>`).join(""); rs.hidden = !lineas.length; }
       const e = estadoDe(a.id);
       const p = document.querySelector(`[data-punto="${a.id}"]`);
       if (p) { p.className = "punto " + (e.estado || ""); p.title = e.texto; }
@@ -887,6 +969,7 @@
       <div class="apps">${apps.map((a) => `<button class="app-tarjeta" data-a="abrir" data-app="${a.id}">
           <span class="app-icono">${ICONO(a.id)}</span>
           <span class="app-texto"><b>${esc(a.nombre)}</b><span class="desc">${esc(a.descripcion)}</span>
+            <span class="app-resumen" data-resumen-app="${a.id}"></span>
             <span class="estado-texto" data-estado-app="${a.id}"></span></span>
         </button>`).join("")}</div>`;
   }
@@ -928,7 +1011,7 @@
       const tema = T.tema(), actual = (S.prefs.acento && T.valido(S.prefs.acento)) ? S.prefs.acento.toLowerCase() : T.PREDETERMINADO;
       const propio = !T.deLaPaleta(actual);
       return `<h2>Tema</h2>
-        <div class="tarjeta filas">${fila("Tema", "De este dispositivo. Lo comparten SweetSuite y Solvento; Ironrack es siempre oscura.",
+        <div class="tarjeta filas">${fila("Tema", "De este dispositivo. Lo comparten SweetSuite y sus apps.",
           `<div class="segmentado" role="radiogroup" aria-label="Tema">${[["auto", "Automático"], ["claro", "Claro"], ["oscuro", "Oscuro"]].map(([v, n]) =>
             `<button role="radio" aria-checked="${tema === v}" data-a="tema" data-v="${v}">${n}</button>`).join("")}</div>`, "apilar")}</div>
         <h2>Color de acento</h2>
@@ -1156,6 +1239,12 @@
     registrar(app, api) { S.apis[app] = api; },
     // Una app acaba de guardar un token: se pregunta cuándo caduca
     tokenGuardado(app) { if (S.cuenta) preguntarCaducidad(app); },
+    // Unas líneas de resumen para su tarjeta en el inicio
+    resumen: ponerResumen,
+    // Las apps de la cuenta, para el menú de cada app, y cambiar de una a otra
+    apps: () => misApps().map((a) => ({ id: a.id, nombre: a.nombre })),
+    abrir: (id) => { location.hash = id ? "#app/" + id : "#inicio"; },
+    elegirApp,
     estado(app, estado, texto) {
       S.estados[app] = { estado: estado || "", texto: texto || "" };
       if (S.cuenta) pintarEstados();
@@ -1179,6 +1268,7 @@
       return;
     }
     mostrarEntrada("");
+    mirarVersion(true);
     if ("serviceWorker" in navigator) {
       if (E.prod) navigator.serviceWorker.register("sw.js").catch(() => {});
       else navigator.serviceWorker.getRegistrations().then((rs) => rs.forEach((x) => x.unregister())).catch(() => {});

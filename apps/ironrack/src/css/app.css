@@ -44,7 +44,40 @@
      guardada por el service worker para usarla sin conexión) */
   --fuente: "Albert Sans", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
   --mono: ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace;
+  --texto-medio: #b4b4bc;
+  --enfoque: #2f3033;
+  --conmutador: #252733;
+  --contorno: #ffffff;      /* las curvas del fondo, muy tenues */
+  --acento-tinta: var(--acento);   /* el acento como color de texto */
   color-scheme: dark;
+}
+/* El tema claro, el de Solvento y SweetSuite. El acento de texto va oscurecido
+   (el del botón) para que se lea sobre blanco. */
+:root[data-tema="claro"] {
+  --fondo: #f6f6f7;
+  --tarjeta: #ffffff;
+  --borde: #e6e6e9;
+  --borde-lateral: #e6e6e9;
+  --separador: #ebebee;
+  --pozo: #f6f6f7;
+  --control: #efeff1;
+  --control-borde: #dcdce0;
+  --campo: #f1f1f3;
+  --pista: #f1f1f3;
+  --texto: #16181f;
+  --suave: #6b6c75;
+  --icono: #9a9ba3;
+  --ok: #047857;
+  --aviso: #92400e;
+  --peligro: #b91c1c;
+  --texto-medio: #45464e;
+  --enfoque: #c4c4ca;
+  --conmutador: #dcdce0;
+  --contorno: #0e1015;
+  --acento-tinta: var(--boton);
+  --acento-suave: color-mix(in srgb, var(--acento) 10.5%, #ffffff);
+  --acento-linea: color-mix(in srgb, var(--acento) 32%, #ffffff);
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -73,7 +106,7 @@ svg { width: 18px; height: 18px; fill: none; stroke: currentColor; stroke-width:
 
 /* ── Cabecera de página: título en el acento, como «Apariencia» ── */
 .cabeza { margin: 4px 0 22px; }
-.cabeza h1 { font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; color: var(--acento); margin: 0; }
+.cabeza h1 { font-size: 26px; line-height: 1.15; font-weight: 700; letter-spacing: -.02em; color: var(--acento-tinta); margin: 0; }
 .cabeza p { font-size: 13.5px; color: var(--suave); margin: 6px 0 0; max-width: 560px; }
 .cabeza p b { color: var(--texto); font-weight: 500; }
 .volver { display: inline-flex; align-items: center; gap: 6px; color: var(--suave); font-size: 14px; margin: 0 0 14px; padding: 4px 0; }
@@ -103,7 +136,9 @@ body.con-descanso main { padding-bottom: 140px; }
 /* Las curvas de nivel del fondo de OpenClaw */
 #app::before {
   content: ""; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: url("../../img/contornos.svg") right center / auto 120% no-repeat;
+  background-color: var(--contorno);
+  -webkit-mask: url("../../img/contornos.svg") right center / auto 120% no-repeat;
+  mask: url("../../img/contornos.svg") right center / auto 120% no-repeat;
 }
 
 /* Barra de arriba (móvil y tableta): hamburguesa, logo y la cuenta */
@@ -116,10 +151,10 @@ body.con-descanso main { padding-bottom: 140px; }
 }
 .hamburguesa {
   flex: none; width: 34px; height: 34px; display: grid; place-items: center; cursor: pointer;
-  color: #b4b4bc; background: var(--tarjeta); border: 1px solid var(--control-borde); border-radius: 8px;
+  color: var(--texto-medio); background: var(--tarjeta); border: 1px solid var(--control-borde); border-radius: 8px;
 }
 .hamburguesa svg { width: 16px; height: 16px; stroke-width: 2; }
-.marca { display: flex; align-items: center; gap: 9px; margin-right: auto; font-size: 13.6px; font-weight: 700; color: #b4b4bc; }
+.marca { display: flex; align-items: center; gap: 9px; margin-right: auto; font-size: 13.6px; font-weight: 700; color: var(--texto-medio); }
 .marca svg { fill: var(--acento); stroke: none; width: 28px; height: 28px; }
 
 /* Pestañas abajo (móvil) */
@@ -158,13 +193,13 @@ body.entrenando [data-tab="entrenar"]::after { content: ""; position: absolute; 
 .lateral-marca svg { fill: var(--acento); stroke: none; width: 25px; height: 25px; }
 .lateral-cerrar {
   display: grid; place-items: center; width: 26px; height: 22px; cursor: pointer;
-  color: #b4b4bc; background: none; border: 1px solid var(--control-borde); border-radius: 6px;
+  color: var(--texto-medio); background: none; border: 1px solid var(--control-borde); border-radius: 6px;
 }
 .lateral-cerrar svg { width: 14px; height: 14px; stroke-width: 2.2; }
 .lateral-titulo { font-size: 21px; font-weight: 700; color: var(--texto); padding: 0 9px; line-height: 24px; }
 .lateral-cuenta {
   display: flex; align-items: center; gap: 8px; width: 100%; margin: 22px 0 15px; padding: 4px 9px; height: 28px; line-height: 20px;
-  font: inherit; font-size: 14.2px; font-weight: 500; color: #b4b4bc; background: none; border: 0; border-radius: 8px; cursor: pointer; text-align: left;
+  font: inherit; font-size: 14.2px; font-weight: 500; color: var(--texto-medio); background: none; border: 0; border-radius: 8px; cursor: pointer; text-align: left;
 }
 .lateral-cuenta:hover { background: var(--campo); color: var(--texto); }
 .lateral-cuenta-nombre { flex: 1; min-width: 0; color: var(--texto); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -176,7 +211,7 @@ body.entrenando [data-tab="entrenar"]::after { content: ""; position: absolute; 
 .lateral-buscar svg { width: 16px; height: 16px; stroke-width: 2; }
 .lateral-buscar input { flex: 1; min-width: 0; font: inherit; font-size: 12.4px; color: var(--texto); background: none; border: 0; outline: none; padding: 0; }
 .lateral-buscar input::placeholder { color: var(--suave); opacity: 1; }
-.lateral-buscar:focus-within { border-color: #2f3033; }
+.lateral-buscar:focus-within { border-color: var(--enfoque); }
 @media (pointer: coarse) { .lateral-buscar input { font-size: 16px; } }
 .lateral-seccion { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--suave); padding: 0 9px; margin: 18px 0 8px; }
 .lateral-nav { display: flex; flex-direction: column; gap: 3px; }
@@ -257,7 +292,7 @@ body.entrenando .lateral-nav [data-tab="entrenar"]::after { top: 12px; left: aut
 .icono:hover { color: var(--texto); background: var(--control); }
 .icono:disabled { opacity: .3; }
 .icono svg { width: 20px; height: 20px; }
-.enlace { color: var(--acento); font: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
+.enlace { color: var(--acento-tinta); font: inherit; background: none; border: 0; padding: 0; cursor: pointer; }
 .botones { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 16px; }
 .botones .btn { flex: 1 1 140px; }
 
@@ -339,7 +374,7 @@ a.tarjeta:hover, .enlace-tarjeta:hover { border-color: color-mix(in srgb, var(--
 /* Conmutador de 32 × 18 */
 .conmutador {
   appearance: none; -webkit-appearance: none; flex: none; position: relative; margin: 0; cursor: pointer;
-  width: 32px; height: 18px; border-radius: 9px; border: 1.5px solid var(--suave); background: #252733;
+  width: 32px; height: 18px; border-radius: 9px; border: 1.5px solid var(--suave); background: var(--conmutador);
   transition: background .15s, border-color .15s;
 }
 .conmutador::after {
@@ -499,7 +534,7 @@ a.ej-nombre:hover { color: var(--acento); }
 .prs li { display: flex; flex-direction: column; padding: 10px 16px; }
 .prs li + li { border-top: 1px solid var(--separador); }
 .prs b { font-weight: 500; font-size: 15px; }
-.prs span { font-size: 13px; color: var(--acento); }
+.prs span { font-size: 13px; color: var(--acento-tinta); }
 
 /* ── Ajustes › Apariencia: muestras de acento ── */
 .muestras { display: flex; flex-wrap: wrap; gap: 12px; padding: 16px; }
@@ -518,10 +553,11 @@ a.ej-nombre:hover { color: var(--acento); }
   display: flex; align-items: center; justify-content: center; padding: 24px;
   background: var(--fondo);
 }
-#login::before { content: ""; position: fixed; inset: 0; pointer-events: none; background: url("../../img/contornos.svg") right center / auto 120% no-repeat; }
+#login::before { content: ""; position: fixed; inset: 0; pointer-events: none; background-color: var(--contorno);
+  -webkit-mask: url("../../img/contornos.svg") right center / auto 120% no-repeat; mask: url("../../img/contornos.svg") right center / auto 120% no-repeat; }
 .entrada { line-height: normal; position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
 .entrada-logo svg { display: block; width: 56px; height: 56px; fill: var(--acento); stroke: none; }
-.entrada-titulo { font-size: 26px; font-weight: 700; letter-spacing: 0; color: var(--acento); margin: 16px 0 5.6px; }
+.entrada-titulo { font-size: 26px; font-weight: 700; letter-spacing: 0; color: var(--acento-tinta); margin: 16px 0 5.6px; }
 .entrada-sub { font-size: 12.5px; color: var(--suave); margin-bottom: 28px; text-align: center; }
 .entrada input {
   width: 100%; background: var(--campo); border: 1px solid var(--borde); border-radius: 8px;
@@ -529,7 +565,7 @@ a.ej-nombre:hover { color: var(--acento); }
   margin-bottom: 12px; transition: border-color .15s;
 }
 .entrada input::placeholder { color: var(--suave); }
-.entrada input:focus { border-color: #2f3033; }
+.entrada input:focus { border-color: var(--enfoque); }
 /* En el iPhone, un campo de menos de 16 px hace zoom al tocarlo */
 @media (pointer: coarse) { .entrada input { font-size: 16px; } }
 .entrada-clave { position: relative; width: 100%; }
@@ -593,7 +629,7 @@ a.ej-nombre:hover { color: var(--acento); }
 .aj-tab:hover { background: var(--campo); color: var(--texto); }
 .aj-tab.activo { background: var(--acento-suave); border-color: var(--acento-linea); color: var(--texto); }
 .aj-body { min-width: 0; background: var(--tarjeta); border: 1px solid var(--borde); border-radius: 12px; padding: 17px 20px; }
-.aj-body > h3 { font-size: 21px; font-weight: 700; color: var(--acento); margin: 0 0 5.6px; }
+.aj-body > h3 { font-size: 21px; font-weight: 700; color: var(--acento-tinta); margin: 0 0 5.6px; }
 .aj-body > p { font-size: 12.5px; color: var(--suave); margin: 0 0 17.6px; }
 .aj-body h2, .aj-body .seccion-cab { margin: 26px 0 8px; }
 .aj-body > p + h2, .aj-body > p + .seccion-cab { margin-top: 0; }

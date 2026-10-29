@@ -141,6 +141,34 @@
   }
   function render() {
     if (DB.state.doc && window.SolventoRender) window.SolventoRender.render(DB.state.doc, PRICES);
+    resumenParaSuite();
+  }
+
+  // El resumen de la tarjeta de Solvento en el inicio de SweetSuite
+  const EUR = new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" });
+  function resumenParaSuite() {
+    const m = window.__MODEL;
+    if (!SS || !SS.resumen || !m || esperandoDatos || !isFinite(m.patrimonioNeto)) return;
+    const miles = (window.SolventoConfig && window.SolventoConfig.miles) || ((x) => x);   // 1.722,60 y no 1722,60
+    SS.resumen("solvento", { lineas: ["Patrimonio " + miles(EUR.format(m.patrimonioNeto)),
+      (DB.state.doc.movimientos || []).length + " movimientos"] });
+  }
+
+  // El inicio de SweetSuite y las demás apps, en la barra lateral
+  const ICONO_SUITE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">';
+  const ICONOS_APPS = {
+    inicio: '<rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/>',
+    ironrack: '<path d="M6.5 6.5v11M17.5 6.5v11M3.5 9.5v5M20.5 9.5v5M6.5 12h11"/>',
+  };
+  function pintarAppsSuite() {
+    const caja = $("sn-suite");
+    if (!caja || !SS || !SS.apps) return;
+    const boton = (id, nombre) => `<button class="sn-item" data-ir-app="${esc(id)}">${ICONO_SUITE}${ICONOS_APPS[id] || ICONOS_APPS.inicio}</svg><span>${esc(nombre)}</span></button>`;
+    caja.innerHTML = boton("inicio", "Inicio") + SS.apps().filter((a) => a.id !== "solvento").map((a) => boton(a.id, a.nombre)).join("");
+    caja.querySelectorAll("[data-ir-app]").forEach((b) => b.addEventListener("click", () => {
+      if (window.v2Sidebar) window.v2Sidebar(false);
+      SS.abrir(b.dataset.irApp === "inicio" ? null : b.dataset.irApp);
+    }));
   }
 
   // ── Valores liquidativos subidos ───────────────────────────────────────────
@@ -1531,6 +1559,7 @@
     document.addEventListener("visibilitychange", () => { if (!document.hidden) traerYMezclar(); });
     window.addEventListener("focus", () => traerYMezclar());
     if (!SS) return;                       // fuera de SweetSuite: suite-puente.js ya se va
+    pintarAppsSuite();
     SS.registrar("solvento", {
       guardarAlSalir,
       pendiente: () => !!DB.state.doc && !esperandoDatos && hayPendiente(),
@@ -1541,6 +1570,6 @@
     entrarEnSuite();
   }
 
-  window.SolventoBoot = { pintarRegistro, volverSuite: () => SS && SS.volver(), irAlToken: () => showPageSync(), lock, openSync, saveDoc, toast, cambiarPassword, abrirCambioPassword, esInvitado, editarIgualmente, avisoLectura, pintarLectura, rellenarToken, pintarComprobacion, comprobarAhora, cargarNav, activosParaNav, precios: () => PRICES };
+  window.SolventoBoot = { pintarRegistro, volverSuite: () => SS && SS.volver(), elegirApp: () => SS && SS.elegirApp(), irAlToken: () => showPageSync(), lock, openSync, saveDoc, toast, cambiarPassword, abrirCambioPassword, esInvitado, editarIgualmente, avisoLectura, pintarLectura, rellenarToken, pintarComprobacion, comprobarAhora, cargarNav, activosParaNav, precios: () => PRICES };
   document.addEventListener("DOMContentLoaded", init);
 })();

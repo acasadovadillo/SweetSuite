@@ -220,6 +220,15 @@
     return Object.assign({}, llavero, { preferencias: caja, actualizado: Date.now() });
   }
 
+  // Un dato pequeño de la cuenta, cifrado con su clave interna, para guardarlo
+  // en el dispositivo (el resumen de cada app en el inicio)
+  async function cifrarDato(maestra, obj) {
+    return cifrar(enc.encode(JSON.stringify(obj)), await claveInterna(maestra));
+  }
+  async function descifrarDato(maestra, caja) {
+    return JSON.parse(dec.decode(await descifrar(caja, await claveInterna(maestra))));
+  }
+
   // Entre dos llaveros distintos de la misma cuenta, cuál se queda. Siempre el
   // mismo, lo mire quien lo mire: si no, dos dispositivos se lo cambiarían el
   // uno al otro sin fin.
@@ -234,7 +243,7 @@
   window.SweetLlavero = {
     crear, abrir, abrirConRecuperacion, abrirConCualquiera, cambiarContrasena, cambiarRecuperacion,
     anteriores, conAnteriores, preferencias, conPreferencias, secretoDeApp, ganador, esLlavero,
-    esEmpresa, conRepresentante, abrirEmpresa, soloRepresentantes,
+    esEmpresa, conRepresentante, abrirEmpresa, soloRepresentantes, cifrarDato, descifrarDato,
     nuevaRecuperacion, normalizarRecuperacion, pareceRecuperacion, igual,
   };
 })();

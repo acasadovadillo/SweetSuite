@@ -254,6 +254,8 @@ main {
 .app-icono { width: 44px; height: 44px; border-radius: 11px; display: grid; place-items: center; background: var(--acento-suave); border: 1px solid var(--acento-linea); color: var(--acento); }
 .app-icono svg { width: 24px; height: 24px; stroke-width: 1.8; }
 .app-texto { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+.app-resumen { display: flex; flex-direction: column; gap: 1px; margin-top: 6px; font-size: 13.5px; font-weight: 600; color: var(--texto); }
+.app-resumen span + span { font-weight: 400; font-size: 12.5px; color: var(--texto-medio); }
 .app-tarjeta b { font-size: 17px; font-weight: 700; }
 .app-tarjeta .desc { font-size: 13px; color: var(--suave); line-height: 1.4; }
 .aviso-token { display: flex; align-items: center; gap: 7px; flex-basis: 100%; margin-top: 4px; color: var(--texto-medio); }
@@ -410,6 +412,30 @@ select.campo, input[type="date"].campo { width: auto; min-width: 160px; cursor: 
 .aviso::before { content: ""; flex: none; width: 8px; height: 8px; border-radius: 50%; background: var(--punto, var(--acento)); }
 .aviso.visible { opacity: 1; transform: translate(-50%, 0); }
 @media (min-width: 1024px) { .aviso { top: 24px; } }
+
+/* Ir a otra app */
+.lista-apps { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.lista-apps button {
+  display: flex; align-items: center; gap: 12px; width: 100%; padding: 10px 12px; text-align: left; cursor: pointer;
+  font: inherit; color: var(--texto); background: var(--pozo); border: 1px solid var(--borde); border-radius: 10px;
+}
+.lista-apps button:hover { border-color: color-mix(in srgb, var(--borde) 55%, var(--suave)); }
+.lista-apps button[aria-current="true"] { border-color: var(--acento-linea); background: var(--acento-suave); }
+.lista-apps .app-icono { width: 36px; height: 36px; border-radius: 9px; flex: none; }
+.lista-apps .app-icono svg { width: 20px; height: 20px; }
+.lista-apps b { display: block; font-size: 15px; font-weight: 600; }
+.lista-apps small { display: block; font-size: 12.5px; color: var(--suave); }
+
+/* Aviso de versión nueva */
+.version-nueva {
+  position: fixed; z-index: 1200; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 16px); transform: translateX(-50%);
+  display: flex; align-items: center; gap: 10px; flex-wrap: wrap; justify-content: center;
+  width: max-content; max-width: calc(100% - 24px); padding: 10px 12px 10px 16px;
+  background: var(--tarjeta); color: var(--texto); border: 1px solid var(--acento-linea); border-radius: 12px; box-shadow: var(--sombra);
+  font-size: 14px; font-weight: 500;
+}
+.version-nueva .btn { min-height: 32px; padding: 6px 12px; font-size: 13px; }
+@media (max-width: 640px) { .version-nueva { bottom: calc(env(safe-area-inset-bottom) + var(--tabs) + 12px); } }
 
 /* El menú de la cuenta */
 .menu-flotante {

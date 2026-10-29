@@ -65,6 +65,12 @@ Pruebas de Solvento (necesitan la carpeta `../solvento` al lado para los precios
 cd apps/solvento && jsc tools/pruebas/humo.js
 ```
 
+## Publicar una versión
+
+1. Sube el número en los tres sitios: `VERSION` en `src/js/suite.js`, `VERSION` en `sw.js` y `version.json`. Si cambia Solvento, sube también su `?v=pNNN` en `apps/solvento/index.html`.
+2. `git push`: GitHub Pages publica en uno o dos minutos.
+3. Quien tenga SweetSuite abierta ve «Hay una versión nueva · Actualizar» (se mira cada media hora y al volver a la app). Al actualizar, cada app sube lo pendiente y hay que volver a entrar.
+
 ## Estética
 
 La común de Ironrack, Solvento y webkit-asociaciones: ver `../CLAUDE.md`.

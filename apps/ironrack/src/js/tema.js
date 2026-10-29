@@ -5,6 +5,8 @@
  * El color elegido se guarda en el documento cifrado (ajustes.acento), así que
  * acompaña al usuario en todos sus dispositivos.
  *
+ * El tema claro u oscuro es el de SweetSuite (sweetsuite_tema).
+ *
  * La pantalla de entrada va siempre en el rojo de siempre: todavía no se sabe
  * quién entra, y el acento es de cada cuenta. Al entrar se aplica el suyo, y al
  * salir se vuelve al rojo.
@@ -67,6 +69,20 @@
   };
 
   aplicar(PREDETERMINADO);
+
+  // El tema (claro, oscuro o el del sistema) es el de SweetSuite, de este
+  // dispositivo; si se cambia allí, se cambia aquí también al momento.
+  const CLAVE_TEMA = "sweetsuite_tema";
+  const sistema = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+  function aplicarTema() {
+    let pref = "auto";
+    try { pref = localStorage.getItem(CLAVE_TEMA) || "auto"; } catch (e) { /* el del sistema */ }
+    const t = pref === "claro" || pref === "oscuro" ? pref : (sistema && sistema.matches ? "claro" : "oscuro");
+    document.documentElement.setAttribute("data-tema", t);
+  }
+  aplicarTema();
+  window.addEventListener("storage", (e) => { if (e.key === CLAVE_TEMA) aplicarTema(); });
+  if (sistema && sistema.addEventListener) sistema.addEventListener("change", aplicarTema);
   // Hasta la 1.5.1 se guardaba aquí el último acento para pintar la entrada
   try { localStorage.removeItem("ironrack_acento"); } catch (e) { /* nada que borrar */ }
 
