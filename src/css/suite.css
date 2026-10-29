@@ -445,6 +445,11 @@ select.campo, input[type="date"].campo { width: auto; min-width: 160px; cursor: 
 .marcas legend { font-size: 13px; font-weight: 500; color: var(--texto-medio); padding: 0 4px; }
 .marcas label { flex-direction: row; align-items: center; gap: 7px; font-size: 14px; color: var(--texto); }
 .marcas input { accent-color: var(--acento); }
+/* Los representantes de una empresa, cada uno con su cargo en Agora */
+.marcas-reps { flex-direction: column; flex-wrap: nowrap; gap: 6px; }
+.rep-fila { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 36px; }
+.rep-fila .rep-cargo { height: 34px; min-width: 0; width: 200px; font-size: 13px; padding-top: 0; padding-bottom: 0; }
+.rep-fila .rep-cargo:disabled { opacity: .45; cursor: default; }
 
 /* El menú de la cuenta */
 .menu-flotante {

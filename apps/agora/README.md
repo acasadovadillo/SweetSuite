@@ -13,7 +13,7 @@ La gestión de la asociación **ABIES**: socios y cuotas, tesorería, facturas, 
 Agora vive dentro de **SweetSuite** y solo la tiene la cuenta de empresa **ABIES** (`cuentas.json`):
 
 - **Se entra por SweetSuite**, con las dos llaves de la empresa: ABIES y su contraseña, y el representante y la suya. SweetSuite le da a Agora su secreto, quién entra y su **cargo**. Abierta sola, fuera de SweetSuite, se va a SweetSuite.
-- **El cargo lo pone la Administración** en `cuentas.json` (`"cargos": { "alberto": "Presidencia" }`). Todos ven todo y cada cargo modifica lo suyo:
+- **El cargo lo pone la Administración de SweetSuite**: al editar ABIES, junto a cada representante. Se guarda en `cuentas.json` (`"cargos": { "alberto": "Presidencia" }`) y cuenta desde la siguiente vez que entra. Todos ven todo y cada cargo modifica lo suyo:
   - Tesorería: cuotas, tesorería, facturas, IVA y presupuestos.
   - Secretaría: asociación, socios, actas, obligaciones, documentos y textos de la memoria.
   - Vocalía: actividades.

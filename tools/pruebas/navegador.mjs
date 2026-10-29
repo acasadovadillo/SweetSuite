@@ -393,6 +393,25 @@ async function main() {
     await hasta(() => !$("#dialogo").hidden && $("#dialogo").textContent.includes("Lucia-Ironrack"), 20000);
     $('#dialogo [data-r="ok"]').click();
     return true;`));
+  await prueba("el Admin elige el cargo de un representante de ABIES en Agora", () => AdM.js(`
+    $('[data-adm="editar"][data-u="abies"]').click();
+    await hasta(() => $("#f-cuenta")); const f = $("#f-cuenta");
+    const sel = f.querySelector('select[name="cargo-alberto"]');
+    const seVe = !sel.hidden && !sel.disabled && sel.value === "Presidencia";
+    sel.value = "Tesorería"; f.requestSubmit();
+    await hasta(() => $('[data-adm="guardar"]')); $('[data-adm="guardar"]').click();
+    await hasta(() => !$('[data-adm="guardar"]') && !$(".admin-cambios"), 20000);
+    return seVe && document.body.textContent.includes("Alberto (Tesorería)");`));
+  await prueba("…y en Agora ese cargo decide qué edita", async () => {
+    await E.abrir(URL_SUITE);
+    return E.js(`
+      $('[data-modo="empresa"]').click();
+      await hasta(() => $("#f-empresa")); let f = $("#f-empresa"); f.empresa.value = "abies"; f.contrasena.value = "empresa-1234"; f.requestSubmit();
+      await hasta(() => $("#f-rep")); f = $("#f-rep"); f.usuario.value = "alberto"; f.contrasena.value = "prueba-1234"; f.requestSubmit();
+      await hasta(() => location.hash === "#inicio", 20000); location.hash = "#app/agora";
+      const W = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
+      return W.WA.Sesion.firma === "Alberto · Tesorería" && !W.WA.Sesion.puedeEditar("socios") && W.WA.Sesion.puedeEditar("cuotas");`);
+  });
   await prueba("…y quien no es Admin no ve la Administración", async () => {
     await AdM.abrir(URL_SUITE);
     return AdM.js(`

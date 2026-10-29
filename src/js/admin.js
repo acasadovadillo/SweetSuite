@@ -3,7 +3,7 @@
  *
  * Solo la ve la cuenta de tipo «admin», que es una y solo una (cuentas.json).
  * Da de alta personas y empresas, elige sus apps y los representantes de cada
- * empresa, y da de baja. Por debajo edita cuentas.json y lo sube al
+ * empresa (y, si la empresa tiene Agora, el cargo de cada uno), y da de baja. Por debajo edita cuentas.json y lo sube al
  * repositorio SweetSuite con un commit; GitHub Pages lo publica en un minuto.
  *
  * La seguridad la pone GitHub, no esta pantalla: para guardar hace falta el
@@ -18,6 +18,9 @@
 (function () {
   "use strict";
   const TIPOS = ["persona", "organizacion"];
+  // Los cargos de una asociación con Agora: cada uno edita lo suyo y todos ven
+  // todo (ver apps/agora/src/js/logica/permisos.js). Sin cargo, solo ve.
+  const CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vocalía", "Coordinación"];
   const limpiarUsuario = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const copia = (x) => JSON.parse(JSON.stringify(x));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -42,9 +45,20 @@
           const p = cuentas.find((x) => x.usuario === r);
           if (!p || p.tipo !== "persona") errores.push(`${c.nombre}: «${r}» no es una persona dada de alta`);
         });
+        Object.keys(c.cargos || {}).forEach((r) => {
+          if ((c.representantes || []).indexOf(r) < 0) errores.push(`${c.nombre}: «${r}» tiene cargo pero no es representante`);
+          if (CARGOS.indexOf(c.cargos[r]) < 0) errores.push(`${c.nombre}: «${c.cargos[r]}» no es un cargo`);
+        });
       }
     });
     return errores;
+  }
+  // Los cargos, solo de quien sigue representando a la empresa y con un cargo
+  // de la lista; sin ninguno, no se escribe la clave
+  function ponerCargos(cuenta, cargos) {
+    const limpios = {};
+    (cuenta.representantes || []).forEach((r) => { if (cargos && CARGOS.indexOf(cargos[r]) >= 0) limpios[r] = cargos[r]; });
+    if (Object.keys(limpios).length) cuenta.cargos = limpios; else delete cuenta.cargos;
   }
   function alta(cat, c) {
     const nuevo = copia(cat);
@@ -52,7 +66,10 @@
       usuario: limpiarUsuario(c.usuario), nombre: String(c.nombre || "").trim(),
       tipo: c.tipo === "organizacion" ? "organizacion" : "persona", apps: (c.apps || []).slice(),
     };
-    if (cuenta.tipo === "organizacion") cuenta.representantes = (c.representantes || []).slice();
+    if (cuenta.tipo === "organizacion") {
+      cuenta.representantes = (c.representantes || []).slice();
+      ponerCargos(cuenta, c.cargos);
+    }
     if (cuenta.usuario === "admin") throw fallo("«admin» es la cuenta Admin, y solo puede haber una", "ADMIN");
     if (nuevo.cuentas.some((x) => x.usuario === cuenta.usuario)) throw fallo(`Ya hay una cuenta «${cuenta.usuario}»`, "REPETIDA");
     // Antes de la del Admin, que va la última
@@ -68,6 +85,7 @@
     if (cambios.nombre !== undefined) c.nombre = String(cambios.nombre).trim();
     if (cambios.apps) c.apps = cambios.apps.slice();
     if (c.tipo === "organizacion" && cambios.representantes) c.representantes = cambios.representantes.slice();
+    if (c.tipo === "organizacion") ponerCargos(c, cambios.cargos !== undefined ? cambios.cargos : c.cargos);
     return nuevo;
   }
   // Dar de baja: sale de la lista (y de las empresas que representaba). Sus datos se quedan.
@@ -77,7 +95,11 @@
     if (!c) throw fallo(`No hay ninguna cuenta «${usuario}»`, "NO_EXISTE");
     if (c.tipo === "admin") throw fallo("La cuenta Admin no se puede dar de baja", "ADMIN");
     nuevo.cuentas = nuevo.cuentas.filter((x) => x.usuario !== usuario);
-    nuevo.cuentas.forEach((x) => { if (x.representantes) x.representantes = x.representantes.filter((r) => r !== usuario); });
+    nuevo.cuentas.forEach((x) => {
+      if (!x.representantes) return;
+      x.representantes = x.representantes.filter((r) => r !== usuario);
+      ponerCargos(x, x.cargos);   // y su cargo, fuera
+    });
     return nuevo;
   }
   // Los tokens que hay que crear en GitHub para lo que es nuevo
@@ -211,8 +233,9 @@
           <span><b>Cambios sin guardar.</b> ${errores.length ? `<span class="error">${esc(errores[0])}</span>` : "Al guardar se publican en un minuto."}</span>
           <span class="botones"><button class="btn" data-adm="descartar">Descartar</button><button class="btn primario" data-adm="guardar" ${errores.length || st.guardando ? "disabled" : ""}>${st.guardando ? "Guardando…" : "Guardar cambios"}</button></span>
         </div>` : "";
+      const conCargo = (c, r) => esc(nombreDe(r)) + (c.cargos && c.cargos[r] ? " (" + esc(c.cargos[r]) + ")" : "");
       const filaCuenta = (c) => ctx.fila(`${esc(c.nombre)} <span class="usuario-admin">${esc(c.usuario)}</span>`,
-        esc(appsDe(c)) + (c.tipo === "organizacion" ? " · Representantes: " + ((c.representantes || []).map((r) => esc(nombreDe(r))).join(", ") || "ninguno") : ""),
+        esc(appsDe(c)) + (c.tipo === "organizacion" ? " · Representantes: " + ((c.representantes || []).map((r) => conCargo(c, r)).join(", ") || "ninguno") : ""),
         `<button class="btn" data-adm="editar" data-u="${esc(c.usuario)}">Editar</button><button class="btn texto-peligro" data-adm="baja" data-u="${esc(c.usuario)}">Dar de baja</button>`, "apilar");
       return cab + barra + `
         <h2>Personas</h2>
@@ -235,18 +258,40 @@
           <label>Nombre <input class="campo" name="nombre" value="${esc(c.nombre)}" placeholder="${tipo === "organizacion" ? "ABIES" : "Nombre"}"></label>
           <fieldset class="marcas"><legend>Apps</legend>${(st.borrador.apps || []).map((a) =>
             `<label><input type="checkbox" name="app" value="${esc(a.id)}" ${(c.apps || []).indexOf(a.id) >= 0 ? "checked" : ""}> ${esc(a.nombre)}</label>`).join("")}</fieldset>
-          ${c.tipo === "organizacion" ? `<fieldset class="marcas"><legend>Representantes</legend>${personas.map((p) =>
-            `<label><input type="checkbox" name="rep" value="${esc(p.usuario)}" ${(c.representantes || []).indexOf(p.usuario) >= 0 ? "checked" : ""}> ${esc(p.nombre)}</label>`).join("") || "<p class='nota'>Primero da de alta a las personas.</p>"}</fieldset>
+          ${c.tipo === "organizacion" ? `<fieldset class="marcas marcas-reps"><legend>Representantes</legend>${personas.map((p) => {
+            const es = (c.representantes || []).indexOf(p.usuario) >= 0, cargo = (c.cargos || {})[p.usuario] || "";
+            return `<div class="rep-fila"><label><input type="checkbox" name="rep" value="${esc(p.usuario)}" ${es ? "checked" : ""}> ${esc(p.nombre)}</label>
+              <select class="campo rep-cargo" name="cargo-${esc(p.usuario)}" aria-label="Cargo de ${esc(p.nombre)} en Agora" ${es ? "" : "disabled"}>
+                <option value="">Sin cargo (solo ve)</option>${CARGOS.map((x) => `<option ${x === cargo ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></div>`;
+          }).join("") || "<p class='nota'>Primero da de alta a las personas.</p>"}</fieldset>
+            <p class="nota nota-cargos">En Agora, el cargo decide qué edita cada uno; todos ven todo.</p>
             <p class="nota">Un representante nuevo entra la primera vez con la clave de recuperación de la empresa.</p>` : ""}
           <p class="error" id="cuenta-error"></p>
           <div class="botones"><button type="button" class="btn" data-r="no">Cancelar</button><button class="btn primario">${nueva ? "Añadir" : "Aceptar"}</button></div>
         </form>`);
       d.querySelector('[data-r="no"]').onclick = () => ctx.cerrarDialogo();
-      d.querySelector("#f-cuenta").addEventListener("submit", (ev) => {
+      // El cargo solo cuenta con Agora y para quien representa a la empresa
+      const fc = d.querySelector("#f-cuenta");
+      const verCargos = () => {
+        const agora = !!fc.querySelector('input[name="app"][value="agora"]:checked');
+        fc.querySelectorAll(".rep-cargo").forEach((sel) => {
+          sel.hidden = !agora;
+          sel.disabled = !fc.querySelector(`input[name="rep"][value="${sel.name.slice(6)}"]`).checked;
+        });
+        const n = fc.querySelector(".nota-cargos");
+        if (n) n.hidden = !agora;
+      };
+      fc.addEventListener("change", verCargos);
+      verCargos();
+      fc.addEventListener("submit", (ev) => {
         ev.preventDefault();
         const f = ev.target;
         const marcadas = (n) => [...f.querySelectorAll(`input[name="${n}"]:checked`)].map((i) => i.value);
         const datos = { usuario: f.usuario.value, nombre: f.nombre.value, tipo: c.tipo, apps: marcadas("app"), representantes: marcadas("rep") };
+        if (c.tipo === "organizacion") {
+          datos.cargos = {};   // (sin Agora, sin cargos)
+          if (datos.apps.indexOf("agora") >= 0) datos.representantes.forEach((r) => { const sel = f.querySelector(`select[name="cargo-${r}"]`); if (sel && sel.value) datos.cargos[r] = sel.value; });
+        }
         try {
           if (!limpiarUsuario(datos.usuario)) throw new Error("Escribe el usuario");
           if (!datos.nombre.trim()) throw new Error("Escribe el nombre");
@@ -335,5 +380,5 @@
     return { cargar, html, accion, cargado: () => st.cargado, avisoSalir: () => cambios() };
   }
 
-  window.SweetAdmin = { validar, alta, editar, baja, tokensQueCrear, formatear, crearVista, limpiarUsuario };
+  window.SweetAdmin = { CARGOS, validar, alta, editar, baja, tokensQueCrear, formatear, crearVista, limpiarUsuario };
 })();

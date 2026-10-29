@@ -167,6 +167,21 @@ await prueba("dice qué tokens crear para lo nuevo, sin tildes y solo sobre su r
   return t.map((x) => x.nombre).sort().join() === "ABIES-Lucia-Agora,ABIES-Lucia-Solvento,Lucia-Solvento" &&
     t.every((x) => x.acceso.join() === (x.app === "Agora" ? "Agora-Data" : "Solvento-Data,Solvento"));
 });
+await prueba("el cargo de cada representante: solo de la lista y solo de quien representa", () => {
+  let c = AD.alta(cat, { usuario: "lucia", nombre: "Lucía", tipo: "persona", apps: ["solvento"] });
+  c = AD.editar(c, "abies", { representantes: ["alberto", "lucia"], cargos: { alberto: "Presidencia", lucia: "Tesorería", nadie: "Vocalía" } });
+  const abies = () => c.cuentas.find((x) => x.usuario === "abies");
+  const bien = JSON.stringify(abies().cargos) === '{"alberto":"Presidencia","lucia":"Tesorería"}' && AD.validar(c).length === 0;
+  // Un cargo que no está en la lista no vale
+  const mal = JSON.parse(JSON.stringify(c)); mal.cuentas.find((x) => x.usuario === "abies").cargos.lucia = "Jefa";
+  // Al dejar de representar (o al darse de baja), su cargo se va
+  const sinLucia = AD.editar(c, "abies", { representantes: ["alberto"] });
+  const baja = AD.baja(c, "lucia");
+  return bien && AD.validar(mal).some((e) => e.includes("no es un cargo")) &&
+    JSON.stringify(sinLucia.cuentas.find((x) => x.usuario === "abies").cargos) === '{"alberto":"Presidencia"}' &&
+    JSON.stringify(baja.cuentas.find((x) => x.usuario === "abies").cargos) === '{"alberto":"Presidencia"}' &&
+    !AD.baja(cat, "alberto").cuentas.find((x) => x.usuario === "abies").cargos;
+});
 await prueba("cuentas.json se escribe como a mano y se vuelve a leer igual", () => {
   const txt = AD.formatear(cat);
   return JSON.stringify(JSON.parse(txt)) === JSON.stringify(cat) && txt.includes('\n    { "usuario": "alberto"');
