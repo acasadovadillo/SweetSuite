@@ -22,6 +22,22 @@ Web: <https://acasadovadillo.github.io/SweetSuite/> (se instala en el móvil con
 - **Otro dispositivo.** Se entra con «Ya uso SweetSuite en otro dispositivo». Al pegar el token de una app, SweetSuite trae el llavero de GitHub; si allí la contraseña es otra, la pide (o la clave de recuperación).
 - **Los datos de antes.** En los Ajustes de Solvento, «Traer tus datos del Solvento de antes» abre con la contraseña de entonces lo que guardaba en este dispositivo y en `datos-cifrados`, y lo pasa a SweetSuite. `datos-cifrados` solo se lee. Ironrack no lo necesita: nadie tenía entrenos.
 
+## Seguridad
+
+- **Bloqueo automático** tras 15 minutos sin usarla (5, 15, 30, 60 o nunca, en Ajustes de la cuenta → Seguridad). Cuenta también el tiempo en segundo plano. Antes de bloquear, cada app sube lo pendiente.
+- **Caducidad de los tokens.** GitHub no deja que el navegador lea cuándo caduca un token, así que al pegarlo SweetSuite pregunta la fecha (también en Ajustes de la cuenta → Seguridad) y avisa 15 días antes, en el inicio y al entrar.
+- **Política de contenido (CSP)** en cada página: solo se habla con este sitio, con `api.github.com` y `raw.githubusercontent.com` (y la letra de Google Fonts). Si se colara un script ajeno, no podría mandar los datos a otro sitio.
+- En el dispositivo solo queda lo cifrado (llaveros, datos y tokens) y preferencias sin datos (tema, grupos del menú, el temporizador de descanso…).
+
+### Dar de baja a un representante de una empresa
+
+1. Quítalo de `"representantes"` en `cuentas.json` y publica. La próxima vez que otro representante sincronice, su entrada desaparece del llavero de la empresa.
+2. **Cambia la contraseña de la empresa:** en la entrada, Empresa → «¿Has olvidado una contraseña?», con la clave de recuperación de la empresa y una contraseña nueva. Así, aunque conserve una copia vieja del llavero en su dispositivo, la contraseña de antes ya no vale para la de GitHub.
+3. **Borra su token** en GitHub (Settings → Developer settings → Fine-grained tokens, el que se llama `EMPRESA-Nombre-App`): deja de poder leer y escribir.
+4. Si quieres más margen, genera también una clave de recuperación nueva de la empresa (Ajustes de la cuenta → Recuperación) y dásela al resto.
+
+Lo que esa persona ya hubiera visto no se puede «desver»: estas medidas cortan su acceso desde ahora.
+
 ## Estructura
 
 ```

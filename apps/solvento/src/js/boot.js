@@ -817,6 +817,7 @@
       await empezarVacia(pwAhora);
       showPageSync();
       setError("sync-status", "Token guardado ✓ · tu Solvento empieza vacío", "var(--verde)");
+      if (SS && SS.tokenGuardado) SS.tokenGuardado("solvento");      // ¿cuándo caduca?
       return;
     }
     let doc, actual = true;
@@ -834,6 +835,7 @@
     if (!actual) { await guardarLocal(); marcarPendiente(true); reintentarPendiente(); }
     setError("sync-status", "");
     if (window.v2Tab) window.v2Tab("patrimonio");
+    if (SS && SS.tokenGuardado) SS.tokenGuardado("solvento");        // ¿cuándo caduca?
     toast("Tus datos ya están en este dispositivo ✓", "var(--verde)");
   }
   // Primera vez de una cuenta: se pasa al panel de empezar con su nombre puesto
@@ -1326,6 +1328,7 @@
     setError("sync-status", autoguardado() ? "Token guardado ✓ · a partir de ahora se guarda solo"
                                            : "Token guardado ✓ · enciende el autoguardado o sube con ⌘S / Ctrl+S", "var(--verde)");
     if (hayPendiente()) await reintentarPendiente(); else pintarEstado("ok");
+    if (SS && SS.tokenGuardado) SS.tokenGuardado("solvento");        // ¿cuándo caduca?
   }
   // El botón de Ajustes sube por la misma cola que todo lo demás: si ya había
   // una subida en marcha, espera a que termine en vez de cruzarse con ella.

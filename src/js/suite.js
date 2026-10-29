@@ -20,7 +20,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.2.0";
+  const VERSION = "1.3.0";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -42,7 +42,8 @@
   const limpiar = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const cuentaDe = (u) => CAT.cuentas.find((c) => c.usuario === limpiar(u));
   const appDe = (id) => CAT.apps.find((a) => a.id === id);
-  const misApps = () => (S.cuenta ? CAT.apps.filter((a) => S.cuenta.apps.indexOf(a.id) >= 0) : []);
+  const misAppsDe = (c) => (c ? CAT.apps.filter((a) => c.apps.indexOf(a.id) >= 0) : []);
+  const misApps = () => misAppsDe(S.cuenta);
   const esEmpresa = (c) => !!c && c.tipo === "organizacion";
   // El usuario con el que cada app guarda el token: en una empresa, uno por representante
   const usuarioToken = () => S.cuenta.usuario + (S.representante ? "@" + S.representante.usuario : "");
@@ -459,6 +460,9 @@
     $("#suite").hidden = false;
     $("#suite").classList.add("con-curvas");
     T.aplicarAcento(S.prefs.acento);
+    marcarActividad();
+    const caducan = misAppsDe(cuenta).filter((a) => avisoToken(a.id));
+    if (caducan.length) setTimeout(() => aviso(caducan.map((a) => a.nombre + ": " + avisoToken(a.id).toLowerCase()).join(" · "), "pendiente"), 600);
     $("#avatar").textContent = iniciales(cuenta.nombre);
     $("#nombre-usuario").textContent = cuenta.nombre + (S.representante ? " · " + S.representante.nombre : "");
     $("#marca-nombre").textContent = cuenta.nombre;
@@ -503,6 +507,7 @@
       f.id = "marco-" + id;
       f.title = app.nombre;
       f.src = app.ruta + "index.html";
+      vigilarMarco(f);
       $("#marcos").appendChild(f);
     } else if (S.apis[id] && S.apis[id].alVolver) {
       S.apis[id].alVolver();             // lo que otros guardaron mientras tanto
@@ -765,6 +770,86 @@
     $("#marca-lateral").insertAdjacentHTML("afterbegin", logo);
   }
 
+  // ── Seguridad: bloqueo por inactividad y caducidad de los tokens ──
+  // Las dos van en las preferencias de la cuenta (cifradas en el llavero), así
+  // que acompañan a la cuenta en todos sus dispositivos.
+  const BLOQUEO_POR_DEFECTO = 15;
+  const OPCIONES_BLOQUEO = [5, 15, 30, 60, 0];
+  const minutosBloqueo = () => (S.prefs && typeof S.prefs.bloqueo === "number" ? S.prefs.bloqueo : BLOQUEO_POR_DEFECTO);
+  // De quién es cada token: en una empresa, de cada representante
+  const claveCaducidad = (app) => app + (S.representante ? "@" + S.representante.usuario : "");
+  const caducidad = (app) => ((S.prefs && S.prefs.caducidades) || {})[claveCaducidad(app)] || "";
+  // Días que le quedan al token de una app (negativo si ya caducó), o null si no se sabe
+  function diasToken(app) {
+    const f = caducidad(app);
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f)) return null;
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    return Math.round((new Date(f + "T00:00:00") - hoy) / 864e5);
+  }
+  const AVISO_DIAS = 15;
+  function avisoToken(app) {
+    const d = diasToken(app);
+    if (d === null || d > AVISO_DIAS) return "";
+    return d < 0 ? "El token caducó: pega uno nuevo en los Ajustes de la app"
+      : d === 0 ? "El token caduca hoy" : d === 1 ? "El token caduca mañana" : `El token caduca en ${d} días`;
+  }
+  async function guardarPrefs(cambios) {
+    const prefs = Object.assign({}, S.prefs, cambios);
+    await cambiarLlavero(await L.conPreferencias(S.llavero, S.maestra, prefs));
+  }
+  async function ponerCaducidad(app, fecha) {
+    const c = Object.assign({}, (S.prefs && S.prefs.caducidades) || {});
+    if (fecha) c[claveCaducidad(app)] = fecha; else delete c[claveCaducidad(app)];
+    await guardarPrefs({ caducidades: c });
+    pintar();
+  }
+  // Al pegar un token en una app: ¿cuándo caduca? (GitHub no deja que el
+  // navegador lo lea, así que se pregunta)
+  function preguntarCaducidad(app) {
+    const nombre = appDe(app).nombre;
+    const d = dialogo(`<h3>¿Cuándo caduca este token?</h3>
+      <p>GitHub no deja que SweetSuite lo mire. Apúntalo y te avisaré ${AVISO_DIAS} días antes, para que ${esc(nombre)} no deje de guardar de golpe.
+         Lo ves en GitHub → Settings → Developer settings → Fine-grained tokens.</p>
+      <form class="form" id="f-caduca">
+        <input class="campo" type="date" name="fecha" value="${esc(caducidad(app))}">
+        <div class="botones"><button type="button" class="btn" data-r="no">Ahora no</button><button class="btn primario">Guardar</button></div>
+      </form>`);
+    d.querySelector('[data-r="no"]').onclick = () => cerrarDialogo();
+    d.querySelector("#f-caduca").addEventListener("submit", async (ev) => {
+      ev.preventDefault();
+      const f = ev.target.fecha.value;
+      cerrarDialogo();
+      if (f) { await ponerCaducidad(app, f); aviso("Te avisaré antes de que caduque", "ok"); }
+    });
+  }
+
+  // El bloqueo: tras X minutos sin tocar nada (en SweetSuite o en una app), o
+  // al volver a la app después de tenerla más tiempo que ese en segundo plano.
+  // Antes de bloquear, cada app sube lo que tenga pendiente.
+  let ultimaActividad = Date.now();
+  const marcarActividad = () => { ultimaActividad = Date.now(); };
+  const EVENTOS_ACTIVIDAD = ["pointerdown", "keydown", "wheel", "touchstart"];
+  EVENTOS_ACTIVIDAD.forEach((e) => document.addEventListener(e, marcarActividad, { capture: true, passive: true }));
+  function vigilarMarco(f) {
+    f.addEventListener("load", () => {
+      try { EVENTOS_ACTIVIDAD.forEach((e) => f.contentWindow.addEventListener(e, marcarActividad, { capture: true, passive: true })); }
+      catch (e) { /* otro origen: no pasa */ }
+    });
+  }
+  let bloqueando = false;
+  async function revisarInactividad() {
+    const min = S.cuenta ? minutosBloqueo() : 0;
+    if (!min || bloqueando || Date.now() - ultimaActividad < min * 60000) return;
+    bloqueando = true;
+    try {
+      if (!$("#dialogo").hidden) cerrarDialogo(null);
+      await salir(false);
+      aviso("SweetSuite se ha bloqueado tras " + min + " minutos sin usarla");
+    } finally { bloqueando = false; }
+  }
+  setInterval(revisarInactividad, 15000);
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) revisarInactividad(); });
+
   function pintarEstados() {
     const apps = misApps();
     let peor = "ok";
@@ -773,7 +858,9 @@
       const p = document.querySelector(`[data-punto="${a.id}"]`);
       if (p) { p.className = "punto " + (e.estado || ""); p.title = e.texto; }
       const t = document.querySelector(`[data-estado-app="${a.id}"]`);
-      if (t) t.innerHTML = `<i class="punto ${e.estado || ""}"></i>${esc(e.texto)}`;
+      const tk = avisoToken(a.id);
+      if (t) t.innerHTML = `<i class="punto ${e.estado || ""}"></i>${esc(e.texto)}` +
+        (tk ? `<span class="aviso-token"><i class="punto ${diasToken(a.id) < 0 ? "error" : "pendiente"}"></i>${esc(tk)}</span>` : "");
       if (e.estado === "error") peor = "error";
       else if (e.estado === "pendiente" && peor !== "error") peor = "pendiente";
       else if (e.estado !== "ok" && peor === "ok") peor = "";
@@ -808,6 +895,7 @@
   const SECCIONES = [
     ["cuenta", "Mi cuenta", "Tu usuario, tus apps y tu contraseña."],
     ["recuperacion", "Recuperación", "Lo que te deja volver a entrar si olvidas la contraseña."],
+    ["seguridad", "Seguridad", "Cuándo se bloquea SweetSuite y cuándo caducan tus tokens."],
     ["apariencia", "Apariencia", ""],
     ["dispositivo", "Este dispositivo", "Lo que SweetSuite guarda aquí."],
     ["acerca", "Acerca de", ""],
@@ -851,6 +939,22 @@
             <input type="color" value="${actual}" id="acento-propio" aria-label="Color personalizado"></label>
         </div></div>
         <p class="nota">El de SweetSuite. Cada app tiene el suyo, en sus Ajustes › Apariencia.</p>`;
+    },
+    seguridad: () => {
+      const min = minutosBloqueo();
+      return `<h2>Bloqueo automático</h2>
+        <div class="tarjeta filas">
+          ${fila("Bloquear tras un rato sin usarla", "Antes de bloquear, cada app sube lo que tenga pendiente. Cuenta también el tiempo en segundo plano.",
+            `<select class="campo" data-cambio="bloqueo" aria-label="Bloqueo automático">${OPCIONES_BLOQUEO.map((m) =>
+              `<option value="${m}" ${m === min ? "selected" : ""}>${m ? m + " minutos" : "Nunca"}</option>`).join("")}</select>`, "apilar")}
+        </div>
+        <h2>${S.representante ? "Tus tokens en " + esc(S.cuenta.nombre) : "Tus tokens"}</h2>
+        <p class="nota" style="margin:-2px 0 10px">GitHub no deja que SweetSuite lea cuándo caduca un token: apúntalo aquí y te avisaré ${AVISO_DIAS} días antes, en el inicio.</p>
+        <div class="tarjeta filas">${misApps().map((a) => {
+          const tk = avisoToken(a.id);
+          return fila("Token de " + esc(a.nombre), tk ? esc(tk) : caducidad(a.id) ? "Caduca el " + new Date(caducidad(a.id) + "T00:00:00").toLocaleDateString("es-ES") : "Sin fecha apuntada",
+            `<input class="campo" type="date" data-cambio="caducidad" data-app="${a.id}" value="${esc(caducidad(a.id))}" aria-label="Caducidad del token de ${esc(a.nombre)}">`, "apilar");
+        }).join("")}</div>`;
     },
     dispositivo: () => `<div class="tarjeta filas">
         ${fila("Bloquear", "Vuelve a la entrada. Antes, cada app sube lo que tenga pendiente.", '<button class="btn" data-a="bloquear">Bloquear</button>')}
@@ -1004,6 +1108,7 @@
         if (k === claveLlavero(u) || (k.indexOf("sweetsuite_solvento_") === 0 && (k.endsWith(":" + u) || k.indexOf(":" + u + "@") > 0)) ||
             (k.indexOf("sweetsuite_ironrack_") === 0 && k.endsWith("_" + u))) borrar.push(k);
       }
+      borrar.push("sweetsuite_ironrack_descanso");
       borrar.forEach(ls.del);
       Object.assign(S, SIN_SESION, { apis: {}, estados: {}, anteriores: [], prefs: {} });
       history.replaceState(null, "", location.pathname);
@@ -1017,6 +1122,14 @@
     ACC[el.dataset.a](el);
   });
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") cerrarLateral(); });
+  const CAMBIOS = {
+    bloqueo: async (el) => { await guardarPrefs({ bloqueo: Number(el.value) }); aviso(Number(el.value) ? "Se bloqueará tras " + el.value + " minutos sin usarla" : "No se bloqueará sola", "ok"); },
+    caducidad: (el) => ponerCaducidad(el.dataset.app, el.value),
+  };
+  document.addEventListener("change", (ev) => {
+    const el = ev.target.closest && ev.target.closest("[data-cambio]");
+    if (el && CAMBIOS[el.dataset.cambio] && S.cuenta) CAMBIOS[el.dataset.cambio](el);
+  });
 
   // Cerrar la pestaña con cambios sin subir: el navegador pregunta
   window.addEventListener("beforeunload", (ev) => {
@@ -1041,6 +1154,8 @@
       };
     },
     registrar(app, api) { S.apis[app] = api; },
+    // Una app acaba de guardar un token: se pregunta cuándo caduca
+    tokenGuardado(app) { if (S.cuenta) preguntarCaducidad(app); },
     estado(app, estado, texto) {
       S.estados[app] = { estado: estado || "", texto: texto || "" };
       if (S.cuenta) pintarEstados();

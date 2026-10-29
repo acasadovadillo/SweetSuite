@@ -222,6 +222,7 @@
           IR.ui.cerrarHoja();
           IR.ui.aviso(S.estado === "ok" ? "Conectado con GitHub" : "Token guardado");
           render(true);
+          if (IR.suite.tokenGuardado) IR.suite.tokenGuardado("ironrack");    // ¿cuándo caduca?
         } catch (e) {
           $("#token-error").textContent = e.message;
           btn.disabled = false;

@@ -10,7 +10,7 @@
   "use strict";
   const IR = (window.IR = window.IR || {});
   const U = IR.u;
-  const CLAVE = "ironrack_descanso";
+  const CLAVE = "sweetsuite_ironrack_descanso";
 
   let T = { fin: 0, total: 0, avisado: false };
   try { T = Object.assign(T, JSON.parse(localStorage.getItem(CLAVE)) || {}); } catch (e) { /* sin guardar */ }
