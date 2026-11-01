@@ -11,7 +11,7 @@
  * Al instalarse se guarda todo lo que hace falta para abrir sin conexión: lo
  * de SweetSuite y lo que piden los index.html de cada app.
  */
-const VERSION = "sweetsuite-1.7.0";
+const VERSION = "sweetsuite-1.7.1";
 const FUENTES = "sweetsuite-fuentes";
 const BASE = [
   "./", "./index.html", "./manifest.json", "./cuentas.json", "./version.json",
