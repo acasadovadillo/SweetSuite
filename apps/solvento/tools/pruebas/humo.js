@@ -265,6 +265,14 @@ comprobar("con fecha en la tarjeta, una devolución del 29 entra en el recibo de
   M.fechaEnTarjeta(conDesfase.movimientos[conDesfase.movimientos.length - 1]) === "02/10/2026" &&
   M.fechaEnTarjeta(recibo) === "30/09/2026");
 
+// Un traspaso entre fondos son dos operaciones: la que sale del fondo de origen
+// va en negativo y la que entra en el de destino, en positivo. Antes el
+// formulario las guardaba las dos en positivo y el fondo de origen no se iba.
+comprobar("el traspaso que sale del fondo va en negativo y el que entra, en positivo",
+  M.signoOperacion("Traspaso", "Sale del fondo") === -1 && M.signoOperacion("Traspaso", "Entra en el fondo") === 1 &&
+  M.signoOperacion("Venta", "Sale del fondo") === -1 && M.signoOperacion("Compra", "Sale del fondo") === 1 &&
+  M.signoOperacion("Herencia") === 1);
+
 // Y el caso que dispara todo esto: un recibo por MÁS de lo que la tarjeta debe
 // la deja en negativo y arrastra ese saldo a favor al ciclo siguiente.
 var conExceso = JSON.parse(JSON.stringify(conCargos));

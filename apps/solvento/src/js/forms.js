@@ -422,6 +422,8 @@
     const body =
       field("i-fecha", "Fecha", input("i-fecha", "date", toISO(e.fecha || hoyES()))) +
       field("i-tipo", "Operación", select("i-tipo", ["Compra", "Venta", "Traspaso", "Herencia"], e.tipo_movimiento || "Compra")) +
+      field("i-sentido", "El traspaso", select("i-sentido", ["Sale del fondo", "Entra en el fondo"],
+        existing && Number(e.coste) >= 0 ? "Entra en el fondo" : "Sale del fondo")) +
       field("i-nombre", "Activo", datalist("i-nombre", Object.keys(conocidos), e.nombre)) +
       field("i-isin", "ISIN", input("i-isin", "text", e.isin && e.isin !== "-" ? e.isin : "")) +
       field("i-renta", "Categoría", select("i-renta", RENTAS, e.renta || "Renta variable")) +
@@ -435,7 +437,7 @@
       const importe = parseFloat(G("i-importe"));
       if (!isFinite(importe) || importe <= 0) return "Introduce un importe válido";
       const uds = parseFloat(G("i-unidades"));
-      const signo = G("i-tipo") === "Venta" ? -1 : 1;
+      const signo = window.SolventoModel.signoOperacion(G("i-tipo"), G("i-sentido"));
       upsert(doc.inversiones, {
         id: e.id || newId("i"), fecha: fromISO(G("i-fecha")) || hoyES(),
         tipo_movimiento: G("i-tipo"), nombre, ticker: e.ticker || "-", isin: G("i-isin") || "-",
@@ -444,6 +446,10 @@
       });
       return null;
     });
+    // Solo un traspaso pregunta si sale del fondo o entra en él.
+    const tEl = document.getElementById("i-tipo");
+    const verSentido = () => { const ff = document.querySelector('.ff[data-for="i-sentido"]'); if (ff) ff.style.display = tEl.value === "Traspaso" ? "" : "none"; };
+    tEl.addEventListener("change", verSentido); verSentido();
     const nEl = document.getElementById("i-nombre");
     nEl.addEventListener("change", () => {
       const a = conocidos[nEl.value.trim()]; if (!a) return;

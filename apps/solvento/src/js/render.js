@@ -481,9 +481,11 @@
     const mov = r.tipo_movimiento || "Compra";
     const c = MC[mov] || "var(--t2)";
     const coste = Number(r.coste);
+    // Las dos patas de un traspaso se ven distintas: la que sale y la que entra.
+    const etiqueta = mov === "Traspaso" ? (coste < 0 ? "Traspaso, sale" : "Traspaso, entra") : mov;
     return `<tr class="table-row">
       <td style="text-align:left;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${esc(r.fecha)}</td>
-      <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.5rem;">${logoImg(r.nombre, r.isin, 18)}<span style="color:var(--t0);font-weight:600;font-size:0.85rem;">${esc(r.nombre)}</span><span style="color:${c};font-size:0.7rem;font-weight:700;background:color-mix(in srgb, ${c} 13%, transparent);padding:0.1rem 0.4rem;border-radius:4px;">${esc(mov)}</span></div></td>
+      <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.5rem;">${logoImg(r.nombre, r.isin, 18)}<span style="color:var(--t0);font-weight:600;font-size:0.85rem;">${esc(r.nombre)}</span><span style="color:${c};font-size:0.7rem;font-weight:700;background:color-mix(in srgb, ${c} 13%, transparent);padding:0.1rem 0.4rem;border-radius:4px;">${esc(etiqueta)}</span></div></td>
       <td style="text-align:right;color:${coste < 0 ? RED : "var(--t1)"};font-weight:600;white-space:nowrap;">${fmtEur(coste)}</td>
       <td style="text-align:right;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${r.unidades !== "" && r.unidades != null ? Number(r.unidades).toLocaleString("es-ES", { maximumFractionDigits: 6 }) : "—"}</td>
       ${rowActions(`v2EditInv('${r.id}')`, `v2DelInv('${r.id}')`)}</tr>`;
