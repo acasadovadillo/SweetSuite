@@ -50,7 +50,7 @@
     const src = CFG.assetLogo(nombre, isin);
     const s = size || 22;
     return src
-      ? `<img src="${src}" alt="" style="width:${s}px;height:${s}px;object-fit:contain;border-radius:5px;flex-shrink:0;">`
+      ? `<img src="${src}" alt="" style="width:${s}px;height:${s}px;object-fit:contain;border-radius:${Math.round(s * 0.2)}px;flex-shrink:0;">`
       : `<span style="display:inline-block;width:${s}px;height:${s}px;flex-shrink:0;"></span>`;
   }
 
@@ -485,7 +485,7 @@
     const etiqueta = mov === "Traspaso" ? (coste < 0 ? "Traspaso, sale" : "Traspaso, entra") : mov;
     return `<tr class="table-row">
       <td style="text-align:left;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${esc(r.fecha)}</td>
-      <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.5rem;">${logoImg(r.nombre, r.isin, 18)}<span style="color:var(--t0);font-weight:600;font-size:0.85rem;">${esc(r.nombre)}</span><span style="color:${c};font-size:0.7rem;font-weight:700;background:color-mix(in srgb, ${c} 13%, transparent);padding:0.1rem 0.4rem;border-radius:4px;">${esc(etiqueta)}</span></div></td>
+      <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.5rem;">${logoImg(r.nombre, r.isin, 26)}<span style="color:var(--t0);font-weight:600;font-size:0.85rem;">${esc(r.nombre)}</span><span style="color:${c};font-size:0.7rem;font-weight:700;background:color-mix(in srgb, ${c} 13%, transparent);padding:0.1rem 0.4rem;border-radius:4px;">${esc(etiqueta)}</span></div></td>
       <td style="text-align:right;color:${coste < 0 ? RED : "var(--t1)"};font-weight:600;white-space:nowrap;">${fmtEur(coste)}</td>
       <td style="text-align:right;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${r.unidades !== "" && r.unidades != null ? Number(r.unidades).toLocaleString("es-ES", { maximumFractionDigits: 6 }) : "—"}</td>
       ${rowActions(`v2EditInv('${r.id}')`, `v2DelInv('${r.id}')`)}</tr>`;
@@ -665,7 +665,7 @@
       if (esCerrada(a)) {
         const realizado = -a.coste;   // coste neto negativo = dinero recuperado de más
         return `<tr class="table-row" style="opacity:0.55;">
-          <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.6rem;">${logoImg(a.nombre, a.isin)}<div><div style="font-weight:600;color:var(--t1b);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);">${esc(a.tipo)} · <span style="color:var(--t2);font-weight:600;">Cerrada</span></div></div></div></td>
+          <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.75rem;">${logoImg(a.nombre, a.isin, 40)}<div><div style="font-weight:600;color:var(--t1b);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);">${esc(a.tipo)} · <span style="color:var(--t2);font-weight:600;">Cerrada</span></div></div></div></td>
           <td style="text-align:right;color:var(--t2);white-space:nowrap;">—</td>
           <td style="text-align:right;color:var(--t2);white-space:nowrap;">—</td>
           <td style="text-align:right;white-space:nowrap;"><div style="color:${realizado >= 0 ? GREEN : RED};font-weight:600;">${realizado >= 0 ? "+" : ""}${fmtEur(realizado)}</div><div style="color:var(--t2);font-size:0.74rem;">realizado</div></td>
@@ -675,7 +675,7 @@
         ? `<div style="color:${rc(a.ganancia)};font-weight:600;">${a.ganancia >= 0 ? "+" : ""}${fmtEur(a.ganancia)}</div><div style="color:${rc(a.rentPct)};font-size:0.78rem;">${fmtPct(a.rentPct)}${isFinite(a.cagr) && a.coste >= 100 ? '<span class="col-secundaria"> · CAGR ' + a.cagr.toFixed(1) + "%</span>" : ""}</div>`
         : `<span style="color:var(--t3);">—</span>`;
       return `<tr class="table-row">
-        <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.6rem;">${logoImg(a.nombre, a.isin)}<div><div style="font-weight:600;color:var(--t0);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);">${esc(a.tipo)}${a.isin && a.isin !== "-" ? ' · <span style="font-family:ui-monospace,monospace;">' + esc(a.isin) + "</span>" : ""}</div>${avisoFrescura(a)}</div></div></td>
+        <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.75rem;">${logoImg(a.nombre, a.isin, 40)}<div><div style="font-weight:600;color:var(--t0);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);">${esc(a.tipo)}${a.isin && a.isin !== "-" ? ' · <span style="font-family:ui-monospace,monospace;">' + esc(a.isin) + "</span>" : ""}</div>${avisoFrescura(a)}</div></div></td>
         <td style="text-align:right;color:var(--t0);font-weight:600;white-space:nowrap;">${fmtEur(a.importe)}</td>
         <td style="text-align:right;color:var(--t1b);white-space:nowrap;">${a.coste ? fmtEur(a.coste) : "—"}</td>
         <td style="text-align:right;white-space:nowrap;">${rentCell}</td>
@@ -711,7 +711,7 @@
     const filas = an.filas.map((f) => {
       const cs = f.celdas.slice(desde);
       return `<tr class="table-row"><td style="text-align:left;position:sticky;left:0;background:var(--f1);z-index:1;">
-        <div style="display:flex;align-items:center;gap:0.5rem;min-width:200px;">${logoImg(f.nombre, f.isin, 20)}
+        <div style="display:flex;align-items:center;gap:0.5rem;min-width:200px;">${logoImg(f.nombre, f.isin, 26)}
           <span style="color:var(--t1);font-weight:600;font-size:0.82rem;">${esc(f.nombre.length > 32 ? f.nombre.slice(0, 31) + "…" : f.nombre)}</span></div></td>
         ${cs.map(celda).join("")}</tr>`;
     }).join("");
