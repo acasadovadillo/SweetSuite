@@ -252,6 +252,19 @@ comprobar("una compra posterior al recibo no entra en el recibo",
   cerca(M.cicloTarjeta(TJ, conPosterior.movimientos, "30/09/2026", "m-prueba-recibo").pendiente, ciclo.pendiente) &&
   cerca(M.cicloTarjeta(TJ, conPosterior.movimientos, null, null).pendiente, 40));
 
+// Una devolución del día 29 que el banco mete en el extracto del mes
+// siguiente: se queda con su fecha (para los ingresos de septiembre), pero en
+// la tarjeta cuenta con «fecha_tarjeta», así que no entra en el recibo de
+// septiembre y sí en el de octubre.
+var conDesfase = JSON.parse(JSON.stringify(conCargos));
+conDesfase.movimientos.push({ id: "m-prueba-anula", fecha: "29/09/2026", fecha_tarjeta: "02/10/2026", tipo: "Ingreso",
+  importe: "20", cuenta_origen: "", cuenta_destino: TJ, tipo_ingreso: "Devoluciones", detalle: "Anulación de prueba" });
+comprobar("con fecha en la tarjeta, una devolución del 29 entra en el recibo del mes siguiente",
+  cerca(M.cicloTarjeta(TJ, conDesfase.movimientos, "30/09/2026", null).pendiente, ciclo.pendiente) &&
+  cerca(M.cicloTarjeta(TJ, conDesfase.movimientos, "05/10/2026", null).pendiente, ciclo.pendiente - 20) &&
+  M.fechaEnTarjeta(conDesfase.movimientos[conDesfase.movimientos.length - 1]) === "02/10/2026" &&
+  M.fechaEnTarjeta(recibo) === "30/09/2026");
+
 // Y el caso que dispara todo esto: un recibo por MÁS de lo que la tarjeta debe
 // la deja en negativo y arrastra ese saldo a favor al ciclo siguiente.
 var conExceso = JSON.parse(JSON.stringify(conCargos));

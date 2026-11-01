@@ -218,6 +218,10 @@
     const centros = uniq(((doc.config || {}).centros || []).concat((doc.movimientos || []).map((m) => m.centro)));
     const body =
       field("m-fecha", "Fecha", input("m-fecha", "date", toISO(e.fecha || hoyES()))) +
+      // Solo con una tarjeta: el día que el banco lo mete en la tarjeta, si es
+      // otro (una compra del 29 que entra en el extracto del mes siguiente)
+      field("m-ftarjeta", "Fecha en la tarjeta (opcional)", input("m-ftarjeta", "date", e.fecha_tarjeta ? toISO(e.fecha_tarjeta) : "") +
+        `<div style="font-size:0.72rem;color:var(--t3);margin-top:0.3rem;">Si el banco lo pone en la tarjeta otro día, por ejemplo en el extracto del mes siguiente. Se queda en tus gastos con su fecha y en la tarjeta, con esta.</div>`) +
       field("m-tipo", "Tipo", select("m-tipo", ["Gasto", "Ingreso", "Traspaso", "Préstamo"], e.tipo || "Gasto")) +
       field("m-importe", "Importe (€)", input("m-importe", "number", e.importe, 'step="0.01" min="0"')) +
       field("m-origen", "Cuenta origen", select("m-origen", donde, e.cuenta_origen || donde[0])) +
@@ -263,6 +267,10 @@
       });
       const centro = G("m-centro");
       if (centro) rec.centro = centro; else delete rec.centro;
+      // La fecha en la tarjeta, solo si toca una tarjeta y es otra que la suya
+      const ftarjeta = fromISO(G("m-ftarjeta"));
+      const conTarjeta = movConTarjeta(doc, tipo, G("m-origen"), G("m-destino"));
+      if (conTarjeta && ftarjeta && ftarjeta !== rec.fecha) rec.fecha_tarjeta = ftarjeta; else delete rec.fecha_tarjeta;
       if (tipo === "Gasto") { rec.cuenta_origen = G("m-origen"); rec.tipo_gasto = G("m-catg"); }
       else if (tipo === "Ingreso") { rec.cuenta_destino = G("m-destino"); rec.tipo_ingreso = G("m-cati"); }
       else if (tipo === "Traspaso") {
@@ -297,6 +305,7 @@
     wireArbol("m-centro", centros, "— Sin imputar —",
               (k) => (k === 0 ? "+ Nuevo centro…" : "+ Nuevo centro dentro…"));
     wireMovVisibility();
+    wireFechaTarjeta(doc);
     wireLiquidacion(doc, e);
   }
 
@@ -367,6 +376,26 @@
     el("m-tipo").addEventListener("change", pintar);
     pintar();
   }
+  // ¿Toca este movimiento una tarjeta (sin ser su recibo)? Una compra con ella,
+  // una devolución a ella o un traspaso desde ella.
+  function movConTarjeta(doc, tipo, origen, destino) {
+    const M = window.SolventoModel;
+    const nombres = new Set((M && M.tarjetas ? M.tarjetas(doc) : []).map((t) => t.nombre));
+    return (tipo === "Gasto" && nombres.has(origen)) || (tipo === "Ingreso" && nombres.has(destino)) ||
+      (tipo === "Traspaso" && nombres.has(origen));
+  }
+  // La «fecha en la tarjeta» solo se enseña cuando hay una tarjeta de por medio
+  function wireFechaTarjeta(doc) {
+    const caja = document.querySelector('.ff[data-for="m-ftarjeta"]');
+    if (!caja) return;
+    const upd = () => {
+      const v = (id) => document.getElementById(id).value;
+      caja.style.display = movConTarjeta(doc, v("m-tipo"), v("m-origen"), v("m-destino")) ? "" : "none";
+    };
+    ["m-tipo", "m-origen", "m-destino"].forEach((id) => document.getElementById(id).addEventListener("change", upd));
+    upd();
+  }
+
   function wireMovVisibility() {
     const tipoEl = document.getElementById("m-tipo"), tpresEl = document.getElementById("m-tpres");
     function upd() {

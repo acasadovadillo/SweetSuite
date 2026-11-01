@@ -641,6 +641,13 @@
       .filter((t) => t.nombre);
   }
 
+  // La fecha con la que un movimiento cuenta EN LA TARJETA. Casi siempre es la
+  // suya, pero no siempre: una compra o una devolución del día 29 que el banco
+  // mete en el extracto del mes siguiente lleva su fecha de verdad (la de los
+  // gastos e ingresos) y, aparte, «fecha_tarjeta», la del recibo en el que
+  // entra. El ciclo de la tarjeta y su página de Pasivos van por esta.
+  const fechaEnTarjeta = (m) => (m && (m.fecha_tarjeta || m.fecha)) || "";
+
   // La tarjeta que salda este movimiento, si es que salda alguna.
   function tarjetaDeLiquidacion(db, m) {
     if (!m || m.tipo !== "Traspaso") return null;
@@ -673,10 +680,10 @@
         const d = String(m.cuenta_destino || "").trim();
         if (o !== nombre && d !== nombre) return false;
         if (!limite) return true;
-        const f = parseFechaES(m.fecha);
+        const f = parseFechaES(fechaEnTarjeta(m));
         return f && f <= limite;
       })
-      .sort((a, b) => (parseFechaES(a.fecha) || 0) - (parseFechaES(b.fecha) || 0));
+      .sort((a, b) => (parseFechaES(fechaEnTarjeta(a)) || 0) - (parseFechaES(fechaEnTarjeta(b)) || 0));
 
     let pendiente = 0, arrastre = 0, desde = "";
     let cargos = [];
@@ -1921,5 +1928,5 @@
     return { caja, cartera, patrimonio };
   }
 
-  window.SolventoModel = { build, buildSeries, rentabilidadBien, xirr, buildAnalitica, buildGastos, resumenCentros, pendientes, esPendiente, resumenPrestamos, revision, arreglarTexto, textosMalCodificados, cobrosPendientes, porCobrar, planMensual, seguimientoPlan, tarjetas, tarjetaDeLiquidacion, cicloTarjeta, revisarLiquidacion, presupuestoAnual, aniosConDatos, flujoMensual, partirCategoria, rutaCategoria, agruparCategorias, arbolCategorias, arbolCentros, repartoRegla, clasificarCategoria, REGLA_DEFECTO, _internals: { computeSaldos, valuate, valuatePropiedades, parseFechaES, round2 } };
+  window.SolventoModel = { build, buildSeries, rentabilidadBien, xirr, buildAnalitica, buildGastos, resumenCentros, pendientes, esPendiente, resumenPrestamos, revision, arreglarTexto, textosMalCodificados, cobrosPendientes, porCobrar, planMensual, seguimientoPlan, tarjetas, tarjetaDeLiquidacion, cicloTarjeta, revisarLiquidacion, fechaEnTarjeta, presupuestoAnual, aniosConDatos, flujoMensual, partirCategoria, rutaCategoria, agruparCategorias, arbolCategorias, arbolCentros, repartoRegla, clasificarCategoria, REGLA_DEFECTO, _internals: { computeSaldos, valuate, valuatePropiedades, parseFechaES, round2 } };
 })();

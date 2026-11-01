@@ -1906,12 +1906,14 @@
     // hasta ahora había que fiarse de la cifra. Se despliega y se ve: cada
     // compra suma, cada recibo resta, y el acumulado a la derecha explica el
     // total sin que nadie tenga que rehacerlo a mano.
+    // (en el orden y el mes en que entran en la tarjeta: ver fechaEnTarjeta)
+    const enTarjeta = window.SolventoModel.fechaEnTarjeta;
     const movsDe = (nombre) => (CURRENT_DOC.movimientos || [])
       .filter((m) => {
         const o = String(m.cuenta_origen || "").trim(), dd = String(m.cuenta_destino || "").trim();
         return o === nombre || dd === nombre;
       })
-      .sort((a, b) => (parseFechaES(a.fecha) || 0) - (parseFechaES(b.fecha) || 0));
+      .sort((a, b) => (parseFechaES(enTarjeta(a)) || 0) - (parseFechaES(enTarjeta(b)) || 0));
 
     const detalleDeuda = (d) => {
       const lista = movsDe(d.nombre);
@@ -1939,7 +1941,7 @@
         // Suma lo que se compra con ella; resta lo que se le paga.
         const suma = (m.tipo === "Gasto" && o === d.nombre) || (m.tipo === "Traspaso" && o === d.nombre);
         acumulado = Math.round((acumulado + (suma ? imp : -imp)) * 100) / 100;
-        const f = parseFechaES(m.fecha);
+        const f = parseFechaES(enTarjeta(m));
         return {
           m, imp, suma, acumulado,
           contra: suma ? (String(m.cuenta_destino || "").trim() || m.tipo_gasto || "") : o,
@@ -1997,7 +1999,7 @@
         const rojoAbajo = f.acumulado < -0.005;
         return `<tr class="table-row" style="background:var(--f1b);">
           <td style="text-align:left;padding-left:2.2rem;color:var(--t1b);font-size:0.82rem;">
-            ${esc(f.m.fecha)} · ${esc(String(f.m.detalle || f.m.tipo_gasto || f.m.tipo).slice(0, 46))}</td>
+            ${esc(f.m.fecha)}${f.m.fecha_tarjeta ? ` <span style="color:var(--t3);" title="Fecha del movimiento; en la tarjeta entra el ${esc(f.m.fecha_tarjeta)}">→ ${esc(f.m.fecha_tarjeta)}</span>` : ""} · ${esc(String(f.m.detalle || f.m.tipo_gasto || f.m.tipo).slice(0, 46))}</td>
           <td style="text-align:left;color:${f.liq ? AZUL : "var(--t3)"};font-size:0.78rem;">
             ${f.liq ? "Liquidación" : esc(f.m.tipo)}${f.contra ? " · " + esc(f.contra) : ""}</td>
           <td style="text-align:right;white-space:nowrap;font-size:0.85rem;color:${f.suma ? RED : GREEN};">
