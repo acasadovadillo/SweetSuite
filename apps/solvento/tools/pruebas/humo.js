@@ -670,6 +670,26 @@ var ej = JSON.parse(leer(base + "tools/pruebas/datos-ejemplo.json"));
 comprobar("mezclar los datos de ejemplo con una copia de sí mismos no cambia nada",
   MZ.iguales(MZ.fusionar(ej, copia(ej)), ej) && MZ.fusionar(ej, copia(ej)).movimientos.length === ej.movimientos.length);
 
+// ── Tu cartera en rentabilidad pura ─────────────────────────────────────────
+// Un fondo que sube un 10 % en febrero y otro 10 % en marzo rinde un 21 %, por
+// mucho que el 1 de marzo se compre otro tanto: la rentabilidad pura no
+// depende de cuándo ni cuánto metes. Sobre el coste saldría otra cosa (242 €
+// sobre 210 €, un 15 %), que es lo que hace que no se pueda comparar con un
+// índice. Y el fondo se ve desde el principio, no desde que se compró.
+var dia = function (s) { var p = s.split("/"); return new Date(+p[2], +p[1] - 1, +p[0]).getTime(); };
+var docPura = { config: { activos: [{ nombre: "Fondo T", isin: "XX0000000001", yf: "T.TEST", categoria: "Renta variable", tipo: "Fondo de inversión" }] },
+  inversiones: [
+    { fecha: "01/01/2025", tipo_movimiento: "Compra", nombre: "Fondo T", isin: "XX0000000001", coste: "100", unidades: "10" },
+    { fecha: "01/03/2025", tipo_movimiento: "Compra", nombre: "Fondo T", isin: "XX0000000001", coste: "110", unidades: "10" }] };
+window.SolventoConfig.usarDoc(docPura);
+var anPura = M.buildAnalitica(docPura, { hist: { "T.TEST": [[dia("01/12/2024"), 9], [dia("01/01/2025"), 10], [dia("28/02/2025"), 11], [dia("31/03/2025"), 12.1]] } });
+var pura = anPura.comportamiento.filter(function (s) { return s.key === "__pura"; })[0];
+var ultimo = function (s) { return s.puntos[s.puntos.length - 1][1]; };
+comprobar("la rentabilidad pura de la cartera no depende de cuándo se aporta",
+  pura && cerca(pura.puntos[0][1], 0) && Math.abs(pura.puntos[1][1] - 10) < 0.01 && Math.abs(ultimo(pura) - 21) < 0.2,
+  pura && pura.puntos.slice(0, 3).map(function (p) { return p[1]; }).join(" · ") + " … " + ultimo(pura));
+window.SolventoConfig.usarDoc(doc);
+
 print("");
 if (fallos.length) { print(fallos.length + " comprobación(es) fallidas"); salir(1); }
 print("todo en orden");

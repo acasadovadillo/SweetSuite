@@ -1715,15 +1715,14 @@
       puntos: meses.map((t, i) => (total[i] ? [t, total[i].rentPct] : [t, null])),
     });
 
-    // Comportamiento del precio, rebasado a 0 % en el primer mes con dato
+    // Comportamiento del precio, rebasado a 0 % en el primer mes con dato. Desde
+    // el principio de la gráfica, no desde que lo compraste: lo que se compara
+    // aquí es el activo, y un fondo comprado ayer también tiene su historia.
     function serieComportamiento(jk, etiqueta, isin, destacada) {
       const ptl = priceTL[jk];
       if (!ptl || ptl.length < 2) return null;
-      // Solo desde que la tienes: antes de comprarla, su precio no te afectaba
-      const desde = unitsTL[jk] ? unitsTL[jk][0][0] : ptl[0][0];
       let base = null;
       const puntos = meses.map((t) => {
-        if (t < desde) return [t, null];
         const p = antesDe(ptl, t);
         if (p == null || !(p > 0)) return [t, null];
         if (base == null) base = p;
@@ -1734,6 +1733,52 @@
     const comportamiento = filas
       .map((f) => serieComportamiento(f.jk, f.nombre, f.isin, false))
       .filter(Boolean);
+
+    // Tu cartera, en rentabilidad PURA (ponderada en el tiempo): cuánto ha
+    // rendido cada euro mientras estuvo invertido, sin que cuente cuándo ni
+    // cuánto metiste o sacaste. Es la cifra que se puede poner al lado de un
+    // índice. Mes a mes, por el método de Dietz modificado: lo que ganó la
+    // cartera descontando las aportaciones (las compras y ventas del mes), sobre
+    // lo que había al empezar más cada aportación por la parte del mes que
+    // estuvo invertida; y los meses se encadenan. Solo cuentan los activos con
+    // precio: uno sin precio no tiene valor que medir y sumaría su coste como
+    // si se hubiera perdido.
+    const conPrecio = jks.filter((jk) => priceTL[jk] && priceTL[jk].length);
+    const aportaciones = [];   // [fecha, euros] de cada compra (+) o venta (−)
+    conPrecio.forEach((jk) => costTL[jk].forEach(([t, c], k) => aportaciones.push([t, c - (k ? costTL[jk][k - 1][1] : 0)])));
+    const valorCartera = meses.map((t) => {
+      let v = 0;
+      for (const jk of conPrecio) {
+        const u = antesDe(unitsTL[jk], t);
+        if (u == null || u <= 1e-9) continue;
+        let precio = antesDe(priceTL[jk], t);
+        if (precio == null) precio = priceTL[jk][0][1];
+        v += u * precio;
+      }
+      return v;
+    });
+    let acum = 1, previo = null;
+    const puntosPura = meses.map((t, i) => {
+      const x = { v: valorCartera[i] };
+      if (previo == null) {
+        if (!(x.v > 0)) return [t, null];
+        previo = x; return [t, 0];
+      }
+      const desde = meses[i - 1];
+      let aportado = 0, ponderado = 0;
+      for (const [tf, euros] of aportaciones) {
+        if (tf <= desde || tf > t) continue;
+        aportado += euros;
+        ponderado += euros * (t - tf) / (t - desde);
+      }
+      const sobre = previo.v + ponderado;
+      acum *= 1 + (sobre > 0 ? (x.v - previo.v - aportado) / sobre : 0);
+      previo = x;
+      return [t, (acum - 1) * 100];
+    });
+    if (puntosPura.some((p) => p[1] != null)) {
+      comportamiento.unshift({ key: "__pura", label: "Tu cartera", isin: "-", destacada: true, puntos: puntosPura });
+    }
 
     return { meses, filas, total, comparativa, comportamiento };
   }

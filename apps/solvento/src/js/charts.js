@@ -324,10 +324,21 @@
     const yAt = (v) => P.y1 - (vmax === vmin ? 0.5 : (v - vmin) / (vmax - vmin)) * (P.y1 - P.y0);
 
     function visibles() { return series.filter((s) => !hidden.has(s.key)); }
-    const valorEn = (s, i) => {
+    const crudo = (s, i) => {
       const p = s.puntos[i];
       const v = p ? p[1] : null;
       return v != null && isFinite(v) ? v : null;
+    };
+    // Con opts.rebasar, cada línea parte de 0 % en el primer punto que tiene
+    // dentro de la ventana: al ampliar un tramo se ve lo que hizo cada una en
+    // él, no lo que arrastraba de antes. Los porcentajes se encadenan (no se
+    // restan): +10 % y luego +10 % es +21 %.
+    const valorEn = (s, i) => {
+      const v = crudo(s, i);
+      if (v == null || !opts.rebasar) return v;
+      let b = null;
+      for (let k = i0; k <= i1 && b == null; k++) b = crudo(s, k);
+      return b == null ? v : ((1 + v / 100) / (1 + b / 100) - 1) * 100;
     };
 
     function draw() {
@@ -364,8 +375,9 @@
           abierto = true;
         }
         if (!d) return "";
-        return `<path d="${d.trim()}" fill="none" stroke="${s.color}" stroke-width="${s.destacada ? 3 : 1.8}"
-          stroke-linecap="round" stroke-linejoin="round" opacity="${s.destacada ? 1 : 0.9}"/>`;
+        // Los índices de referencia, discontinuos: no son tuyos, son la vara de medir.
+        return `<path d="${d.trim()}" fill="none" stroke="${s.color}" stroke-width="${s.destacada ? 3 : s.referencia ? 2 : 1.8}"
+          ${s.referencia ? 'stroke-dasharray="6 4"' : ""} stroke-linecap="round" stroke-linejoin="round" opacity="${s.destacada ? 1 : 0.9}"/>`;
       }).join("");
       // Leyenda ordenada por resultado, con la cifra al lado: así se lee quién va
       // mejor sin tener que rastrear las líneas por el gráfico. La cifra es la del
@@ -375,7 +387,9 @@
         return null;
       };
       const ordenadas = series.slice().sort((a, b) => {
-        if (a.destacada !== b.destacada) return a.destacada ? -1 : 1;
+        // La tuya primero, luego los índices y después cada activo por resultado
+        const rango = (x) => (x.destacada ? 0 : x.referencia ? 1 : 2);
+        if (rango(a) !== rango(b)) return rango(a) - rango(b);
         return (ultimoDe(b) ?? -Infinity) - (ultimoDe(a) ?? -Infinity);
       });
       legEl.innerHTML = ordenadas.map((s) => {

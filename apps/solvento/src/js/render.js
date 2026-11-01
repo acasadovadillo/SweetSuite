@@ -751,7 +751,7 @@
       display:inline-flex;align-items:center;justify-content:center;line-height:0;
       padding:0.32rem 0.55rem;cursor:pointer;font-family:inherit;">${ICONO_COMP[modo]}</button>`;
     const explicacion = COMP_MODO === "comportamiento"
-      ? "Cuánto se ha movido el precio de cada activo desde que lo tienes. Todas parten de 0 %, así que se pueden comparar entre sí."
+      ? "Tu cartera en rentabilidad pura —sin que cuente cuándo ni cuánto metiste— frente a los índices y a cada activo, todos desde la misma fecha y partiendo de 0 %. Al ampliar un tramo, todos vuelven a partir de 0 % ahí."
       : "Cuánto has ganado sobre lo que pagaste por cada uno. Es tu resultado real, pero no compara: un activo comprado hace años parte de un acumulado que otro reciente no puede tener.";
     return `<div class="v2-wrap" id="v2-comparativa"><div class="dashboard-panel">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:0.75rem;flex-wrap:wrap;margin-bottom:0.35rem;">
@@ -3151,31 +3151,43 @@
     // Referencia de mercado: sirve para saber si lo estás haciendo mejor o peor
     // que comprar el índice, que es la comparación que de verdad importa.
     if (COMP_MODO === "comportamiento") {
-      const ref = referenciaMercado(an.meses);
-      if (ref) series = [ref].concat(series);
+      const refs = referenciasMercado(an.meses);
+      // «Tu cartera» primero, luego los índices y después cada activo
+      series = series.filter((x) => x.destacada).concat(refs, series.filter((x) => !x.destacada));
     }
     window.SolventoCharts.mountMulti(el, series.map((s) => Object.assign({}, s)), {
       meses: an.meses,
+      // Al ampliar un tramo, todas las líneas vuelven a partir de 0 % en su
+      // inicio: se compara lo que hizo cada una en ese tramo, no lo que traía.
+      rebasar: COMP_MODO === "comportamiento",
       ventana: COMP_VENTANA,
       onVentana: (v) => { COMP_VENTANA = v; },
     });
   }
 
-  // MSCI World como índice de referencia, desde el histórico público de precios.
-  function referenciaMercado(meses) {
-    const hist = (window.__PRICES && window.__PRICES.hist && window.__PRICES.hist["IWDA.AS"]) || null;
-    if (!hist || hist.length < 2 || !meses.length) return null;
-    const antesDe = (t) => { for (let i = hist.length - 1; i >= 0; i--) if (hist[i][0] <= t) return hist[i][1]; return null; };
-    let base = null;
-    const puntos = meses.map((t) => {
-      const p = antesDe(t);
-      if (p == null || !(p > 0)) return [t, null];
-      if (base == null) base = p;
-      return [t, (p / base - 1) * 100];
-    });
-    return puntos.some((x) => x[1] != null)
-      ? { key: "__ref", label: "MSCI World (referencia)", isin: "-", destacada: true, puntos }
-      : null;
+  // Índices de referencia, desde el histórico público de precios. Son ETF de
+  // acumulación en euros (el proceso de precios los descarga siempre), así que
+  // su precio es la rentabilidad total de un inversor en euros: lo que se pone
+  // al lado de «Tu cartera» para saber si lo haces mejor o peor que el índice.
+  const REFERENCIAS = [["IWDA.AS", "MSCI World"], ["SXR8.DE", "S&P 500"], ["SXRV.DE", "Nasdaq 100"]];
+  function referenciasMercado(meses) {
+    const hists = (window.__PRICES && window.__PRICES.hist) || {};
+    if (!meses.length) return [];
+    return REFERENCIAS.map(([ticker, nombre]) => {
+      const hist = hists[ticker];
+      if (!hist || hist.length < 2) return null;
+      const antesDe = (t) => { for (let i = hist.length - 1; i >= 0; i--) if (hist[i][0] <= t) return hist[i][1]; return null; };
+      let base = null;
+      const puntos = meses.map((t) => {
+        const p = antesDe(t);
+        if (p == null || !(p > 0)) return [t, null];
+        if (base == null) base = p;
+        return [t, (p / base - 1) * 100];
+      });
+      return puntos.some((x) => x[1] != null)
+        ? { key: "__ref-" + ticker, label: nombre + " (índice)", isin: "-", referencia: true, puntos }
+        : null;
+    }).filter(Boolean);
   }
   window.v2EditMov = (id) => F() && F().editMovimiento(id);
   window.v2EditInv = (id) => F() && F().editInversion(id);
