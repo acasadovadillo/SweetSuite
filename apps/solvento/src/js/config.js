@@ -175,7 +175,7 @@
     "ES0173311103": "asset-fund-logo-numantia.png",
     "IE00BYX5MX67": "asset-fund-logo-sp500.png",
     "IE000ZYRH0Q7": "asset-fund-logo-developed-world.png",
-    "IE00B6R52259": "asset-etf-logo-msci-world.png",
+    "IE00B6R52259": "asset-etf-logo-msci-acwi.png",
   };
   // Fallback por palabra clave cuando no hay ISIN (Bitcoin) o no está mapeado.
   const ASSET_LOGO_KEYWORDS = [["bitcoin", "asset-logo-bitcoin.png"], ["bankinter", "asset-logo-bankinter.png"]];
