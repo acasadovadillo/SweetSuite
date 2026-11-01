@@ -146,7 +146,7 @@ async function main() {
   await hastaQue(async () => (await fetch(URL_SUITE + "cuentas.json")).ok, 60000, "el servidor de desarrollo").catch((e) => {
     throw new Error(e.message + (errServidor ? "\n" + errServidor.slice(-400) : ""));
   });
-  const ruta = await hastaQue(() => existsSync(join(perfil, "DevToolsActivePort")) && readFileSync(join(perfil, "DevToolsActivePort"), "utf8").trim().split("\n"), 20000, "el navegador");
+  const ruta = await hastaQue(() => existsSync(join(perfil, "DevToolsActivePort")) && readFileSync(join(perfil, "DevToolsActivePort"), "utf8").trim().split("\n"), 60000, "el navegador");
   ws = new WebSocket(`ws://127.0.0.1:${ruta[0]}${ruta[1]}`);
   await new Promise((ok, ko) => { ws.onopen = ok; ws.onerror = ko; });
   ws.onmessage = (m) => {
@@ -471,6 +471,23 @@ async function main() {
       await hasta(() => marco("ironrack"), 20000);
       return !document.querySelector("[data-adm]") && !window.SweetSuite.apps().some((a) => a.id === "admin");`);
   });
+
+  // ── Una app suelta: su carpeta (apps/ironrack/) ──
+  const G = await dispositivo();
+  await G.abrir(URL_SUITE + "apps/ironrack/");
+  await prueba("una app suelta: su carpeta abre su entrada y solo esa app", () => G.js(`
+    const entrada = location.search === "?app=ironrack" && $(".entrada-titulo").textContent === "Ironrack" && !!$(".entrada-suite");
+    // Paula no tiene Ironrack: no pasa
+    await entrar("paula", "paula-1234");
+    await hasta(() => $("#b-yalauso")); $("#b-yalauso").click();
+    await hasta(() => $(".entrada-error").textContent.includes("no tiene Ironrack"));
+    // Alberto sí: entra directo en Ironrack, sin inicio ni otras apps
+    await entrar("alberto", "prueba-1234");
+    await hasta(() => $("#b-yalauso")); $("#b-yalauso").click();
+    const W = await hasta(() => { const w = marco("ironrack"); return w && w.IR && w.IR.almacen && w.IR.almacen.S.doc && w; }, 40000);
+    await espera(300);
+    return entrada && window.SweetSuite.suelta === "ironrack" && window.SweetSuite.apps().map((a) => a.id).join() === "ironrack" &&
+      document.title === "Ironrack" && !marco("solvento") && $("#nav-principal").innerHTML === "" && W.document.getElementById("nav-suite").hidden;`));
 
   await prueba("ninguna página ha dado errores de JavaScript", () => {
     if (errores.length) throw new Error(errores.length + ": " + errores[0].split("\n")[0]);

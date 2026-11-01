@@ -1,23 +1,32 @@
 {
-  "_": "Quién entra en SweetSuite y qué apps tiene cada uno. Este repositorio es público: aquí solo van nombres, nunca datos. Los datos de cada app viven cifrados en su repositorio privado (Solvento-Data, Ironrack-Data, Agora-Data). Una empresa (tipo «organizacion») lleva sus «representantes»: los usuarios que pueden entrar en ella; se dan de alta y de baja aquí. En una asociación con Agora, «cargos» dice el cargo de cada representante (Presidencia, Vicepresidencia, Secretaría, Tesorería, Vocalía o Coordinación), que decide qué edita. La cuenta «admin» (la única de tipo «admin») lo hace desde SweetSuite → Administración.",
+  "_": "Quién entra en SweetSuite y qué apps tiene cada uno. Este repositorio es público: aquí solo van nombres, nunca datos. Los datos de cada app viven cifrados en su repositorio privado (Solvento-Data, Ironrack-Data, Agora-Data). Una empresa (tipo «organizacion») lleva sus «representantes»: los usuarios que pueden entrar en ella; se dan de alta y de baja aquí. En una asociación con Agora, «cargos» dice el cargo de cada representante (Presidencia, Vicepresidencia, Secretaría, Tesorería, Vocalía o Coordinación), que decide qué edita. La cuenta «admin» (la única de tipo «admin») lo hace desde SweetSuite → Administración. De cada app, «acento», «icono» e «iconoApple» son los de su entrada cuando se abre suelta (apps/<id>/).",
   "apps": [
     {
       "id": "solvento",
       "nombre": "Solvento",
       "descripcion": "Tus finanzas: patrimonio, inversiones, ingresos y gastos.",
-      "ruta": "apps/solvento/"
+      "ruta": "apps/solvento/",
+      "acento": "#1aac8c",
+      "icono": "apps/solvento/img/icono-solvento.svg",
+      "iconoApple": "apps/solvento/img/app/icon-180.png"
     },
     {
       "id": "ironrack",
       "nombre": "Ironrack",
       "descripcion": "Tu gimnasio: entrenos, series, kilos y progreso.",
-      "ruta": "apps/ironrack/"
+      "ruta": "apps/ironrack/",
+      "acento": "#ff5c5c",
+      "icono": "apps/ironrack/img/icono.svg",
+      "iconoApple": "apps/ironrack/img/icono-180.png"
     },
     {
       "id": "agora",
       "nombre": "Agora",
       "descripcion": "La asociación: socios, cuotas, tesorería, actividades y actas.",
-      "ruta": "apps/agora/src/"
+      "ruta": "apps/agora/",
+      "acento": "#3fb0a0",
+      "icono": "apps/agora/img/icono.svg",
+      "iconoApple": "apps/agora/img/icono-180.png"
     }
   ],
   "cuentas": [

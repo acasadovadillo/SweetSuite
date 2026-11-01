@@ -128,7 +128,8 @@ main {
 }
 .hamburguesa svg { width: 16px; height: 16px; stroke-width: 2; }
 .marca { display: flex; align-items: center; gap: 9px; margin-right: auto; font-size: 13.6px; font-weight: 700; color: var(--texto-medio); }
-.marca svg { width: 26px; height: 26px; }
+.marca svg, .marca img { width: 26px; height: 26px; }
+.marca img, .lateral-marca img { border-radius: 7px; }
 
 .tabs {
   position: fixed; left: 0; right: 0; bottom: 0; z-index: 20;
@@ -159,7 +160,7 @@ main {
 .lateral-velo { position: fixed; inset: 0; z-index: 39; background: rgba(0, 0, 0, .55); }
 .lateral-cab { display: flex; align-items: center; gap: 8px; padding: 2px 9px 30px; min-height: 60px; }
 .lateral-marca { display: flex; align-items: center; gap: 8px; margin-right: auto; font-size: 13px; font-weight: 500; color: var(--suave); }
-.lateral-marca svg { width: 24px; height: 24px; }
+.lateral-marca svg, .lateral-marca img { width: 24px; height: 24px; }
 .lateral-cerrar {
   display: grid; place-items: center; width: 26px; height: 22px; cursor: pointer;
   color: var(--texto-medio); background: none; border: 1px solid var(--control-borde); border-radius: 6px;
@@ -331,7 +332,12 @@ select.campo, input[type="date"].campo { width: auto; min-width: 160px; cursor: 
   background: var(--fondo);
 }
 .entrada { line-height: normal; position: relative; width: 100%; max-width: 360px; display: flex; flex-direction: column; align-items: center; }
-.entrada-logo svg { display: block; width: 56px; height: 56px; }
+.entrada-logo svg, .entrada-logo img { display: block; width: 56px; height: 56px; }
+.entrada-logo img { border-radius: 14px; }
+/* Una app suelta: abajo, la vuelta a SweetSuite con todas las apps */
+.entrada-suite { position: absolute; left: 0; right: 0; bottom: max(22px, env(safe-area-inset-bottom)); text-align: center; font-size: 12.5px; color: var(--suave); text-decoration: underline; text-underline-offset: 2px; }
+.entrada-suite:hover { color: var(--texto); }
+.entrada-suite:focus-visible { outline: 2px solid var(--acento); outline-offset: 3px; border-radius: 4px; }
 .entrada-titulo { font-size: 26px; font-weight: 700; color: var(--acento-tinta); margin: 16px 0 5.6px; }
 .entrada-sub { font-size: 12.5px; color: var(--suave); margin-bottom: 28px; text-align: center; line-height: 1.45; }
 .entrada input:not([type="checkbox"]) {

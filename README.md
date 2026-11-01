@@ -6,6 +6,7 @@ Web: <https://acasadovadillo.github.io/SweetSuite/> (se instala en el móvil con
 
 ## Cómo funciona
 
+- **Apps sueltas.** Cada app tiene su carpeta (`apps/solvento/`, `apps/ironrack/`, `apps/agora/`) y se puede abrir sola: su carpeta lleva a SweetSuite con `?app=<id>`, que pone la entrada con el logo, el nombre y el color de esa app (`"acento"`, `"icono"` e `"iconoApple"` en `cuentas.json`) y, al entrar, abre solo esa app, sin el inicio ni las demás. Misma cuenta, misma contraseña y mismos datos. Cada una tiene su `manifest.json` para instalarla sola en el móvil. Quien no tiene esa app no pasa.
 - **Una entrada.** Usuario y contraseña. Según la cuenta (`cuentas.json`) se ven unas apps u otras: Alberto y Hafsa, Solvento e Ironrack; ABIES, Solvento y Agora; Paula, solo Solvento (con una sola app se entra directamente en ella).
 - **Particular o Empresa.** La entrada tiene un selector. Una empresa (ABIES) entra en dos pasos: la empresa y su contraseña, y después el representante con su usuario y su contraseña personales de SweetSuite. **Hacen falta las dos** para abrir sus datos: la clave maestra de la empresa va envuelta una vez por representante, con las dos contraseñas a la vez. Quién es representante lo dice `cuentas.json` (`"representantes"`): la app no da de alta a nadie. Un representante nuevo, o uno que cambió su contraseña personal, entra la primera vez con la clave de recuperación de la empresa («¿Has olvidado una contraseña?»), que crea su entrada. Cada representante usa su propio token (p. ej. «ABIES-Alberto-Solvento») y lo que guarda queda firmado: en el commit (`… · Alberto`) y en Solvento → Ajustes → Registro de cambios.
 - **La cuenta Admin** (`admin`, la única de tipo `admin` en `cuentas.json`) no tiene apps: al entrar ve la **Administración**, donde da de alta personas, empresas y sus representantes (y, en una empresa con Agora, el cargo de cada uno), cambia sus apps y da de baja. Por debajo edita `cuentas.json` y lo sube a este repositorio con un commit (se publica en un minuto). Para guardar hace falta su token, `Admin-SweetSuite`, con *Contents: Read and write* sobre `SweetSuite` y `SweetSuite-Admin` (donde va su llavero, privado). Dar de baja no borra datos: eso solo se hace desde GitHub. Al dar de alta, dice qué tokens hay que crear en GitHub (`Nombre-App`, `EMPRESA-Nombre-App`).
@@ -45,6 +46,8 @@ Lo que esa persona ya hubiera visto no se puede «desver»: estas medidas cortan
 ```
 index.html, src/        SweetSuite: entrada, llavero, inicio y ajustes de la cuenta
 cuentas.json            quién entra y qué apps tiene
+apps/<id>/              cada app en su carpeta, todas con la misma forma:
+                          index.html, manifest.json, img/, src/ (css y js), README.md y sus pruebas
 apps/solvento/          Solvento (copia de acasadovadillo/Solvento p218, adaptada)
 apps/ironrack/          Ironrack (con su historial, git subtree)
 apps/agora/             Agora, antes webkit-asociaciones (con su historial, git subtree); solo ABIES
@@ -52,7 +55,7 @@ sw.js, manifest.json    la app instalable y sin conexión
 tools/dev/servidor.py   servidor de desarrollo
 ```
 
-Cada app se carga en su marco (`apps/<id>/index.html`) y pide a `window.SweetSuite` su secreto. Abierta sola, se va a SweetSuite.
+Cada app se carga en su marco (`apps/<id>/index.html`) y pide a `window.SweetSuite` su secreto. Abierta sola, se va a SweetSuite con `?app=<id>` y funciona suelta (`window.SweetSuite.suelta` dice cuál; la app esconde entonces su apartado SweetSuite).
 
 ## Desarrollo
 

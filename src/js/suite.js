@@ -16,6 +16,11 @@
  * registrado con el nombre del representante.
  *
  * Rutas: #inicio, #cuenta/<sección> y #app/<id>.
+ *
+ * Una app SUELTA: abrir la carpeta de una app (apps/solvento/) trae aquí con
+ * ?app=solvento. Entonces SweetSuite se pone el nombre, el logo y el color de
+ * esa app, y al entrar abre solo esa, sin el inicio ni las demás. La cuenta,
+ * la contraseña y los datos son los mismos que dentro de la suite.
  */
 (function () {
   "use strict";
@@ -32,6 +37,10 @@
   const MIN_CONTRASENA = 8;
 
   let CAT = { apps: [], cuentas: [] };
+  // La app que se abre suelta (?app=<id>), o null
+  const PEDIDA = String(new URLSearchParams(location.search).get("app") || "").toLowerCase();
+  let SOLA = null;
+  const acentoEntrada = () => (SOLA && T.valido(SOLA.acento) ? SOLA.acento : T.PREDETERMINADO);
   // La sesión, solo en memoria
   // (en una empresa, «contrasena» es la del representante y «empresaPw» la de la empresa)
   const S = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
@@ -44,7 +53,7 @@
   // (la cuenta Admin no tiene apps: su «app» es la Administración)
   const appDe = (id) => CAT.apps.find((a) => a.id === id) || (id === "admin" ? { id: "admin", nombre: "Administración" } : undefined);
   const misAppsDe = (c) => (c ? CAT.apps.filter((a) => c.apps.indexOf(a.id) >= 0) : []);
-  const misApps = () => misAppsDe(S.cuenta);
+  const misApps = () => misAppsDe(S.cuenta).filter((a) => !SOLA || a.id === SOLA.id);
   const esEmpresa = (c) => !!c && c.tipo === "organizacion";
   // La cuenta Admin: una y solo una (si hubiera dos en cuentas.json, ninguna vale)
   const esAdmin = (c) => !!c && c.tipo === "admin" && CAT.cuentas.filter((x) => x.tipo === "admin").length === 1;
@@ -141,12 +150,12 @@
   let pendienteEntrar = null;
 
   function pantalla(html) {
-    T.aplicarAcento(T.PREDETERMINADO);       // la entrada no es de nadie todavía
+    T.aplicarAcento(acentoEntrada());       // la entrada no es de nadie todavía: el de SweetSuite o el de la app suelta
     $("#suite").hidden = true;
     const el = $("#entrada");
     el.hidden = false;
     el.classList.add("con-curvas");
-    el.innerHTML = html;
+    el.innerHTML = html + (SOLA ? `<a class="entrada-suite" href="${esc(location.pathname)}">Abrir SweetSuite, con todas tus apps</a>` : "");
     el.querySelectorAll("[data-ojo]").forEach((b) => b.addEventListener("click", () => {
       const inputs = el.querySelectorAll('input[type="password"], input[data-era-clave]');
       const ver = b.querySelector(".ojo-ver").hasAttribute("hidden") === false;
@@ -158,8 +167,9 @@
     if (f) setTimeout(() => f.focus(), 50);
     return el;
   }
-  const cabecera = (titulo, sub) => `<span class="entrada-logo">${LOGO}</span>
-      <div class="entrada-titulo">${esc(titulo)}</div>
+  // Suelta, la entrada lleva el logo y el nombre de la app
+  const cabecera = (titulo, sub) => `<span class="entrada-logo">${SOLA && SOLA.icono ? `<img src="${esc(SOLA.icono)}" alt="">` : LOGO}</span>
+      <div class="entrada-titulo">${esc(SOLA && titulo === "SweetSuite" ? SOLA.nombre : titulo)}</div>
       <div class="entrada-sub">${sub}</div>`;
   function errorEntrada(texto, gris) {
     const e = $("#entrada .entrada-error");
@@ -198,7 +208,8 @@
         <button type="button" class="entrada-enlace" id="b-olvide">¿Has olvidado tu contraseña?</button>
       </form>`);
     enchufarModo(el, (m) => mostrarEntrada("", m));
-    if (usuario) setTimeout(() => el.querySelector('[name="contrasena"]').focus(), 60);
+    // (si la pantalla no ha cambiado ya, como al rechazar una app suelta)
+    if (usuario) setTimeout(() => { const c = el.querySelector('[name="contrasena"]'); if (c) c.focus(); }, 60);
     $("#b-olvide").onclick = () => mostrarRecuperar(el.querySelector('[name="usuario"]').value);
     $("#f-entrar").addEventListener("submit", async (ev) => {
       ev.preventDefault();
@@ -469,6 +480,12 @@
   // ── La sesión ──
   // «empresa»: { representante, empresaPw } si se entra como representante
   async function iniciarSesion(cuenta, contrasena, llavero, maestra, empresa) {
+    // Suelta, solo entra quien tiene esa app
+    if (SOLA && (cuenta.apps || []).indexOf(SOLA.id) < 0) {
+      mostrarEntrada(cuenta.usuario);
+      errorEntrada(cuenta.nombre + " no tiene " + SOLA.nombre + ". Ábrela desde SweetSuite, abajo.");
+      return;
+    }
     Object.assign(S, SIN_SESION, { cuenta, contrasena, maestra, llavero, estados: {}, apis: {} });
     if (empresa) Object.assign(S, { representante: empresa.representante, empresaPw: empresa.empresaPw });
     S.anteriores = await L.anteriores(llavero, maestra);
@@ -478,7 +495,7 @@
     $("#entrada").innerHTML = "";
     $("#suite").hidden = false;
     $("#suite").classList.add("con-curvas");
-    T.aplicarAcento(S.prefs.acento);
+    T.aplicarAcento(S.prefs.acento || acentoEntrada());   // sin uno elegido, el de SweetSuite o el de la app suelta
     marcarActividad();
     await cargarResumenes();
     const caducan = conToken(cuenta).filter((a) => avisoToken(a.id));
@@ -512,8 +529,8 @@
     const usuario = S.cuenta && S.cuenta.usuario;
     $("#marcos").innerHTML = "";
     Object.assign(S, SIN_SESION, { apis: {}, estados: {}, anteriores: [], prefs: {} });
-    history.replaceState(null, "", location.pathname);
-    document.title = "SweetSuite";
+    history.replaceState(null, "", location.pathname + location.search);   // (la app suelta sigue siéndolo)
+    document.title = SOLA ? SOLA.nombre : "SweetSuite";
     cerrarLateral();
     mostrarEntrada(olvidarUsuario ? "" : usuario);
   }
@@ -538,7 +555,7 @@
     $("#marcos").classList.remove("oculto");
     $("#suite").inert = true;
     S.abierta = id;
-    document.title = app.nombre + " · SweetSuite";
+    document.title = SOLA ? app.nombre : app.nombre + " · SweetSuite";
     cerrarLateral();
     try { f.contentWindow.focus(); } catch (e) { /* aún cargando */ }
   }
@@ -550,7 +567,7 @@
     S.abierta = null;
     $("#marcos").classList.add("oculto");
     $("#suite").inert = false;
-    document.title = "SweetSuite";
+    document.title = SOLA ? SOLA.nombre : "SweetSuite";
     await guardarAlDejar(id);
     pintar();
   }
@@ -601,7 +618,7 @@
     guardarLlaveroLocal(ll);
     S.anteriores = await L.anteriores(ll, S.maestra);
     S.prefs = await L.preferencias(ll, S.maestra);
-    T.aplicarAcento(S.prefs.acento);
+    T.aplicarAcento(S.prefs.acento || acentoEntrada());   // sin uno elegido, el de SweetSuite o el de la app suelta
   }
 
   async function reconciliarYa(app, ad) {
@@ -783,18 +800,21 @@
   const ICONO = (id) => `<svg viewBox="0 0 24 24"><use href="#i-${id}"/></svg>`;
   function pintarMenus() {
     const apps = misApps(), admin = esAdmin(S.cuenta);
-    $("#nav-principal").innerHTML = admin
+    // Suelta no hay inicio: solo la app y la cuenta
+    $("#nav-principal").innerHTML = SOLA ? "" : admin
       ? `<a href="#inicio" data-vista="inicio">${ICONO("admin")}Administración</a>`
       : `<a href="#inicio" data-vista="inicio">${ICONO("inicio")}Inicio</a>`;
+    $(".lateral-titulo").textContent = SOLA ? SOLA.nombre : "Tus apps";
     $("#nav-apps").previousElementSibling.hidden = !apps.length;   // la etiqueta «Apps»
     $("#nav-apps").innerHTML = apps.map((a) => `<a href="#app/${a.id}" data-app="${a.id}">${ICONO(a.id)}${esc(a.nombre)}<i class="punto" data-punto="${a.id}"></i></a>`).join("");
-    $("#tabs").innerHTML = (admin ? `<a href="#inicio" data-vista="inicio">${ICONO("admin")}Administración</a>` : `<a href="#inicio" data-vista="inicio">${ICONO("inicio")}Inicio</a>`) +
+    $("#tabs").innerHTML = (SOLA ? "" : admin ? `<a href="#inicio" data-vista="inicio">${ICONO("admin")}Administración</a>` : `<a href="#inicio" data-vista="inicio">${ICONO("inicio")}Inicio</a>`) +
       apps.map((a) => `<a href="#app/${a.id}" data-app="${a.id}">${ICONO(a.id)}${esc(a.nombre)}</a>`).join("") +
       `<a href="#cuenta" data-vista="cuenta">${ICONO("ajustes")}Cuenta</a>`;
     $("#version").textContent = VERSION;
-    const logo = LOGO.replace('aria-hidden="true"', 'aria-hidden="true" class="logo"');
-    $("#marca").querySelectorAll("svg").forEach((s) => s.remove());
-    $("#marca-lateral").querySelectorAll("svg").forEach((s) => s.remove());
+    const logo = SOLA && SOLA.icono ? `<img class="logo" src="${esc(SOLA.icono)}" alt="">` : LOGO.replace('aria-hidden="true"', 'aria-hidden="true" class="logo"');
+    $("#marca-lateral span").textContent = SOLA ? SOLA.nombre : "SweetSuite";
+    $("#marca").querySelectorAll("svg, img").forEach((s) => s.remove());
+    $("#marca-lateral").querySelectorAll("svg, img").forEach((s) => s.remove());
     $("#marca").insertAdjacentHTML("afterbegin", logo);
     $("#marca-lateral").insertAdjacentHTML("afterbegin", logo);
   }
@@ -1025,7 +1045,7 @@
       </div>` : `<div class="tarjeta filas">
         ${fila("Usuario", "Con el que entras en SweetSuite.", `<code>${esc(S.cuenta.usuario)}</code>`)}
         ${esAdmin(S.cuenta) ? fila("Tipo de cuenta", "Administración: da de alta y de baja las demás cuentas. No tiene apps ni datos.", "")
-          : fila("Tus apps", misApps().map((a) => esc(a.nombre)).join(" · "), "")}
+          : fila("Tus apps", misAppsDe(S.cuenta).map((a) => esc(a.nombre)).join(" · "), "")}
         ${fila("Contraseña", "La misma para todas tus apps. Cambiarla no toca tus datos.", '<button class="btn" data-a="cambiarContrasena">Cambiar</button>')}
       </div>`,
     recuperacion: () => `<div class="tarjeta filas">
@@ -1110,6 +1130,8 @@
   function ruta() {
     if (!S.cuenta) return;
     const [v, arg] = location.hash.replace(/^#/, "").split("/");
+    // Suelta, todo lo que no es la cuenta es la app
+    if (SOLA && v !== "cuenta") { if (location.hash !== "#app/" + SOLA.id) location.hash = "#app/" + SOLA.id; else mostrarApp(SOLA.id); return; }
     if (v === "app" && arg) { mostrarApp(arg); return; }
     cerrarAppVisible();
     pintar(v === "cuenta" ? "cuenta" : "inicio", arg);
@@ -1287,19 +1309,35 @@
     resumen: ponerResumen,
     // Las apps de la cuenta, para el menú de cada app, y cambiar de una a otra
     apps: () => misApps().map((a) => ({ id: a.id, nombre: a.nombre })),
-    abrir: (id) => { location.hash = id ? "#app/" + id : "#inicio"; },
+    // La app que se ha abierto suelta ("" dentro de la suite): sin inicio ni las demás
+    get suelta() { return SOLA ? SOLA.id : ""; },
+    abrir: (id) => { location.hash = SOLA ? "#app/" + SOLA.id : id ? "#app/" + id : "#inicio"; },
     elegirApp,
     estado(app, estado, texto) {
       S.estados[app] = { estado: estado || "", texto: texto || "" };
       if (S.cuenta) pintarEstados();
     },
     reconciliar,
-    volver() { location.hash = "#inicio"; },
+    // Suelta no hay inicio: se va a la cuenta, que tiene la vuelta a la app
+    volver() { location.hash = SOLA ? "#cuenta" : "#inicio"; },
     cuenta() { location.hash = "#cuenta"; },
     bloquear: () => salir(false),
     cerrarSesion: () => salir(true),
     aviso,
   };
+
+  // ── Una app suelta: su nombre, su logo y su color, también al instalarla ──
+  function prepararSola() {
+    SOLA = CAT.apps.find((a) => a.id === PEDIDA) || null;
+    if (!SOLA) return;
+    document.body.classList.add("sola");
+    document.title = SOLA.nombre;
+    const poner = (sel, atr, valor) => { const el = document.querySelector(sel); if (el && valor) el.setAttribute(atr, valor); };
+    poner('link[rel="icon"]', "href", SOLA.icono);
+    poner('link[rel="apple-touch-icon"]', "href", SOLA.iconoApple);
+    poner('link[rel="manifest"]', "href", SOLA.ruta + "manifest.json");
+    poner('meta[name="apple-mobile-web-app-title"]', "content", SOLA.nombre);
+  }
 
   // ── Arranque ──
   async function iniciar() {
@@ -1313,6 +1351,7 @@
       }
       if (!r) r = await fetch("cuentas.json?" + Date.now(), { cache: "no-store" });
       CAT = await r.json();
+      prepararSola();
     } catch (e) {
       $("#entrada").hidden = false;
       $("#entrada").innerHTML = '<div class="entrada"><div class="entrada-error">No se ha podido cargar SweetSuite. Comprueba la conexión y recarga.</div></div>';

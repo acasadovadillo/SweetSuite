@@ -12,7 +12,7 @@ La gestión de la asociación **ABIES**: socios y cuotas, tesorería, facturas, 
 
 Agora vive dentro de **SweetSuite** y solo la tiene la cuenta de empresa **ABIES** (`cuentas.json`):
 
-- **Se entra por SweetSuite**, con las dos llaves de la empresa: ABIES y su contraseña, y el representante y la suya. SweetSuite le da a Agora su secreto, quién entra y su **cargo**. Abierta sola, fuera de SweetSuite, se va a SweetSuite.
+- **Se entra por SweetSuite**, con las dos llaves de la empresa: ABIES y su contraseña, y el representante y la suya. SweetSuite le da a Agora su secreto, quién entra y su **cargo**. También se abre **suelta**, desde su carpeta (ver abajo).
 - **El cargo lo pone la Administración de SweetSuite**: al editar ABIES, junto a cada representante. Se guarda en `cuentas.json` (`"cargos": { "alberto": "Presidencia" }`) y cuenta desde la siguiente vez que entra. Todos ven todo y cada cargo modifica lo suyo:
   - Tesorería: cuotas, tesorería, facturas, IVA y presupuestos.
   - Secretaría: asociación, socios, actas, obligaciones, documentos y textos de la memoria.
@@ -66,6 +66,23 @@ En **Ajustes › Seguridad › Traer una copia de antes** (solo Presidencia), el
 ## Privacidad y RGPD
 
 La asociación es responsable de los datos de sus socios. En **Ajustes → Privacidad** hay una lista de buenas prácticas: quién accede, contraseñas, copias y conservación de datos.
+
+## Suelta
+
+Abrir su carpeta, `apps/agora/` (en la web, <https://acasadovadillo.github.io/SweetSuite/apps/agora/>), lleva a SweetSuite con `?app=agora`: la entrada sale con el logo, el nombre y el color de Agora, y al entrar se abre solo Agora, sin el inicio ni las demás apps. La cuenta, la contraseña y los datos son los mismos. «Tu cuenta», en su menú, abre la contraseña y la clave de recuperación. Se puede instalar sola en el móvil (`manifest.json`).
+
+## Estructura
+
+```
+index.html      la página (SweetSuite la abre en un marco)
+manifest.json   para instalarla suelta
+img/            el icono (la hoja de ABIES)
+src/css/        estilos
+src/js/         nucleo/ (interfaz, cifrado, fechas…), logica/ (socios, cuotas, SEPA…),
+                datos/ (esquema, mezcla, GitHub…), modulos/ (cada sección)
+tests/          las pruebas de la lógica (node --test)
+docs/           capturas
+```
 
 ## Para desarrollar
 

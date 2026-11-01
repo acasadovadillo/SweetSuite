@@ -164,6 +164,15 @@
   function pintarAppsSuite() {
     const caja = $("sn-suite");
     if (!caja || !SS || !SS.apps) return;
+    // Suelta (abierta desde apps/solvento/) no hay inicio ni otras apps: sin apartado
+    if (SS.suelta) {
+      caja.style.display = "none";
+      if (caja.previousElementSibling) caja.previousElementSibling.style.display = "none";
+      const c = $("cuenta-btn");
+      if (c) c.textContent = "▦ Tu cuenta";
+      document.querySelectorAll(".nb-menu").forEach((b) => { if (/elegirApp/.test(b.getAttribute("onclick") || "")) b.style.display = "none"; });
+      return;
+    }
     const boton = (id, nombre) => `<button class="sn-item" data-ir-app="${esc(id)}">${ICONO_SUITE}${ICONOS_APPS[id] || ICONOS_APPS.inicio}</svg><span>${esc(nombre)}</span></button>`;
     caja.innerHTML = boton("inicio", "Inicio") + SS.apps().filter((a) => a.id !== "solvento").map((a) => boton(a.id, a.nombre)).join("");
     caja.querySelectorAll("[data-ir-app]").forEach((b) => b.addEventListener("click", () => {

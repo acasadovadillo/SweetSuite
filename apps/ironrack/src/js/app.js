@@ -276,7 +276,7 @@
       cerrarLateral();
       IR.ui.menu(S.nombre || S.usuario, [
         { texto: "Ajustes de Ironrack", fn: () => { location.hash = "#ajustes"; } },
-        { texto: "Inicio de SweetSuite", fn: () => IR.suite.volver() },
+        { texto: IR.suite.suelta ? "Tu cuenta" : "Inicio de SweetSuite", fn: () => IR.suite.volver() },
         { texto: "Bloquear", fn: () => bloquear() },
         { texto: "Cerrar sesión", fn: () => { cerrarLateral(); IR.suite.cerrarSesion(); } },
       ]);
@@ -375,6 +375,11 @@
     $("#nav-suite").innerHTML = `<a href="#" data-a="volverSuite"><svg viewBox="0 0 24 24"><use href="#i-suite"/></svg>Inicio</a>` +
       IR.suite.apps().filter((a) => a.id !== "ironrack").map((a) =>
         `<a href="#" data-a="irApp" data-app="${esc(a.id)}"><svg viewBox="0 0 24 24">${ICONOS[a.id] || '<use href="#i-suite"/>'}</svg>${esc(a.nombre)}</a>`).join("");
+    // Suelta (abierta desde apps/ironrack/) no hay inicio ni otras apps
+    if (IR.suite.suelta) {
+      $("#nav-suite").hidden = $("#nav-suite").previousElementSibling.hidden = true;
+      document.querySelectorAll('[data-a="elegirApp"]').forEach((b) => { b.hidden = true; });
+    }
     $("#version").textContent = VERSION;
     IR.cripto.borrarSesionesAntiguas();
     entrarEnSuite();

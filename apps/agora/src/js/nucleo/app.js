@@ -111,6 +111,7 @@
 
   /** El apartado SweetSuite: su inicio y las demás apps de la cuenta. */
   function menuSuite() {
+    if (WA.Suite.suelta) return "";   // suelta (apps/agora/): sin inicio ni otras apps
     var esc = WA.UI.esc;
     var boton = function (accion, icono, texto, app) {
       return '<li><button type="button" class="menu-boton" data-accion="' + accion + '"' + (app ? ' data-app="' + esc(app) + '"' : "") + ">" +
@@ -217,7 +218,7 @@
     m.style.width = Math.max(220, b.width) + "px";
     m.innerHTML = (u ? '<div class="menu-flotante-cab"><b>' + esc(u.nombre) + "</b>" + esc(u.cargo) + "</div>" : "") +
       '<a href="#/ajustes" role="menuitem">' + svg(I_AJUSTES) + "Ajustes de Agora</a>" +
-      '<button type="button" role="menuitem" data-accion="suite">' + svg(I_SUITE) + "Inicio de SweetSuite</button>" +
+      '<button type="button" role="menuitem" data-accion="suite">' + svg(I_SUITE) + (WA.Suite.suelta ? "Tu cuenta" : "Inicio de SweetSuite") + "</button>" +
       '<button type="button" role="menuitem" data-accion="bloquear">' + svg(I_BLOQUEAR) + "Bloquear</button>" +
       '<button type="button" role="menuitem" data-accion="salir">' + svg(I_SALIR) + "Cerrar sesión</button>";
     document.body.appendChild(m);
@@ -378,6 +379,7 @@
       } else if (e.key === "Escape") { buscador.value = ""; filtrarMenu(""); }
     });
     $("btn-apps").addEventListener("click", function () { cerrarMenuMovil(); WA.Suite.elegirApp(); });
+    $("btn-apps").hidden = !!WA.Suite.suelta;
     $("estado-copia").addEventListener("click", function () { guardarAhora(); });
     document.addEventListener("keydown", function (e) {
       if ((e.metaKey || e.ctrlKey) && !e.altKey && String(e.key).toLowerCase() === "s") {

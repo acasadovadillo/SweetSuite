@@ -34,10 +34,11 @@ Sin build ni dependencias: HTML, CSS y JS que se sirven tal cual, dentro de Swee
 
 ```
 index.html            la página (SweetSuite la abre en un marco)
-img/                  logo y curvas del fondo
+manifest.json         para instalarla suelta
+img/                  logo, iconos y curvas del fondo
 src/css/app.css
 src/js/
-  suite-puente.js     el enlace con SweetSuite (fuera de ella, se va a SweetSuite)
+  suite-puente.js     el enlace con SweetSuite (abierta suelta, se va a SweetSuite con ?app=ironrack)
   util.js             formato, 1RM (Epley), volumen
   tema.js             color de acento (Ajustes › Apariencia)
   cripto.js           cifrado y sesión en memoria
@@ -52,3 +53,8 @@ src/js/
 ```
 
 Se prueba y se publica con SweetSuite (ver su README).
+
+## Suelta
+
+Abrir su carpeta, `apps/ironrack/` (en la web, <https://acasadovadillo.github.io/SweetSuite/apps/ironrack/>), lleva a SweetSuite con `?app=ironrack`: la entrada sale con el logo, el nombre y el color de Ironrack, y al entrar se abre solo Ironrack, sin el inicio ni las demás apps. La cuenta, la contraseña y los datos son los mismos. «Tu cuenta», en su menú, abre la contraseña y la clave de recuperación. Se puede instalar sola en el móvil (`manifest.json`).
+
