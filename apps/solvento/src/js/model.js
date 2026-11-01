@@ -608,8 +608,11 @@
       })
       // Una deuda a cero sigue existiendo: una tarjeta saldada este mes vuelve a
       // tener saldo el que viene. Antes desaparecía de la lista y con ella la
-      // única forma de mirar por qué su saldo es el que es.
-      .filter((x) => isFinite(x.importe) && x.importe >= 0)
+      // única forma de mirar por qué su saldo es el que es. Y lo mismo una
+      // tarjeta A FAVOR (en negativo): una devolución mayor que lo gastado la
+      // deja así hasta el ciclo siguiente, y desaparecía de repente. Se enseña,
+      // pero no suma a la deuda (`vivas` y `total` solo cuentan lo que se debe).
+      .filter((x) => isFinite(x.importe))
       .sort((a, b) => b.importe - a.importe);
     const vivas = items.filter((x) => x.importe > 0.005);
     return { items, vivas, n: vivas.length, total: round2(vivas.reduce((s, x) => s + x.importe, 0)) };

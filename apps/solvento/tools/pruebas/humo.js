@@ -209,6 +209,17 @@ comprobar("lo pendiente en la tarjeta es su saldo en pasivos",
   ciclo.pendiente + " vs " + (enPasivos && enPasivos.importe));
 comprobar("lo pendiente es el arrastre más lo cargado en el ciclo",
   cerca(ciclo.pendiente, ciclo.arrastre + ciclo.cargado) && ciclo.n === 2);
+// Una devolución mayor que lo gastado deja la tarjeta a favor: sigue en la
+// lista de pasivos (antes desaparecía), pero no resta de la deuda.
+var conFavor = JSON.parse(JSON.stringify(doc));
+conFavor.movimientos.push({ id: "m-prueba-dev", fecha: "29/10/2026", tipo: "Ingreso", importe: "25",
+  cuenta_origen: "", cuenta_destino: TJ, tipo_ingreso: "Devoluciones", detalle: "Devolución de prueba" });
+var mf = M.build(conFavor, precios);
+var aFavor = mf.pas.items.filter(function (x) { return x.nombre === TJ; })[0];
+comprobar("una tarjeta a favor sigue en pasivos y no cambia la deuda",
+  aFavor && cerca(aFavor.importe, -25) && cerca(mf.pas.total, m.pas.total) &&
+  mf.pas.vivas.every(function (x) { return x.importe > 0; }), aFavor && aFavor.importe);
+
 comprobar("comprar con la tarjeta no toca la caja, sube la deuda",
   cerca(mc.patrimonioLiquido, m.patrimonioLiquido) &&
   cerca(mc.pas.total, m.pas.total + 102.30),

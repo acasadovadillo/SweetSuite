@@ -975,7 +975,7 @@
       const total = hijo ? s.saldo : enBanco(s);
       // Las deudas vinculadas a esta cuenta cuelgan de ella: una tarjeta de
       // crédito no es una cuenta, pero se paga desde una y conviene verla ahí.
-      const deudas = ((m.pas && m.pas.items) || []).filter((d) => d.cuenta === s.cuenta);
+      const deudas = ((m.pas && m.pas.items) || []).filter((d) => d.cuenta === s.cuenta && d.importe >= 0);
       const colgando = deudas.length
         ? `<div style="font-size:0.74rem;color:var(--t2);margin-top:0.2rem;padding-left:1.55rem;">
              pasivos → <button onclick="v2Tab('pasivos')" title="Ver en Pasivos"
@@ -2045,9 +2045,9 @@
                cursor:pointer;white-space:nowrap;">Liquidar ${esc(fmtEur(d.importe))}</button>`
           : ""}</td>
       <td style="text-align:left;color:var(--t1b);">${esc(d.tipo)}</td>
-      <td style="text-align:right;font-weight:600;white-space:nowrap;color:${d.importe > 0.005 ? "var(--t0)" : "var(--t2)"};">
-        ${d.importe > 0.005 ? fmtEur(d.importe) : "saldada"}</td>
-      <td class="col-secundaria" style="text-align:right;color:var(--t1b);">${(todo.total ? d.importe / todo.total * 100 : 0).toFixed(2)}%</td>
+      <td style="text-align:right;font-weight:600;white-space:nowrap;color:${d.importe > 0.005 ? "var(--t0)" : d.importe < -0.005 ? GREEN : "var(--t2)"};">
+        ${d.importe > 0.005 ? fmtEur(d.importe) : d.importe < -0.005 ? "a tu favor " + fmtEur(-d.importe) : "saldada"}</td>
+      <td class="col-secundaria" style="text-align:right;color:var(--t1b);">${d.importe < -0.005 ? "—" : (todo.total ? d.importe / todo.total * 100 : 0).toFixed(2) + "%"}</td>
       ${rowActions(`v2EditPas('${d.id}')`, `v2DelPas('${d.id}')`)}</tr>` +
       (abierta ? detalleDeuda(d) : "");
     }).join("");
