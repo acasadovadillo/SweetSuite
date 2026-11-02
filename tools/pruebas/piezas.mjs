@@ -107,6 +107,73 @@ await prueba("un llavero de antes de ser empresa se abre con su contraseña y se
   return nuevo.contrasena === null && L.igual(await L.abrirEmpresa(nuevo, "alberto", "empresa-1", "personal-1"), viejo.maestra);
 });
 
+console.log("\nLa llave de Tesorería (una app solo para algunos representantes)");
+{
+  // Alberto y Nhara tienen Solvento; Pepa es de la junta pero no.
+  let ll = (await L.conRepresentante(emp.llavero, emp.maestra, "empresa-1", "nhara", "nh-1"));
+  ll = await L.conRepresentante(ll, emp.maestra, "empresa-1", "pepa", "pp-1");
+  const pAlb = await L.conPar(ll, "alberto", "empresa-1", "personal-1"); ll = pAlb.llavero;
+  const pPepa = await L.conPar(ll, "pepa", "empresa-1", "pp-1"); ll = pPepa.llavero;
+  const creada = await L.nuevaLlave(ll, "solvento", ["alberto"]); ll = creada.llavero;
+  const llave = creada.llave;
+
+  await prueba("quien la creó la abre, y su secreto no es el que sale de la maestra", async () => {
+    const r = await L.abrirLlaves(ll, "solvento", "alberto", pAlb.privada);
+    return L.igual(r.actual, llave) &&
+      (await L.secretoDeLlave(llave, "solvento")) !== (await L.secretoDeApp(emp.maestra, "solvento"));
+  });
+  await prueba("quien no tiene acceso no la abre, aunque tenga la maestra", async () => {
+    const r = await L.abrirLlaves(ll, "solvento", "pepa", pPepa.privada);
+    return r.actual === null && r.anteriores.length === 0;
+  });
+  await prueba("el par se vuelve a abrir con las mismas contraseñas, y no con otras", async () => {
+    const otra = await L.conPar(ll, "alberto", "empresa-1", "personal-1");
+    const mal = await L.conPar(ll, "alberto", "empresa-1", "otra");
+    return otra.llavero === ll && mal.llavero.pares.alberto.kid !== ll.pares.alberto.kid;
+  });
+  let pNh;
+  await prueba("Nhara recibe acceso: entra una vez (su par) y Alberto se la entrega", async () => {
+    pNh = await L.conPar(ll, "nhara", "empresa-1", "nh-1"); ll = pNh.llavero;
+    const antes = await L.abrirLlaves(ll, "solvento", "nhara", pNh.privada);
+    ll = await L.entregar(ll, "solvento", llave, ["alberto", "nhara"]);
+    const despues = await L.abrirLlaves(ll, "solvento", "nhara", pNh.privada);
+    return antes.actual === null && L.igual(despues.actual, llave);
+  });
+  await prueba("entregar otra vez no cambia nada", async () => (await L.entregar(ll, "solvento", llave, ["alberto", "nhara"])) === ll);
+  await prueba("quitar el acceso a Nhara rota la llave: la nueva no la abre ella, y Alberto abre las dos", async () => {
+    const sobran = L.sobranEn(ll, "solvento", ["alberto"]);
+    const rot = await L.nuevaLlave(ll, "solvento", ["alberto"], [llave]);
+    const deAlb = await L.abrirLlaves(rot.llavero, "solvento", "alberto", pAlb.privada);
+    const deNh = await L.abrirLlaves(rot.llavero, "solvento", "nhara", pNh.privada);
+    return sobran.join() === "nhara" && L.igual(deAlb.actual, rot.llave) && deAlb.anteriores.some((k) => L.igual(k, llave)) &&
+      deNh.actual === null && L.sobranEn(rot.llavero, "solvento", ["alberto"]).length === 0;
+  });
+  await prueba("la clave de recuperación de la empresa también abre la llave", async () => {
+    const r = await L.cambiarRecuperacion(ll, emp.maestra);
+    const conRec = await L.entregar(r.llavero, "solvento", llave, ["alberto", "nhara", L.RECUPERACION]);
+    const priv = await L.abrirParRecuperacion(conRec, r.recuperacion.toLowerCase());
+    const mal = await L.abrirParRecuperacion(conRec, L.nuevaRecuperacion());
+    return L.igual((await L.abrirLlaves(conRec, "solvento", L.RECUPERACION, priv)).actual, llave) && mal === null;
+  });
+  await prueba("al juntar dos llaveros no se pierde ni una llave ni una entrega", async () => {
+    // En un dispositivo se entrega a Nhara; en otro, a la vez, se crea la llave de otra app
+    const a1 = await L.entregar(ll, "solvento", llave, ["alberto", "nhara"]);
+    const b1 = (await L.nuevaLlave(Object.assign({}, ll, { llaves: { solvento: ll.llaves.solvento.map((v) => Object.assign({}, v, { para: { alberto: v.para.alberto } })) } }), "otra", ["alberto"])).llavero;
+    const unido = L.mezclarLlaves(b1, a1);
+    const nh = await L.abrirLlaves(unido, "solvento", "nhara", pNh.privada);
+    return L.igual(nh.actual, llave) && unido.llaves.otra.length === 1 && L.mezclarLlaves(a1, b1).llaves.solvento[0].para.nhara.ct === unido.llaves.solvento[0].para.nhara.ct;
+  });
+  await prueba("dos rotaciones a la vez: gana siempre la misma y la otra se sigue abriendo", async () => {
+    const r1 = await L.nuevaLlave(ll, "solvento", ["alberto"], [llave]);
+    const r2 = await L.nuevaLlave(ll, "solvento", ["alberto"], [llave]);
+    const u1 = L.mezclarLlaves(r1.llavero, r2.llavero), u2 = L.mezclarLlaves(r2.llavero, r1.llavero);
+    const x1 = await L.abrirLlaves(u1, "solvento", "alberto", pAlb.privada), x2 = await L.abrirLlaves(u2, "solvento", "alberto", pAlb.privada);
+    const ambas = [r1.llave, r2.llave];
+    return L.igual(x1.actual, x2.actual) && ambas.some((k) => L.igual(k, x1.actual)) &&
+      ambas.every((k) => L.igual(k, x1.actual) || x1.anteriores.some((y) => L.igual(y, k)));
+  });
+}
+
 console.log("\nDos llaveros de la misma cuenta");
 const a = await L.crear("ana", "pw", {}), b = await L.crear("ana", "pw", { provisional: true });
 await prueba("entre uno de verdad y uno provisional, gana siempre el de verdad", () =>
@@ -183,6 +250,32 @@ await prueba("el cargo de cada representante: solo de la lista y solo de quien r
     JSON.stringify(sinLucia.cuentas.find((x) => x.usuario === "abies").cargos) === '{"alberto":"Presidencia"}' &&
     JSON.stringify(baja.cuentas.find((x) => x.usuario === "abies").cargos) === '{"alberto":"Presidencia"}' &&
     !AD.baja(cat, "alberto").cuentas.find((x) => x.usuario === "abies").cargos;
+});
+await prueba("Vicetesorería es un cargo de la lista", () => {
+  const c = AD.editar(cat, "abies", { cargos: { alberto: "Vicetesorería" } });
+  return AD.validar(c).length === 0 && c.cuentas.find((x) => x.usuario === "abies").cargos.alberto === "Vicetesorería";
+});
+await prueba("una app solo para algunos: solo de quien representa, y sale al irse", () => {
+  let c = AD.alta(cat, { usuario: "nhara", nombre: "Nhara", tipo: "persona", apps: [] });
+  c = AD.alta(c, { usuario: "pepa", nombre: "Pepa", tipo: "persona", apps: [] });
+  c = AD.editar(c, "abies", { representantes: ["alberto", "nhara", "pepa"], accesos: { solvento: ["alberto", "nhara", "nadie"], ironrack: ["alberto"] } });
+  const abies = (x) => x.cuentas.find((y) => y.usuario === "abies");
+  const bien = JSON.stringify(abies(c).accesos) === '{"solvento":["alberto","nhara"]}' && AD.validar(c).length === 0;
+  const sinNhara = AD.editar(c, "abies", { representantes: ["alberto", "pepa"] });
+  const baja = AD.baja(c, "nhara");
+  const vacia = JSON.parse(JSON.stringify(c)); abies(vacia).accesos.solvento = [];
+  // Si todos la usan, la lista se queda: quien entre después no la tiene sin dársela
+  const todos = AD.editar(c, "abies", { accesos: { solvento: ["alberto", "nhara", "pepa"] } });
+  return bien && abies(sinNhara).accesos.solvento.join() === "alberto" && abies(baja).accesos.solvento.join() === "alberto" &&
+    AD.validar(vacia).some((e) => e.includes("nadie usaría")) && abies(todos).accesos.solvento.length === 3 &&
+    !abies(AD.editar(c, "abies", { accesos: {} })).accesos;
+});
+await prueba("los tokens de una app solo para algunos, solo para ellos", () => {
+  let c = AD.alta(cat, { usuario: "nhara", nombre: "Nhara", tipo: "persona", apps: [] });
+  c = AD.alta(c, { usuario: "pepa", nombre: "Pepa", tipo: "persona", apps: [] });
+  c = AD.editar(c, "abies", { representantes: ["alberto", "nhara", "pepa"], accesos: { solvento: ["alberto", "nhara"] } });
+  const t = AD.tokensQueCrear(cat, c, { solvento: { repo: "Solvento-Data" }, agora: { repo: "Agora-Data" } });
+  return t.map((x) => x.nombre).sort().join() === "ABIES-Nhara-Agora,ABIES-Nhara-Solvento,ABIES-Pepa-Agora";
 });
 await prueba("cuentas.json se escribe como a mano y se vuelve a leer igual", () => {
   const txt = AD.formatear(cat);

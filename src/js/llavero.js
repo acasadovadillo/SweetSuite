@@ -135,6 +135,7 @@
     };
     if (empresa) {
       llavero = await conRepresentante(llavero, maestra, contrasena, empresa.representante, empresa.contrasenaRep);
+      if (recuperacion) llavero = await conParRecuperacion(llavero, recuperacion);
       llavero.actualizado = ahora;
     }
     return { llavero, maestra, recuperacion };
@@ -189,10 +190,14 @@
   }
   async function cambiarRecuperacion(llavero, maestra) {
     const recuperacion = nuevaRecuperacion();
-    const nuevo = Object.assign({}, llavero, {
+    let nuevo = Object.assign({}, llavero, {
       recuperacion: await envolver(maestra, normalizarRecuperacion(recuperacion), ITER_RECUPERACION),
       provisional: undefined, actualizado: Date.now(),
     });
+    // En una empresa, la clave de recuperación también abre las llaves de sus
+    // apps restringidas: lleva su propio par, y quien tenga cada llave se la
+    // entrega (ver «Llaves» más abajo)
+    if (esEmpresa(nuevo)) nuevo = await conParRecuperacion(nuevo, recuperacion);
     return { llavero: nuevo, recuperacion };
   }
 
@@ -229,6 +234,206 @@
     return JSON.parse(dec.decode(await descifrar(caja, await claveInterna(maestra))));
   }
 
+  // ── Llaves de una app restringida (la de Tesorería: ver TESORERIA.md) ──────
+  // En una empresa, todos los representantes abren la misma maestra, y de ella
+  // sale el secreto de cada app. Una app que solo usan algunos (Solvento de
+  // ABIES, solo Tesorería) cifra con SU PROPIA LLAVE, aleatoria, que no sale de
+  // la maestra. La llave va envuelta para cada uno con su clave pública.
+  //
+  //   pares[destino]  = { kid, publica (JWK), privada (caja cifrada) }
+  //                     destino: un representante, o «@recuperacion»
+  //   llaves[app]     = [{ id, version, creado, para: { destino: caja }, anteriores }]
+  //
+  // La privada de un representante va cifrada con las dos contraseñas (como su
+  // entrada); la de «@recuperacion», con la clave de recuperación de la empresa.
+  // Una app puede tener varias versiones de su llave: la ACTUAL es la de versión
+  // más alta (a igualdad, la de menor id, la mire quien la mire). Al rotar, la
+  // nueva guarda las de antes en «anteriores», cifradas con ella.
+  const RECUPERACION = "@recuperacion";
+  const textoPar = (empresa, rep, pwEmpresa, pwRep) => textoEmpresa(empresa, rep, pwEmpresa, pwRep) + "\u0000par";
+  const ECDH = { name: "ECDH", namedCurve: "P-256" };
+  async function huella(jwk) {
+    const b = new Uint8Array(await crypto.subtle.digest("SHA-256", enc.encode(jwk.x + "." + jwk.y)));
+    return aB64(b.slice(0, 12));
+  }
+  async function cifrarPrivada(jwk, texto, iter) {
+    const salt = aleatorio(16);
+    const caja = await cifrar(enc.encode(JSON.stringify(jwk)), await claveDeTexto(texto, salt, iter));
+    return Object.assign({ kdf: "PBKDF2-SHA256", iter, salt: aB64(salt) }, caja);
+  }
+  async function nuevoPar(texto, iter) {
+    const k = await crypto.subtle.generateKey(ECDH, true, ["deriveBits"]);
+    const publica = await crypto.subtle.exportKey("jwk", k.publicKey);
+    const privada = await crypto.subtle.exportKey("jwk", k.privateKey);
+    const pub = { kty: publica.kty, crv: publica.crv, x: publica.x, y: publica.y };
+    return { kid: await huella(pub), publica: pub, privada: await cifrarPrivada(privada, texto, iter), creado: Date.now() };
+  }
+  async function abrirPrivada(par, texto) {
+    const jwk = JSON.parse(dec.decode(await descifrar(par.privada, await claveDeTexto(texto, deB64(par.privada.salt), par.privada.iter))));
+    return { kid: par.kid, clave: await crypto.subtle.importKey("jwk", jwk, ECDH, false, ["deriveBits"]) };
+  }
+  // La clave que envuelve una llave para un destino: ECDH con una clave de un
+  // solo uso, y de ahí HKDF a AES-256-GCM
+  async function claveCompartida(privada, publicaJwk, salt) {
+    const pub = await crypto.subtle.importKey("jwk", publicaJwk, ECDH, false, []);
+    const bits = await crypto.subtle.deriveBits({ name: "ECDH", public: pub }, privada, 256);
+    const base = await crypto.subtle.importKey("raw", bits, "HKDF", false, ["deriveKey"]);
+    return crypto.subtle.deriveKey({ name: "HKDF", hash: "SHA-256", salt, info: enc.encode("SweetSuite/llave") },
+      base, { name: "AES-GCM", length: 256 }, false, ["encrypt", "decrypt"]);
+  }
+  async function envolverPara(llave, par) {
+    const efimera = await crypto.subtle.generateKey(ECDH, true, ["deriveBits"]);
+    const epk = await crypto.subtle.exportKey("jwk", efimera.publicKey);
+    const salt = aleatorio(16);
+    const caja = await cifrar(llave, await claveCompartida(efimera.privateKey, par.publica, salt));
+    return Object.assign({ kid: par.kid, epk: { kty: epk.kty, crv: epk.crv, x: epk.x, y: epk.y }, salt: aB64(salt) }, caja);
+  }
+  async function desenvolverPara(caja, privada) {
+    return descifrar(caja, await claveCompartida(privada.clave, caja.epk, deB64(caja.salt)));
+  }
+
+  // El par de un representante: se crea si no lo tiene. Devuelve el llavero
+  // (el mismo si no cambia) y su privada, abierta.
+  async function conPar(llavero, rep, pwEmpresa, pwRep) {
+    const texto = textoPar(llavero.usuario, rep, pwEmpresa, pwRep);
+    const par = llavero.pares && llavero.pares[rep];
+    if (par) {
+      try { return { llavero, privada: await abrirPrivada(par, texto) }; }
+      catch (e) { /* cambió alguna contraseña: se le hace uno nuevo, y quien tenga la llave se la vuelve a dar */ }
+    }
+    const nuevo = await nuevoPar(texto, ITER_CONTRASENA);
+    const pares = Object.assign({}, llavero.pares, { [rep]: nuevo });
+    return { llavero: Object.assign({}, llavero, { pares, actualizado: Date.now() }), privada: await abrirPrivada(nuevo, texto) };
+  }
+  // El par de la clave de recuperación de la empresa (al generarla, que es
+  // cuando se tiene en la mano)
+  async function conParRecuperacion(llavero, codigo) {
+    const par = await nuevoPar(normalizarRecuperacion(codigo), ITER_RECUPERACION);
+    return Object.assign({}, llavero, { pares: Object.assign({}, llavero.pares, { [RECUPERACION]: par }), actualizado: Date.now() });
+  }
+  async function abrirParRecuperacion(llavero, codigo) {
+    const par = llavero.pares && llavero.pares[RECUPERACION];
+    if (!par) return null;
+    try { return await abrirPrivada(par, normalizarRecuperacion(codigo)); } catch (e) { return null; }
+  }
+
+  // ¿Cuál es la actual de una lista de versiones? Siempre la misma.
+  const ordenVersiones = (a, b) => (b.version - a.version) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
+  const versionesDe = (llavero, app) => ((llavero.llaves && llavero.llaves[app]) || []).slice().sort(ordenVersiones);
+
+  // Lo que un destino puede abrir de una app: la llave actual (o null si aún no
+  // se la han dado) y todas las anteriores que alcanza (por sus entregas y por
+  // las «anteriores» de las que abre).
+  async function abrirLlaves(llavero, app, destino, privada) {
+    const versiones = versionesDe(llavero, app);
+    const abiertas = {};
+    for (const v of versiones) {
+      const caja = v.para && v.para[destino];
+      if (!caja || caja.kid !== privada.kid) continue;
+      try { abiertas[v.id] = await desenvolverPara(caja, privada); } catch (e) { /* entrega rota: se rehará */ }
+    }
+    const extra = [], deLaActual = [];
+    for (const v of versiones) {
+      if (!abiertas[v.id] || !v.anteriores) continue;
+      try {
+        const k = await crypto.subtle.importKey("raw", abiertas[v.id], { name: "AES-GCM" }, false, ["decrypt"]);
+        JSON.parse(dec.decode(await descifrar(v.anteriores, k))).forEach((b) => {
+          extra.push(deB64(b));
+          if (v === versiones[0]) deLaActual.push(deB64(b));
+        });
+      } catch (e) { /* nada */ }
+    }
+    const actual = versiones.length && abiertas[versiones[0].id] ? abiertas[versiones[0].id] : null;
+    const todas = Object.keys(abiertas).map((id) => abiertas[id]).concat(extra);
+    const anteriores = [];
+    todas.forEach((k) => { if (!(actual && igual(k, actual)) && !anteriores.some((x) => igual(x, k))) anteriores.push(k); });
+    // «sueltas»: llaves que este destino abre pero que la actual no lleva
+    // dentro (dos dispositivos crearon o rotaron a la vez). Quien las vea, las
+    // junta en una nueva: así a quien reciba la actual le basta con ella.
+    const sueltas = actual ? anteriores.filter((k) => !deLaActual.some((x) => igual(x, k))).length : 0;
+    return { actual, anteriores, hay: versiones.length > 0, sueltas };
+  }
+
+  // Una llave nueva para la app, envuelta para esos destinos (pares). Si ya
+  // había alguna, es una ROTACIÓN: la nueva lleva dentro las de antes.
+  async function nuevaLlave(llavero, app, destinos, deAntes) {
+    const llave = aleatorio(32);
+    const versiones = versionesDe(llavero, app);
+    const para = {};
+    for (const d of destinos) para[d] = await envolverPara(llave, llavero.pares[d]);
+    let anteriores = null;
+    if (deAntes && deAntes.length) {
+      const k = await crypto.subtle.importKey("raw", llave, { name: "AES-GCM" }, false, ["encrypt"]);
+      anteriores = await cifrar(enc.encode(JSON.stringify(deAntes.map(aB64))), k);
+    }
+    const v = {
+      id: aB64(aleatorio(9)).replace(/[+/=]/g, "x"), version: versiones.length ? versiones[0].version + 1 : 1,
+      creado: Date.now(), para, anteriores,
+    };
+    const llaves = Object.assign({}, llavero.llaves, { [app]: versiones.concat([v]) });
+    return { llavero: Object.assign({}, llavero, { llaves, actualizado: Date.now() }), llave };
+  }
+  // Darle la llave actual a quien tiene acceso y aún no la tiene (o la tiene
+  // envuelta para un par que ya no es el suyo)
+  async function entregar(llavero, app, llave, destinos) {
+    const versiones = versionesDe(llavero, app);
+    if (!versiones.length) return llavero;
+    const actual = versiones[0];
+    const para = Object.assign({}, actual.para);
+    let cambio = false;
+    for (const d of destinos) {
+      const par = llavero.pares && llavero.pares[d];
+      if (!par || (para[d] && para[d].kid === par.kid)) continue;
+      para[d] = await envolverPara(llave, par);
+      cambio = true;
+    }
+    if (!cambio) return llavero;
+    const nuevaActual = Object.assign({}, actual, { para });
+    const llaves = Object.assign({}, llavero.llaves, { [app]: versiones.map((v) => (v === actual ? nuevaActual : v)) });
+    return Object.assign({}, llavero, { llaves, actualizado: Date.now() });
+  }
+  // ¿Quién tiene la llave actual sin deber tenerla? (le quitaron el acceso)
+  function sobranEn(llavero, app, destinos) {
+    const versiones = versionesDe(llavero, app);
+    if (!versiones.length) return [];
+    return Object.keys(versiones[0].para || {}).filter((d) => destinos.indexOf(d) < 0);
+  }
+  // Una llave dada en bytes: el secreto de su app, igual que de una maestra
+  const secretoDeLlave = (llave, app) => secretoDeApp(llave, app);
+
+  // Juntar las piezas de las llaves de dos llaveros de la misma cuenta. El
+  // resto del llavero se decide como siempre (gana uno); esto no se pierde:
+  // una llave perdida serían datos que ya no se abren.
+  function mezclarLlaves(base, otro) {
+    if (!otro || (!otro.pares && !otro.llaves)) return base;
+    const pares = Object.assign({}, base.pares);
+    Object.keys(otro.pares || {}).forEach((d) => {
+      const a = pares[d], b = otro.pares[d];
+      // Dos pares del mismo destino (se hicieron a la vez): el más nuevo, que
+      // es el de la contraseña de ahora; la llave se le vuelve a entregar.
+      if (!a || (b.creado || 0) > (a.creado || 0)) pares[d] = b;
+    });
+    const llaves = Object.assign({}, base.llaves);
+    Object.keys(otro.llaves || {}).forEach((app) => {
+      const lista = (llaves[app] || []).slice();
+      otro.llaves[app].forEach((v) => {
+        const i = lista.findIndex((x) => x.id === v.id);
+        if (i < 0) { lista.push(v); return; }
+        const para = Object.assign({}, lista[i].para);
+        // De cada destino, la entrega hecha para su par de ahora
+        Object.keys(v.para || {}).forEach((d) => {
+          if (!para[d] || (pares[d] && v.para[d].kid === pares[d].kid && para[d].kid !== pares[d].kid)) para[d] = v.para[d];
+        });
+        lista[i] = Object.assign({}, lista[i], { para, anteriores: lista[i].anteriores || v.anteriores });
+      });
+      llaves[app] = lista;
+    });
+    const r = Object.assign({}, base);
+    if (Object.keys(pares).length) r.pares = pares;
+    if (Object.keys(llaves).length) r.llaves = llaves;
+    return r;
+  }
+
   // Entre dos llaveros distintos de la misma cuenta, cuál se queda. Siempre el
   // mismo, lo mire quien lo mire: si no, dos dispositivos se lo cambiarían el
   // uno al otro sin fin.
@@ -245,5 +450,7 @@
     anteriores, conAnteriores, preferencias, conPreferencias, secretoDeApp, ganador, esLlavero,
     esEmpresa, conRepresentante, abrirEmpresa, soloRepresentantes, cifrarDato, descifrarDato,
     nuevaRecuperacion, normalizarRecuperacion, pareceRecuperacion, igual,
+    RECUPERACION, conPar, conParRecuperacion, abrirParRecuperacion, abrirLlaves, nuevaLlave, entregar, sobranEn,
+    secretoDeLlave, mezclarLlaves,
   };
 })();

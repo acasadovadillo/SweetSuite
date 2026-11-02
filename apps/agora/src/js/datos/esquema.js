@@ -59,7 +59,7 @@
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
-  var CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vocalía", "Otro"];
+  var CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vicetesorería", "Vocalía", "Otro"];
 
   function asociacionVacia() {
     return {

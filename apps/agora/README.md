@@ -14,7 +14,7 @@ Agora vive dentro de **SweetSuite** y solo la tiene la cuenta de empresa **ABIES
 
 - **Se entra por SweetSuite**, con las dos llaves de la empresa: ABIES y su contraseña, y el representante y la suya. SweetSuite le da a Agora su secreto, quién entra y su **cargo**. También se abre **suelta**, desde su carpeta (ver abajo).
 - **El cargo lo pone la Administración de SweetSuite**: al editar ABIES, junto a cada representante. Se guarda en `cuentas.json` (`"cargos": { "alberto": "Presidencia" }`) y cuenta desde la siguiente vez que entra. Todos ven todo y cada cargo modifica lo suyo:
-  - Tesorería: cuotas, tesorería, facturas, IVA y presupuestos.
+  - Tesorería y vicetesorería: cuotas, tesorería, facturas, IVA y presupuestos.
   - Secretaría: asociación, socios, actas, obligaciones, documentos y textos de la memoria.
   - Vocalía: actividades.
   - Presidencia y vicepresidencia: todo. Presidencia, además, hace lo que hacía la cuenta de administración.

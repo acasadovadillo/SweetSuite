@@ -25,7 +25,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.8.0";
+  const VERSION = "1.9.0";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -44,15 +44,26 @@
   // La sesión, solo en memoria
   // (en una empresa, «contrasena» es la del representante y «empresaPw» la de la empresa)
   const S = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-              representante: null, empresaPw: null, resumenes: {}, admin: null };
+              representante: null, empresaPw: null, resumenes: {}, admin: null, par: null, llaves: {}, parRecuperacion: null };
   const SIN_SESION = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-                       representante: null, empresaPw: null, resumenes: {}, admin: null };
+                       representante: null, empresaPw: null, resumenes: {}, admin: null, par: null, llaves: {}, parRecuperacion: null };
 
   const limpiar = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const cuentaDe = (u) => CAT.cuentas.find((c) => c.usuario === limpiar(u));
   // (la cuenta Admin no tiene apps: su «app» es la Administración)
   const appDe = (id) => CAT.apps.find((a) => a.id === id) || (id === "admin" ? { id: "admin", nombre: "Administración" } : undefined);
-  const misAppsDe = (c) => (c ? CAT.apps.filter((a) => c.apps.indexOf(a.id) >= 0) : []);
+  // En una empresa, una app puede ser solo de algunos representantes
+  // («accesos» en cuentas.json: Solvento de ABIES, solo Tesorería). Quien no
+  // está en la lista no la ve, y tampoco la abre: cifra con su propia llave
+  // (llavero.js, «Llaves»; TESORERIA.md).
+  const accesosDe = (c, app) => (c && c.accesos && Array.isArray(c.accesos[app]) ? c.accesos[app] : null);
+  const puedeUsar = (app) => {
+    if (!S.representante) return true;
+    const con = accesosDe(S.cuenta, app);
+    return !con || con.indexOf(S.representante.usuario) >= 0;
+  };
+  const restringida = (app) => !!(S.representante && accesosDe(S.cuenta, app));
+  const misAppsDe = (c) => (c ? CAT.apps.filter((a) => c.apps.indexOf(a.id) >= 0 && (c !== S.cuenta || puedeUsar(a.id))) : []);
   const misApps = () => misAppsDe(S.cuenta).filter((a) => !SOLA || a.id === SOLA.id);
   const esEmpresa = (c) => !!c && c.tipo === "organizacion";
   // La cuenta Admin: una y solo una (si hubiera dos en cuentas.json, ninguna vale)
@@ -349,7 +360,10 @@
         const maestra = await L.abrirConRecuperacion(ll, f.codigo.value);
         const nuevo = L.soloRepresentantes(await L.conRepresentante(ll, maestra, f.pwEmpresa.value, r, f.contrasena.value), cuenta.representantes || []);
         guardarLlaveroLocal(nuevo);
-        await iniciarSesion(cuenta, f.contrasena.value, nuevo, maestra, { representante: repCuenta, empresaPw: f.pwEmpresa.value });
+        // La clave de recuperación también abre las llaves de Tesorería: con
+        // ella, quien tenga acceso recibe la suya aunque nadie más la tenga
+        const parRecuperacion = await L.abrirParRecuperacion(nuevo, f.codigo.value);
+        await iniciarSesion(cuenta, f.contrasena.value, nuevo, maestra, { representante: repCuenta, empresaPw: f.pwEmpresa.value, parRecuperacion });
         aviso("Ya puedes entrar en " + cuenta.nombre + " con estas contraseñas", "ok");
       } catch (e) {
         errorEntrada(e.code === "BAD_PASSWORD" ? "Esa clave de recuperación no es la de " + cuenta.nombre : e.message);
@@ -487,8 +501,9 @@
       return;
     }
     Object.assign(S, SIN_SESION, { cuenta, contrasena, maestra, llavero, estados: {}, apis: {} });
-    if (empresa) Object.assign(S, { representante: empresa.representante, empresaPw: empresa.empresaPw });
+    if (empresa) Object.assign(S, { representante: empresa.representante, empresaPw: empresa.empresaPw, parRecuperacion: empresa.parRecuperacion || null });
     S.anteriores = await L.anteriores(llavero, maestra);
+    try { await prepararLlaves(); } catch (e) { console.error("SweetSuite: las llaves", e); }
     S.prefs = await L.preferencias(llavero, maestra);
     pendienteEntrar = null;
     $("#entrada").hidden = true;
@@ -538,7 +553,8 @@
   // ── Las apps ──
   function mostrarApp(id) {
     const app = appDe(id);
-    if (!app || S.cuenta.apps.indexOf(id) < 0) { location.hash = "#inicio"; return; }
+    if (!app || S.cuenta.apps.indexOf(id) < 0 || !puedeUsar(id)) { location.hash = "#inicio"; return; }
+    if (restringida(id) && !(S.llaves[id] && S.llaves[id].actual)) { esperandoLlave(app); return; }
     if (S.abierta && S.abierta !== id) guardarAlDejar(S.abierta);    // de una app a otra
     let f = document.getElementById("marco-" + id);
     if (!f) {
@@ -613,12 +629,92 @@
     return nuevo;
   }
 
+  // Las piezas de las llaves de otro llavero, juntas con las de este. Devuelve
+  // el mismo si no hay nada nuevo (y entonces no hace falta escribir).
+  function conLlavesDe(ll, otro) {
+    const unido = L.mezclarLlaves(ll, otro);
+    const piezas = (x) => JSON.stringify([x.pares || null, x.llaves || null]);
+    return piezas(unido) === piezas(ll) ? ll : Object.assign({}, unido, { actualizado: Date.now() });
+  }
+
   async function adoptar(ll) {
     S.llavero = ll;
     guardarLlaveroLocal(ll);
     S.anteriores = await L.anteriores(ll, S.maestra);
     S.prefs = await L.preferencias(ll, S.maestra);
     T.aplicarAcento(S.prefs.acento || acentoEntrada());   // sin uno elegido, el de SweetSuite o el de la app suelta
+  }
+
+  // ── Las llaves de las apps restringidas (TESORERIA.md) ──
+  // Al entrar y cada vez que llega un llavero de GitHub: quien entra tiene su
+  // par; si tiene acceso a una app restringida, abre su llave (y si no la hay,
+  // la crea); y se la da a quien tenga acceso y aún no la tenga. Si alguien la
+  // tiene sin deber, se rota. Devuelve si el llavero ha cambiado.
+  async function prepararLlaves() {
+    if (!S.representante || !S.cuenta || !S.cuenta.accesos || !S.llavero) return false;
+    const rep = S.representante.usuario;
+    let ll = S.llavero;
+    if (!S.par || !ll.pares || !ll.pares[rep] || ll.pares[rep].kid !== S.par.kid) {
+      const r = await L.conPar(ll, rep, S.empresaPw, S.contrasena);
+      ll = r.llavero; S.par = r.privada;
+    }
+    for (const app of Object.keys(S.cuenta.accesos)) {
+      const con = accesosDe(S.cuenta, app);
+      if (!con || S.cuenta.apps.indexOf(app) < 0 || con.indexOf(rep) < 0) { delete S.llaves[app]; continue; }
+      const destinos = con.concat([L.RECUPERACION]).filter((d) => ll.pares && ll.pares[d]);
+      let x = await L.abrirLlaves(ll, app, rep, S.par);
+      // Aún no te la han dado: con la clave de recuperación de la empresa, si
+      // se acaba de usar para entrar
+      if (x.hay && !x.actual && S.parRecuperacion) {
+        const r = await L.abrirLlaves(ll, app, L.RECUPERACION, S.parRecuperacion);
+        if (r.actual) x = r;
+      }
+      if (!x.hay) {
+        const n = await L.nuevaLlave(ll, app, destinos);
+        ll = n.llavero;
+        x = { actual: n.llave, anteriores: [], hay: true };
+      } else if (x.actual) {
+        if (L.sobranEn(ll, app, destinos).length || x.sueltas) {
+          const deAntes = [x.actual].concat(x.anteriores);
+          const n = await L.nuevaLlave(ll, app, destinos, deAntes);
+          ll = n.llavero;
+          x = { actual: n.llave, anteriores: deAntes, hay: true };
+        } else {
+          ll = await L.entregar(ll, app, x.actual, destinos);
+        }
+      }
+      S.llaves[app] = x;
+    }
+    S.parRecuperacion = null;
+    if (ll === S.llavero) return false;
+    S.llavero = ll;
+    guardarLlaveroLocal(ll);
+    return true;
+  }
+
+  // Las llaves de las apps restringidas también se abren con la clave de
+  // recuperación de la empresa, pero solo desde que se generó con esta versión
+  // (lleva su par). Si es de antes, a quien tiene acceso se le avisa: si todos
+  // perdieran su contraseña, esos datos no se podrían recuperar.
+  function avisoLlavesSinRecuperacion() {
+    const apps = Object.keys(S.llaves).filter((a) => S.llaves[a] && S.llaves[a].actual);
+    if (!apps.length || (S.llavero.pares && S.llavero.pares[L.RECUPERACION])) return "";
+    const nombres = apps.map((a) => esc(appDe(a).nombre)).join(" y ");
+    return `<div class="tarjeta aviso-llave"><p><b>La clave de recuperación de ${esc(S.cuenta.nombre)} aún no abre ${nombres}.</b>
+      ${nombres} va cifrado con una llave que solo tenéis quienes lo usáis. Genera otra clave de recuperación (arriba) para que también lo abra:
+      si no, y todos perdierais vuestra contraseña, esos datos no se podrían recuperar.</p></div>`;
+  }
+
+  // Tienes acceso, pero nadie te ha dado aún la llave: hace falta que alguien
+  // que ya la tiene entre después de ti (o entrar con la clave de recuperación)
+  function esperandoLlave(app) {
+    location.hash = "#inicio";
+    const d = dialogo(`<h3>${esc(app.nombre)} aún no se abre</h3>
+      <p>Tienes acceso a ${esc(app.nombre)} de ${esc(S.cuenta.nombre)}, pero sus datos van cifrados con una llave que solo
+        tienen quienes ya lo usan. Te la darán en cuanto uno de ellos entre en SweetSuite después de ti; luego, vuelve a entrar.</p>
+      <p>Si corre prisa, entra con la clave de recuperación de ${esc(S.cuenta.nombre)}: también la abre.</p>
+      <div class="botones"><button class="btn primario" data-r="ok">Entendido</button></div>`);
+    d.querySelector('[data-r="ok"]').onclick = () => cerrarDialogo();
   }
 
   async function reconciliarYa(app, ad) {
@@ -661,10 +757,18 @@
         }
         const conEntrada = await conMiEntrada(remoto, S.maestra);
         if (conEntrada !== remoto) { remoto = conEntrada; escribir = true; }
-        if (escribir) await ad.escribir(rutaLlavero(), JSON.stringify(remoto), res.sha, mensaje("llavero"));
+        // Las llaves no se pisan: lo que solo hay aquí se junta con lo de allí
+        const unido = conLlavesDe(remoto, local);
+        if (unido !== remoto) { remoto = unido; escribir = true; }
         await adoptar(remoto);
-      } else if ((local.actualizado || 0) > (remoto.actualizado || 0)) {
-        await ad.escribir(rutaLlavero(), JSON.stringify(local), res.sha, mensaje("llavero"));
+        if (await prepararLlaves()) escribir = true;
+        if (escribir) await ad.escribir(rutaLlavero(), JSON.stringify(S.llavero), res.sha, mensaje("llavero"));
+      } else {
+        const unido = conLlavesDe(local, remoto);
+        let escribir = (local.actualizado || 0) > (remoto.actualizado || 0) || unido !== local;
+        if (unido !== local) await adoptar(unido);
+        if (await prepararLlaves()) escribir = true;
+        if (escribir) await ad.escribir(rutaLlavero(), JSON.stringify(S.llavero), res.sha, mensaje("llavero"));
       }
       return { cambio: false };
     }
@@ -691,9 +795,11 @@
       nuevo = await L.conAnteriores(local, S.maestra, todas);
     }
     nuevo = await conMiEntrada(nuevo, S.maestra);
+    nuevo = conLlavesDe(conLlavesDe(nuevo, local), remoto);
     nuevo = Object.assign({}, nuevo, { actualizado: Date.now() });
-    await ad.escribir(rutaLlavero(), JSON.stringify(nuevo), res.sha, mensaje("llavero"));
     await adoptar(nuevo);
+    await prepararLlaves();
+    await ad.escribir(rutaLlavero(), JSON.stringify(S.llavero), res.sha, mensaje("llavero"));
     if (tecleada && !recuperada) aviso(S.representante ? "La contraseña de la empresa es la de su cuenta de GitHub" : "A partir de ahora tu contraseña es la de tu cuenta de GitHub", "ok");
     avisarApps("alCambiarClaves");
     return { cambio: true };
@@ -793,6 +899,7 @@
 
   async function cambiarLlavero(nuevo) {
     await adoptar(nuevo);
+    await prepararLlaves();            // (una clave de recuperación nueva recibe las llaves)
     avisarApps("llaveroCambiado");     // las apps con token lo suben
   }
 
@@ -832,7 +939,7 @@
   }
   let tResumen = null;
   function ponerResumen(app, r) {
-    if (!S.cuenta || S.cuenta.apps.indexOf(app) < 0) return;
+    if (!S.cuenta || S.cuenta.apps.indexOf(app) < 0 || !puedeUsar(app)) return;
     const lineas = (r && Array.isArray(r.lineas) ? r.lineas : []).map(String).slice(0, 3);
     if (JSON.stringify((S.resumenes[app] || {}).lineas) === JSON.stringify(lineas)) return;
     S.resumenes[app] = { lineas, fecha: Date.now() };
@@ -1054,6 +1161,7 @@
           : "Tu cuenta aún no tiene: se crea al unirla con GitHub o al generarla aquí.",
           `<button class="btn" data-a="nuevaRecuperacion">${S.llavero.recuperacion ? "Generar otra" : "Generar"}</button>`, "apilar")}
       </div>
+      ${avisoLlavesSinRecuperacion()}
       <p class="nota">Con ella y tu usuario se elige una contraseña nueva en «¿Has olvidado tu contraseña?», en la entrada.</p>`,
     apariencia: () => {
       const tema = T.tema(), actual = (S.prefs.acento && T.valido(S.prefs.acento)) ? S.prefs.acento.toLowerCase() : T.PREDETERMINADO;
@@ -1290,15 +1398,25 @@
     tema: T,
     // De quién es la sesión y con qué abre cada app su archivo
     async sesion(app) {
-      if (!S.cuenta || S.cuenta.apps.indexOf(app) < 0) return null;
+      if (!S.cuenta || S.cuenta.apps.indexOf(app) < 0 || !puedeUsar(app)) return null;
+      let secreto = await L.secretoDeApp(S.maestra, app);
+      let anteriores = await Promise.all(S.anteriores.map((m) => L.secretoDeApp(m, app)));
+      // Una app con su propia llave: su secreto sale de ella, y lo cifrado
+      // antes (con la maestra, o con una llave de antes de rotar) se abre una
+      // vez con las anteriores y se vuelve a cifrar con la de ahora
+      if (restringida(app)) {
+        const x = S.llaves[app];
+        if (!x || !x.actual) return null;
+        anteriores = [secreto].concat(anteriores, await Promise.all(x.anteriores.map((k) => L.secretoDeLlave(k, app))));
+        secreto = await L.secretoDeLlave(x.actual, app);
+      }
       return {
         usuario: S.cuenta.usuario, nombre: S.cuenta.nombre, tipo: S.cuenta.tipo || "persona",
         // En una empresa, quién la representa: firma los cambios y lleva su propio token
         representante: S.representante ? { usuario: S.representante.usuario, nombre: S.representante.nombre } : null,
         // Su cargo en la asociación (Agora), que pone la Administración en cuentas.json
         cargo: S.representante && S.cuenta.cargos ? S.cuenta.cargos[S.representante.usuario] || "" : "",
-        secreto: await L.secretoDeApp(S.maestra, app),
-        anteriores: await Promise.all(S.anteriores.map((m) => L.secretoDeApp(m, app))),
+        secreto, anteriores,
         repo: E.repos[app], antiguo: E.antiguo,
       };
     },

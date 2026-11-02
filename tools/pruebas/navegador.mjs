@@ -245,7 +245,9 @@ async function main() {
     const f = $("#f-rep"); f.usuario.value = "alberto"; f.contrasena.value = "prueba-1234"; f.requestSubmit();
     await hasta(() => $("#b-nueva")); $("#b-nueva").click();
     await hasta(() => $("#f-crear")); const c = $("#f-crear"); c.repetir.value = "empresa-1234"; c.requestSubmit();
-    await hasta(() => $("#c-guardada"), 30000); $("#c-guardada").click(); $("#b-seguir").click();
+    await hasta(() => $("#c-guardada"), 30000);
+    localStorage.setItem("pruebas_rec_abies", $("#codigo-rec").textContent);   // la clave de recuperación de ABIES, para más adelante
+    $("#c-guardada").click(); $("#b-seguir").click();
     await hasta(() => location.hash === "#inicio"); location.hash = "#app/solvento";   // ABIES tiene Solvento y Agora
     const W = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.document.getElementById("boot-overlay").style.display === "none" && w; }, 40000);
     W.document.getElementById("sync-token").value = "dev"; W.document.getElementById("sync-save-token").click();
@@ -461,6 +463,87 @@ async function main() {
       const W = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
       return W.WA.Sesion.firma === "Alberto · Tesorería" && !W.WA.Sesion.puedeEditar("socios") && W.WA.Sesion.puedeEditar("cuotas");`);
   });
+  // ── La llave de Tesorería: Solvento de ABIES, solo para algunos (TESORERIA.md) ──
+  const entrarAbies = (rep, pw) => `
+    $('[data-modo="empresa"]').click();
+    await hasta(() => $("#f-empresa")); let f = $("#f-empresa"); f.empresa.value = "abies"; f.contrasena.value = "empresa-1234"; f.requestSubmit();
+    await hasta(() => $("#f-rep")); f = $("#f-rep"); f.usuario.value = "${rep}"; f.contrasena.value = "${pw}"; f.requestSubmit();
+    await hasta(() => location.hash === "#inicio" || location.hash.indexOf("#app") === 0 || $("#b-rec-empresa"), 30000);`;
+  const editarAbies = (que) => AdM.js(`
+    $('[data-adm="editar"][data-u="abies"]').click();
+    await hasta(() => $("#f-cuenta")); const f = $("#f-cuenta");
+    const marcar = (el, v) => { if (el.checked !== v) { el.checked = v; el.dispatchEvent(new Event("change", { bubbles: true })); } };
+    ${que}
+    f.requestSubmit();
+    await hasta(() => $('[data-adm="guardar"]')); $('[data-adm="guardar"]').click();
+    await hasta(() => !$('[data-adm="guardar"]') && !$(".admin-cambios"), 20000);
+    return document.body.textContent;`);
+  await prueba("el Admin deja Solvento de ABIES solo para Alberto y suma a Hafsa a la junta", async () => {
+    const txt = await editarAbies(`
+      marcar(f.querySelector('input[name="rep"][value="hafsa"]'), true);
+      f.querySelector('select[name="cargo-hafsa"]').value = "Vocalía";
+      marcar(await hasta(() => f.querySelector('.acc-solo[data-app="solvento"]')), true);
+      marcar(await hasta(() => f.querySelector('.acc-rep[data-app="solvento"][value="hafsa"]')), false);`);
+    return txt.includes("Solvento, solo Alberto");
+  });
+  const recAbies = await E.js(`return localStorage.getItem("pruebas_rec_abies");`);
+  await prueba("Alberto abre Solvento de ABIES: sus datos pasan a su propia llave", async () => {
+    await E.abrir(URL_SUITE);
+    return E.js(`${entrarAbies("alberto", "prueba-1234")}
+      location.hash = "#app/solvento";
+      const W = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.SolventoDB.state.doc && (w.SolventoDB.state.doc.registro || []).length && w; }, 40000);
+      const s = await window.SweetSuite.sesion("solvento");
+      // Lo de GitHub acaba cifrado con la llave, y ya no con lo que sale de la maestra
+      const remoto = async () => { const r = await fetch("/__dev/api/repos/dev/solvento-data-dev/contents/abies-solvento.enc", { headers: { Authorization: "Bearer dev" } });
+        return JSON.parse(decodeURIComponent(escape(atob((await r.json()).content.replace(/\\s/g, ""))))); };
+      const abre = async (pw) => { try { await W.SolventoCrypto.decryptDoc(await remoto(), pw); return true; } catch (e) { return false; } };
+      await hasta(async () => await abre(s.secreto), 40000);
+      const ll = await (await fetch("/__dev/api/repos/dev/solvento-data-dev/contents/abies.llavero.json", { headers: { Authorization: "Bearer dev" } })).json();
+      const llavero = JSON.parse(decodeURIComponent(escape(atob(ll.content.replace(/\\s/g, "")))));
+      return !(await abre(s.anteriores[0])) && Object.keys(llavero.llaves.solvento[0].para).sort().join() === "@recuperacion,alberto";`);
+  });
+  await prueba("Hafsa entra en ABIES (con la clave de recuperación): Agora sí, Solvento ni lo ve ni lo abre", () => E.js(`
+    await window.SweetSuite.bloquear();
+    ${entrarAbies("hafsa", "hafsa-1234")}
+    await hasta(() => $("#b-rec-empresa")); $("#b-rec-empresa").click();
+    await hasta(() => $("#f-rec-empresa")); const fr = $("#f-rec-empresa");
+    fr.codigo.value = ${JSON.stringify(recAbies)}; fr.contrasena.value = "hafsa-1234"; fr.pwEmpresa.value = "empresa-1234"; fr.repetir.value = "empresa-1234";
+    fr.requestSubmit();
+    // Con una sola app, entra directa en ella
+    await hasta(() => location.hash === "#app/agora", 30000);
+    const apps = window.SweetSuite.apps().map((a) => a.id).join();
+    location.hash = "#app/solvento"; await espera(500);
+    return apps === "agora" && location.hash === "#inicio" && !marco("solvento") && (await window.SweetSuite.sesion("solvento")) === null;`));
+  await prueba("Hafsa recibe acceso: lo ve, pero se abre solo cuando Alberto le da la llave", async () => {
+    await editarAbies(`marcar(await hasta(() => f.querySelector('.acc-rep[data-app="solvento"][value="hafsa"]')), true);`);
+    await E.abrir(URL_SUITE);
+    const antes = await E.js(`${entrarAbies("hafsa", "hafsa-1234")}
+      const ve = window.SweetSuite.apps().some((a) => a.id === "solvento");
+      location.hash = "#app/solvento";
+      await hasta(() => !$("#dialogo").hidden && $("#dialogo").textContent.includes("aún no se abre"));
+      $('#dialogo [data-r="ok"]').click();
+      const r = [ve, !marco("solvento"), (await window.SweetSuite.sesion("solvento")) === null];
+      if (r.some((x) => !x)) throw new Error("antes: " + r.join());
+      return true;`);
+    await E.abrir(URL_SUITE);
+    await E.js(`${entrarAbies("alberto", "prueba-1234")} return true;`);   // al entrar, Alberto se la entrega
+    await E.abrir(URL_SUITE);
+    return antes && E.js(`${entrarAbies("hafsa", "hafsa-1234")}
+      location.hash = "#app/solvento";
+      const W = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.SolventoDB.state.doc && (w.SolventoDB.state.doc.registro || []).length && w; }, 40000);
+      return true;`);
+  });
+  await prueba("quitarle el acceso rota la llave: lo nuevo ya no lo abre", async () => {
+    const vieja = await E.js(`return (await window.SweetSuite.sesion("solvento")).secreto;`);
+    await editarAbies(`marcar(f.querySelector('.acc-rep[data-app="solvento"][value="hafsa"]'), false);`);
+    await E.abrir(URL_SUITE);
+    return E.js(`${entrarAbies("alberto", "prueba-1234")}
+      const s = await window.SweetSuite.sesion("solvento");
+      const ll = JSON.parse(localStorage.getItem("sweetsuite_llavero_abies"));
+      const actual = ll.llaves.solvento.slice().sort((a, b) => b.version - a.version)[0];
+      return s.secreto !== ${JSON.stringify(vieja)} && s.anteriores.includes(${JSON.stringify(vieja)}) && !actual.para.hafsa;`);
+  });
+
   await prueba("…y quien no es Admin no ve la Administración", async () => {
     await AdM.abrir(URL_SUITE);
     return AdM.js(`

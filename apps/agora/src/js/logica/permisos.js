@@ -35,7 +35,7 @@
   var IDS = SECCIONES.map(function (s) { return s[0]; });
 
   /** Cargos habituales (para sugerir al escribir). Se admite cualquier otro. */
-  var CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vocalía", "Coordinación"];
+  var CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vicetesorería", "Vocalía", "Coordinación"];
   var CARGO_ADMIN = "Administración";
   var NOMBRE_ADMIN = "ABIES";
 
@@ -50,7 +50,7 @@
     var c = normalizar(cargo);
     if (c.indexOf("vicepresiden") === 0 || c.indexOf("presiden") === 0) return IDS.slice();
     if (c.indexOf("secretar") === 0) return ["asociacion", "socios", "actas", "obligaciones", "documentos", "informes"];
-    if (c.indexOf("tesor") === 0) return ["cuotas", "tesoreria", "facturas", "iva", "proyectos"];
+    if (c.indexOf("tesor") === 0 || c.indexOf("vicetesor") === 0) return ["cuotas", "tesoreria", "facturas", "iva", "proyectos"];
     if (c.indexOf("vocal") === 0) return ["actividades"];
     return [];
   }

@@ -3,7 +3,8 @@
  *
  * Solo la ve la cuenta de tipo «admin», que es una y solo una (cuentas.json).
  * Da de alta personas y empresas, elige sus apps y los representantes de cada
- * empresa (y, si la empresa tiene Agora, el cargo de cada uno), y da de baja. Por debajo edita cuentas.json y lo sube al
+ * empresa (y, si la empresa tiene Agora, el cargo de cada uno; y si una app
+ * es solo de algunos, quiénes), y da de baja. Por debajo edita cuentas.json y lo sube al
  * repositorio SweetSuite con un commit; GitHub Pages lo publica en un minuto.
  *
  * La seguridad la pone GitHub, no esta pantalla: para guardar hace falta el
@@ -20,7 +21,7 @@
   const TIPOS = ["persona", "organizacion"];
   // Los cargos de una asociación con Agora: cada uno edita lo suyo y todos ven
   // todo (ver apps/agora/src/js/logica/permisos.js). Sin cargo, solo ve.
-  const CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vocalía", "Coordinación"];
+  const CARGOS = ["Presidencia", "Vicepresidencia", "Secretaría", "Tesorería", "Vicetesorería", "Vocalía", "Coordinación"];
   const limpiarUsuario = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const copia = (x) => JSON.parse(JSON.stringify(x));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -49,6 +50,14 @@
           if ((c.representantes || []).indexOf(r) < 0) errores.push(`${c.nombre}: «${r}» tiene cargo pero no es representante`);
           if (CARGOS.indexOf(c.cargos[r]) < 0) errores.push(`${c.nombre}: «${c.cargos[r]}» no es un cargo`);
         });
+        Object.keys(c.accesos || {}).forEach((a) => {
+          const nombre = ((cat.apps || []).find((x) => x.id === a) || { nombre: a }).nombre;
+          if ((c.apps || []).indexOf(a) < 0) errores.push(`${c.nombre}: tiene accesos de ${nombre}, pero no tiene esa app`);
+          else if (!Array.isArray(c.accesos[a]) || !c.accesos[a].length) errores.push(`${c.nombre}: nadie usaría ${nombre}`);
+          else c.accesos[a].forEach((r) => {
+            if ((c.representantes || []).indexOf(r) < 0) errores.push(`${c.nombre}: «${r}» usa ${nombre} pero no es representante`);
+          });
+        });
       }
     });
     return errores;
@@ -60,6 +69,18 @@
     (cuenta.representantes || []).forEach((r) => { if (cargos && CARGOS.indexOf(cargos[r]) >= 0) limpios[r] = cargos[r]; });
     if (Object.keys(limpios).length) cuenta.cargos = limpios; else delete cuenta.cargos;
   }
+  // Las apps que solo usan algunos representantes («accesos»): solo de apps
+  // que tiene la empresa y de quien la representa. Una app sin entrada la usan
+  // todos; una con entrada, solo los de la lista, aunque sean todos: así quien
+  // entre después en la junta no la tiene sin que se le dé.
+  function ponerAccesos(cuenta, accesos) {
+    const limpios = {};
+    Object.keys(accesos || {}).forEach((a) => {
+      if ((cuenta.apps || []).indexOf(a) < 0 || !Array.isArray(accesos[a])) return;
+      limpios[a] = accesos[a].filter((r) => (cuenta.representantes || []).indexOf(r) >= 0);
+    });
+    if (Object.keys(limpios).length) cuenta.accesos = limpios; else delete cuenta.accesos;
+  }
   function alta(cat, c) {
     const nuevo = copia(cat);
     const cuenta = {
@@ -69,6 +90,7 @@
     if (cuenta.tipo === "organizacion") {
       cuenta.representantes = (c.representantes || []).slice();
       ponerCargos(cuenta, c.cargos);
+      ponerAccesos(cuenta, c.accesos);
     }
     if (cuenta.usuario === "admin") throw fallo("«admin» es la cuenta Admin, y solo puede haber una", "ADMIN");
     if (nuevo.cuentas.some((x) => x.usuario === cuenta.usuario)) throw fallo(`Ya hay una cuenta «${cuenta.usuario}»`, "REPETIDA");
@@ -86,6 +108,7 @@
     if (cambios.apps) c.apps = cambios.apps.slice();
     if (c.tipo === "organizacion" && cambios.representantes) c.representantes = cambios.representantes.slice();
     if (c.tipo === "organizacion") ponerCargos(c, cambios.cargos !== undefined ? cambios.cargos : c.cargos);
+    if (c.tipo === "organizacion") ponerAccesos(c, cambios.accesos !== undefined ? cambios.accesos : c.accesos);
     return nuevo;
   }
   // Dar de baja: sale de la lista (y de las empresas que representaba). Sus datos se quedan.
@@ -99,6 +122,7 @@
       if (!x.representantes) return;
       x.representantes = x.representantes.filter((r) => r !== usuario);
       ponerCargos(x, x.cargos);   // y su cargo, fuera
+      ponerAccesos(x, x.accesos); // y sus apps
     });
     return nuevo;
   }
@@ -111,7 +135,9 @@
     const tiene = (cat, usuario, app, rep) => {
       const c = ((cat && cat.cuentas) || []).find((x) => x.usuario === usuario);
       if (!c || (c.apps || []).indexOf(app) < 0) return false;
-      return rep ? (c.representantes || []).indexOf(rep) >= 0 : true;
+      if (!rep) return true;
+      const con = c.accesos && c.accesos[app];
+      return (c.representantes || []).indexOf(rep) >= 0 && (!con || con.indexOf(rep) >= 0);
     };
     const lista = [];
     const appDe = (id) => (despues.apps || []).find((a) => a.id === id) || { id, nombre: id };
@@ -123,7 +149,7 @@
         });
       } else if (c.tipo === "organizacion") {
         (c.apps || []).forEach((a) => (c.representantes || []).forEach((r) => {
-          if (tiene(antes, c.usuario, a, r)) return;
+          if (!tiene(despues, c.usuario, a, r) || tiene(antes, c.usuario, a, r)) return;
           const p = (despues.cuentas || []).find((x) => x.usuario === r) || { nombre: r };
           lista.push({ nombre: nombreToken(c.usuario, p.nombre, appDe(a).nombre), para: p.nombre + " (" + c.nombre + ")", app: appDe(a).nombre, acceso: acceso(a) });
         }));
@@ -234,8 +260,11 @@
           <span class="botones"><button class="btn" data-adm="descartar">Descartar</button><button class="btn primario" data-adm="guardar" ${errores.length || st.guardando ? "disabled" : ""}>${st.guardando ? "Guardando…" : "Guardar cambios"}</button></span>
         </div>` : "";
       const conCargo = (c, r) => esc(nombreDe(r)) + (c.cargos && c.cargos[r] ? " (" + esc(c.cargos[r]) + ")" : "");
+      const soloDe = (c) => Object.keys(c.accesos || {}).map((a) =>
+        " · " + esc(((st.borrador.apps || []).find((x) => x.id === a) || { nombre: a }).nombre) + ", solo " +
+        (c.accesos[a].map((r) => esc(nombreDe(r))).join(", ") || "nadie")).join("");
       const filaCuenta = (c) => ctx.fila(`${esc(c.nombre)} <span class="usuario-admin">${esc(c.usuario)}</span>`,
-        esc(appsDe(c)) + (c.tipo === "organizacion" ? " · Representantes: " + ((c.representantes || []).map((r) => conCargo(c, r)).join(", ") || "ninguno") : ""),
+        esc(appsDe(c)) + (c.tipo === "organizacion" ? " · Representantes: " + ((c.representantes || []).map((r) => conCargo(c, r)).join(", ") || "ninguno") + soloDe(c) : ""),
         `<button class="btn" data-adm="editar" data-u="${esc(c.usuario)}">Editar</button><button class="btn texto-peligro" data-adm="baja" data-u="${esc(c.usuario)}">Dar de baja</button>`, "apilar");
       return cab + barra + `
         <h2>Personas</h2>
@@ -265,6 +294,7 @@
                 <option value="">Sin cargo (solo ve)</option>${CARGOS.map((x) => `<option ${x === cargo ? "selected" : ""}>${esc(x)}</option>`).join("")}</select></div>`;
           }).join("") || "<p class='nota'>Primero da de alta a las personas.</p>"}</fieldset>
             <p class="nota nota-cargos">En Agora, el cargo decide qué edita cada uno; todos ven todo.</p>
+            <fieldset class="marcas marcas-accesos"><legend>Quién usa cada app</legend><div id="accesos-apps"></div></fieldset>
             <p class="nota">Un representante nuevo entra la primera vez con la clave de recuperación de la empresa.</p>` : ""}
           <p class="error" id="cuenta-error"></p>
           <div class="botones"><button type="button" class="btn" data-r="no">Cancelar</button><button class="btn primario">${nueva ? "Añadir" : "Aceptar"}</button></div>
@@ -281,8 +311,32 @@
         const n = fc.querySelector(".nota-cargos");
         if (n) n.hidden = !agora;
       };
-      fc.addEventListener("change", verCargos);
+      // Quién usa cada app: todos los representantes, o solo los marcados. Una
+      // app «solo para algunos» va cifrada con su propia llave (TESORERIA.md)
+      const acc = JSON.parse(JSON.stringify(c.accesos || {}));
+      const pintarAccesos = () => {
+        const caja = fc.querySelector("#accesos-apps");
+        if (!caja) return;
+        const apps = [...fc.querySelectorAll('input[name="app"]:checked')].map((i) => i.value);
+        const reps = [...fc.querySelectorAll('input[name="rep"]:checked')].map((i) => i.value);
+        caja.innerHTML = apps.map((a) => {
+          const app = (st.borrador.apps || []).find((x) => x.id === a) || { nombre: a };
+          const solo = Array.isArray(acc[a]);
+          return `<div class="acc-app"><label><input type="checkbox" class="acc-solo" data-app="${esc(a)}" ${solo ? "checked" : ""}>
+              <span><b>${esc(app.nombre)}</b>: solo para algunos</span></label>
+            ${solo ? `<div class="acc-reps">${reps.map((r) => `<label><input type="checkbox" class="acc-rep" data-app="${esc(a)}" value="${esc(r)}"
+              ${acc[a].indexOf(r) >= 0 ? "checked" : ""}> ${esc(nombreDe(r))}</label>`).join("") || "<span class='nota'>Marca antes a los representantes.</span>"}</div>` : ""}</div>`;
+        }).join("") || "<p class='nota'>Marca antes las apps.</p>";
+      };
+      fc.addEventListener("change", (ev) => {
+        const t = ev.target;
+        if (t.classList.contains("acc-solo")) acc[t.dataset.app] = t.checked ? [...fc.querySelectorAll('input[name="rep"]:checked')].map((i) => i.value) : undefined;
+        else if (t.classList.contains("acc-rep")) acc[t.dataset.app] = [...fc.querySelectorAll(`.acc-rep[data-app="${t.dataset.app}"]:checked`)].map((i) => i.value);
+        if (!t.classList.contains("acc-rep")) pintarAccesos();
+        verCargos();
+      });
       verCargos();
+      pintarAccesos();
       fc.addEventListener("submit", (ev) => {
         ev.preventDefault();
         const f = ev.target;
@@ -291,6 +345,8 @@
         if (c.tipo === "organizacion") {
           datos.cargos = {};   // (sin Agora, sin cargos)
           if (datos.apps.indexOf("agora") >= 0) datos.representantes.forEach((r) => { const sel = f.querySelector(`select[name="cargo-${r}"]`); if (sel && sel.value) datos.cargos[r] = sel.value; });
+          datos.accesos = {};
+          Object.keys(acc).forEach((a) => { if (Array.isArray(acc[a]) && datos.apps.indexOf(a) >= 0) datos.accesos[a] = acc[a].filter((r) => datos.representantes.indexOf(r) >= 0); });
         }
         try {
           if (!limpiarUsuario(datos.usuario)) throw new Error("Escribe el usuario");
@@ -380,5 +436,5 @@
     return { cargar, html, accion, cargado: () => st.cargado, avisoSalir: () => cambios() };
   }
 
-  window.SweetAdmin = { CARGOS, validar, alta, editar, baja, tokensQueCrear, formatear, crearVista, limpiarUsuario };
+  window.SweetAdmin = { CARGOS, validar, alta, editar, baja, tokensQueCrear, formatear, crearVista, limpiarUsuario, ponerAccesos };
 })();

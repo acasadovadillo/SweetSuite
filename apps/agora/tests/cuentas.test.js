@@ -103,6 +103,7 @@ test("la cabecera no deja ver usuarios ni claves sin la contraseña del archivo"
 test("permisos por cargo: ve todo, edita lo suyo", () => {
   const sec = (c) => Permisos.porDefecto(c);
   assert.deepEqual(sec("Tesorería"), ["cuotas", "tesoreria", "facturas", "iva", "proyectos"]);
+  assert.deepEqual(sec("Vicetesorería"), sec("Tesorería"), "Vicetesorería edita lo mismo que Tesorería");
   assert.ok(sec("Secretaria").includes("actas") && !sec("Secretaria").includes("tesoreria"));
   assert.deepEqual(sec("Vocalía de actividades"), ["actividades"]);
   assert.equal(sec("Presidencia").length, Permisos.IDS.length);
