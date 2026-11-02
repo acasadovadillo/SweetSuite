@@ -1,0 +1,139 @@
+/* ── La contabilidad de una asociación (asociacion/paginas.js) ─────────────
+   Facturas, IVA, Subvenciones y Cuentas del ejercicio. Las mismas medidas que
+   el resto (OpenClaw): tarjetas de radio 12, controles de 10, etiquetas de
+   10,8 px en mayúsculas y texto secundario en --t2. */
+
+.cont-titulo {
+  font-size: 10.8px; font-weight: 700; color: var(--t2); text-transform: uppercase; letter-spacing: 0.06em;
+  margin: 4px 0 10px;
+}
+.table-container .cont-titulo:not(:first-child), .dashboard-panel .cont-titulo:not(:first-child) { margin-top: 18px; }
+.cont-nota { font-size: 12.5px; line-height: 1.5; color: var(--t2); margin-top: 10px; }
+.cont-aviso {
+  font-size: 13px; line-height: 1.5; color: var(--t1); padding: 10px 12px; border-radius: 10px; margin-bottom: 10px;
+  background: color-mix(in srgb, var(--ambar) 10%, transparent); border: 1px solid color-mix(in srgb, var(--ambar) 35%, transparent);
+}
+.cont-cabecera { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 8px; }
+.v2-wrap.cont-cabecera { margin-top: 0.5rem; }
+.cont-acciones { display: flex; gap: 8px; flex-wrap: wrap; }
+.cont-btn {
+  background: var(--f4); border: 1px solid var(--b2); border-radius: 8px; color: var(--t1); cursor: pointer;
+  font-family: inherit; font-size: 0.8rem; font-weight: 600; padding: 0.4rem 0.75rem; white-space: nowrap;
+}
+.cont-btn:hover { border-color: var(--b3); color: var(--t0); }
+.cont-btn.principal { background: var(--primario-bg); border-color: var(--primario-bg); color: var(--primario-t); }
+.cont-btn.peligro { color: var(--rojo); }
+.cont-btn:focus-visible, .cont-enlace:focus-visible, .cont-seg button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+.cont-enlace { background: none; border: none; padding: 0; color: var(--acento); font-family: inherit; font-size: 13px; cursor: pointer; }
+.cont-fila-botones { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 14px; }
+.cont-check { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--t1); cursor: pointer; }
+.cont-check input { accent-color: var(--acento); width: 16px; height: 16px; flex: none; }
+
+/* Selector segmentado (Emitidas · Recibidas, los años) */
+.cont-seg { display: inline-flex; gap: 2px; padding: 4px; background: var(--campo); border-radius: 12px; flex-wrap: wrap; }
+.cont-seg button {
+  background: transparent; border: none; border-radius: 9px; color: var(--t2); cursor: pointer;
+  font-family: inherit; font-size: 13px; font-weight: 600; padding: 6px 12px;
+}
+.cont-seg button[aria-selected="true"] { background: var(--campo-activo); color: var(--t0); }
+
+/* Insignias de estado */
+.cont-insignia {
+  display: inline-block; font-size: 11.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; white-space: nowrap;
+  color: var(--t1b); background: var(--f4);
+}
+.cont-insignia.verde { color: var(--verde); background: color-mix(in srgb, var(--verde) 14%, transparent); }
+.cont-insignia.ambar { color: var(--ambar-2); background: color-mix(in srgb, var(--ambar) 14%, transparent); }
+.cont-insignia.rojo  { color: var(--rojo); background: color-mix(in srgb, var(--rojo) 14%, transparent); }
+.cont-insignia.azul  { color: var(--azul-2); background: color-mix(in srgb, var(--azul) 14%, transparent); }
+.cont-clicable { cursor: pointer; }
+.cont-clicable:focus-visible { outline: 2px solid var(--acento); outline-offset: -2px; }
+
+/* ── La ficha de una factura ── */
+#form-modal .modal-card.hoja-ancha { max-width: 760px !important; }
+.fl-dos { display: grid; grid-template-columns: 1fr 1fr; gap: 0 12px; }
+.fl-cab, .fl-linea { display: grid; grid-template-columns: minmax(0, 1fr) 64px 96px 96px 30px; gap: 6px; align-items: center; }
+.fl-cab { font-size: 10.8px; font-weight: 700; color: var(--t2); text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px; }
+.fl-linea { margin-bottom: 6px; }
+.fl-linea input, .fl-linea select { padding: 0.5rem 0.6rem !important; }
+.fl-quitar { background: none; border: none; color: var(--t2); cursor: pointer; font-size: 15px; padding: 6px; border-radius: 6px; }
+.fl-quitar:hover { color: var(--rojo); }
+.fl-totales { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--campo); }
+.fl-tot { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--t1b); padding: 3px 0; font-variant-numeric: tabular-nums; }
+.fl-tot.fuerte { color: var(--t0); font-weight: 700; font-size: 15px; border-top: 1px solid var(--b1); margin-top: 4px; padding-top: 8px; }
+.fv-cab { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--t2); flex-wrap: wrap; }
+.fv-quien { font-size: 15px; color: var(--t0); margin: 8px 0 12px; }
+.fv-lineas { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+.fv-lineas td { padding: 6px 0; border-bottom: 1px solid var(--b1); color: var(--t1); }
+.fv-lineas .num, .ej-tabla .num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fv-pagos { margin-top: 16px; }
+.fv-pago { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--t1b); padding: 6px 0; border-bottom: 1px solid var(--b1); }
+.fv-pago b { color: var(--t0); font-variant-numeric: tabular-nums; }
+.ex-resumen { font-size: 13.5px; color: var(--t1); margin: 12px 0 4px; }
+
+/* ── IVA ── */
+.iva-trimestres { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+@media (min-width: 1400px) { .iva-trimestres { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.iva-tri { display: flex; flex-direction: column; gap: 2px; }
+.iva-tri-cab { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 600; color: var(--t1b); }
+.iva-tri-res { font-size: 24px; font-weight: 700; color: var(--t0); letter-spacing: -0.02em; margin: 6px 0 8px; font-variant-numeric: tabular-nums; }
+.iva-tri .cont-btn { margin-top: 10px; align-self: flex-start; }
+.iva-fila { display: flex; justify-content: space-between; gap: 12px; font-size: 13.5px; color: var(--t1b); padding: 5px 0; }
+.iva-fila span:last-child { color: var(--t0); font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+.iva-fila.suave, .iva-fila.suave span:last-child { color: var(--t2); font-weight: 400; }
+.iva-resumen { display: flex; flex-direction: column; border-top: 1px solid var(--b1); padding-top: 4px; margin-bottom: 6px; }
+.iva-resumen .iva-fila { border-bottom: 1px solid var(--b1); padding: 8px 0; }
+
+/* ── Subvenciones ── */
+.sub-req { padding: 8px 0; border-bottom: 1px solid var(--b1); }
+.sub-req .cont-enlace { margin-left: auto; color: var(--t2); font-size: 12.5px; }
+.sub-req-nuevo { display: flex; gap: 8px; margin-top: 10px; }
+.sub-req-nuevo input { flex: 1; min-width: 0; }
+.sp-fila { display: grid; grid-template-columns: minmax(0, 1fr) 140px; gap: 10px; align-items: center; padding: 4px 0; }
+.sp-fila label { font-size: 14px; color: var(--t1); overflow: hidden; text-overflow: ellipsis; }
+
+/* ── Cuentas del ejercicio ── */
+.ej-tabla { width: 100%; border-collapse: collapse; font-size: 14px; }
+.ej-tabla td { padding: 7px 0; border-bottom: 1px solid var(--b1); color: var(--t1); }
+.ej-grupo td { padding-top: 16px; font-weight: 700; color: var(--t0); text-transform: uppercase; font-size: 11.5px; letter-spacing: 0.06em; }
+.ej-tabla tr.ej-grupo:first-child td { padding-top: 4px; }
+.ej-partida td { font-weight: 600; color: var(--t0); }
+.ej-cat td { color: var(--t2); font-size: 13px; }
+.ej-cat td:first-child { padding-left: 16px; }
+.ej-total td { font-weight: 700; color: var(--t0); font-size: 15px; border-top: 2px solid var(--b2); border-bottom: none; padding-top: 12px; }
+
+/* ── Imprimir (o guardar como PDF): solo la factura o el informe ── */
+#impresion { display: none; }
+@media print {
+  body.imprimiendo { background: #fff !important; padding: 0 !important; color: #111 !important; }
+  body.imprimiendo > *:not(#impresion) { display: none !important; }
+  body.imprimiendo #impresion { display: block; }
+  #impresion, #impresion * { color: #111 !important; background: transparent !important; }
+  .imp-factura { font-family: var(--fuente); font-size: 12px; line-height: 1.45; max-width: 180mm; margin: 0 auto; }
+  .imp-titulo { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
+  .imp-partes { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin: 18px 0; }
+  .imp-et { font-size: 10px; text-transform: uppercase; letter-spacing: 0.06em; color: #555 !important; margin-bottom: 4px; }
+  .imp-lineas { width: 100%; border-collapse: collapse; margin-top: 8px; }
+  .imp-lineas th, .imp-lineas td { border-bottom: 1px solid #ccc; padding: 6px 4px; text-align: right; }
+  .imp-lineas th:first-child, .imp-lineas td:first-child { text-align: left; }
+  .imp-totales { margin: 12px 0 0 auto; width: 50%; }
+  .imp-totales .fl-tot { color: #111 !important; }
+  .imp-pie { margin-top: 24px; font-size: 10px; color: #555 !important; }
+  #impresion .ej-tabla td { border-bottom: 1px solid #ddd; }
+}
+
+/* ── En el móvil ── */
+@media (max-width: 640px) {
+  .fl-dos { grid-template-columns: 1fr; }
+  .fl-cab { display: none; }
+  .fl-linea { grid-template-columns: 1fr 1fr 36px; grid-template-areas: "c c c" "n p x" "i i i"; padding: 10px; border: 1px solid var(--b1); border-radius: 10px; }
+  .fl-linea .fl-concepto { grid-area: c; }
+  .fl-linea .fl-cantidad { grid-area: n; }
+  .fl-linea .fl-precio { grid-area: p; }
+  .fl-linea .fl-iva { grid-area: i; }
+  .fl-linea .fl-quitar { grid-area: x; }
+  .iva-trimestres { grid-template-columns: 1fr; }
+  .sp-fila { grid-template-columns: minmax(0, 1fr) 110px; }
+  .cont-seg { max-width: 100%; overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .cont-seg button { flex: none; }
+}

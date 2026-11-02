@@ -170,8 +170,11 @@
 
   // Devuelve true si el formulario llegó a abrirse: quien tenga que cablear algo
   // después (los selectores de árbol) necesita saber que hay a qué agarrarse.
-  function shell(titulo, bodyHtml, onSubmit, despues) {
-    if (soloLectura()) return false;
+  // «opciones.boton»: el texto del botón de abajo («Guardar» si no se dice);
+  // false, sin botón (una ficha que solo se mira, con sus acciones dentro).
+  function shell(titulo, bodyHtml, onSubmit, despues, opciones) {
+    opciones = opciones || {};
+    if (soloLectura() && !opciones.leer) return false;
     const m = ensureModal();
     m.querySelector(".modal-card").innerHTML =
       `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.5rem;">
@@ -180,8 +183,9 @@
       </div>
       <form id="ff-form">${bodyHtml}
         <div id="ff-error" style="display:none;color:var(--rojo);font-size:0.82rem;font-weight:600;margin-top:0.75rem;"></div>
-        <button type="submit" class="primary" style="width:100%;margin-top:1.25rem;background:var(--primario-bg);color:var(--primario-t);border:none;border-radius:10px;font-size:0.92rem;font-weight:700;padding:0.7rem;cursor:pointer;font-family:inherit;">Guardar</button>
+        ${opciones.boton === false ? "" : `<button type="submit" class="primary" style="width:100%;margin-top:1.25rem;background:var(--primario-bg);color:var(--primario-t);border:none;border-radius:10px;font-size:0.92rem;font-weight:700;padding:0.7rem;cursor:pointer;font-family:inherit;">${esc(opciones.boton || "Guardar")}</button>`}
       </form>`;
+    m.querySelector(".modal-card").classList.toggle("hoja-ancha", !!opciones.ancha);
     m.style.display = "flex";
     document.getElementById("ff-close").addEventListener("click", close);
     document.getElementById("ff-form").addEventListener("submit", async (ev) => {
@@ -2015,7 +2019,13 @@
   }
   const findById = (coll, id) => (DB.state.doc[coll] || []).find((x) => x.id === id);
 
+  // Las piezas de los formularios, para las páginas de la asociación
+  // (asociacion/paginas.js), que los hacen igual que estos
+  const ui = { shell, close, field, input, select, selectKV, datalist, selectorArbol, wireArbol, G, esc, toISO, fromISO, hoyES, newId,
+    upsert, uniq, CUENTAS, categoriasCfg, categoriasIngresoCfg, centrosCfg, registrarRuta, styleInput, styleLabel };
+
   window.SolventoForms = {
+    ui,
     openPlanLinea, openPlanProducto, openPlanAportacion, borrarPlan, ponerPctAhorro, importarPlanXlsx, atarPlan,
     openMovimiento, openInversion, openPropiedad, openNav, openCuadrar, openPasivo, openImputarCentro,
     fragmentosAjustes, verPagina, ponerAcento, wireMenuOrden, ordenarPaginas, wireNav, marcarRevisado, restaurarRevisiones, arreglarTextos, openCobro, cobrarCobro, marcarIncobrable, darPrestamoPorIncobrable, openPartida, openPresupuesto, openRegla, openCategoriaNueva, borrarCategoriaCfg, renombrarCategoriaCfg,

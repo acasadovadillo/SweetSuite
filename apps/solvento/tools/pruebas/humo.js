@@ -323,6 +323,14 @@ var ordenadas = C.paginasOrdenadas().map(function (p) { return p.id; });
 comprobar("el menú se ordena como se dejó y lo nuevo va al final",
   ordenadas.join(",") === "pasivos,caja,patrimonio,cartera,propiedades,otros,balance,presupuesto",
   ordenadas.join(", "));
+// Las páginas de la contabilidad son solo de una asociación
+window.SolventoPerfil = { esOrganizacion: function () { return true; } };
+var deOrg = C.paginasOrdenadas().map(function (p) { return p.id; }).join(",");
+var arbolOrg = C.menuArbol().map(function (n) { return n.id; }).join(",");
+window.SolventoPerfil = undefined;
+comprobar("una asociación tiene además Contabilidad (facturas, IVA, subvenciones, cuentas)",
+  /facturas,iva,subvenciones,ejercicio$/.test(deOrg) && /contabilidad/.test(arbolOrg) && !/contabilidad/.test(C.menuArbol().map(function (n) { return n.id; }).join(",")),
+  deOrg + " | " + arbolOrg);
 // Un orden guardado antes de que existiera Inversiones es el de otro menú: se
 // ignora entero en vez de colocar a medias cada cosa fuera de su sitio.
 C.usarDoc({ config: { menu_orden: ["pasivos", "caja", "balance"] } });

@@ -482,7 +482,7 @@
     return `<div class="v2-wrap" style="padding-bottom:2rem;"><div class="table-container">
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem;flex-wrap:wrap;gap:0.5rem;">
         <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Movimientos</div>
-        ${addBtn("＋ Movimiento", "v2AddMov()")}
+        <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">${addBtn("＋ Extracto del banco", "v2ImportarExtracto()")}${addBtn("＋ Movimiento", "v2AddMov()")}</div>
       </div>
       <div class="filtros" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
         <input id="v2-mov-q" type="search" value="${esc(MOV.q)}" placeholder="Buscar movimientos…" aria-label="Buscar por concepto, categoría o persona"
@@ -2866,6 +2866,10 @@
     if (pres) pres.innerHTML = (window.SolventoPerfil && window.SolventoPerfil.esOrganizacion()) ? pagePresupuesto() : pagePlan();
     document.getElementById("v2-page-operaciones").innerHTML = pageOperaciones(m);
     document.getElementById("v2-page-reporte").innerHTML = pageReporte(m);
+    // Facturas, IVA, Subvenciones y Cuentas del ejercicio (solo una asociación)
+    if (window.SolventoAsociacion) {
+      try { window.SolventoAsociacion.pintar(doc, m); } catch (e) { console.error("Solvento: la contabilidad", e); }
+    }
     if (window.v2AjPintar) window.v2AjPintar();
     bindTreemapHover();
     // Gráficas de evolución (patrimonio neto + cartera)
@@ -3287,5 +3291,7 @@
   window.v2DelInv = (id) => { if (F() && confirm("¿Borrar esta operación?")) F().deleteInversion(id); };
   window.v2DelProp = (id) => { if (F() && confirm("¿Borrar esta propiedad?")) F().deletePropiedad(id); };
 
-  window.SolventoRender = { render, showPage, aplicarMenu };
+  // Las piezas de las páginas, para las de la asociación (asociacion/paginas.js)
+  const ui = { esc, fmtEur, fmtPct, header, hubCard, addBtn, rowActions, editBtn, delBtn, rc, GREEN, RED, AZUL, AMBAR, parseFechaES };
+  window.SolventoRender = { render, showPage, aplicarMenu, ui };
 })();

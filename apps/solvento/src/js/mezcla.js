@@ -21,7 +21,8 @@
  */
 (function () {
   "use strict";
-  const COLECCIONES = ["movimientos", "inversiones", "propiedades", "pasivos", "cobros"];
+  // (facturas y subvenciones: las de una asociación, asociacion/contabilidad.js)
+  const COLECCIONES = ["movimientos", "inversiones", "propiedades", "pasivos", "cobros", "facturas", "subvenciones"];
   // Lo que no es de nadie en particular: se lleva aparte
   const PROPIAS = COLECCIONES.concat(["config", "registro", "borrados", "mod", "configMod", "otrosMod"]);
   const REGISTRO_MAX = 1000;

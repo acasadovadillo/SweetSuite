@@ -357,12 +357,21 @@
     // dentro de Activos, sino al lado del Presupuesto, que es lo planeado.
     { id: "balance",     nombre: "Ingresos y gastos", nota: "lo que entra y sale cada mes, por categoría" },
     { id: "presupuesto", nombre: "Presupuesto", nota: "gastos fijos, ingresos, ahorro, ocio y aportación" },
+    // Solo en una asociación (`org`): lo que antes llevaba Agora (TESORERIA.md)
+    { id: "facturas",     nombre: "Facturas",     grupo: "contabilidad", org: true, nota: "emitidas y recibidas, con rectificativas" },
+    { id: "iva",          nombre: "IVA",          grupo: "contabilidad", org: true, nota: "la ayuda para el 303 y el resumen del año" },
+    { id: "subvenciones", nombre: "Subvenciones", grupo: "contabilidad", org: true, nota: "subvenciones y proyectos, con su presupuesto" },
+    { id: "ejercicio",    nombre: "Cuentas del ejercicio", grupo: "contabilidad", org: true, nota: "ingresos y gastos del año, para la asamblea" },
   ];
   // Un grupo puede colgar de otro (`padre`): Inversiones vive dentro de Activos.
   const GRUPOS = [
     { id: "activos",     nombre: "Activos",     nota: "lo que tienes: caja e inversiones" },
     { id: "inversiones", nombre: "Inversiones", padre: "activos", nota: "cartera, inmuebles y otros bienes" },
+    { id: "contabilidad", nombre: "Contabilidad", org: true, nota: "facturas, IVA, subvenciones y cuentas del ejercicio" },
   ];
+  // Lo que es solo de una asociación no existe para una persona
+  const esOrg = () => !!(window.SolventoPerfil && window.SolventoPerfil.esOrganizacion());
+  const deEstePerfil = (x) => !x.org || esOrg();
   // Lo guardado se filtra contra el catálogo: una página fija no se puede
   // ocultar aunque alguien escriba su nombre a mano en el documento, y un id
   // que ya no existe no deja escondida una página que sí.
@@ -396,14 +405,14 @@
     const pos = (x) => { const i = orden.indexOf(x.id); return i < 0 ? Infinity : i; };
     return lista.slice().sort((a, b) => pos(a) - pos(b) || lista.indexOf(a) - lista.indexOf(b));
   };
-  const paginasOrdenadas = () => ordenar(PAGINAS);
+  const paginasOrdenadas = () => ordenar(PAGINAS.filter(deEstePerfil));
   // El menú como árbol: arriba, páginas sueltas y grupos en su orden; dentro de
   // cada grupo, sus páginas y sus subgrupos en el suyo. Cada nodo es
   // { tipo: "pagina", pagina, id } o { tipo: "grupo", grupo, id, hijos }.
   const nodoPagina = (p) => ({ tipo: "pagina", pagina: p, id: p.id });
   const nodoGrupo = (g) => ({ tipo: "grupo", grupo: g, id: g.id, hijos: nivel(
-    PAGINAS.filter((p) => p.grupo === g.id).map(nodoPagina)
-      .concat(GRUPOS.filter((h) => h.padre === g.id).map(nodoGrupo))) });
+    PAGINAS.filter((p) => p.grupo === g.id && deEstePerfil(p)).map(nodoPagina)
+      .concat(GRUPOS.filter((h) => h.padre === g.id && deEstePerfil(h)).map(nodoGrupo))) });
   // Las páginas que cuelgan de un nodo, a cualquier profundidad.
   const paginasDe = (n) => n.tipo === "pagina" ? [n.pagina] : [].concat(...n.hijos.map(paginasDe));
   // Sin orden guardado, cada nodo va donde estaría su primera página en el
@@ -415,8 +424,8 @@
     return nodos.sort((a, b) => pos(a) - pos(b) || posCatalogo(a) - posCatalogo(b));
   }
   const menuArbol = () => nivel(
-    PAGINAS.filter((p) => !p.grupo).map(nodoPagina)
-      .concat(GRUPOS.filter((g) => !g.padre).map(nodoGrupo)));
+    PAGINAS.filter((p) => !p.grupo && deEstePerfil(p)).map(nodoPagina)
+      .concat(GRUPOS.filter((g) => !g.padre && deEstePerfil(g)).map(nodoGrupo)));
 
   // Los miles, también por debajo de diez mil. Intl en español no agrupa hasta
   // cinco cifras —«1203,08 €» pero «20.931,73 €»— porque así lo dice el CLDR.

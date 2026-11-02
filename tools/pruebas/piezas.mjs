@@ -332,6 +332,18 @@ else {
   if (r.stderr) console.log(r.stderr.split("\n").slice(0, 5).join("\n"));
 }
 
+// Las de la contabilidad de una asociación (facturas, IVA, subvenciones,
+// cuentas del ejercicio y extractos), con node --test como las de Agora
+const pruebasSolvento = readdirSync(join(RAIZ, "apps/solvento/tests")).filter((f) => f.endsWith(".test.js")).sort().map((f) => join("tests", f));
+const rs = spawnSync(process.execPath, ["--test", "--test-reporter=tap", ...pruebasSolvento], { cwd: join(RAIZ, "apps/solvento"), encoding: "utf8" });
+const cuentaS = (que) => +(((rs.stdout || "").match(new RegExp("^# " + que + " (\\d+)", "m")) || [])[1] || 0);
+if (rs.status === 0 && cuentaS("pass") > 0 && !cuentaS("fail")) { bien++; console.log(`  ✓ las ${cuentaS("pass")} pruebas de la contabilidad de una asociación (${pruebasSolvento.length} archivos)`); }
+else {
+  fallos.push("Solvento: contabilidad");
+  console.log(`  ✗ Solvento, contabilidad: ${cuentaS("fail")} fallan`);
+  (rs.stdout || "").split("\n").filter((l) => /^\s*not ok/.test(l)).slice(0, 10).forEach((l) => console.log("    " + l.trim()));
+}
+
 // ── Agora ───────────────────────────────────────────────────────────────────
 console.log("\nAgora");
 const dirAgora = join(RAIZ, "apps/agora");

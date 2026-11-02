@@ -14,13 +14,13 @@
   <!-- Se instala SweetSuite, no Solvento: esto vive dentro de ella -->
   <meta name="theme-color" content="#12141d" />
   <meta name="description" content="Tus finanzas, cifradas y siempre contigo." />
-  <script src="src/js/suite-puente.js?v=p231"></script>
+  <script src="src/js/suite-puente.js?v=p232"></script>
   <!-- El tema, antes que el CSS: si se aplicara después de pintar, quien use
        el tema claro vería un fogonazo oscuro en cada carga. -->
-  <script src="src/js/tema.js?v=p231"></script>
-  <link rel="stylesheet" href="src/css/base.css?v=p231" />
-  <link rel="stylesheet" href="src/css/layout.css?v=p231" />
-  <link rel="stylesheet" href="src/css/components.css?v=p231" />
+  <script src="src/js/tema.js?v=p232"></script>
+  <link rel="stylesheet" href="src/css/base.css?v=p232" />
+  <link rel="stylesheet" href="src/css/layout.css?v=p232" />
+  <link rel="stylesheet" href="src/css/components.css?v=p232" />
   <style>
     /* Arranque (login / importación) — cubre todo hasta desbloquear */
     #boot-overlay input {
@@ -123,9 +123,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="src/css/openclaw.css?v=p231" />
+  <link rel="stylesheet" href="src/css/openclaw.css?v=p232" />
   <!-- El móvil, lo último de todo: cuenta las cosas de otra manera (ver el archivo). -->
-  <link rel="stylesheet" href="src/css/movil.css?v=p231" />
+  <link rel="stylesheet" href="src/css/asociacion.css?v=p232" />
+  <link rel="stylesheet" href="src/css/movil.css?v=p232" />
 </head>
 <body>
 
@@ -288,6 +289,17 @@
         </div>
         <button class="sn-item" data-page="balance" onclick="v2Tab('balance')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 4.5v13"/><path d="M3.5 14 7 17.5 10.5 14"/><path d="M17 19.5v-13"/><path d="M13.5 10 17 6.5 20.5 10"/></svg><span>Ingresos y gastos</span></button>
         <button class="sn-item" data-page="presupuesto" onclick="v2Tab('presupuesto')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20V9"/><path d="M10 20V4"/><path d="M16 20v-7"/><path d="M2.5 20h19"/></svg><span>Presupuesto</span></button>
+        <!-- Contabilidad: solo en una asociación (lo que antes llevaba Agora;
+             TESORERIA.md). Las páginas las pinta asociacion/paginas.js. -->
+        <div class="sn-grupo solo-org" data-grupo="contabilidad">
+          <button class="sn-item sn-grupo-btn" aria-expanded="false" onclick="v2Grupo('contabilidad')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 4.5h11.5a2 2 0 0 1 2 2V20H7a2 2 0 0 1-2-2V4.5Z"/><path d="M5 18a2 2 0 0 1 2-2h11.5"/><path d="M9 8.5h6M9 12h4"/></svg><span>Contabilidad</span><span class="sn-caret" aria-hidden="true">›</span></button>
+          <div class="sn-hijos">
+          <button class="sn-item" data-page="facturas" onclick="v2Tab('facturas')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 3.5h12v17l-3-1.6-3 1.6-3-1.6-3 1.6Z"/><path d="M9 8h6M9 11.5h6M9 15h3.5"/></svg><span>Facturas</span></button>
+          <button class="sn-item" data-page="iva" onclick="v2Tab('iva')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M18.5 5.5 5.5 18.5"/><circle cx="7.5" cy="7.5" r="2.5"/><circle cx="16.5" cy="16.5" r="2.5"/></svg><span>IVA</span></button>
+          <button class="sn-item" data-page="subvenciones" onclick="v2Tab('subvenciones')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="8.5" width="17" height="4" rx="1"/><path d="M5 12.5v8h14v-8"/><path d="M12 8.5v12"/><path d="M12 8.5C10.5 5 8.3 3.6 7.2 4.7 6 6 8 8.5 12 8.5Zm0 0c1.5-3.5 3.7-4.9 4.8-3.8C18 6 16 8.5 12 8.5Z"/></svg><span>Subvenciones</span></button>
+          <button class="sn-item" data-page="ejercicio" onclick="v2Tab('ejercicio')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 4v16"/><path d="M6 20h12"/><path d="M4.5 8h15"/><path d="M7 8 4.5 14a2.6 2.6 0 0 0 5 0Z"/><path d="M17 8l-2.5 6a2.6 2.6 0 0 0 5 0Z"/></svg><span>Cuentas del ejercicio</span></button>
+          </div>
+        </div>
     </nav>
     <!-- El inicio de SweetSuite y las demás apps de la cuenta (boot.js) -->
     <div class="sn-etiqueta">SweetSuite</div>
@@ -315,6 +327,10 @@
   <div class="page" id="v2-page-otros"></div>
   <div class="page" id="v2-page-pasivos"></div>
   <div class="page" id="v2-page-presupuesto"></div>
+  <div class="page" id="v2-page-facturas"></div>
+  <div class="page" id="v2-page-iva"></div>
+  <div class="page" id="v2-page-subvenciones"></div>
+  <div class="page" id="v2-page-ejercicio"></div>
   <div class="page" id="v2-page-ajustes">
     <div class="v2-wrap">
       <div class="section-title">Ajustes</div>
@@ -496,21 +512,32 @@
 <!-- ══ MODAL DE SINCRONIZACIÓN ══ -->
 
 
-<script src="src/js/entorno.js?v=p231"></script>
-<script src="src/js/crypto.js?v=p231"></script>
-<script src="src/js/config.js?v=p231"></script>
-<script src="src/js/model.js?v=p231"></script>
-<script src="src/js/charts.js?v=p231"></script>
-<script src="src/js/render.js?v=p231"></script>
-<script src="src/js/db.js?v=p231"></script>
-<script src="src/js/mezcla.js?v=p231"></script>
-<script src="src/js/sync.js?v=p231"></script>
-<script src="src/js/nav.js?v=p231"></script>
-<script src="src/js/plan.js?v=p231"></script>
-<script src="src/js/forms.js?v=p231"></script>
-<script src="src/js/perfil.js?v=p231"></script>
-<script src="src/js/exportar.js?v=p231"></script>
-<script src="src/js/boot.js?v=p231"></script>
+<script src="src/js/entorno.js?v=p232"></script>
+<script src="src/js/crypto.js?v=p232"></script>
+<script src="src/js/config.js?v=p232"></script>
+<script src="src/js/model.js?v=p232"></script>
+<script src="src/js/charts.js?v=p232"></script>
+<script src="src/js/render.js?v=p232"></script>
+<script src="src/js/db.js?v=p232"></script>
+<script src="src/js/mezcla.js?v=p232"></script>
+<script src="src/js/sync.js?v=p232"></script>
+<script src="src/js/nav.js?v=p232"></script>
+<script src="src/js/plan.js?v=p232"></script>
+<script src="src/js/forms.js?v=p232"></script>
+<script src="src/js/perfil.js?v=p232"></script>
+<script src="src/js/exportar.js?v=p232"></script>
+<!-- La contabilidad de una asociación (TESORERIA.md): las piezas de cálculo
+     vienen de Agora; paginas.js pinta Facturas, IVA, Subvenciones y Cuentas -->
+<script src="src/js/asociacion/dinero.js?v=p232"></script>
+<script src="src/js/asociacion/fechas.js?v=p232"></script>
+<script src="src/js/asociacion/csv.js?v=p232"></script>
+<script src="src/js/asociacion/xlsx.js?v=p232"></script>
+<script src="src/js/asociacion/facturas.js?v=p232"></script>
+<script src="src/js/asociacion/iva.js?v=p232"></script>
+<script src="src/js/asociacion/extracto.js?v=p232"></script>
+<script src="src/js/asociacion/contabilidad.js?v=p232"></script>
+<script src="src/js/asociacion/paginas.js?v=p232"></script>
+<script src="src/js/boot.js?v=p232"></script>
   <!-- Sin service worker propio: el de SweetSuite guarda también Solvento -->
 </body>
 </html>

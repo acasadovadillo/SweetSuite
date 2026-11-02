@@ -1982,5 +1982,5 @@
     return { caja, cartera, patrimonio };
   }
 
-  window.SolventoModel = { build, buildSeries, rentabilidadBien, xirr, buildAnalitica, buildGastos, resumenCentros, pendientes, esPendiente, resumenPrestamos, revision, arreglarTexto, textosMalCodificados, cobrosPendientes, porCobrar, planMensual, seguimientoPlan, tarjetas, tarjetaDeLiquidacion, cicloTarjeta, revisarLiquidacion, fechaEnTarjeta, signoOperacion, presupuestoAnual, aniosConDatos, flujoMensual, partirCategoria, rutaCategoria, agruparCategorias, arbolCategorias, arbolCentros, repartoRegla, clasificarCategoria, REGLA_DEFECTO, _internals: { computeSaldos, valuate, valuatePropiedades, parseFechaES, round2 } };
+  window.SolventoModel = { build, buildSeries, rentabilidadBien, xirr, buildAnalitica, buildGastos, resumenCentros, pendientes, esPendiente, computeSaldos, resumenPrestamos, revision, arreglarTexto, textosMalCodificados, cobrosPendientes, porCobrar, planMensual, seguimientoPlan, tarjetas, tarjetaDeLiquidacion, cicloTarjeta, revisarLiquidacion, fechaEnTarjeta, signoOperacion, presupuestoAnual, aniosConDatos, flujoMensual, partirCategoria, rutaCategoria, agruparCategorias, arbolCategorias, arbolCentros, repartoRegla, clasificarCategoria, REGLA_DEFECTO, _internals: { computeSaldos, valuate, valuatePropiedades, parseFechaES, round2 } };
 })();
