@@ -21,6 +21,13 @@
   const fmtTick = (t, spanDias) => new Date(t).toLocaleDateString("es-ES",
     spanDias <= 120 ? { day: "2-digit", month: "short" } : { month: "short", year: "2-digit" });
 
+  // Las cifras del eje Y van en HTML encima del SVG, no dentro: el SVG se estira
+  // sin guardar proporción (preserveAspectRatio="none") y un <text> salía
+  // aplastado y diminuto, sobre todo en el móvil. Así miden siempre lo mismo.
+  const etiquetasY = (pares, W, H, x) => pares.map(([yy, txt]) =>
+    `<span class="ch-ylab" style="position:absolute;left:${((x + 6) / W * 100).toFixed(2)}%;top:${(yy / H * 100).toFixed(2)}%;
+      transform:translateY(-50%);font-size:11px;color:var(--t2);white-space:nowrap;font-variant-numeric:tabular-nums;">${txt}</span>`).join("");
+
   const PERIODS = [["1M", 30], ["3M", 91], ["6M", 182], ["1A", 365], ["MAX", Infinity]];
   const PLOT = { x0: 10, x1: 940, y0: 20, y1: 270, W: 1000, H: 300 };
   const MIN_DRAG_PX = 8;   // por debajo de esto se considera un clic, no una selección
@@ -61,6 +68,7 @@
            <line class="ch-vline" x1="0" y1="${PLOT.y0}" x2="0" y2="${PLOT.y1}" stroke="var(--t2)" stroke-width="1" stroke-dasharray="3 3" style="display:none;"/>
            <rect class="ch-hit" x="0" y="0" width="${PLOT.W}" height="${PLOT.H}" fill="transparent"/>
          </svg>
+         <div class="ch-ylabs" style="position:absolute;inset:0;pointer-events:none;"></div>
          <div class="ch-sel" style="position:absolute;top:0;bottom:0;background:rgba(139,92,246,0.16);border-left:1px solid var(--violeta);border-right:1px solid var(--violeta);pointer-events:none;display:none;"></div>
          <div class="ch-dot" style="position:absolute;width:10px;height:10px;border-radius:50%;background:${color};border:2px solid var(--f1);transform:translate(-50%,-50%);pointer-events:none;display:none;"></div>
          <div class="ch-tip" style="position:absolute;background:var(--tip-bg);color:var(--tip-t);font-size:0.72rem;font-weight:600;padding:0.3rem 0.55rem;border-radius:6px;border:1px solid var(--b2);pointer-events:none;white-space:nowrap;display:none;z-index:5;"></div>
@@ -76,6 +84,7 @@
     const areaEl = container.querySelector(".ch-area");
     const lineEl = container.querySelector(".ch-line");
     const gridEl = container.querySelector(".ch-grid");
+    const ylabsEl = container.querySelector(".ch-ylabs");
     const vline = container.querySelector(".ch-vline");
     const dot = container.querySelector(".ch-dot");
     const tip = container.querySelector(".ch-tip");
@@ -126,12 +135,14 @@
       lineEl.setAttribute("d", d);
       areaEl.setAttribute("d", d + ` L ${PLOT.x1} ${PLOT.y1} L ${PLOT.x0} ${PLOT.y1} Z`);
       let g = "";
+      const ys = [];
       for (let k = 0; k < 5; k++) {
         const f = k / 4, yy = PLOT.y1 - f * (PLOT.y1 - PLOT.y0), vv = vmin + f * (vmax - vmin);
         g += `<line x1="${PLOT.x0}" y1="${yy.toFixed(1)}" x2="${PLOT.x1}" y2="${yy.toFixed(1)}" stroke="var(--b2)" stroke-width="1" stroke-dasharray="3 3"/>`;
-        g += `<text x="${PLOT.x1 + 6}" y="${(yy + 4).toFixed(1)}" font-size="10" fill="var(--t2)">${fmtK(vv)}</text>`;
+        ys.push([yy, fmtK(vv)]);
       }
       gridEl.innerHTML = g;
+      ylabsEl.innerHTML = etiquetasY(ys, PLOT.W, PLOT.H, PLOT.x1);
       drawTicks();
       const first = view[0][1], last = view[view.length - 1][1];
       const diff = last - first, pct = first !== 0 ? diff / Math.abs(first) * 100 : 0;
@@ -229,7 +240,7 @@
     draw();
   }
 
-  window.SolventoCharts = { mount };
+  window.SolventoCharts = { mount, etiquetasY };
 })();
 
 /*
@@ -249,6 +260,7 @@
   const fmtPct = (x) => (isFinite(x) ? (x >= 0 ? "+" : "") + x.toFixed(2).replace(".", ",") + "%" : "—");
   const fmtMes = (t) => new Date(t).toLocaleDateString("es-ES", { month: "short", year: "2-digit" });
   const fmtDia = (t) => new Date(t).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+  const etiquetasY = window.SolventoCharts.etiquetasY;
   const esc = (s) => String(s == null ? "" : s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const P = { x0: 10, x1: 940, y0: 16, y1: 264, W: 1000, H: 300 };
 
@@ -286,6 +298,7 @@
            <line class="cm-vline" x1="0" y1="${P.y0}" x2="0" y2="${P.y1}" stroke="var(--t2)" stroke-width="1" stroke-dasharray="3 3" style="display:none;"/>
            <rect class="cm-hit" x="0" y="0" width="${P.W}" height="${P.H}" fill="transparent"/>
          </svg>
+         <div class="cm-ylabs" style="position:absolute;inset:0;pointer-events:none;"></div>
          <div class="cm-sel" style="position:absolute;top:0;bottom:0;background:rgba(139,92,246,0.18);border-left:1px solid rgba(139,92,246,0.6);border-right:1px solid rgba(139,92,246,0.6);pointer-events:none;display:none;"></div>
          <div class="cm-tip" style="position:absolute;background:var(--tip-bg);color:var(--tip-t);font-size:0.72rem;padding:0.45rem 0.6rem;border-radius:8px;border:1px solid var(--b2);pointer-events:none;white-space:nowrap;display:none;z-index:6;line-height:1.5;"></div>
        </div>
@@ -306,6 +319,7 @@
 
     const svg = container.querySelector("svg");
     const gridEl = container.querySelector(".cm-grid");
+    const ylabsEl = container.querySelector(".cm-ylabs");
     const linesEl = container.querySelector(".cm-lines");
     const vline = container.querySelector(".cm-vline");
     const tip = container.querySelector(".cm-tip");
@@ -354,11 +368,13 @@
       }
       // rejilla + eje Y en %
       let g = "";
+      const ys = [];
       for (let k = 0; k < 5; k++) {
         const f = k / 4, yy = P.y1 - f * (P.y1 - P.y0), vv = vmin + f * (vmax - vmin);
         g += `<line x1="${P.x0}" y1="${yy.toFixed(1)}" x2="${P.x1}" y2="${yy.toFixed(1)}" stroke="var(--b2)" stroke-width="1" stroke-dasharray="3 3"/>`;
-        g += `<text x="${P.x1 + 6}" y="${(yy + 4).toFixed(1)}" font-size="10" fill="var(--t2)">${vv.toFixed(0)}%</text>`;
+        ys.push([yy, vv.toFixed(0) + "%"]);
       }
+      ylabsEl.innerHTML = etiquetasY(ys, P.W, P.H, P.x1);
       // línea del 0% (referencia: ni ganas ni pierdes)
       if (vmin < 0 && vmax > 0) {
         const y0 = yAt(0);

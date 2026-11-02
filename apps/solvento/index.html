@@ -14,13 +14,13 @@
   <!-- Se instala SweetSuite, no Solvento: esto vive dentro de ella -->
   <meta name="theme-color" content="#12141d" />
   <meta name="description" content="Tus finanzas, cifradas y siempre contigo." />
-  <script src="src/js/suite-puente.js?v=p230"></script>
+  <script src="src/js/suite-puente.js?v=p231"></script>
   <!-- El tema, antes que el CSS: si se aplicara después de pintar, quien use
        el tema claro vería un fogonazo oscuro en cada carga. -->
-  <script src="src/js/tema.js?v=p230"></script>
-  <link rel="stylesheet" href="src/css/base.css?v=p230" />
-  <link rel="stylesheet" href="src/css/layout.css?v=p230" />
-  <link rel="stylesheet" href="src/css/components.css?v=p230" />
+  <script src="src/js/tema.js?v=p231"></script>
+  <link rel="stylesheet" href="src/css/base.css?v=p231" />
+  <link rel="stylesheet" href="src/css/layout.css?v=p231" />
+  <link rel="stylesheet" href="src/css/components.css?v=p231" />
   <style>
     /* Arranque (login / importación) — cubre todo hasta desbloquear */
     #boot-overlay input {
@@ -123,7 +123,9 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="src/css/openclaw.css?v=p230" />
+  <link rel="stylesheet" href="src/css/openclaw.css?v=p231" />
+  <!-- El móvil, lo último de todo: cuenta las cosas de otra manera (ver el archivo). -->
+  <link rel="stylesheet" href="src/css/movil.css?v=p231" />
 </head>
 <body>
 
@@ -301,6 +303,9 @@
   <!-- La barra de abajo del móvil la arma render.js (pintarBarraMovil) con las
        entradas de arriba del menú lateral: como mucho cinco, con su icono. -->
   <nav class="bottom-nav" id="v2-bottom-nav" aria-label="Secciones"></nav>
+  <!-- En el móvil, las páginas del grupo de la página abierta (Caja, Cartera,
+       Inmuebles…), a un toque: la barra de abajo solo lleva una por grupo. -->
+  <nav class="subnav-movil" id="v2-subnav" aria-label="Páginas de esta sección" hidden></nav>
 
   <div class="page active" id="v2-page-patrimonio"></div>
   <div class="page" id="v2-page-caja"></div>
@@ -491,21 +496,21 @@
 <!-- ══ MODAL DE SINCRONIZACIÓN ══ -->
 
 
-<script src="src/js/entorno.js?v=p230"></script>
-<script src="src/js/crypto.js?v=p230"></script>
-<script src="src/js/config.js?v=p230"></script>
-<script src="src/js/model.js?v=p230"></script>
-<script src="src/js/charts.js?v=p230"></script>
-<script src="src/js/render.js?v=p230"></script>
-<script src="src/js/db.js?v=p230"></script>
-<script src="src/js/mezcla.js?v=p230"></script>
-<script src="src/js/sync.js?v=p230"></script>
-<script src="src/js/nav.js?v=p230"></script>
-<script src="src/js/plan.js?v=p230"></script>
-<script src="src/js/forms.js?v=p230"></script>
-<script src="src/js/perfil.js?v=p230"></script>
-<script src="src/js/exportar.js?v=p230"></script>
-<script src="src/js/boot.js?v=p230"></script>
+<script src="src/js/entorno.js?v=p231"></script>
+<script src="src/js/crypto.js?v=p231"></script>
+<script src="src/js/config.js?v=p231"></script>
+<script src="src/js/model.js?v=p231"></script>
+<script src="src/js/charts.js?v=p231"></script>
+<script src="src/js/render.js?v=p231"></script>
+<script src="src/js/db.js?v=p231"></script>
+<script src="src/js/mezcla.js?v=p231"></script>
+<script src="src/js/sync.js?v=p231"></script>
+<script src="src/js/nav.js?v=p231"></script>
+<script src="src/js/plan.js?v=p231"></script>
+<script src="src/js/forms.js?v=p231"></script>
+<script src="src/js/perfil.js?v=p231"></script>
+<script src="src/js/exportar.js?v=p231"></script>
+<script src="src/js/boot.js?v=p231"></script>
   <!-- Sin service worker propio: el de SweetSuite guarda también Solvento -->
 </body>
 </html>

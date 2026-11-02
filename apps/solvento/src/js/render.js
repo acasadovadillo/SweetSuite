@@ -26,7 +26,7 @@
   const addBtn = (label, onclick) => `<button class="${String(label).indexOf("＋") === 0 ? "solo-editor" : ""}" onclick="${onclick}" style="background:var(--f4);border:1px solid var(--b2);border-radius:8px;color:var(--t1);font-size:0.8rem;font-weight:600;padding:0.4rem 0.75rem;cursor:pointer;font-family:inherit;white-space:nowrap;">${label}</button>`;
   const delBtn = (onclick) => `<button class="fila-acc" onclick="event.stopPropagation();${onclick}" title="Borrar" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:0.9rem;padding:0.2rem 0.4rem;">✕</button>`;
   const editBtn = (onclick) => `<button class="fila-acc" onclick="event.stopPropagation();${onclick}" title="Editar" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:0.85rem;padding:0.2rem 0.4rem;">✎</button>`;
-  const rowActions = (edit, del) => `<td style="text-align:right;width:1%;white-space:nowrap;">${editBtn(edit)}${delBtn(del)}</td>`;
+  const rowActions = (edit, del) => `<td class="td-acc" style="text-align:right;width:1%;white-space:nowrap;">${editBtn(edit)}${delBtn(del)}</td>`;
 
   // El icono de una cuenta: su logo si está, y si el archivo todavía no existe,
   // la inicial sobre el color de la marca. Un logo que falta no puede dejar una
@@ -95,8 +95,11 @@
       }
       const punto = `<span style="width:9px;height:9px;background:${it.accent};border-radius:50%;flex-shrink:0;"></span>`;
       const nombre = `<span style="color:var(--t1b);font-weight:500;">${esc(it.label)}</span>`;
+      // En el móvil no hay ratón que haga salir el globo: allí la leyenda
+      // lleva su porcentaje a la derecha.
+      const pctMovil = `<span class="solo-movil leg-pct">${esc(p.toFixed(1).replace(".", ","))} %</span>`;
       return `<div class="leg-it" style="${estiloItem}"
-        onmouseenter="v2Reparto('${idPanel}',${i})" onmouseleave="v2Reparto('${idPanel}',null)">${punto}${nombre}${badge}</div>`;
+        onmouseenter="v2Reparto('${idPanel}',${i})" onmouseleave="v2Reparto('${idPanel}',null)">${punto}${nombre}${badge}${pctMovil}</div>`;
     }).join("");
   }
 
@@ -325,13 +328,15 @@
     const flecha = pagina
       ? `<span style="color:${color};font-weight:700;margin-left:0.35rem;">&nbsp;→</span>`
       : "";
-    return `<div class="dashboard-panel" style="border-left:3px solid ${color};${pagina ? "cursor:pointer;transition:background 0.2s;" : ""}"${clicable}${enlace}>
-      <div style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;color:${color};margin-bottom:0.6rem;">${esc(titulo)}</div>
-      <div style="font-size:1.7rem;font-weight:800;color:var(--t0);letter-spacing:-0.02em;">${valor}</div>
-      <div style="font-size:0.82rem;color:${subColor || "var(--t1b)"};font-weight:600;margin-top:0.3rem;">${sub}</div>
+    // Las clases hub-* son para el móvil (movil.css): allí la tarjeta se vuelve
+    // una fila, con el nombre y el importe en la misma línea.
+    return `<div class="dashboard-panel hub-card" style="border-left:3px solid ${color};${pagina ? "cursor:pointer;transition:background 0.2s;" : ""}"${clicable}${enlace}>
+      <div class="hub-tit" style="font-size:0.72rem;text-transform:uppercase;letter-spacing:0.06em;font-weight:700;color:${color};margin-bottom:0.6rem;">${esc(titulo)}</div>
+      <div class="hub-val" style="font-size:1.7rem;font-weight:800;color:var(--t0);letter-spacing:-0.02em;">${valor}</div>
+      <div class="hub-sub" style="font-size:0.82rem;color:${subColor || "var(--t1b)"};font-weight:600;margin-top:0.3rem;">${sub}</div>
       ${pct == null
-        ? (flecha ? `<div style="margin-top:0.15rem;">${flecha}</div>` : "")
-        : `<div style="font-size:0.78rem;color:var(--t2);margin-top:0.15rem;">${pct.toFixed(2)}% ${sufijo || "del patrimonio"}${flecha}</div>`}
+        ? (flecha ? `<div class="hub-pct" style="margin-top:0.15rem;">${flecha}</div>` : "")
+        : `<div class="hub-pct" style="font-size:0.78rem;color:var(--t2);margin-top:0.15rem;">${pct.toFixed(2).replace(".", ",")} %<span class="hub-suf"> ${sufijo || "del patrimonio"}</span>${flecha}</div>`}
     </div>`;
   }
 
@@ -354,6 +359,25 @@
   const selFiltro = (id, opts, val, onchange) =>
     `<select id="${id}" onchange="${onchange}" style="${estiloFiltro}">` +
     opts.map((o) => `<option value="${esc(o[0])}" ${o[0] === val ? "selected" : ""}>${esc(o[1])}</option>`).join("") + `</select>`;
+  // En el móvil los filtros ocupaban media pantalla antes del primer
+  // movimiento. Allí se quedan el buscador y un botón «Filtros» que despliega
+  // el resto y cuenta los que hay puestos; en el ordenador no existe y todo se
+  // ve como siempre (movil.css).
+  const FILTROS_ABIERTOS = { mov: false, ops: false };
+  const botonFiltros = (clave, valores) => {
+    const n = valores.filter(Boolean).length;
+    return `<button type="button" class="boton-filtros solo-movil" onclick="v2VerFiltros('${clave}')"
+      aria-expanded="${FILTROS_ABIERTOS[clave]}" aria-controls="v2-${clave}-extra">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg>
+      Filtros${n ? `<span class="boton-filtros-n">${n}</span>` : ""}</button>`;
+  };
+  window.v2VerFiltros = (clave) => {
+    FILTROS_ABIERTOS[clave] = !FILTROS_ABIERTOS[clave];
+    const extra = document.getElementById("v2-" + clave + "-extra");
+    if (extra) extra.classList.toggle("abiertos", FILTROS_ABIERTOS[clave]);
+    document.querySelectorAll(`.boton-filtros[aria-controls="v2-${clave}-extra"]`)
+      .forEach((b) => b.setAttribute("aria-expanded", String(FILTROS_ABIERTOS[clave])));
+  };
   const enRango = (f, desde, hasta) => {
     const t = parseFechaES(f).getTime();
     if (desde && t < new Date(desde + "T00:00:00").getTime()) return false;
@@ -399,7 +423,22 @@
     // era imposible: parecía que entraban 102,30 € en la tarjeta. Ahora dice lo
     // que es y con el signo que le corresponde.
     const esLiquidacion = liquidaciones();
+    // En el móvil la fecha no tiene columna: los movimientos se agrupan por
+    // día bajo un rótulo, como en la app del banco. En el ordenador ese rótulo
+    // no existe (movil.css) y la fecha sigue en su columna.
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const rotuloDia = (f) => {
+      const d = parseFechaES(f), dias = Math.round((hoy - d) / 864e5);
+      if (dias === 0) return "Hoy";
+      if (dias === 1) return "Ayer";
+      const txt = d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long",
+        year: d.getFullYear() === hoy.getFullYear() ? undefined : "numeric" });
+      return txt.charAt(0).toUpperCase() + txt.slice(1);
+    };
+    let diaAnterior = null;
     const rows = visibles.map((r) => {
+      const cabDia = r.fecha !== diaAnterior ? `<tr class="m-dia"><td colspan="4">${esc(rotuloDia(r.fecha))}</td></tr>` : "";
+      diaAnterior = r.fecha;
       const liq = esLiquidacion(r);
       const signo = liq || r.tipo === "Gasto" ? "−" : (r.tipo === "Ingreso" ? "+" : "");
       const color = liq ? AZUL : (r.tipo === "Ingreso" ? GREEN : (r.tipo === "Gasto" ? RED : "var(--t1b)"));
@@ -408,12 +447,12 @@
       // La palabra «Gasto» o «Ingreso» delante del concepto repetía lo que ya
       // dice el color del importe. Se queda como title de la fila, para quien
       // navegue con lector de pantalla o pase el ratón por encima.
-      return `<tr class="table-row" title="${esc(liq ? "Liquidación de tarjeta" : r.tipo)}">
-        <td style="text-align:left;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${esc(r.fecha)}</td>
-        <td style="text-align:left;"><span style="color:var(--t1);">${det}</span>${liq
+      return cabDia + `<tr class="table-row" title="${esc(liq ? "Liquidación de tarjeta" : r.tipo)}">
+        <td class="m-oculta" style="text-align:left;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${esc(r.fecha)}</td>
+        <td class="m-cab" style="text-align:left;"><span class="m-nombre" style="color:var(--t1);">${det}</span>${liq
           ? ` <span style="color:${AZUL};font-size:0.66rem;font-weight:700;background:color-mix(in srgb, ${AZUL} 13%, transparent);
                padding:0.1rem 0.4rem;border-radius:4px;white-space:nowrap;">Liquidación</span>` : ""}
-          ${cta ? `<div style="color:var(--t3);font-size:0.72rem;">${cta}${liq ? " · salda la tarjeta" : ""}</div>` : ""}</td>
+          ${cta ? `<div class="m-sub" style="color:var(--t3);font-size:0.72rem;">${cta}${liq ? " · salda la tarjeta" : ""}</div>` : ""}</td>
         <td style="text-align:right;color:${color};font-weight:600;white-space:nowrap;">${signo}${fmtEur(Number(r.importe))}</td>
         ${rowActions(`v2EditMov('${r.id}')`, `v2DelMov('${r.id}')`)}</tr>`;
     }).join("");
@@ -429,7 +468,7 @@
           font-family:inherit;padding:0.25rem 0.6rem;cursor:pointer;white-space:nowrap;">
           Imputar centro a estos ${todos.length}</button>` : ""}
       </div>
-      <table class="minimal-table"><tbody>${rows || '<tr><td style="color:var(--t2);padding:1rem;">Ningún movimiento coincide con el filtro</td></tr>'}</tbody></table>
+      <table class="minimal-table m-lista m-movs"><tbody>${rows || '<tr><td style="color:var(--t2);padding:1rem;">Ningún movimiento coincide con el filtro</td></tr>'}</tbody></table>
       ${quedan > 0 ? `<div style="text-align:center;margin-top:0.75rem;">${addBtn("Ver " + Math.min(quedan, PAGINA) + " más (quedan " + quedan + ")", "v2MovMas()")}</div>` : ""}`;
   }
 
@@ -445,14 +484,17 @@
         <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Movimientos</div>
         ${addBtn("＋ Movimiento", "v2AddMov()")}
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
-        <input id="v2-mov-q" type="search" value="${esc(MOV.q)}" placeholder="Buscar por concepto, categoría, persona…"
+      <div class="filtros" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+        <input id="v2-mov-q" type="search" value="${esc(MOV.q)}" placeholder="Buscar movimientos…" aria-label="Buscar por concepto, categoría o persona"
                oninput="v2MovFiltro()" style="${estiloFiltro}flex:1;min-width:190px;">
+        ${botonFiltros("mov", [MOV.tipo, MOV.cuenta, MOV.cat, MOV.desde, MOV.hasta])}
+        <div class="filtros-extra${FILTROS_ABIERTOS.mov ? " abiertos" : ""}" id="v2-mov-extra">
         ${selFiltro("v2-mov-tipo", tipos, MOV.tipo, "v2MovFiltro()")}
         ${selFiltro("v2-mov-cuenta", cuentas, MOV.cuenta, "v2MovFiltro()")}
         ${selFiltro("v2-mov-cat", cats, MOV.cat, "v2MovFiltro()")}
-        <input id="v2-mov-desde" type="date" value="${esc(MOV.desde)}" onchange="v2MovFiltro()" title="Desde" style="${estiloFiltro}">
-        <input id="v2-mov-hasta" type="date" value="${esc(MOV.hasta)}" onchange="v2MovFiltro()" title="Hasta" style="${estiloFiltro}">
+        <input id="v2-mov-desde" type="date" value="${esc(MOV.desde)}" onchange="v2MovFiltro()" title="Desde" aria-label="Desde" style="${estiloFiltro}">
+        <input id="v2-mov-hasta" type="date" value="${esc(MOV.hasta)}" onchange="v2MovFiltro()" title="Hasta" aria-label="Hasta" style="${estiloFiltro}">
+        </div>
         ${(function () {
           const p = window.SolventoModel.pendientes((CURRENT_DOC || {}).movimientos);
           if (!p.n && !MOV.pend) return "";
@@ -470,7 +512,7 @@
             color:${MOV.sinCentro ? "var(--blanco)" : "var(--azul)"};font-size:0.8rem;font-weight:600;padding:0.4rem 0.75rem;
             cursor:pointer;font-family:inherit;white-space:nowrap;">⊘ ${n} sin centro</button>`;
         })()}
-        ${addBtn("Limpiar", "v2MovLimpiar()")}
+        <span class="filtros-limpiar">${addBtn("Limpiar", "v2MovLimpiar()")}</span>
       </div>
       <div id="v2-mov-lista">${movimientosTabla()}</div>
     </div></div>`;
@@ -483,11 +525,15 @@
     const coste = Number(r.coste);
     // Las dos patas de un traspaso se ven distintas: la que sale y la que entra.
     const etiqueta = mov === "Traspaso" ? (coste < 0 ? "Traspaso, sale" : "Traspaso, entra") : mov;
+    const insignia = `<span style="color:${c};font-size:0.7rem;font-weight:700;background:color-mix(in srgb, ${c} 13%, transparent);padding:0.1rem 0.4rem;border-radius:4px;white-space:nowrap;">${esc(etiqueta)}</span>`;
+    const unidades = r.unidades !== "" && r.unidades != null ? Number(r.unidades).toLocaleString("es-ES", { maximumFractionDigits: 6 }) : "—";
+    // En el móvil la fecha y el tipo bajan bajo el nombre, y las unidades bajo
+    // el importe: cuatro columnas no caben en 340 px sin partir el nombre.
     return `<tr class="table-row">
-      <td style="text-align:left;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${esc(r.fecha)}</td>
-      <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.5rem;">${logoImg(r.nombre, r.isin, 26)}<span style="color:var(--t0);font-weight:600;font-size:0.85rem;">${esc(r.nombre)}</span><span style="color:${c};font-size:0.7rem;font-weight:700;background:color-mix(in srgb, ${c} 13%, transparent);padding:0.1rem 0.4rem;border-radius:4px;">${esc(etiqueta)}</span></div></td>
+      <td class="m-oculta" style="text-align:left;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${esc(r.fecha)}</td>
+      <td class="m-cab" style="text-align:left;"><div style="display:flex;align-items:center;gap:0.5rem;">${logoImg(r.nombre, r.isin, 26)}<div class="m-titulo" style="display:flex;align-items:center;gap:0.5rem;flex-wrap:wrap;"><span class="m-nombre" style="color:var(--t0);font-weight:600;font-size:0.85rem;">${esc(r.nombre)}</span><span class="m-oculta">${insignia}</span><div class="solo-movil m-sub">${esc(r.fecha)} · <span style="color:${c};font-weight:600;">${esc(etiqueta)}</span></div></div></div></td>
       <td style="text-align:right;color:${coste < 0 ? RED : "var(--t1)"};font-weight:600;white-space:nowrap;">${fmtEur(coste)}</td>
-      <td style="text-align:right;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${r.unidades !== "" && r.unidades != null ? Number(r.unidades).toLocaleString("es-ES", { maximumFractionDigits: 6 }) : "—"}</td>
+      <td class="m-mini" style="text-align:right;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${unidades}<span class="solo-movil"> uds.</span></td>
       ${rowActions(`v2EditInv('${r.id}')`, `v2DelInv('${r.id}')`)}</tr>`;
   }
 
@@ -511,7 +557,7 @@
     const invertido = todas.reduce((s, r) => s + (Number(r.coste) || 0), 0);
     return `<div style="font-size:0.78rem;color:var(--t2);margin:0.35rem 0 0.5rem;">
         ${todas.length} ${todas.length === 1 ? "operación" : "operaciones"} · neto invertido <b style="color:var(--t1);">${fmtEur(invertido)}</b></div>
-      <table class="minimal-table"><tbody>${rows || '<tr><td style="color:var(--t2);padding:1rem;">Ninguna operación coincide con el filtro</td></tr>'}</tbody></table>
+      <table class="minimal-table m-lista"><tbody>${rows || '<tr><td style="color:var(--t2);padding:1rem;">Ninguna operación coincide con el filtro</td></tr>'}</tbody></table>
       ${quedan > 0 ? `<div style="text-align:center;margin-top:0.75rem;">${addBtn("Ver 40 más (quedan " + quedan + ")", "v2OpsMas()")}</div>` : ""}`;
   }
 
@@ -528,7 +574,7 @@
           <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Últimas operaciones</div>
           <div style="display:flex;gap:0.5rem;">${addBtn("＋ NAV", "v2AddNav()")}${addBtn("＋ Operación", "v2AddInv()")}</div>
         </div>
-        <table class="minimal-table"><tbody>${filas || '<tr><td style="color:var(--t2);padding:1rem;">Sin operaciones</td></tr>'}</tbody></table>
+        <table class="minimal-table m-lista"><tbody>${filas || '<tr><td style="color:var(--t2);padding:1rem;">Sin operaciones</td></tr>'}</tbody></table>
         <div style="margin-top:1rem;">${addBtn("Ver todas las operaciones (" + todas.length + ") →", "v2Tab('operaciones')")}</div>
       </div></div>`;
     }
@@ -538,13 +584,16 @@
         <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Historial de operaciones</div>
         <div style="display:flex;gap:0.5rem;">${addBtn("＋ NAV", "v2AddNav()")}${addBtn("＋ Operación", "v2AddInv()")}</div>
       </div>
-      <div style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
+      <div class="filtros" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;">
         <input id="v2-ops-q" type="search" value="${esc(OPS.q)}" placeholder="Buscar por activo o ISIN…"
                oninput="v2OpsFiltro()" style="${estiloFiltro}flex:1;min-width:190px;">
+        ${botonFiltros("ops", [OPS.tipo, OPS.desde, OPS.hasta])}
+        <div class="filtros-extra${FILTROS_ABIERTOS.ops ? " abiertos" : ""}" id="v2-ops-extra">
         ${selFiltro("v2-ops-tipo", tipos, OPS.tipo, "v2OpsFiltro()")}
-        <input id="v2-ops-desde" type="date" value="${esc(OPS.desde)}" onchange="v2OpsFiltro()" title="Desde" style="${estiloFiltro}">
-        <input id="v2-ops-hasta" type="date" value="${esc(OPS.hasta)}" onchange="v2OpsFiltro()" title="Hasta" style="${estiloFiltro}">
+        <input id="v2-ops-desde" type="date" value="${esc(OPS.desde)}" onchange="v2OpsFiltro()" title="Desde" aria-label="Desde" style="${estiloFiltro}">
+        <input id="v2-ops-hasta" type="date" value="${esc(OPS.hasta)}" onchange="v2OpsFiltro()" title="Hasta" aria-label="Hasta" style="${estiloFiltro}">
         ${addBtn("Limpiar", "v2OpsLimpiar()")}
+        </div>
       </div>
       <div id="v2-ops-lista">${operacionesTabla(banco)}</div>
     </div></div>`;
@@ -665,25 +714,27 @@
       if (esCerrada(a)) {
         const realizado = -a.coste;   // coste neto negativo = dinero recuperado de más
         return `<tr class="table-row" style="opacity:0.55;">
-          <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.75rem;">${logoImg(a.nombre, a.isin, 40)}<div><div style="font-weight:600;color:var(--t1b);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);">${esc(a.tipo)} · <span style="color:var(--t2);font-weight:600;">Cerrada</span></div></div></div></td>
-          <td style="text-align:right;color:var(--t2);white-space:nowrap;">—</td>
-          <td style="text-align:right;color:var(--t2);white-space:nowrap;">—</td>
-          <td style="text-align:right;white-space:nowrap;"><div style="color:${realizado >= 0 ? GREEN : RED};font-weight:600;">${realizado >= 0 ? "+" : ""}${fmtEur(realizado)}</div><div style="color:var(--t2);font-size:0.74rem;">realizado</div></td>
+          <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.75rem;">${logoImg(a.nombre, a.isin, 40)}<div class="m-titulo"><div class="m-nombre" style="font-weight:600;color:var(--t1b);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);">${esc(a.tipo)} · <span style="color:var(--t2);font-weight:600;">Cerrada</span></div></div></div></td>
+          <td class="m-oculta" style="text-align:right;color:var(--t2);white-space:nowrap;">—</td>
+          <td class="m-oculta" style="text-align:right;color:var(--t2);white-space:nowrap;">—</td>
+          <td class="m-rent" style="text-align:right;white-space:nowrap;"><div style="color:${realizado >= 0 ? GREEN : RED};font-weight:600;">${realizado >= 0 ? "+" : ""}${fmtEur(realizado)}</div><div style="color:var(--t2);font-size:0.74rem;">realizado</div></td>
           <td style="text-align:right;color:var(--t3);">—</td></tr>`;
       }
       const rentCell = (a.coste > 0 && isFinite(a.importe))
-        ? `<div style="color:${rc(a.ganancia)};font-weight:600;">${a.ganancia >= 0 ? "+" : ""}${fmtEur(a.ganancia)}</div><div style="color:${rc(a.rentPct)};font-size:0.78rem;">${fmtPct(a.rentPct)}${isFinite(a.cagr) && a.coste >= 100 ? '<span class="col-secundaria"> · CAGR ' + a.cagr.toFixed(1) + "%</span>" : ""}</div>`
+        ? `<div class="m-oculta" style="color:${rc(a.ganancia)};font-weight:600;">${a.ganancia >= 0 ? "+" : ""}${fmtEur(a.ganancia)}</div><div style="color:${rc(a.rentPct)};font-size:0.78rem;">${fmtPct(a.rentPct)}${isFinite(a.cagr) && a.coste >= 100 ? '<span class="col-secundaria"> · CAGR ' + a.cagr.toFixed(1) + "%</span>" : ""}</div>`
         : `<span style="color:var(--t3);">—</span>`;
+      // En el móvil el ISIN se retira y en su sitio va lo invertido, que allí
+      // no tiene columna propia.
       return `<tr class="table-row">
-        <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.75rem;">${logoImg(a.nombre, a.isin, 40)}<div><div style="font-weight:600;color:var(--t0);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);">${esc(a.tipo)}${a.isin && a.isin !== "-" ? ' · <span style="font-family:ui-monospace,monospace;">' + esc(a.isin) + "</span>" : ""}</div>${avisoFrescura(a)}</div></div></td>
+        <td style="text-align:left;"><div style="display:flex;align-items:center;gap:0.75rem;">${logoImg(a.nombre, a.isin, 40)}<div class="m-titulo"><div class="m-nombre" style="font-weight:600;color:var(--t0);font-size:0.9rem;">${esc(a.nombre)}</div><div style="font-size:0.74rem;color:var(--t2);"><span class="m-oculta">${esc(a.tipo)}${a.isin && a.isin !== "-" ? ' · <span style="font-family:ui-monospace,monospace;">' + esc(a.isin) + "</span>" : ""}</span>${a.coste ? '<span class="solo-movil">' + esc(fmtEur(a.coste)) + " invertidos</span>" : '<span class="solo-movil">' + esc(a.tipo) + "</span>"}</div>${avisoFrescura(a)}</div></div></td>
         <td style="text-align:right;color:var(--t0);font-weight:600;white-space:nowrap;">${fmtEur(a.importe)}</td>
-        <td style="text-align:right;color:var(--t1b);white-space:nowrap;">${a.coste ? fmtEur(a.coste) : "—"}</td>
-        <td style="text-align:right;white-space:nowrap;">${rentCell}</td>
+        <td class="m-oculta" style="text-align:right;color:var(--t1b);white-space:nowrap;">${a.coste ? fmtEur(a.coste) : "—"}</td>
+        <td class="m-rent" style="text-align:right;white-space:nowrap;">${rentCell}</td>
         <td class="col-secundaria" style="text-align:right;color:var(--azul);font-weight:600;">${a.pct.toFixed(2)}%</td></tr>`;
     }).join("");
     return `<div class="v2-wrap" style="padding-bottom:2rem;"><div class="table-container">
       <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Cartera</div>
-      <table class="minimal-table"><thead><tr><th style="text-align:left;">Activo</th><th style="text-align:right;">Valor actual</th><th style="text-align:right;">Invertido</th><th style="text-align:right;">Rentabilidad</th><th class="col-secundaria" style="text-align:right;">Peso</th></tr></thead><tbody>${rows}</tbody></table>
+      <table class="minimal-table m-lista"><thead><tr><th style="text-align:left;">Activo</th><th style="text-align:right;">Valor actual</th><th style="text-align:right;">Invertido</th><th style="text-align:right;">Rentabilidad</th><th class="col-secundaria" style="text-align:right;">Peso</th></tr></thead><tbody>${rows}</tbody></table>
       <div style="margin-top:1rem;">${addBtn("Ver reporte mensual de activos →", "v2Tab('reporte')")}</div>
     </div></div>`;
   }
@@ -794,11 +845,11 @@
     const cta = CFG.cuentas().find((c) => c.cuenta === cuenta) || {};
     const ef = efectivoBroker(m, cuenta);
     const icon = iconoCuenta(cta);
-    return `<div class="dashboard-panel" style="border-left:3px solid ${cta.accent || "var(--t2)"};">
-      <div style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.6rem;">${icon}
+    return `<div class="dashboard-panel hub-card" style="border-left:3px solid ${cta.accent || "var(--t2)"};">
+      <div class="hub-tit" style="display:flex;align-items:center;gap:0.55rem;margin-bottom:0.6rem;">${icon}
         <span style="font-size:0.72rem;color:${cta.accent || "var(--t1b)"};text-transform:uppercase;letter-spacing:0.06em;font-weight:700;">${esc(cuenta)}</span></div>
-      <div style="font-size:1.4rem;font-weight:800;color:var(--t0);letter-spacing:-0.02em;">${fmtEur(ef.valor)}</div>
-      <div style="font-size:0.76rem;color:var(--t2);margin-top:0.25rem;">${esc(ef.etiqueta)}${ef.fijo ? " · sin efectivo propio" : ""}</div>
+      <div class="hub-val" style="font-size:1.4rem;font-weight:800;color:var(--t0);letter-spacing:-0.02em;">${fmtEur(ef.valor)}</div>
+      <div class="hub-sub" style="font-size:0.76rem;color:var(--t2);margin-top:0.25rem;">${esc(ef.etiqueta)}${ef.fijo ? " · sin efectivo propio" : ""}</div>
     </div>`;
   }
 
@@ -893,16 +944,16 @@
     const cols = f.meses.map((x) => {
       const he = (x.entradas / tope * 100).toFixed(1), hs = (x.salidas / tope * 100).toFixed(1);
       const enero = x.ym.slice(5) === "01";
-      return `<div title="${esc(x.label)} · entra ${fmtEur(x.entradas)} · sale ${fmtEur(x.salidas)} · neto ${x.neto >= 0 ? "+" : "−"}${fmtEur(Math.abs(x.neto))}"
+      return `<div class="flujo-col" title="${esc(x.label)} · entra ${fmtEur(x.entradas)} · sale ${fmtEur(x.salidas)} · neto ${x.neto >= 0 ? "+" : "−"}${fmtEur(Math.abs(x.neto))}"
         style="flex:1 0 auto;min-width:34px;display:flex;flex-direction:column;align-items:center;gap:0.35rem;
         ${enero && varios ? "border-left:1px solid var(--b2);" : ""}">
         <div style="display:flex;align-items:flex-end;gap:2px;height:96px;width:100%;justify-content:center;">
           <div style="width:42%;max-width:15px;height:${he}%;background:${GREEN};border-radius:2px 2px 0 0;opacity:0.75;"></div>
           <div style="width:42%;max-width:15px;height:${hs}%;background:${RED};border-radius:2px 2px 0 0;opacity:0.75;"></div>
         </div>
-        <div style="font-size:0.6rem;color:${x.neto >= 0 ? GREEN : RED};font-weight:600;white-space:nowrap;">
+        <div class="flujo-neto" style="font-size:0.6rem;color:${x.neto >= 0 ? GREEN : RED};font-weight:600;white-space:nowrap;">
           ${x.neto >= 0 ? "+" : "−"}${Math.abs(Math.round(x.neto))}</div>
-        <div style="font-size:0.62rem;color:var(--t3);white-space:nowrap;">${esc(x.label.split(" ")[0])}${varios ? `<span style="display:block;font-size:0.56rem;color:var(--t4);">${x.ym.slice(2, 4)}</span>` : ""}</div>
+        <div class="flujo-mes" style="font-size:0.62rem;color:var(--t3);white-space:nowrap;">${esc(x.label.split(" ")[0])}${varios ? `<span style="display:block;font-size:0.56rem;color:var(--t4);">${x.ym.slice(2, 4)}</span>` : ""}</div>
       </div>`;
     }).join("");
     const med = f.media;
@@ -997,7 +1048,7 @@
       const nombre = `<button onclick="v2VerCuenta('${cuentaJs}')" title="Ver los movimientos de ${esc(s.cuenta)}" style="background:none;border:none;padding:0;color:${hijo ? "var(--t1)" : "var(--t0)"};font-weight:600;font-family:inherit;font-size:inherit;cursor:pointer;text-align:left;">${esc(s.cuenta)}</button>`;
       // Un apartado se cuadra desde su cuenta: el banco no lo ve por separado.
       const cuadrar = hijo ? "" : `<button class="solo-editor fila-acc" onclick="v2Cuadrar('${cuentaJs}',${total})" title="Cuadrar con el saldo real del banco${hijos.length ? " (cuenta y apartados juntos)" : ""}" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:0.9rem;padding:0.2rem 0.4rem;">⚖️</button>`;
-      return `<tr class="table-row" onmouseenter="v2Reparto('caja','${cuentaJs}',true)" onmouseleave="v2Reparto('caja',null)"><td style="text-align:left;${hijo ? "padding-left:1.6rem;" : ""}"><div style="display:flex;align-items:center;gap:0.6rem;">${hijo ? `<span style="color:var(--t3);">↳</span>` : ""}<span style="width:9px;height:9px;border-radius:50%;background:${s.accent};flex-shrink:0;"></span>${icon}${nombre}${etiqueta}</div>${resto}${propio(s)}${colgando}</td><td style="text-align:right;color:${hijo ? "var(--t1)" : "var(--t0)"};font-weight:600;white-space:nowrap;">${fmtEur(total)}</td><td class="col-secundaria" style="text-align:right;color:var(--t1b);">${(m.patrimonioLiquido ? total / m.patrimonioLiquido * 100 : 0).toFixed(2)}%</td><td style="text-align:right;width:1%;">${cuadrar}</td></tr>` +
+      return `<tr class="table-row" onmouseenter="v2Reparto('caja','${cuentaJs}',true)" onmouseleave="v2Reparto('caja',null)"><td style="text-align:left;${hijo ? "padding-left:1.6rem;" : ""}"><div style="display:flex;align-items:center;gap:0.6rem;">${hijo ? `<span style="color:var(--t3);">↳</span>` : ""}<span style="width:9px;height:9px;border-radius:50%;background:${s.accent};flex-shrink:0;"></span>${icon}${nombre}${etiqueta}</div>${resto}${propio(s)}${colgando}</td><td style="text-align:right;color:${hijo ? "var(--t1)" : "var(--t0)"};font-weight:600;white-space:nowrap;">${fmtEur(total)}</td><td class="col-secundaria" style="text-align:right;color:var(--t1b);">${(m.patrimonioLiquido ? total / m.patrimonioLiquido * 100 : 0).toFixed(2)}%</td><td class="td-acc" style="text-align:right;width:1%;">${cuadrar}</td></tr>` +
         hijos.map((h) => fila(h, true)).join("");
     };
     const arriba = cuentas.filter((s) => !s.dentroDe).sort((a, b) => enBanco(b) - enBanco(a));
@@ -1021,7 +1072,7 @@
     return header("Caja", fmtEur(m.patrimonioLiquido)) + compartida + panelCajaUso(m) +
       vistaPanel("caja", "Distribución de la caja", items, fmtEur(m.patrimonioLiquido), "Total", null,
                  { sinLeyenda: true, desnudo: true }) +
-      `<div class="v2-wrap"><div class="table-container"><table class="minimal-table"><thead><tr><th style="text-align:left;">Cuenta</th><th style="text-align:right;">Saldo</th><th class="col-secundaria" style="text-align:right;">Peso</th><th></th></tr></thead><tbody>${rows}</tbody></table>
+      `<div class="v2-wrap"><div class="table-container"><table class="minimal-table m-lista"><thead><tr><th style="text-align:left;">Cuenta</th><th style="text-align:right;">Saldo</th><th class="col-secundaria" style="text-align:right;">Peso</th><th></th></tr></thead><tbody>${rows}</tbody></table>
         <div class="solo-editor solo-edicion" style="font-size:0.75rem;color:var(--t3);margin-top:0.75rem;">⚖️ Cuadra el saldo con el de tu banco: Solvento crea el movimiento de ajuste exacto.</div>
       </div></div>` +
       chartPanel("Evolución de la caja", "v2-chart-caja") +
@@ -1275,7 +1326,7 @@
           <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">${esc(titulo)}</div>
           ${addBtn(botonNuevo, accionNuevo)}
         </div>
-        <table class="minimal-table"><thead><tr><th style="text-align:left;">Nombre</th><th style="text-align:right;">Valor actual</th><th class="col-secundaria" style="text-align:right;">Coste</th><th style="text-align:right;">Revalorización</th><th></th></tr></thead>
+        <table class="minimal-table m-lista"><thead><tr><th style="text-align:left;">Nombre</th><th style="text-align:right;">Valor actual</th><th class="col-secundaria" style="text-align:right;">Coste</th><th style="text-align:right;">Revalorización</th><th></th></tr></thead>
         <tbody>${rows || `<tr><td style="color:var(--t2);padding:1rem;">${esc(vacio)}</td></tr>`}</tbody></table>
       </div></div>`;
   }
@@ -1310,14 +1361,15 @@
               border:1px solid ${abierta ? "var(--azul)" : "var(--b2)"};border-radius:6px;color:${abierta ? "var(--azul)" : "var(--t1b)"};
               font-size:0.7rem;flex-shrink:0;">${abierta ? "▾" : "▸"}</span>
             <span>${esc(p.nombre)}</span></button>
+          ${p.prestado || p.devuelto ? `<div class="solo-movil m-sub">prestado ${esc(fmtEur(p.prestado || 0))} · devuelto ${esc(fmtEur(p.devuelto || 0))}</div>` : ""}
           ${p.huerfano ? `<div style="color:var(--t2);font-size:0.72rem;padding-left:0.9rem;">
              te devolvió ${esc(fmtEur(p.devuelto))} de un adelanto que no está registrado como préstamo</div>` : ""}
           ${p.perdido > 0.005 ? `<div style="color:var(--t2);font-size:0.72rem;padding-left:0.9rem;">
              ${esc(fmtEur(p.perdido))} dados por incobrables</div>` : ""}</td>
-        <td style="text-align:right;color:var(--t1b);white-space:nowrap;">${p.prestado ? esc(fmtEur(p.prestado)) : "—"}</td>
-        <td style="text-align:right;color:var(--t1b);white-space:nowrap;">${p.devuelto ? esc(fmtEur(p.devuelto)) : "—"}</td>
+        <td class="m-oculta" style="text-align:right;color:var(--t1b);white-space:nowrap;">${p.prestado ? esc(fmtEur(p.prestado)) : "—"}</td>
+        <td class="m-oculta" style="text-align:right;color:var(--t1b);white-space:nowrap;">${p.devuelto ? esc(fmtEur(p.devuelto)) : "—"}</td>
         <td style="text-align:right;white-space:nowrap;">${saldoTxt}</td>
-        <td style="text-align:right;width:1%;white-space:nowrap;">${p.saldo > 0.005
+        <td class="td-acc" style="text-align:right;width:1%;white-space:nowrap;">${p.saldo > 0.005
           ? `<button class="fila-acc" onclick="v2PrestamoIncobrable('${jsN}',${p.saldo})"
                title="No te lo va a devolver: deja de contar como tuyo"
                style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:0.85rem;padding:0.2rem 0.4rem;">⊘</button>`
@@ -1335,7 +1387,7 @@
         <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Préstamos entre personas</div>
         <div style="font-size:0.8rem;color:var(--t1b);">Te deben <b style="color:${r.teDeben ? GREEN : "var(--t2)"};">${esc(fmtEur(r.teDeben))}</b></div>
       </div>
-      <table class="minimal-table">
+      <table class="minimal-table m-lista">
         <thead><tr><th style="text-align:left;">Persona</th><th style="text-align:right;">Prestado</th>
           <th style="text-align:right;">Devuelto</th><th style="text-align:right;">Pendiente</th><th></th></tr></thead>
         <tbody>${r.personas.map(fila).join("")}</tbody></table>
@@ -1387,7 +1439,7 @@
       <div style="font-size:0.78rem;color:var(--t2);margin-bottom:0.75rem;">
         No son deuda y su valor sigue contando en Activos. Pero cada año salen de tu caja sin devolver nada,
         y eso es lo que se mira en esta página.</div>
-      <table class="minimal-table"><thead><tr><th style="text-align:left;">Inmueble</th><th style="text-align:right;">Coste al año</th><th></th></tr></thead>
+      <table class="minimal-table m-lista"><thead><tr><th style="text-align:left;">Inmueble</th><th style="text-align:right;">Coste al año</th><th></th></tr></thead>
       <tbody>${filas}</tbody></table></div></div>`;
   }
 
@@ -1397,8 +1449,8 @@
       const jsId = String(x.id).replace(/'/g, "\\'");
       return `<tr class="table-row">
         <td style="text-align:left;"><div style="color:var(--t0);font-weight:600;">${esc(x.persona)}</div>
-          ${x.concepto ? `<div style="color:var(--t2);font-size:0.78rem;">${esc(x.concepto)}</div>` : ""}</td>
-        <td style="text-align:left;color:var(--t1b);white-space:nowrap;">${esc(x.fecha)}</td>
+          ${x.concepto ? `<div class="m-sub" style="color:var(--t2);font-size:0.78rem;">${esc(x.concepto)}</div>` : ""}<div class="solo-movil m-sub">desde el ${esc(x.fecha)}</div></td>
+        <td class="m-oculta" style="text-align:left;color:var(--t1b);white-space:nowrap;">${esc(x.fecha)}</td>
         <td style="text-align:right;color:${GREEN};font-weight:700;white-space:nowrap;">${esc(fmtEur(x.importe))}</td>
         <td style="text-align:right;width:1%;white-space:nowrap;">
           <button class="solo-editor" onclick="v2Cobrar('${jsId}')" title="Ya te lo ha pagado: crea el ingreso y cierra la línea"
@@ -1436,7 +1488,7 @@
         </div>
       </div>
       ${c.n
-        ? `<table class="minimal-table">
+        ? `<table class="minimal-table m-lista">
              <thead><tr><th style="text-align:left;">Quién</th><th style="text-align:left;">Desde</th>
                <th style="text-align:right;">Importe</th><th></th><th></th></tr></thead>
              <tbody>${filas}</tbody></table>
@@ -2034,7 +2086,7 @@
             border:1px solid ${abierta ? "var(--azul)" : "var(--b2)"};border-radius:6px;color:${abierta ? "var(--azul)" : "var(--t1b)"};
             font-size:0.7rem;flex-shrink:0;">${abierta ? "▾" : "▸"}</span>
           <span>${esc(d.nombre)}</span>
-          <span style="color:var(--t3);font-size:0.72rem;font-weight:500;white-space:nowrap;">
+          <span class="m-oculta" style="color:var(--t3);font-size:0.72rem;font-weight:500;white-space:nowrap;">
             ${abierta ? "" : "ver movimientos"}</span></button>
         ${d.entidad ? `<div style="color:var(--t2);font-size:0.78rem;padding-left:0.9rem;">${esc(d.entidad)}</div>` : ""}
         ${d.tipo === "Tarjeta de crédito" && d.importe > 0.005
@@ -2044,7 +2096,7 @@
                color:${AZUL};font-size:0.72rem;font-weight:600;font-family:inherit;padding:0.2rem 0.55rem;
                cursor:pointer;white-space:nowrap;">Liquidar ${esc(fmtEur(d.importe))}</button>`
           : ""}</td>
-      <td style="text-align:left;color:var(--t1b);">${esc(d.tipo)}</td>
+      <td class="m-oculta" style="text-align:left;color:var(--t1b);">${esc(d.tipo)}</td>
       <td style="text-align:right;font-weight:600;white-space:nowrap;color:${d.importe > 0.005 ? "var(--t0)" : d.importe < -0.005 ? GREEN : "var(--t2)"};">
         ${d.importe > 0.005 ? fmtEur(d.importe) : d.importe < -0.005 ? "a tu favor " + fmtEur(-d.importe) : "saldada"}</td>
       <td class="col-secundaria" style="text-align:right;color:var(--t1b);">${d.importe < -0.005 ? "—" : (todo.total ? d.importe / todo.total * 100 : 0).toFixed(2) + "%"}</td>
@@ -2057,7 +2109,7 @@
           <div style="font-size:0.82rem;color:var(--t2);text-transform:uppercase;letter-spacing:0.05em;font-weight:600;">Deudas</div>
           ${addBtn("＋ Deuda", tipo ? `v2AddPas('${esc(jsNombre(tipo))}')` : "v2AddPas()")}
         </div>
-        <table class="minimal-table">
+        <table class="minimal-table m-lista">
         <thead><tr><th style="text-align:left;">Deuda</th><th style="text-align:left;">Tipo</th><th style="text-align:right;">Importe</th><th class="col-secundaria" style="text-align:right;">Peso</th><th></th></tr></thead>
         <tbody>${rows}</tbody></table></div></div>` +
       (tipo ? "" : panelSinAlquilar(m) + panelPrestamos() + panelCobros());
@@ -2089,7 +2141,7 @@
           <div style="width:42%;max-width:16px;height:${hi}%;background:${GREEN};border-radius:2px 2px 0 0;opacity:${activo ? 1 : 0.55};"></div>
           <div style="width:42%;max-width:16px;height:${hg}%;background:${RED};border-radius:2px 2px 0 0;opacity:${activo ? 1 : 0.55};"></div>
         </div>
-        <div style="font-size:0.62rem;color:${activo ? "var(--t0)" : "var(--t3)"};font-weight:${activo ? 700 : 500};white-space:nowrap;">${esc(m.label.split(" ")[0])}${varios ? `<span style="display:block;font-size:0.56rem;color:${activo ? "var(--t1b)" : "var(--t4)"};">${m.ym.slice(2, 4)}</span>` : ""}</div>
+        <div class="flujo-mes" style="font-size:0.62rem;color:${activo ? "var(--t0)" : "var(--t3)"};font-weight:${activo ? 700 : 500};white-space:nowrap;">${esc(m.label.split(" ")[0])}${varios ? `<span style="display:block;font-size:0.56rem;color:${activo ? "var(--t1b)" : "var(--t4)"};">${m.ym.slice(2, 4)}</span>` : ""}</div>
       </button>`;
     }).join("");
     return `<div class="v2-wrap"><div class="dashboard-panel">
@@ -2365,9 +2417,9 @@
         <td style="text-align:left;padding-left:${(0.75 + prof * 1.35).toFixed(2)}rem;">
           <div style="display:flex;align-items:center;gap:0.5rem;">${flecha}
             <span style="color:${tono(prof)};font-weight:${prof ? 500 : 600};font-size:${prof ? "0.85rem" : "0.92rem"};">${esc(n.nombre)}</span></div></td>
-        <td style="text-align:right;color:${tono(prof)};white-space:nowrap;">${n.total ? fmtEur(n.total) : "—"}</td>
-        <td style="text-align:right;color:${ing ? GREEN : "var(--t3)"};white-space:nowrap;">${ing ? fmtEur(ing) : "—"}</td>
-        <td style="text-align:right;color:${ing ? rc(neto) : tono(prof)};font-weight:600;white-space:nowrap;">${ing ? (neto >= 0 ? "+" : "−") + fmtEur(Math.abs(neto)) : "−" + fmtEur(n.total)}</td>
+        <td class="m-mini" style="text-align:right;color:${tono(prof)};white-space:nowrap;"><span class="solo-movil">gasto </span>${n.total ? fmtEur(n.total) : "—"}</td>
+        <td class="m-mini${ing ? "" : " m-oculta"}" style="text-align:right;color:${ing ? GREEN : "var(--t3)"};white-space:nowrap;"><span class="solo-movil">ingreso </span>${ing ? fmtEur(ing) : "—"}</td>
+        <td class="m-principal" style="text-align:right;color:${ing ? rc(neto) : tono(prof)};font-weight:600;white-space:nowrap;">${ing ? (neto >= 0 ? "+" : "−") + fmtEur(Math.abs(neto)) : "−" + fmtEur(n.total)}</td>
         <td class="col-secundaria" style="text-align:right;color:var(--t2);white-space:nowrap;">${(base ? n.total / base * 100 : 0).toFixed(1)}%</td></tr>`;
       if (!hijas.length || !abierta) return html;
       if (n.propio > 0.005) {
@@ -2392,7 +2444,7 @@
       </div>
       <div style="font-size:0.75rem;color:var(--t3);margin-bottom:0.5rem;">
         Para qué o para quién, no en qué. ${totalIngreso ? `Neto del periodo: <span style="color:${rc(netoTotal)};font-weight:600;">${netoTotal >= 0 ? "+" : "−"}${fmtEur(Math.abs(netoTotal))}</span>.` : ""}</div>
-      <table class="minimal-table">
+      <table class="minimal-table m-lista">
         <thead><tr>
           <th style="text-align:left;">Centro</th><th style="text-align:right;">Gasto</th>
           <th style="text-align:right;">Ingreso</th><th style="text-align:right;">Neto</th>
@@ -2536,6 +2588,7 @@
     // se está en cualquiera de sus páginas.
     document.querySelectorAll(".bottom-nav-item").forEach((b) =>
       b.classList.toggle("active", (b.dataset.paginas || b.dataset.page || "").split(" ").indexOf(id) >= 0));
+    pintarSubnav(id);
     // Si la página está dentro de un grupo, el grupo lo dice —y se abre, para
     // que se vea dónde estás— aunque estuviera plegado.
     document.querySelectorAll("#sidebar .sn-grupo").forEach((g) => {
@@ -2578,25 +2631,46 @@
   // entradas con icono y nombre, que son las de arriba del menú lateral en su
   // orden y con lo que cada uno haya ocultado; el resto está en el cajón. Un
   // grupo lleva a su primera página visible.
+  // En la barra, un nombre que se parte en dos líneas descuadra su icono del
+  // de los demás: ahí va su forma corta (en el menú lateral, el nombre entero).
+  const NOMBRE_CORTO = { "Ingresos y gastos": "Balance" };
+  // Los grupos de la barra (Activos lleva Caja, Cartera, Inmuebles y Otros):
+  // en el móvil, al entrar en uno, sus páginas salen en una tira de arriba.
+  let GRUPOS_MOVIL = [];
+  function pintarSubnav(id) {
+    const nav = document.getElementById("v2-subnav");
+    if (!nav) return;
+    const grupo = GRUPOS_MOVIL.find((g) => g.some((p) => p.id === id));
+    nav.hidden = !grupo;
+    nav.innerHTML = grupo ? grupo.map((p) => `<button type="button" onclick="v2Tab('${p.id}')"${p.id === id ? ' aria-current="page"' : ""}>${esc(p.nombre)}</button>`).join("") : "";
+    const activo = nav.querySelector('[aria-current="page"]');
+    if (activo && nav.scrollWidth > nav.clientWidth) {
+      nav.scrollLeft += activo.getBoundingClientRect().left - nav.getBoundingClientRect().left - (nav.clientWidth - activo.offsetWidth) / 2;
+    }
+  }
   function pintarBarraMovil(barra) {
     const visible = (p) => p.fijo || CFG.paginaVisible(p.id);
     const actual = (document.querySelector("#app .page.active") || {}).id || "";
     const entradas = [];
+    GRUPOS_MOVIL = [];
     CFG.menuArbol().forEach((n) => {
       const paginas = CFG.paginasDe(n).filter(visible);
       if (!paginas.length || entradas.length >= 5) return;
+      if (n.tipo !== "pagina" && paginas.length > 1) GRUPOS_MOVIL.push(paginas.map((p) => ({ id: p.id, nombre: p.nombre || p.id })));
       const destino = n.tipo === "pagina" ? n.id : paginas[0].id;
       const boton = n.tipo === "pagina"
         ? document.querySelector(`#sidebar .sn-item[data-page="${n.id}"]`)
         : document.querySelector(`#sidebar .sn-grupo[data-grupo="${n.id}"] > .sn-grupo-btn`);
       const icono = boton && boton.querySelector("svg") ? boton.querySelector("svg").outerHTML : "";
-      const nombre = n.tipo === "pagina" ? n.pagina.nombre : n.grupo.nombre;
+      const completo = n.tipo === "pagina" ? n.pagina.nombre : n.grupo.nombre;
+      const nombre = NOMBRE_CORTO[completo] || completo;
       const ids = paginas.map((p) => p.id);
       const activa = ids.some((id) => actual === "v2-page-" + id);
       entradas.push(`<button class="bottom-nav-item${activa ? " active" : ""}" data-page="${destino}" data-paginas="${ids.join(" ")}"
         onclick="v2Tab('${destino}')">${icono}<span>${esc(nombre)}</span></button>`);
     });
     barra.innerHTML = entradas.join("");
+    pintarSubnav(actual.replace("v2-page-", ""));
   }
 
   function aplicarMenu() {
@@ -2817,8 +2891,19 @@
 
   // Filtros: se repinta solo la lista para no perder el foco del buscador
   const valDe = (id) => { const e = document.getElementById(id); return e ? e.value : ""; };
-  const pintarMov = () => { const c = document.getElementById("v2-mov-lista"); if (c) c.innerHTML = movimientosTabla(); };
-  const pintarOps = () => { const c = document.getElementById("v2-ops-lista"); if (c) c.innerHTML = operacionesTabla(OPS_BANCO); };
+  // El botón «Filtros» del móvil cuenta los filtros puestos: se rehace con la lista.
+  const recontar = (clave, valores) => {
+    const b = document.querySelector(`.boton-filtros[aria-controls="v2-${clave}-extra"]`);
+    if (b) b.outerHTML = botonFiltros(clave, valores);
+  };
+  const pintarMov = () => {
+    const c = document.getElementById("v2-mov-lista"); if (c) c.innerHTML = movimientosTabla();
+    recontar("mov", [MOV.tipo, MOV.cuenta, MOV.cat, MOV.desde, MOV.hasta]);
+  };
+  const pintarOps = () => {
+    const c = document.getElementById("v2-ops-lista"); if (c) c.innerHTML = operacionesTabla(OPS_BANCO);
+    recontar("ops", [OPS.tipo, OPS.desde, OPS.hasta]);
+  };
   window.v2MovFiltro = () => {
     MOV.q = valDe("v2-mov-q"); MOV.tipo = valDe("v2-mov-tipo"); MOV.cuenta = valDe("v2-mov-cuenta");
     MOV.cat = valDe("v2-mov-cat"); MOV.desde = valDe("v2-mov-desde"); MOV.hasta = valDe("v2-mov-hasta");
@@ -2990,6 +3075,12 @@
   window.v2AjSec = (sec) => {
     document.querySelectorAll(".aj-sec").forEach((e) => e.classList.toggle("active", e.id === "aj-sec-" + sec));
     document.querySelectorAll(".aj-tab").forEach((b) => b.classList.toggle("active", b.dataset.sec === sec));
+    // En el móvil las secciones son una tira que se desliza: la elegida, a la vista.
+    const tab = document.querySelector(`.aj-tab[data-sec="${sec}"]`);
+    const tira = tab && tab.parentElement;
+    if (tira && tira.scrollWidth > tira.clientWidth) {
+      tira.scrollLeft += tab.getBoundingClientRect().left - tira.getBoundingClientRect().left - (tira.clientWidth - tab.offsetWidth) / 2;
+    }
     // El token vive cifrado y solo boot.js lo tiene en la mano: se le pide que
     // lo ponga en su campo cuando esta sección se abre, venga uno por donde venga.
     const B = window.SolventoBoot;

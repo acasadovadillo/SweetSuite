@@ -1,0 +1,226 @@
+/* ── Solvento en el móvil ────────────────────────────────────────────────────
+   Hasta 640 px. Va la última: casi todo lo que pinta render.js lleva estilos en
+   línea, pensados para el ordenador, y de ahí los !important.
+
+   La idea no es encoger lo del ordenador, sino contarlo de otra manera: una
+   tabla de cuatro columnas en 340 px parte los nombres letra a letra, así que
+   en el móvil cada fila es una línea de lista —nombre a la izquierda, cifra a
+   la derecha— y lo secundario baja debajo o se retira. Las clases que marcan
+   qué es qué las pone render.js:
+
+     .m-lista      la tabla que en el móvil se vuelve lista
+     .m-oculta     la celda (o el trozo) que en el móvil sobra
+     .m-principal  la cifra que va arriba a la derecha aunque no sea la primera
+     .m-mini       una cifra de apoyo, pequeña, bajo la principal
+     .m-sub        la línea gris bajo el nombre
+     .solo-movil   lo que solo existe aquí (en el ordenador, oculto)
+     .td-acc       editar y borrar: solo en modo edición
+     .hub-*        las tarjetas de resumen, que aquí son filas */
+
+.solo-movil { display: none; }
+.m-dia { display: none; }
+.subnav-movil { display: none; }
+/* En el ordenador los filtros van todos en su fila, como siempre: la caja que
+   los agrupa para el móvil no existe a efectos de maquetación. */
+.filtros-extra { display: contents; }
+
+@media (max-width: 640px) {
+  .solo-movil { display: revert; }
+  .m-oculta { display: none !important; }
+
+  /* ── Ritmo: menos aire alrededor, más sitio para las cifras ── */
+  .header-block { margin: 1.25rem auto 1rem !important; }
+  .section-title { font-size: 22px; margin-bottom: 4px; }
+  .section-subtitle { font-size: 28px; letter-spacing: -0.02em; }
+  .pagina-sub { margin-bottom: 1.1rem; }
+  .v2-wrap { margin-top: 0.75rem; }
+  .dashboard-panel, .chart-block { padding: 16px; }
+  .table-container { padding: 14px 16px !important; margin-top: 0.75rem; }
+
+  /* Las notas grises de 0,68 a 0,75 rem se quedaban en 10–12 px: ilegibles
+     en un teléfono. Nada baja de 12 px. */
+  .dashboard-panel [style*="font-size:0.6"],
+  .dashboard-panel [style*="font-size:0.7"],
+  .table-container [style*="font-size:0.6"],
+  .table-container [style*="font-size:0.7"] { font-size: 12px !important; }
+
+  /* ── Tarjetas de resumen: una fila con el nombre y el importe ── */
+  .v2-hub-grid { gap: 8px !important; grid-template-columns: 1fr !important; }
+  .hub-card {
+    display: grid !important; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline;
+    column-gap: 12px; row-gap: 3px; padding: 13px 16px !important; height: auto !important;
+  }
+  .hub-card .hub-tit { grid-column: 1; grid-row: 1; margin: 0 !important; min-width: 0; }
+  .hub-card .hub-tit, .hub-card .hub-tit span { font-size: 11.5px !important; }
+  .hub-card .hub-val {
+    grid-column: 2; grid-row: 1; text-align: right; white-space: nowrap;
+    font-size: 19px !important; font-weight: 700 !important;
+  }
+  .hub-card .hub-sub {
+    grid-column: 1; grid-row: 2; margin: 0 !important; font-size: 13px !important; font-weight: 500 !important;
+    min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .hub-card .hub-pct {
+    grid-column: 2; grid-row: 2; margin: 0 !important; text-align: right; white-space: nowrap;
+    font-size: 13px !important;
+  }
+  .hub-card .hub-suf { display: none; }
+  /* La tarjeta del efectivo de un bróker no tiene porcentaje: su etiqueta
+     ocupa la fila entera. */
+  .hub-card .hub-sub:last-child { grid-column: 1 / -1; }
+
+  /* ── La cifra grande con su desglose: el desglose, en filas ── */
+  .hero-card { padding: 18px 16px !important; gap: 14px !important; margin-bottom: 0 !important; }
+  .hero-value { font-size: 30px !important; }
+  .hero-breakdown {
+    display: flex !important; flex-direction: column !important; gap: 0 !important; width: 100%;
+    border-top: 1px solid var(--b1);
+  }
+  .hero-item {
+    flex-direction: row !important; align-items: baseline; justify-content: space-between; gap: 12px !important;
+    width: 100% !important; min-width: 0 !important; padding: 11px 0 !important;
+    background: none !important; border: 0 !important; border-bottom: 1px solid var(--b1) !important; border-radius: 0 !important;
+  }
+  .hero-item:last-child { border-bottom: 0 !important; padding-bottom: 0 !important; }
+  .hero-item-label { font-size: 13px !important; text-transform: none !important; letter-spacing: 0 !important; font-weight: 500 !important; color: var(--t2) !important; }
+  .hero-item-value { font-size: 16px !important; text-align: right; }
+  .hero-item-value span { display: inline !important; margin-left: 6px; font-size: 12px !important; }
+
+  /* ── Tablas que se vuelven lista ── */
+  .m-lista, .m-lista tbody { display: block; width: 100%; margin-top: 0.25rem !important; }
+  .m-lista thead { display: none; }
+  .m-lista tr { display: block; }
+  .m-lista td { display: block; padding: 0 !important; border: 0 !important; }
+  .m-lista tr.table-row {
+    display: grid; grid-template-columns: minmax(0, 1fr) auto auto; align-items: center;
+    column-gap: 12px; row-gap: 2px; padding: 12px 0; border-bottom: 1px solid var(--b1);
+  }
+  .m-lista tr.table-row:last-child { border-bottom: 0; }
+  .m-lista tr.table-row:hover { background: none; }
+  /* La celda del título es la primera o, si la primera se oculta (la fecha de
+     un movimiento), la que lleva .m-cab. */
+  .m-lista tr.table-row > td { grid-column: 2; text-align: right !important; white-space: nowrap; }
+  .m-lista tr.table-row > td:first-child, .m-lista tr.table-row > td.m-cab {
+    grid-column: 1; grid-row: 1 / span 4; min-width: 0; text-align: left !important; white-space: normal;
+  }
+  .m-lista tr.table-row > td.m-principal { order: -1; }
+  .m-lista tr.table-row > td:empty { display: none; }
+  .m-lista tr.table-row > td.td-acc { grid-column: 3; grid-row: 1 / span 4; }
+  body:not(.modo-edicion) .m-lista td.td-acc { display: none; }
+  .m-lista .col-secundaria { display: none !important; }
+
+  /* Lo que hay dentro de cada fila */
+  .m-lista td:first-child, .m-lista td:first-child button, .m-lista td.m-cab { font-size: 15px !important; }
+  .m-lista .m-titulo { min-width: 0; flex: 1; }
+  /* El nombre, en dos líneas como mucho: «iShares Developed World Index
+     Fund» cortado en «iShares Devel…» no dice cuál de tus fondos es. */
+  .m-lista .m-nombre {
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden;
+    white-space: normal; line-height: 1.25;
+    font-size: 15px !important; font-weight: 500 !important; color: var(--t0) !important;
+  }
+  .m-lista .m-titulo > div:not(.m-nombre), .m-lista .m-sub, .m-lista td:first-child > div:not(:first-child),
+  .m-lista td.m-cab > div:not(:first-child) {
+    font-size: 13px !important; color: var(--t2) !important; padding-left: 0 !important;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  /* El logo de un activo (el que va junto a su nombre), igual en todas las listas */
+  .m-lista img:has(+ .m-titulo) { width: 36px !important; height: 36px !important; border-radius: 8px !important; }
+  .m-lista .m-sub { display: block; white-space: nowrap; margin-top: 1px; }
+  .m-lista tr.table-row > td { font-size: 15px !important; }
+  .m-lista tr.table-row > td.m-mini, .m-lista .m-rent > div { font-size: 13px !important; font-weight: 500 !important; }
+  .m-lista .m-rent .col-secundaria { display: none; }
+  .m-lista .fila-acc { padding: 8px !important; font-size: 16px !important; }
+  /* Lo que en una tabla bajaba a una fila propia (el contexto de un
+     inmueble) aquí cabe bajo el nombre. */
+  .m-lista .solo-ancho { display: block !important; }
+  .m-lista .fila-detalle { display: none !important; }
+  .m-lista tr:not(.table-row) > td { padding: 0 !important; }
+  .m-lista tr.table-row[style*="background"] { background: none !important; }
+
+  /* Los movimientos, agrupados por día como en la app del banco */
+  .m-movs tr.m-dia { display: block; }
+  .m-movs tr.m-dia td {
+    padding: 18px 0 6px !important; font-size: 12px !important; font-weight: 700; color: var(--t2);
+    text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 1px solid var(--b1) !important;
+  }
+  .m-movs tr.m-dia:first-child td { padding-top: 6px !important; }
+  .m-movs tr.table-row { padding: 11px 0; }
+  .m-movs td.m-cab > span:not(.m-nombre) { display: inline-block; margin-top: 3px; }
+
+  /* ── Filtros: el buscador y un botón que despliega el resto ── */
+  .filtros { gap: 8px !important; }
+  .filtros > input[type="search"] { min-width: 0 !important; height: 40px; }
+  .boton-filtros {
+    display: inline-flex !important; align-items: center; gap: 6px; height: 40px; padding: 0 12px;
+    background: var(--f1); border: 1px solid var(--b2); border-radius: 8px; color: var(--t1);
+    font-family: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+  }
+  .boton-filtros[aria-expanded="true"] { border-color: var(--acento-borde); background: var(--acento-fondo); }
+  .boton-filtros-n {
+    min-width: 18px; height: 18px; padding: 0 5px; border-radius: 9px; background: var(--acento); color: var(--f0);
+    font-size: 11px; font-weight: 700; display: inline-flex; align-items: center; justify-content: center;
+  }
+  .filtros-extra { display: none; }
+  .filtros-extra.abiertos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; width: 100%; }
+  .filtros-extra.abiertos > * { width: 100%; height: 40px; }
+  .filtros-extra.abiertos > select { grid-column: 1 / -1; }
+  .filtros-extra:not(.abiertos) ~ .filtros-limpiar { display: none; }
+
+  /* ── Leyendas de los repartos: una lista con su porcentaje ── */
+  .leg-fila { gap: 0 !important; margin-top: 12px !important; }
+  .leg-fila > .leg-it, .leg-col > .leg-it {
+    width: 100% !important; max-width: none !important; justify-content: flex-start !important;
+    font-size: 14px !important; padding: 7px 0; margin: 0 !important; border-bottom: 1px solid var(--b1);
+  }
+  .leg-fila > .leg-it:last-child, .leg-col > .leg-it:last-child { border-bottom: 0; }
+  .leg-pct { margin-left: auto; color: var(--t0); font-weight: 600; font-variant-numeric: tabular-nums; }
+  .leg-col { width: 100%; }
+
+  /* ── Gráficas ── */
+  .ch-hint { display: none; }
+  /* Sin margen a la derecha para las cifras del eje: van dentro, encima de
+     su línea, como en las apps de bolsa. */
+  .ch-ylab { left: auto !important; right: 0; transform: translateY(-115%) !important; }
+  .ch-periods button, .cm-modo button { min-height: 32px; }
+
+  /* La tira de barras de entra y sale: rótulos legibles */
+  .flujo-col { min-width: 40px !important; }
+  .flujo-col .flujo-neto { font-size: 11px !important; }
+  .flujo-mes { font-size: 12px !important; }
+  .flujo-mes span { font-size: 11px !important; }
+
+  /* ── Ajustes: la tira de secciones, sin barra de desplazamiento ── */
+  .aj-nav { scrollbar-width: none; margin: 0 -16px; padding: 0 16px 4px !important; }
+  .aj-nav::-webkit-scrollbar { display: none; }
+  .aj-tab { flex: none; height: 34px; font-size: 14px !important; padding: 0 12px !important; }
+  .aj-body { padding: 16px !important; }
+
+  /* ── Las páginas de un grupo, a un toque (Caja · Cartera · Inmuebles…) ── */
+  .subnav-movil {
+    position: sticky; top: calc(64px + env(safe-area-inset-top)); z-index: 900;
+    display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none;
+    margin: -8px -16px 0; padding: 10px 16px;
+    background: color-mix(in srgb, var(--f0) 92%, transparent);
+    backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);
+  }
+  .subnav-movil::-webkit-scrollbar { display: none; }
+  .subnav-movil[hidden] { display: none; }
+  .subnav-movil button {
+    flex: none; height: 32px; padding: 0 14px; border-radius: 999px; cursor: pointer;
+    background: var(--f2); border: 1px solid var(--b1); color: var(--t1b);
+    font-family: inherit; font-size: 13.5px; font-weight: 500;
+  }
+  .subnav-movil button[aria-current="page"] { background: var(--acento-fondo); border-color: var(--acento-borde); color: var(--t0); }
+  .subnav-movil button:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; }
+}
+
+/* El modo edición se enciende desde el cajón; en el móvil, sin él, no habría
+   forma de ver que está encendido. */
+@media (max-width: 640px) {
+  body.modo-edicion .navbar::after {
+    content: "Modo edición"; position: absolute; left: 50%; transform: translateX(-50%); top: 22px;
+    font-size: 12px; font-weight: 600; color: var(--acento);
+    background: var(--acento-fondo); border: 1px solid var(--acento-borde); border-radius: 999px; padding: 2px 10px;
+  }
+}
