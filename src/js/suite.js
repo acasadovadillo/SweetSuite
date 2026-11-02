@@ -25,7 +25,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.11.0";
+  const VERSION = "1.12.0";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -551,11 +551,11 @@
   }
 
   // ── Las apps ──
-  function mostrarApp(id) {
+  // El marco de una app: se crea la primera vez y se queda mientras dura la sesión
+  function cargarMarco(id) {
     const app = appDe(id);
-    if (!app || S.cuenta.apps.indexOf(id) < 0 || !puedeUsar(id)) { location.hash = "#inicio"; return; }
-    if (restringida(id) && !(S.llaves[id] && S.llaves[id].actual)) { esperandoLlave(app); return; }
-    if (S.abierta && S.abierta !== id) guardarAlDejar(S.abierta);    // de una app a otra
+    if (!app || !S.cuenta || S.cuenta.apps.indexOf(id) < 0 || !puedeUsar(id)) return null;
+    if (restringida(id) && !(S.llaves[id] && S.llaves[id].actual)) return null;
     let f = document.getElementById("marco-" + id);
     if (!f) {
       f = document.createElement("iframe");
@@ -564,6 +564,17 @@
       f.src = app.ruta + "index.html";
       vigilarMarco(f);
       $("#marcos").appendChild(f);
+    }
+    return f;
+  }
+  function mostrarApp(id) {
+    const app = appDe(id);
+    if (!app || S.cuenta.apps.indexOf(id) < 0 || !puedeUsar(id)) { location.hash = "#inicio"; return; }
+    if (restringida(id) && !(S.llaves[id] && S.llaves[id].actual)) { esperandoLlave(app); return; }
+    if (S.abierta && S.abierta !== id) guardarAlDejar(S.abierta);    // de una app a otra
+    let f = document.getElementById("marco-" + id);
+    if (!f) {
+      f = cargarMarco(id);
     } else if (S.apis[id] && S.apis[id].alVolver) {
       S.apis[id].alVolver();             // lo que otros guardaron mientras tanto
     }
@@ -1434,6 +1445,9 @@
       (S.buzon[para] = S.buzon[para] || []).push(Object.assign({}, carta, { de }));
       if (opciones && opciones.abrir) location.hash = "#app/" + para;
       else if (S.apis[para] && S.apis[para].correo) setTimeout(() => S.apis[para].correo(), 0);
+      // «fondo»: si la de destino no está abierta, se abre por detrás para que
+      // lo recoja (los cobros de Agora, que Solvento apunta sin que se vea)
+      else if (opciones && opciones.fondo) cargarMarco(para);
       return true;
     },
     recoger(app) {
