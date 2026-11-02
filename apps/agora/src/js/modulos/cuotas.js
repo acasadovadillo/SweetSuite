@@ -51,6 +51,7 @@
 
   /** Diálogo de cobro (una o varias cuotas). Devuelve el pago o null. */
   async function pedirPago(cuotas, socio, config) {
+    if (!WA.Cobros.puedeCobrar(config)) return null;
     var forma = (socio && socio.formaPago) || "Transferencia";
     var cuentas = (config.cuentas || []).map(function (c) { return [c.id, c.nombre]; });
     var total = D.sumar(cuotas.map(function (q) { return q.importe; }));
@@ -94,6 +95,8 @@
       botones: botones,
     });
     var v = r.valor;
+    // Descobrar también toca Solvento (su ingreso se quita)
+    if ((v === "deshacer" || v === "devolver") && !WA.Cobros.puedeCobrar(await datos.leer("config"))) return false;
     if (v === "deshacer") await datos.guardar("cuotas", C.deshacerPago(q));
     else if (v === "devolver") await datos.guardar("cuotas", C.devolver(q, F.hoy(), "Devolución bancaria"));
     else if (v === "anular") {

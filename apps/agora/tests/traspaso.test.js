@@ -99,3 +99,15 @@ test("facturas, subvenciones y lo de la asociación pasan con sus nombres y su c
   assert.ok(!p.categoriasIngreso.some((x) => /ajuste/i.test(x)) && p.categoriasIngreso.includes("Cuotas de socios"));
   assert.ok(new Set(p.movimientos.map((m) => m.id)).size === p.movimientos.length, "ningún id repetido");
 });
+
+test("los cobros de cuotas para Solvento: los mismos ids que en el paquete, y la huella cambia con ellos", () => {
+  const l = Tr.cobros(c);
+  assert.deepEqual(l.map((m) => [m.id, m.importe, m.cuenta_destino]), [["agora-cuota:q2", "15.00", "Caja (efectivo)"]]);
+  assert.ok(p.movimientos.some((m) => m.id === "agora-cuota:q2"));
+  const h = Tr.huella(l);
+  assert.equal(Tr.huella(Tr.cobros(c)), h, "la misma lista, la misma huella");
+  const cobrada = Object.assign({}, c, { cuotas: c.cuotas.map((q) => q.id === "q3" ? Object.assign({}, q, { estado: "pagada", pago: { fecha: "2026-06-01", forma: "Bizum", cuentaId: "banco" } }) : q) });
+  const l2 = Tr.cobros(cobrada);
+  assert.deepEqual(l2.map((m) => m.id), ["agora-cuota:q2", "agora-cuota:q3"]);
+  assert.notEqual(Tr.huella(l2), h);
+});

@@ -61,6 +61,14 @@ En **Ajustes › Seguridad › Llevar el dinero a Solvento** (solo quien tambié
 
 Solvento enseña lo que va a traer antes de guardarlo. No repite nada si se lleva dos veces y avisa a Agora, que lo apunta (`config.dineroEnSolvento`). Aquí no se borra nada: lo de dinero sale de Agora en la fase 5.
 
+Desde entonces (fase 4, `src/js/datos/cobros.js`), cada cuota o inscripción cobrada es un ingreso en Solvento:
+- tras cada cambio, Agora manda la lista entera de esos ingresos;
+- Solvento la deja igual: descobrar una cuota quita su ingreso;
+- si Solvento no está abierto, SweetSuite lo abre por detrás;
+- si no se puede en ese momento, queda pendiente.
+
+Cobrar o descobrar necesita tener Solvento, es decir, ser Tesorería.
+
 ## Traer los datos de antes
 
 En **Ajustes › Seguridad › Traer una copia de antes** (solo Presidencia), el archivo `.json` que descargabas en «ABIES · Gestión». Se abre con lo que pedía entonces (nombre, cargo y las dos contraseñas, o la contraseña de una copia antigua) y se junta con lo que ya haya: no se borra nada, y en la asociación y la configuración manda la copia. Basta con hacerlo una vez: llega al resto de la junta por GitHub.

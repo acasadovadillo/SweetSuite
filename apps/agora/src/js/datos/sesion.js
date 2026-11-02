@@ -47,6 +47,8 @@
       return (c.suite ? WA.Cripto.cifrar(estado.doc, c.llaveDatos) : Cu().sellar(c)).then(WA.Boveda.escribir);
     }).then(function () {
       if (c.suite && soloLocal !== true && WA.Nube) WA.Nube.cambio();
+      // Si cambió un cobro, su ingreso en Solvento (TESORERIA.md, fase 4)
+      if (c.suite && soloLocal !== true && WA.Cobros) WA.Cobros.cambio();
     }).catch(function (e) {
       console.error(e);
       WA.UI && WA.UI.aviso("No se ha podido guardar en el navegador. Descarga una copia de seguridad ahora.", "error");

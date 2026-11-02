@@ -578,6 +578,39 @@ async function main() {
     const n = S.SolventoDB.state.doc.movimientos.filter((m) => m.origen === "agora").length;
     return ok && !!apuntado && n === doc.movimientos.filter((m) => m.origen === "agora").length;`));
 
+  await prueba("cobrar una cuota en Agora apunta su ingreso en Solvento, y deshacer el pago lo quita", () => E.js(`
+    location.hash = "#app/agora";
+    const A = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
+    const S = marco("solvento");
+    const datos = A.WA.Sesion.datos;
+    const q = await datos.guardar("cuotas", { socioId: "", socioNumero: 9, socioNombre: "Lola Prueba", concepto: "Cuota 2026", periodo: "anual-2026",
+      importe: 2500, estado: "pendiente", pago: null, historial: [] });
+    await datos.guardar("cuotas", A.WA.Cuotas.registrarPago(q, { fecha: "2026-10-30", forma: "Bizum", cuentaId: "banco", referencia: "" }));
+    const id = "agora-cuota:" + q.id;
+    const m = await hasta(() => S.SolventoDB.state.doc.movimientos.find((x) => x.id === id), 30000);
+    const huella = await hasta(async () => ((await datos.leer("config")).cobrosEnSolvento || {}).huella, 20000);
+    const bien = m.tipo === "Ingreso" && m.importe === "25.00" && m.tipo_ingreso === "Cuotas de socios" && m.fecha === "30/10/2026";
+    // Deshacer el pago: el ingreso sale de Solvento
+    await datos.guardar("cuotas", A.WA.Cuotas.deshacerPago(await datos.obtener("cuotas", q.id)));
+    await hasta(() => !S.SolventoDB.state.doc.movimientos.some((x) => x.id === id), 30000);
+    const otra = await hasta(async () => { const h = ((await datos.leer("config")).cobrosEnSolvento || {}).huella; return h && h !== huella && h; }, 20000);
+    return bien && !!otra;`));
+
+  await prueba("…también con Solvento cerrado: SweetSuite lo abre por detrás para apuntarlo", async () => {
+    await E.abrir(URL_SUITE);
+    return E.js(`${entrarAbies("alberto", "prueba-1234")}
+      location.hash = "#app/agora";
+      const A = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
+      const sinSolvento = !marco("solvento");
+      const datos = A.WA.Sesion.datos;
+      const q = await datos.guardar("cuotas", { socioId: "", socioNumero: 10, socioNombre: "Paco Prueba", concepto: "Cuota 2026", periodo: "anual-2026",
+        importe: 1800, estado: "pendiente", pago: null, historial: [] });
+      await datos.guardar("cuotas", A.WA.Cuotas.registrarPago(q, { fecha: "2026-10-31", forma: "Efectivo", cuentaId: "caja", referencia: "" }));
+      const S = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.SolventoDB.state.doc &&
+        w.SolventoDB.state.doc.movimientos.some((x) => x.id === "agora-cuota:" + q.id) && w; }, 40000);
+      return sinSolvento && location.hash === "#app/agora" && !$("#marco-solvento").classList.contains("activo");`);
+  });
+
   await prueba("…y quien no es Admin no ve la Administración", async () => {
     await AdM.abrir(URL_SUITE);
     return AdM.js(`

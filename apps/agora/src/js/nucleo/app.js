@@ -341,14 +341,18 @@
       correo: async function () {
         var cartas = SS.recoger ? SS.recoger("agora") : [];
         for (var i = 0; i < cartas.length; i++) {
+          if (cartas[i].tipo === "cobros-recibidos") { try { await WA.Cobros.recibidos(cartas[i].huella); } catch (e) { /* se volverá a mandar */ } continue; }
           if (cartas[i].tipo !== "dinero-traido") continue;
           try {
             var datos = WA.Sesion.datos, cfg = await datos.leer("config");
             await datos.escribir("config", Object.assign({}, cfg, { dineroEnSolvento: { fecha: cartas[i].fecha, resumen: cartas[i].resumen, por: WA.Sesion.firma } }));
+            WA.Cobros.cambio();     // desde ahora, los cobros de cuotas van a Solvento
           } catch (e) { /* sin permiso para la configuración: lo dice Solvento igualmente */ }
         }
       },
     });
+    // Lo que quedara por pasar a Solvento de otra vez (o de otro dispositivo)
+    WA.Cobros.cambio();
   }
 
   /** Las iniciales del avatar: «María López» → «ML». */

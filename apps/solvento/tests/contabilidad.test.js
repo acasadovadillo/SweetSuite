@@ -148,3 +148,20 @@ test("lo que viene de Agora se junta una vez: traerlo dos veces no repite nada",
   assert.equal(doc.movimientos.length, 4);
   assert.throws(() => C.traerDeAgora(doc, { tipo: "otra cosa" }), /no es el dinero de Agora/);
 });
+
+test("los cobros de cuotas de Agora: Solvento deja la lista igual, y respeta lo que se cambió aquí", () => {
+  const cobro = (id, imp, fecha) => ({ id, fecha, tipo: "Ingreso", importe: imp, cuenta_destino: "Bankinter", tipo_ingreso: "Cuotas de socios",
+    tipo_gasto: "", cuenta_origen: "", centro: "", detalle: "Cuota 2026 · " + id, cuotas: [id.split(":")[1]], origen: "agora" });
+  const doc = { movimientos: [mov({ id: "propio", tipo: "Gasto", importe: "5" }), cobro("agora-cuota:q1", "30.00", "01/02/2026"), cobro("agora-cuota:q2", "15.00", "05/03/2026")] };
+  doc.movimientos[1].tipo_ingreso = "Cuotas de socios > Ordinarias";        // recategorizada aquí
+  // q1 cambia de fecha, q2 se descobra y q3 se cobra
+  const r = C.ponerCobrosDeAgora(doc, [cobro("agora-cuota:q1", "30.00", "02/02/2026"), cobro("agora-cuota:q3", "30.00", "01/06/2026")]);
+  assert.deepEqual(r, { altas: 1, cambios: 1, bajas: 1 });
+  assert.deepEqual(doc.movimientos.map((m) => m.id).sort(), ["agora-cuota:q1", "agora-cuota:q3", "propio"]);
+  const q1 = doc.movimientos.find((m) => m.id === "agora-cuota:q1");
+  assert.deepEqual([q1.fecha, q1.tipo_ingreso], ["02/02/2026", "Cuotas de socios > Ordinarias"]);
+  // La misma lista otra vez: nada
+  assert.deepEqual(C.ponerCobrosDeAgora(doc, [cobro("agora-cuota:q1", "30.00", "02/02/2026"), cobro("agora-cuota:q3", "30.00", "01/06/2026")]), { altas: 0, cambios: 0, bajas: 0 });
+  // Lo que no es un cobro de Agora no se toca nunca
+  assert.ok(C.ponerCobrosDeAgora(doc, []) && doc.movimientos.map((m) => m.id).join() === "propio");
+});

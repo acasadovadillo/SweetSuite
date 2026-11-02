@@ -1207,8 +1207,14 @@
   // Lo que otra app ha dejado para Solvento en SweetSuite (el dinero de Agora)
   function mirarCorreo() {
     if (!SS || !SS.recoger || !DB.state.doc || esperandoDatos) return;
-    SS.recoger("solvento").forEach((carta) => {
+    SS.recoger("solvento").forEach(async (carta) => {
       if (carta.tipo === "dinero-agora" && window.SolventoAsociacion) window.SolventoAsociacion.traerDeAgora(carta);
+      // Los cobros de cuotas de Agora (fase 4): se apuntan sin preguntar y se le contesta
+      if (carta.tipo === "cobros-agora" && window.WA && window.WA.Contabilidad && !esInvitado()) {
+        const r = window.WA.Contabilidad.ponerCobrosDeAgora(DB.state.doc, carta.movimientos);
+        if (r.altas || r.cambios || r.bajas) await saveDoc();
+        SS.enviar("solvento", "agora", { tipo: "cobros-recibidos", huella: carta.huella });
+      }
     });
   }
 

@@ -181,5 +181,24 @@
     };
   }
 
-  return { paquete: paquete, centroDe: centroDe };
+  /**
+   * FASE 4: los cobros de cuotas e inscripciones, tal y como tienen que estar
+   * en Solvento. Son los que en Agora no tienen movimiento propio (como en el
+   * paquete, con los mismos ids: «agora-cuota:…» y «agora-inscripcion:…»).
+   * Agora no manda cambios sueltos sino esta lista entera: Solvento la deja
+   * igual (añade, cambia y quita), así que da igual cuántas veces llegue.
+   */
+  function cobros(c) {
+    var p = paquete({ config: c.config, movimientos: c.movimientos, cuotas: c.cuotas, actividades: c.actividades, proyectos: c.proyectos }, "");
+    return p.movimientos.filter(function (m) { return /^agora-(cuota|inscripcion):/.test(m.id); })
+      .sort(function (a, b) { return a.id < b.id ? -1 : a.id > b.id ? 1 : 0; });
+  }
+  /** Una huella corta de la lista, para saber si Solvento ya la tiene. */
+  function huella(lista) {
+    var t = JSON.stringify(lista || []), h = 5381;
+    for (var i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0;
+    return t.length + "-" + h.toString(36);
+  }
+
+  return { paquete: paquete, centroDe: centroDe, cobros: cobros, huella: huella };
 });

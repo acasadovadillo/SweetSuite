@@ -431,6 +431,7 @@
   }
 
   async function pedirPago(ins, socio, config) {
+    if (!WA.Cobros.puedeCobrar(config)) return null;
     var forma = (socio && socio.formaPago) || "Bizum";
     var r = await UI.dialogo({
       titulo: "Cobrar inscripción",

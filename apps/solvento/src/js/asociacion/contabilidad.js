@@ -370,12 +370,40 @@
     return r;
   }
 
+  /**
+   * FASE 4: los cobros de cuotas e inscripciones de Agora. Llega la lista
+   * ENTERA de cómo tienen que estar (ver Traspaso.cobros en Agora) y se deja
+   * igual: los que faltan se añaden, los que cambiaron se ponen al día y los
+   * que ya no están (una cuota descobrada) se quitan. La categoría y el centro
+   * que se les haya cambiado aquí se respetan. Devuelve { altas, cambios, bajas }.
+   */
+  var DE_COBRO = /^agora-(cuota|inscripcion):/;
+  function ponerCobrosDeAgora(doc, lista) {
+    var movs = doc.movimientos = Array.isArray(doc.movimientos) ? doc.movimientos : [];
+    var quiero = {};
+    (lista || []).forEach(function (m) { if (DE_COBRO.test(m.id)) quiero[m.id] = m; });
+    var r = { altas: 0, cambios: 0, bajas: 0 };
+    for (var i = movs.length - 1; i >= 0; i--) {
+      var m = movs[i];
+      if (!DE_COBRO.test(String(m.id))) continue;
+      var q = quiero[m.id];
+      if (!q) { movs.splice(i, 1); r.bajas++; continue; }
+      delete quiero[m.id];
+      var antes = JSON.stringify([m.fecha, m.importe, m.cuenta_destino, m.detalle, m.cuotas]);
+      m.fecha = q.fecha; m.importe = q.importe; m.cuenta_destino = q.cuenta_destino; m.detalle = q.detalle;
+      if (q.cuotas) m.cuotas = q.cuotas.slice();
+      if (JSON.stringify([m.fecha, m.importe, m.cuenta_destino, m.detalle, m.cuotas]) !== antes) r.cambios++;
+    }
+    Object.keys(quiero).forEach(function (id) { movs.push(JSON.parse(JSON.stringify(quiero[id]))); r.altas++; });
+    return r;
+  }
+
   return {
     aISO: aISO, aES: aES, euros: euros, cent: cent, plano: plano,
     facturaNueva: facturaNueva, emitir: emitir, pagosDe: pagosDe, estadoPago: estadoPago, movimientoDePago: movimientoDePago,
     resumenFacturas: resumenFacturas,
     ESTADOS_SUBVENCION: ESTADOS_SUBVENCION, subvencionNueva: subvencionNueva, ejecucion: ejecucion, proximoPlazo: proximoPlazo,
     PARTIDAS: PARTIDAS, partidaDe: partidaDe, cuentasEjercicio: cuentasEjercicio, aniosConMovimientos: aniosConMovimientos,
-    importarExtracto: importarExtracto, traerDeAgora: traerDeAgora,
+    importarExtracto: importarExtracto, traerDeAgora: traerDeAgora, ponerCobrosDeAgora: ponerCobrosDeAgora,
   };
 });
