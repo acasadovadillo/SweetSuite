@@ -243,6 +243,7 @@
     var por = { ingreso: {}, gasto: {} };
     (movimientos || []).forEach(function (m) {
       if (m.tipo !== "Ingreso" && m.tipo !== "Gasto") return;
+      if (/ajuste/i.test(categoriaDe(m))) return;        // un cuadre de saldo no es ni ingreso ni gasto
       var f = aISO(m.fecha);
       if (f < desde || f > hasta) return;
       var tipo = m.tipo === "Ingreso" ? "ingreso" : "gasto";
@@ -310,12 +311,71 @@
     return { nuevos: nuevos, duplicados: r.duplicados, problemas: r.problemas };
   }
 
+  // ── Lo que viene de Agora (TESORERIA.md, fase 3) ─────────────────────────
+  /**
+   * Junta en el documento de Solvento el paquete del dinero de Agora
+   * (logica/traspaso.js de Agora). Lo que ya está (por id) no se repite: se
+   * puede traer dos veces. Cambia «doc» y devuelve lo que ha añadido:
+   * { movimientos, facturas, subvenciones, cuentas, yaEstaban }.
+   */
+  function traerDeAgora(doc, paquete) {
+    if (!paquete || paquete.tipo !== "dinero-agora") throw new Error("Esto no es el dinero de Agora");
+    var cfg = doc.config = doc.config || {};
+    var r = { movimientos: 0, facturas: 0, subvenciones: 0, cuentas: 0, yaEstaban: 0 };
+    var juntar = function (coleccion, lista, campo) {
+      var l = doc[coleccion] = Array.isArray(doc[coleccion]) ? doc[coleccion] : [];
+      var ya = {};
+      l.forEach(function (x) { ya[x.id] = true; });
+      (lista || []).forEach(function (x) {
+        if (ya[x.id]) { r.yaEstaban++; return; }
+        l.push(JSON.parse(JSON.stringify(x)));
+        ya[x.id] = true;
+        r[campo]++;
+      });
+    };
+    juntar("movimientos", paquete.movimientos, "movimientos");
+    juntar("facturas", paquete.facturas, "facturas");
+    juntar("subvenciones", paquete.subvenciones, "subvenciones");
+    // Las cuentas, si Solvento ya lleva su lista (si no, las deduce de los movimientos)
+    if (Array.isArray(cfg.cuentas)) {
+      (paquete.cuentas || []).forEach(function (k) {
+        if (!k.cuenta || cfg.cuentas.some(function (x) { return x.cuenta === k.cuenta; })) return;
+        var c = { cuenta: k.cuenta, accent: "#6b7280" };
+        if (k.emoji) c.emoji = k.emoji;
+        cfg.cuentas.push(c);
+        r.cuentas++;
+      });
+    }
+    // Las categorías y los centros, para que salgan al apuntar (con sus ramas)
+    var conRamas = function (clave, rutas) {
+      if (!Array.isArray(cfg[clave])) return;      // sin lista, Solvento la siembra de lo que hay
+      (rutas || []).forEach(function (ruta) {
+        var partes = String(ruta || "").split(">").map(function (x) { return x.trim(); }).filter(Boolean);
+        for (var i = 1; i <= partes.length; i++) {
+          var acumulada = partes.slice(0, i).join(" > ");
+          if (cfg[clave].indexOf(acumulada) < 0) cfg[clave].push(acumulada);
+        }
+      });
+    };
+    conRamas("categorias_ingreso", paquete.categoriasIngreso);
+    conRamas("categorias", paquete.categoriasGasto);
+    if (!Array.isArray(cfg.centros)) cfg.centros = [];
+    conRamas("centros", paquete.centros);
+    // Los datos del emisor, la facturación y el IVA: los de Agora, si aquí aún no hay
+    var e = paquete.entidad || {};
+    if (!cfg.entidad || !cfg.entidad.nombre) cfg.entidad = { nombre: e.nombre || "", nif: e.nif || "", direccion: e.direccion || "", email: e.email || "", iban: e.iban || "", pie: "" };
+    if (!cfg.facturacion && paquete.facturacion) cfg.facturacion = JSON.parse(JSON.stringify(paquete.facturacion));
+    if (!cfg.iva && paquete.iva) cfg.iva = JSON.parse(JSON.stringify(paquete.iva));
+    cfg.desdeAgora = { fecha: paquete.fecha, resumen: paquete.resumen };
+    return r;
+  }
+
   return {
     aISO: aISO, aES: aES, euros: euros, cent: cent, plano: plano,
     facturaNueva: facturaNueva, emitir: emitir, pagosDe: pagosDe, estadoPago: estadoPago, movimientoDePago: movimientoDePago,
     resumenFacturas: resumenFacturas,
     ESTADOS_SUBVENCION: ESTADOS_SUBVENCION, subvencionNueva: subvencionNueva, ejecucion: ejecucion, proximoPlazo: proximoPlazo,
     PARTIDAS: PARTIDAS, partidaDe: partidaDe, cuentasEjercicio: cuentasEjercicio, aniosConMovimientos: aniosConMovimientos,
-    importarExtracto: importarExtracto,
+    importarExtracto: importarExtracto, traerDeAgora: traerDeAgora,
   };
 });

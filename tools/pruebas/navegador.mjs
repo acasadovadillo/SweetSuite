@@ -544,6 +544,40 @@ async function main() {
       return s.secreto !== ${JSON.stringify(vieja)} && s.anteriores.includes(${JSON.stringify(vieja)}) && !actual.para.hafsa;`);
   });
 
+  // ── El dinero de Agora, a Solvento (TESORERIA.md, fase 3) ──
+  await prueba("Tesorería lleva el dinero de Agora a Solvento, que lo trae sin repetir y se lo dice a Agora", () => E.js(`
+    location.hash = "#app/agora";
+    const A = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
+    const datos = A.WA.Sesion.datos;
+    const p = await datos.guardar("proyectos", { nombre: "Huerto escolar", tipo: "subvencion", importeConcedido: 300000, presupuesto: {}, fechaInicio: "2026-01-01" });
+    await datos.guardar("movimientos", { fecha: "2026-03-01", cuentaId: "banco", tipo: "gasto", importe: 4500, categoriaId: "material", proyectoId: p.id, concepto: "Semillas" });
+    await datos.guardar("facturas", { tipo: "recibida", estado: "emitida", numero: "V-7", fecha: "2026-02-27", tercero: { nombre: "Vivero" },
+      lineas: [{ concepto: "Semillas", cantidad: 1, precio: 4500, tratamiento: "exento", tipoIva: 0 }], categoriaId: "material" });
+    await A.WA.Sesion.esperar();
+    A.location.hash = "#/ajustes/seguridad";
+    const b = await hasta(() => A.document.getElementById("a-solvento"));
+    b.click();
+    await hasta(() => A.document.querySelector('[data-valor="aceptar"]')); A.document.querySelector('[data-valor="aceptar"]').click();
+    // Se abre Solvento con lo que va a traer
+    await hasta(() => location.hash === "#app/solvento");
+    const S = await hasta(() => { const w = marco("solvento"); const m = w && w.document.getElementById("form-modal");
+      return m && m.style.display === "flex" && m.textContent.includes("Traer de Agora") && w; }, 40000);
+    S.document.getElementById("ff-form").requestSubmit();
+    const doc = await hasta(() => { const d = S.SolventoDB.state.doc; return (d.subvenciones || []).some((s) => s.nombre === "Huerto escolar") && d; }, 20000);
+    const mov = doc.movimientos.find((m) => m.origen === "agora" && m.detalle === "Semillas");
+    const ok = mov && mov.centro === "Subvenciones > Huerto escolar" && doc.facturas.some((f) => f.numero === "V-7") && doc.config.entidad.nombre;
+    // Agora se apunta que ya se llevó
+    const apuntado = await hasta(async () => ((await datos.leer("config")).dineroEnSolvento || {}).fecha, 20000);
+    // Otra vez: nada nuevo
+    location.hash = "#app/agora"; await espera(300);
+    A.location.hash = "#/ajustes/seguridad";
+    (await hasta(() => A.document.getElementById("a-solvento"))).click();
+    await hasta(() => A.document.querySelector('[data-valor="aceptar"]')); A.document.querySelector('[data-valor="aceptar"]').click();
+    await hasta(() => { const m = S.document.getElementById("form-modal"); return location.hash === "#app/solvento" && m.style.display === "flex" && m.textContent.includes("Nada nuevo"); }, 20000);
+    S.document.getElementById("ff-form").requestSubmit();
+    const n = S.SolventoDB.state.doc.movimientos.filter((m) => m.origen === "agora").length;
+    return ok && !!apuntado && n === doc.movimientos.filter((m) => m.origen === "agora").length;`));
+
   await prueba("…y quien no es Admin no ve la Administración", async () => {
     await AdM.abrir(URL_SUITE);
     return AdM.js(`

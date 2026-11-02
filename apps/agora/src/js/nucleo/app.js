@@ -337,6 +337,17 @@
         await WA.Sesion.entrarEnSuite(await SS.sesion("agora"));
         await repintar();
       },
+      // Lo que otra app deja para Agora: que Solvento ya tiene el dinero
+      correo: async function () {
+        var cartas = SS.recoger ? SS.recoger("agora") : [];
+        for (var i = 0; i < cartas.length; i++) {
+          if (cartas[i].tipo !== "dinero-traido") continue;
+          try {
+            var datos = WA.Sesion.datos, cfg = await datos.leer("config");
+            await datos.escribir("config", Object.assign({}, cfg, { dineroEnSolvento: { fecha: cartas[i].fecha, resumen: cartas[i].resumen, por: WA.Sesion.firma } }));
+          } catch (e) { /* sin permiso para la configuración: lo dice Solvento igualmente */ }
+        }
+      },
     });
   }
 

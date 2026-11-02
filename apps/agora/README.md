@@ -48,6 +48,19 @@ El estado se ve en el pie de la barra lateral («Sincronizado», «Sin subir»�
 
 Formato SEPA, plazos de cobro, requisitos de las rectificativas y forma de convocar: verificar con el banco, con asesoría y con los estatutos.
 
+## El dinero, a Solvento
+
+Desde la fase 3 de `TESORERIA.md` (en la carpeta de apps), el dinero de la asociación se lleva en **Solvento**, que solo ve Tesorería.
+
+En **Ajustes › Seguridad › Llevar el dinero a Solvento** (solo quien también tiene Solvento), Agora prepara un paquete (`src/js/logica/traspaso.js`) y SweetSuite se lo lleva a Solvento en memoria. El paquete lleva:
+- las cuentas, con su saldo inicial como ajuste;
+- los movimientos, y las cuotas e inscripciones cobradas sin movimiento propio;
+- los anticipos y reembolsos, como préstamos entre personas;
+- las facturas;
+- los proyectos y subvenciones, cada uno con su centro de coste.
+
+Solvento enseña lo que va a traer antes de guardarlo. No repite nada si se lleva dos veces y avisa a Agora, que lo apunta (`config.dineroEnSolvento`). Aquí no se borra nada: lo de dinero sale de Agora en la fase 5.
+
 ## Traer los datos de antes
 
 En **Ajustes › Seguridad › Traer una copia de antes** (solo Presidencia), el archivo `.json` que descargabas en «ABIES · Gestión». Se abre con lo que pedía entonces (nombre, cargo y las dos contraseñas, o la contraseña de una copia antigua) y se junta con lo que ya haya: no se borra nada, y en la asociación y la configuración manda la copia. Basta con hacerlo una vez: llega al resto de la junta por GitHub.

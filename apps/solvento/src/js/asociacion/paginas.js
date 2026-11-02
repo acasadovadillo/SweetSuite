@@ -691,6 +691,39 @@
     calcular();
   }
 
+  // ── Lo que viene de Agora (TESORERIA.md, fase 3) ──────────────────────────
+  // Agora prepara el paquete con su dinero y SweetSuite lo deja aquí, en
+  // memoria. Se enseña qué hay, se trae al aceptar y se le dice a Agora.
+  function traerDeAgora(paquete) {
+    if (!esOrg() || !paquete) return;
+    const ui = FU(), d = docu();
+    let previa;
+    try { previa = C.traerDeAgora(JSON.parse(JSON.stringify(d)), paquete); }
+    catch (e) { aviso(e.message, "var(--rojo)"); return; }
+    const linea = (n, uno, varios) => n ? `<div class="fv-pago"><span>${n === 1 ? uno : varios}</span><b>${n}</b></div>` : "";
+    const nada = !previa.movimientos && !previa.facturas && !previa.subvenciones;
+    const body = `<div class="cont-nota" style="margin-top:0;">El dinero que llevaba Agora, preparado el ${esc(fechaCorta(paquete.fecha))}: cuentas, movimientos
+        (con las cuotas cobradas, y los anticipos y reembolsos como préstamos), facturas y subvenciones.</div>
+      <div class="fv-pagos">${titulo("Lo que entra")}
+        ${linea(previa.movimientos, "movimiento", "movimientos")}${linea(previa.facturas, "factura", "facturas")}
+        ${linea(previa.subvenciones, "subvención o proyecto", "subvenciones y proyectos")}${linea(previa.cuentas, "cuenta nueva", "cuentas nuevas")}
+        ${nada ? `<div class="cont-nota">Nada nuevo: ya estaba todo.</div>` : ""}
+        ${previa.yaEstaban ? `<div class="fv-pago"><span>Ya estaban (no se repiten)</span><b>${previa.yaEstaban}</b></div>` : ""}</div>
+      ${nota("Los saldos de inicio de cada cuenta entran como ajuste, que no cuenta como ingreso ni gasto. Nada de lo que ya hay aquí se toca, y traerlo otra vez no repite nada.")}`;
+    ui.shell("Traer de Agora", body, () => {
+      if (nada) return null;
+      VISTA.traido = C.traerDeAgora(d, paquete);
+      return null;
+    }, () => {
+      const r = VISTA.traido;
+      VISTA.traido = null;
+      if (!r) return;
+      aviso("De Agora: " + r.movimientos + " movimientos, " + r.facturas + " facturas y " + r.subvenciones + " subvenciones");
+      const SS = window.SolventoSuite;
+      if (SS && SS.enviar) SS.enviar("solvento", "agora", { tipo: "dinero-traido", fecha: hoyISO(), resumen: r });
+    }, { boton: nada ? "Cerrar" : "Traer a Solvento", ancha: true });
+  }
+
   // ── Pintar ────────────────────────────────────────────────────────────────
   const PAGINAS = { facturas: pageFacturas, iva: pageIva, subvenciones: pageSubvenciones, ejercicio: pageEjercicio };
   function pintarPagina(id) {
@@ -700,5 +733,5 @@
   }
   function pintar() { Object.keys(PAGINAS).forEach(pintarPagina); }
 
-  window.SolventoAsociacion = { pintar, pintarPagina };
+  window.SolventoAsociacion = { pintar, pintarPagina, traerDeAgora };
 })();

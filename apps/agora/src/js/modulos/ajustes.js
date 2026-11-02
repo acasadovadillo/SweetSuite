@@ -128,7 +128,28 @@
           ? "El archivo .json que descargabas en «ABIES · Gestión». Se abre con lo de entonces y se junta con lo que ya haya aquí; la asociación y la configuración, las de la copia."
           : "Lo hace Presidencia, una sola vez.",
         WA.Sesion.esAdmin ? '<button type="button" class="btn btn-secundario" id="a-traer">Elegir copia…</button>' : "") +
-      "</div>";
+      "</div>" + aSolvento();
+  }
+
+  // El dinero, a Solvento (TESORERIA.md): solo quien también tiene Solvento,
+  // que es Tesorería. Aquí no se borra nada; Solvento enseña lo que va a traer.
+  function aSolvento() {
+    var S = WA.Suite;
+    if (!S || !S.puedeUsar || !S.puedeUsar("solvento")) return "";
+    return "<h3>El dinero, a Solvento</h3>" + '<div class="filas">' +
+      fila("Llevar el dinero a Solvento", "La tesorería, las facturas, los anticipos y los proyectos y subvenciones pasan a Solvento, que es donde se llevan ahora. " +
+        "Aquí no se borra nada, y llevarlo otra vez no repite nada allí.<span class=\"detalle\" id=\"a-solvento-estado\"></span>",
+        '<button type="button" class="btn btn-secundario" id="a-solvento">Llevar a Solvento…</button>') + "</div>";
+  }
+  async function llevarASolvento() {
+    var c = await WA.TesUI.cargar(WA.Sesion.datos);
+    var p = WA.Traspaso.paquete(c, WA.Fechas.hoy());
+    var r = p.resumen;
+    var ok = await UI.confirmar("<p>Se prepara todo el dinero de Agora: " + r.movimientos + " apuntes (con las cuotas cobradas y los anticipos), " +
+      r.facturas + " facturas y " + r.subvenciones + " proyectos o subvenciones, de " + r.cuentas + " cuentas. Se abre Solvento, que te enseña lo que va a traer antes de guardarlo.</p>" +
+      "<p>Aquí no se borra nada.</p>", { titulo: "Llevar el dinero a Solvento", aceptar: "Llevar a Solvento", html: true });
+    if (!ok) return;
+    if (!WA.Suite.enviar("agora", "solvento", p, { abrir: true })) UI.aviso("Ábrelo desde SweetSuite: Agora suelta no ve Solvento.", "error");
   }
 
   /** Traer la copia de antes: elegir el archivo, pedir lo de entonces y juntarla. */
@@ -255,6 +276,14 @@
     });
     var btr = cont.querySelector("#a-traer");
     if (btr) btr.addEventListener("click", traerCopia);
+    var bsv = cont.querySelector("#a-solvento");
+    if (bsv) {
+      bsv.addEventListener("click", llevarASolvento);
+      datos.leer("config").then(function (cfg) {
+        var d = cfg && cfg.dineroEnSolvento, el = cont.querySelector("#a-solvento-estado");
+        if (d && el) el.textContent = " Ya se llevó el " + WA.Fechas.corta(d.fecha) + (d.por ? " (" + d.por + ")" : "") + ".";
+      });
+    }
     var bc = cont.querySelector("#a-cuenta"), bb = cont.querySelector("#a-bloquear");
     if (bc) bc.addEventListener("click", function () { WA.Suite.cuenta(); });
     if (bb) bb.addEventListener("click", function () { WA.Suite.bloquear(); });

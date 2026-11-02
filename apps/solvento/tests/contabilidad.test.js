@@ -115,3 +115,36 @@ test("un extracto del banco: movimientos de esa cuenta, sin repetir lo que ya es
   assert.deepEqual(r.nuevos.map((m) => [m.fecha, m.tipo, m.importe, m.cuenta_origen, m.cuenta_destino, m.tipo_gasto, m.origen]),
     [["02/04/2026", "Ingreso", "30.00", "", "Banco", "", "extracto"], ["03/04/2026", "Gasto", "3.00", "Banco", "", "Comisiones bancarias", "extracto"]]);
 });
+
+test("lo que viene de Agora se junta una vez: traerlo dos veces no repite nada", () => {
+  // Un paquete como el que prepara Agora (apps/agora/src/js/logica/traspaso.js)
+  const Tr = require("../../agora/src/js/logica/traspaso.js");
+  const p = Tr.paquete({
+    config: { cuentas: [{ id: "b", nombre: "Bankinter", tipo: "banco", saldoInicial: 20000, fechaSaldoInicial: "2025-12-31" }],
+      categorias: [{ id: "seg", nombre: "Seguros", tipo: "gasto" }], iva: { prorrata: 90 } },
+    movimientos: [{ id: "m1", fecha: "2026-02-01", cuentaId: "b", tipo: "gasto", importe: 4000, categoriaId: "seg", facturaId: "f1" }],
+    cuotas: [{ id: "q1", socioNumero: 1, socioNombre: "Ana", concepto: "Cuota", importe: 3000, estado: "pagada",
+      pago: { fecha: "2026-03-01", forma: "Transferencia", cuentaId: "b" } }],
+    facturas: [{ id: "f1", tipo: "recibida", estado: "emitida", numero: "X-1", fecha: "2026-01-30", tercero: { nombre: "Aseguradora" },
+      lineas: [{ concepto: "Póliza", cantidad: 1, precio: 4000, tratamiento: "exento", tipoIva: 0 }], categoriaId: "seg" }],
+    proyectos: [{ id: "p1", nombre: "Huerto", tipo: "subvencion", importeConcedido: 100000, presupuesto: {} }],
+    anticipos: [], asociacion: { nombre: "ABIES", nif: "G1" },
+  }, "2026-11-02");
+  const doc = { movimientos: [mov({ id: "propio", tipo: "Gasto", importe: "5", cuenta_origen: "Bankinter" })],
+    config: { cuentas: [{ cuenta: "Bankinter" }], categorias: ["Material"], categorias_ingreso: [] } };
+  const r = C.traerDeAgora(doc, p);
+  assert.deepEqual(r, { movimientos: 3, facturas: 1, subvenciones: 1, cuentas: 0, yaEstaban: 0 });
+  assert.deepEqual(doc.config.categorias.sort(), ["Material", "Seguros"]);
+  assert.ok(doc.config.categorias_ingreso.includes("Cuotas de socios"));
+  assert.ok(doc.config.centros.includes("Subvenciones > Huerto") && doc.config.centros.includes("Subvenciones"));
+  assert.deepEqual([doc.config.entidad.nombre, doc.config.iva.prorrata], ["ABIES", 90]);
+  // La factura queda pagada por su movimiento, y el saldo inicial no es un ingreso del ejercicio
+  assert.equal(C.estadoPago(doc.facturas[0], doc.movimientos).estado, "pagada");
+  const ej = C.cuentasEjercicio(doc.movimientos, 2025, doc.config);
+  assert.equal(ej.totalIngresos, 0);
+  // Otra vez: nada nuevo
+  const otra = C.traerDeAgora(doc, p);
+  assert.deepEqual(otra, { movimientos: 0, facturas: 0, subvenciones: 0, cuentas: 0, yaEstaban: 5 });
+  assert.equal(doc.movimientos.length, 4);
+  assert.throws(() => C.traerDeAgora(doc, { tipo: "otra cosa" }), /no es el dinero de Agora/);
+});

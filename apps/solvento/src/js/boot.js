@@ -1151,6 +1151,7 @@
     DB.storeBlob(await C.encryptDoc(doc, pw));
     esperandoDatos = false; cuentaEsperando = null;
     await unlock(doc, pw);
+    mirarCorreo();
   }
   function pantallaSuite(texto) {
     panel("checking");
@@ -1200,6 +1201,15 @@
     await unlock(r.doc, pw);
     if (!r.actual) { await guardarLocal(); marcarPendiente(true); reintentarPendiente(); }
     else if (token && hayPendiente()) traerYMezclar({ ya: true, aunqueIgual: true });   // lo de aquí sin subir, con lo publicado
+    mirarCorreo();
+  }
+
+  // Lo que otra app ha dejado para Solvento en SweetSuite (el dinero de Agora)
+  function mirarCorreo() {
+    if (!SS || !SS.recoger || !DB.state.doc || esperandoDatos) return;
+    SS.recoger("solvento").forEach((carta) => {
+      if (carta.tipo === "dinero-agora" && window.SolventoAsociacion) window.SolventoAsociacion.traerDeAgora(carta);
+    });
   }
 
   // Al volver a SweetSuite o bloquear: guardar aquí y subir lo pendiente
@@ -1576,6 +1586,7 @@
       alCambiarClaves: refrescarClaves,
       llaveroCambiado: () => { if (DB.state.token) llaveroCon(DB.state.token).catch(() => {}); },
       alVolver: () => traerYMezclar({ ya: true }),
+      correo: mirarCorreo,
     });
     entrarEnSuite();
   }
