@@ -25,7 +25,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.10.0";
+  const VERSION = "1.11.0";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -44,9 +44,9 @@
   // La sesión, solo en memoria
   // (en una empresa, «contrasena» es la del representante y «empresaPw» la de la empresa)
   const S = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-              representante: null, empresaPw: null, resumenes: {}, admin: null, par: null, llaves: {}, parRecuperacion: null };
+              representante: null, empresaPw: null, resumenes: {}, admin: null, par: null, llaves: {}, parRecuperacion: null, buzon: {} };
   const SIN_SESION = { cuenta: null, contrasena: null, maestra: null, llavero: null, anteriores: [], prefs: {}, apis: {}, estados: {}, abierta: null,
-                       representante: null, empresaPw: null, resumenes: {}, admin: null, par: null, llaves: {}, parRecuperacion: null };
+                       representante: null, empresaPw: null, resumenes: {}, admin: null, par: null, llaves: {}, parRecuperacion: null, buzon: {} };
 
   const limpiar = (u) => String(u || "").trim().toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9-]/g, "");
   const cuentaDe = (u) => CAT.cuentas.find((c) => c.usuario === limpiar(u));
@@ -567,6 +567,7 @@
     } else if (S.apis[id] && S.apis[id].alVolver) {
       S.apis[id].alVolver();             // lo que otros guardaron mientras tanto
     }
+    if (S.buzon[id] && S.apis[id] && S.apis[id].correo) S.apis[id].correo();   // lo que le ha dejado otra app
     $("#marcos").querySelectorAll("iframe").forEach((x) => x.classList.toggle("activo", x === f));
     $("#marcos").classList.remove("oculto");
     $("#suite").inert = true;
@@ -1421,6 +1422,25 @@
       };
     },
     registrar(app, api) { S.apis[app] = api; },
+    // ¿Puede esta sesión usar esa app? (en una empresa, solo si tiene acceso)
+    puedeUsar: (app) => misApps().some((a) => a.id === app),
+    // Una app le deja algo a otra (el dinero de Agora, para Solvento). Va en
+    // memoria, solo entre apps que esta sesión puede usar, y no se guarda en
+    // ningún sitio. Si la de destino ya está abierta, se le avisa; si no, lo
+    // recoge al abrirse. «abrir»: llevar ya a la de destino.
+    enviar(de, para, carta, opciones) {
+      const puede = (id) => misApps().some((a) => a.id === id);
+      if (!S.cuenta || !puede(de) || !puede(para)) return false;
+      (S.buzon[para] = S.buzon[para] || []).push(Object.assign({}, carta, { de }));
+      if (opciones && opciones.abrir) location.hash = "#app/" + para;
+      else if (S.apis[para] && S.apis[para].correo) setTimeout(() => S.apis[para].correo(), 0);
+      return true;
+    },
+    recoger(app) {
+      const l = S.buzon[app] || [];
+      delete S.buzon[app];
+      return l;
+    },
     // Una app acaba de guardar un token: se pregunta cuándo caduca
     tokenGuardado(app) { if (S.cuenta) preguntarCaducidad(app); },
     // Unas líneas de resumen para su tarjeta en el inicio
