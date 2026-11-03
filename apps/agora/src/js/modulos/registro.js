@@ -11,7 +11,7 @@
 
   var DONDE = {
     socios: "Socios", cuotas: "Cuotas", remesas: "Remesas", movimientos: "Movimientos", facturas: "Facturas",
-    anticipos: "Anticipos y reembolsos", proyectos: "Presupuestos y subvenciones", actividades: "Actividades", actas: "Actas",
+    anticipos: "Anticipos y reembolsos", proyectos: "Presupuestos y subvenciones", actividades: "Actividades", actas: "Actas", solicitudes: "Admisiones",
     obligaciones: "Obligaciones", documentos: "Documentos", junta: "Junta directiva", config: "Configuración", asociacion: "Asociación", usuarios: "Usuarios",
   };
   var ACCION = { alta: "Alta", cambio: "Cambio", baja: "Baja", varios: "Varios" };

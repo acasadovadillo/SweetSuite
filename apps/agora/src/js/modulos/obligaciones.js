@@ -22,7 +22,9 @@
   /** Vencimientos de obligaciones y subvenciones entre dos fechas (lo usan también Inicio y Actividades). */
   async function vencimientos(datos, desde, hasta) {
     var r = await Promise.all([datos.listar("obligaciones"), datos.listar("proyectos")]);
-    return O.ocurrencias(r[0], desde, hasta).concat(O.ocurrenciasSubvenciones(r[1], desde, hasta))
+    // Con el dinero en Solvento, los plazos de las subvenciones los avisa Solvento
+    var subvenciones = WA.App.dineroFuera && WA.App.dineroFuera() ? [] : O.ocurrenciasSubvenciones(r[1], desde, hasta);
+    return O.ocurrencias(r[0], desde, hasta).concat(subvenciones)
       .sort(function (a, b) { return a.fecha.localeCompare(b.fecha); });
   }
 

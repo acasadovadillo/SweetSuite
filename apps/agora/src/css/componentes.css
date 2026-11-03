@@ -275,6 +275,7 @@ input:focus, select:focus, textarea:focus, input:focus-visible, select:focus-vis
 }
 .pestanas a:hover { color: var(--titulo); background: var(--borde-suave); }
 .pestanas a[aria-current="page"] { color: var(--titulo); background: var(--borde); border-color: var(--borde-fuerte); }
+.pestanas .contador { display: inline-block; min-width: 18px; margin-left: 4px; padding: 0 5px; border-radius: 9px; background: var(--primario); color: var(--primario-texto); font-size: 11px; font-weight: 700; line-height: 18px; text-align: center; }
 .cifras .cifra { font-size: 1.5rem; margin: 0; }
 .zona-peligro { border-left: 3px solid var(--peligro-fuerte); }
 .dato-edad { align-self: center; margin: 0.9rem 0 0; color: var(--texto-2); font-weight: 600; }
@@ -504,6 +505,24 @@ body.solo-lectura #principal form :is(input, select, textarea) { pointer-events:
 .grupo-permisos .casilla { margin: 0.35rem 0; }
 .fila-apagada { opacity: 0.6; }
 .celda-acciones .btn + .btn { margin-left: 0.35rem; }
+/* Un nombre que es botón, en una tabla: se lee como los enlaces de las otras tablas. */
+.enlace-tabla { padding: 0; font: inherit; font-weight: 600; text-align: left; cursor: pointer; }
+@media (max-width: 1100px) { .solo-muy-ancho { display: none; } }
+/* Admisiones en el teléfono: cada solicitud, una ficha (nombre y estado arriba, la fecha debajo y los botones al pie). */
+@media (max-width: 640px) {
+  .tabla-admisiones thead, .tabla-admisiones .adm-tipo { display: none; }
+  .tabla-admisiones tbody tr { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 14px 4px; border-bottom: 1px solid var(--borde-suave); }
+  .tabla-admisiones tbody tr:last-child { border-bottom: none; }
+  .tabla-admisiones tbody th, .tabla-admisiones tbody td { display: block; padding: 0; border: none; }
+  .tabla-admisiones tbody th { grid-column: 1; grid-row: 1; font-size: 15px; }
+  .tabla-admisiones tbody th .detalle { font-size: 13px; }
+  .tabla-admisiones .adm-fecha, .tabla-admisiones .solo-muy-ancho { grid-column: 1 / -1; }
+  .tabla-admisiones .adm-estado { grid-column: 2; grid-row: 1; text-align: right; }
+  .tabla-admisiones .adm-fecha { grid-row: 2; color: var(--texto-2); font-size: 13px; }
+  .tabla-admisiones .adm-fecha::before { content: "Pedida el "; }
+  .tabla-admisiones .celda-acciones { grid-column: 1 / -1; text-align: left; width: auto; margin-top: 8px; }
+  .tabla-admisiones .estado { margin-right: 0; }
+}
 .celda-botones { white-space: normal; min-width: 11rem; }
 .botones-fila { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: flex-end; }
 .botones-fila .btn + .btn { margin-left: 0; }

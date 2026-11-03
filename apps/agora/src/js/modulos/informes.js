@@ -16,7 +16,10 @@
   var anioVista = null;
   var euros = function (c) { return esc(D.formatear(c)); };
 
+  // Con el dinero en Solvento, las cuentas del ejercicio se hacen allí
+  var fuera = function () { return !!(WA.App.dineroFuera && WA.App.dineroFuera()); };
   function pestanas(actual) {
+    if (fuera()) return "";
     return '<nav class="pestanas no-imprimir" aria-label="Informes"><a href="#/informes"' + (actual === "memoria" ? ' aria-current="page"' : "") + ">Memoria anual</a>" +
       '<a href="#/informes/cuentas"' + (actual === "cuentas" ? ' aria-current="page"' : "") + ">Cuentas</a></nav>";
   }
@@ -123,7 +126,7 @@
         }).join("") + "</tbody></table></div>" : '<p class="detalle">No hay actividades registradas en ' + anio + ".</p>") +
 
       "<h3>4. Proyectos y subvenciones</h3>" +
-      (m.proyectos.length ? '<div class="tabla-envoltorio"><table class="tabla tabla-informe"><thead><tr><th scope="col">Proyecto</th><th scope="col" class="importe">Concedido</th>' +
+      (fuera() ? '<p class="detalle">Se llevan en Solvento (Contabilidad › Subvenciones), con sus cuentas del ejercicio.</p>' : m.proyectos.length ? '<div class="tabla-envoltorio"><table class="tabla tabla-informe"><thead><tr><th scope="col">Proyecto</th><th scope="col" class="importe">Concedido</th>' +
         '<th scope="col" class="importe">Gasto previsto</th><th scope="col" class="importe">Gasto realizado</th></tr></thead><tbody>' + m.proyectos.map(function (p) {
           return "<tr><td>" + esc(p.nombre) + '<br><span class="detalle">' + (p.tipo === "subvencion" ? "Subvención" + (p.financiador ? " de " + esc(p.financiador) : "") + (p.estadoSubvencion ? " · " + esc(estadoSub(p.estadoSubvencion)) : "") : "Proyecto propio") +
             '</span></td><td class="importe">' + (p.concedido ? euros(p.concedido) : "—") + '</td><td class="importe">' + euros(p.gastoPrevisto) + '</td><td class="importe">' + euros(p.gastoRealizado) + "</td></tr>";
@@ -255,7 +258,7 @@
   }
 
   async function pintar(cont, datos, ruta) {
-    if (ruta[0] === "cuentas") return pintarCuentas(cont, datos);
+    if (ruta[0] === "cuentas" && !fuera()) return pintarCuentas(cont, datos);
     return pintarMemoria(cont, datos);
   }
 

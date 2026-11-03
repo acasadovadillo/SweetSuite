@@ -38,6 +38,7 @@
  *            · v8 registro de cambios (quién, cuándo, qué) y firma creadoPor / modificadoPor (fase 7a)
  *            · v9 «borrados» y meta.cambios, para mezclar las versiones de cada miembro de la junta (ver datos/mezcla.js)
  *            · v10 convocatorias de asambleas y reuniones (ver logica/convocatorias.js).
+ *            · v11 solicitudes de admisión de socios (ver logica/admisiones.js).
  */
 (function (raiz, fabrica) {
   var Direccion = typeof require === "function" ? require("../nucleo/direccion.js") : raiz.WA.Direccion;
@@ -52,10 +53,10 @@
   // El identificador del documento no cambia con el nombre (Agora): así se
   // siguen abriendo los datos y las copias de antes.
   var APP = "webkit_asociaciones";
-  var VERSION = 10;
+  var VERSION = 11;
 
   /** Las colecciones (listas de registros) que existen en esta versión. */
-  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos", "registro", "convocatorias"];
+  var COLECCIONES = ["junta", "socios", "cuotas", "remesas", "movimientos", "facturas", "anticipos", "proyectos", "actividades", "actas", "obligaciones", "documentos", "registro", "convocatorias", "solicitudes"];
 
   /** Cargos habituales de una junta directiva. Los estatutos de cada asociación
    *  pueden llamarlos de otra forma: por eso existe «Otro». */
@@ -178,6 +179,13 @@
       });
       ["movimientos", "facturas", "anticipos", "proyectos"].forEach(function (c) { if (!Array.isArray(doc[c])) doc[c] = []; });
       doc.esquema = 4;
+      return doc;
+    },
+
+    // 10 → 11: las admisiones, solicitudes de alta de socios (TESORERIA.md, fase 5).
+    10: function (doc) {
+      if (!Array.isArray(doc.solicitudes)) doc.solicitudes = [];
+      doc.esquema = 11;
       return doc;
     },
 

@@ -4,7 +4,7 @@
  * Arriba, lo que falta por rellenar (solo mientras falte). Después, en bloques:
  *   · Agenda: plazos que vencen, próximas actividades y subvenciones en marcha.
  *   · Dinero: saldo por cuenta, ingresos y gastos del año, presupuesto y su evolución.
- *   · Socios y cuotas: socios activos, altas y bajas, cuotas cobradas y deuda.
+ *   · Socios y cuotas: socios activos, altas y bajas, solicitudes de admisión, cuotas cobradas y deuda.
  *   · Copia de seguridad y junta.
  * Las cifras las calcula logica/informes.js (panel), que tiene tests.
  */
@@ -23,6 +23,7 @@
     var hoy = F.hoy(), anio = +hoy.slice(0, 4);
     var c = await WA.TesUI.cargar(datos);
     var obligaciones = await datos.listar("obligaciones");
+    var solicitudes = (await datos.listar("solicitudes")).filter(function (x) { return x.estado === "pendiente"; });
     var a = c.asociacion, config = c.config;
     var p = WA.Informes.panel(c, hoy);
     var junta = WA.Informes.juntaEn(c.junta, hoy);
@@ -58,7 +59,8 @@
 
     var estados = {};
     WA.Obligaciones.ESTADOS_SUBVENCION.forEach(function (e) { estados[e[0]] = e[1]; });
-    var subvHtml = p.subvencionesEnMarcha.length ? tarjeta("subv", "Subvenciones en marcha", '<ul class="lista-actividades">' + p.subvencionesEnMarcha.slice(0, 5).map(function (s) {
+    var fuera = WA.App.dineroFuera && WA.App.dineroFuera();
+    var subvHtml = !fuera && p.subvencionesEnMarcha.length ? tarjeta("subv", "Subvenciones en marcha", '<ul class="lista-actividades">' + p.subvencionesEnMarcha.slice(0, 5).map(function (s) {
       return '<li><a href="#/proyectos/ficha/' + encodeURIComponent(s.id) + '"><strong>' + esc(s.nombre) + '</strong></a><span class="detalle">' + esc(estados[s.estadoSubvencion] || "") +
         (s.importeConcedido ? " · " + euros(s.importeConcedido) : s.importeSolicitado ? " · pedidos " + euros(s.importeSolicitado) : "") + "</span></li>";
     }).join("") + "</ul>", ["#/proyectos", "Ver presupuestos y subvenciones"]) : "";
@@ -88,6 +90,9 @@
     var sociosHtml = tarjeta("socios", "Socios", '<p><span class="cifra">' + p.socios.activos + "</span> " + (p.socios.activos === 1 ? "activo" : "activos") + "</p>" +
       '<p class="detalle">En ' + anio + ": " + p.socios.altas + (p.socios.altas === 1 ? " alta" : " altas") + " y " + p.socios.bajas + (p.socios.bajas === 1 ? " baja" : " bajas") + "</p>",
       ["#/socios", "Ver socios"]);
+    var admHtml = solicitudes.length ? tarjeta("adm", "Admisiones", '<p><span class="cifra">' + solicitudes.length + "</span> " +
+      (solicitudes.length === 1 ? "solicitud pendiente" : "solicitudes pendientes") + "</p>" +
+      '<p class="detalle">La más antigua, del ' + esc(F.corta(WA.Admisiones.ordenar(solicitudes)[0].fecha)) + ".</p>", ["#/socios/admisiones", "Ver solicitudes"]) : "";
     var q = p.cuotas;
     var cuotasHtml = tarjeta("cuotas", "Cuotas de " + anio, q.emitido
       ? "<p>Cobrado</p>" + WA.Graficas.barra(q.cobrado, q.emitido, { titulo: "Cuotas cobradas", texto: D.formatear(q.cobrado) + " de " + D.formatear(q.emitido) }) +
@@ -108,10 +113,13 @@
       (pendientes.length ? '<section class="tarjeta tarjeta-destacada" aria-labelledby="t-pend"><h2 id="t-pend">Para empezar</h2><ul class="lista-pasos">' +
         pendientes.map(function (x) { return "<li>" + x + "</li>"; }).join("") + "</ul></section>" : "") +
       '<h2 class="titulo-bloque">Agenda</h2><div class="rejilla-tarjetas">' + vencHtml + proximasHtml + subvHtml + "</div>" +
-      '<h2 class="titulo-bloque">Dinero</h2><div class="rejilla-tarjetas">' + saldoHtml + anioHtml + presHtml + graficaSaldo + "</div>" +
-      '<h2 class="titulo-bloque">Socios y cuotas</h2><div class="rejilla-tarjetas">' + sociosHtml + cuotasHtml + deudaHtml + graficaSocios + "</div>" +
+      (fuera ? '<h2 class="titulo-bloque">Dinero</h2><div class="rejilla-tarjetas">' + tarjeta("dinero", "En Solvento",
+          '<p class="detalle">La tesorería, las facturas, el IVA, los presupuestos y las subvenciones se llevan en Solvento (lo ve Tesorería). Las cuotas que se cobran aquí apuntan su ingreso allí.</p>',
+          WA.Suite && WA.Suite.puedeUsar && WA.Suite.puedeUsar("solvento") ? ["#/tesoreria", "Abrir Solvento"] : null) + "</div>"
+        : '<h2 class="titulo-bloque">Dinero</h2><div class="rejilla-tarjetas">' + saldoHtml + anioHtml + presHtml + graficaSaldo + "</div>") +
+      '<h2 class="titulo-bloque">Socios y cuotas</h2><div class="rejilla-tarjetas">' + sociosHtml + admHtml + cuotasHtml + deudaHtml + graficaSocios + "</div>" +
       '<h2 class="titulo-bloque">La asociación</h2><div class="rejilla-tarjetas">' + juntaHtml +
-      tarjeta("informes", "Informes", '<p class="detalle">Memoria anual y cuentas del ejercicio, listas para imprimir.</p>', ["#/informes", "Ver informes"]) + "</div>";
+      tarjeta("informes", "Informes", '<p class="detalle">' + (fuera ? "La memoria anual, lista para imprimir." : "Memoria anual y cuentas del ejercicio, listas para imprimir.") + "</p>", ["#/informes", "Ver informes"]) + "</div>";
   }
 
   WA.App.registrar({

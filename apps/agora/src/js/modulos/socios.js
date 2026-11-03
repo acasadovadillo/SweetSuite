@@ -5,13 +5,14 @@
  *   #/socios/nuevo          ficha vacía para dar de alta
  *   #/socios/ficha/<id>     ficha de un socio (datos, baja, cuotas)
  *   #/socios/libro          libro de registro para imprimir o guardar en PDF
+ *   #/socios/admisiones     solicitudes de alta: se admiten (y son socios) o no
  *
  * La lógica (estado, edad, filtros, validación, importación) está en
  * logica/socios.js, con tests. Aquí solo hay pantalla.
  */
 (function (raiz) {
   "use strict";
-  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, S = WA.Socios, C = WA.Cuotas, D = WA.Dinero;
+  var WA = raiz.WA, UI = WA.UI, esc = UI.esc, F = WA.Fechas, S = WA.Socios, C = WA.Cuotas, D = WA.Dinero, A = WA.Admisiones;
 
   // El filtro se recuerda mientras dura la sesión (al volver de una ficha sigue igual).
   var filtro = { texto: "", estado: "activo", tipoSocioId: "", orden: "numero" };
@@ -19,8 +20,16 @@
   var ESTADO_TEXTO = { activo: "Activo", baja: "Baja", futuro: "Alta futura" };
 
   async function cargar(datos) {
-    var r = await Promise.all([datos.listar("socios"), datos.listar("cuotas"), datos.leer("config"), datos.leer("asociacion")]);
-    return { socios: r[0].map(S.completar), cuotas: r[1], config: r[2], asociacion: r[3] };
+    var r = await Promise.all([datos.listar("socios"), datos.listar("cuotas"), datos.leer("config"), datos.leer("asociacion"), datos.listar("solicitudes")]);
+    return { socios: r[0].map(S.completar), cuotas: r[1], config: r[2], asociacion: r[3], solicitudes: r[4] };
+  }
+
+  function pestanas(actual, c) {
+    var n = c.solicitudes.filter(function (x) { return x.estado === "pendiente"; }).length;
+    var p = [["", "Socios"], ["admisiones", "Admisiones" + (n ? ' <span class="contador">' + n + "</span>" : "")]];
+    return '<nav class="pestanas" aria-label="Apartados de socios">' + p.map(function (x) {
+      return '<a href="#/socios' + (x[0] ? "/" + x[0] : "") + '"' + (actual === x[0] ? ' aria-current="page"' : "") + ">" + x[1] + "</a>";
+    }).join("") + "</nav>";
   }
   var nombreTipo = function (config, id) {
     var t = (config.tiposSocio || []).filter(function (x) { return x.id === id; })[0];
@@ -59,6 +68,7 @@
     cont.innerHTML =
       '<div class="cabecera-pagina"><h1>Socios</h1><a class="btn btn-primario" href="#/socios/nuevo">Nuevo socio</a></div>' +
       '<p class="intro">' + activos + (activos === 1 ? " socio activo" : " socios activos") + " · " + c.socios.length + " en el registro (con las bajas).</p>" +
+      pestanas("", c) +
       '<div class="barra-filtros" role="search">' +
       '<label class="filtro-texto"><span class="sr">Buscar</span><input type="search" id="s-buscar" placeholder="Buscar por nombre, documento, correo, teléfono…" value="' + esc(filtro.texto) + '"></label>' +
       '<label><span class="sr">Estado</span><select id="s-estado">' +
@@ -420,10 +430,177 @@
     cont.querySelector("#l-bajas").addEventListener("change", function (e) { conBajas = e.target.checked; cont.querySelector("#l-tabla").innerHTML = tabla(); });
   }
 
+
+  // ── Admisiones ──────────────────────────────────────────────────────────
+  var CLASE_ESTADO = { pendiente: "estado-aviso", admitida: "estado-ok", rechazada: "estado-neutro" };
+
+  function filaSolicitud(x, c) {
+    var acciones = x.estado === "pendiente"
+      ? '<button type="button" class="btn btn-secundario btn-pequeno" data-accion="admitir" data-id="' + esc(x.id) + '">Admitir</button>' +
+        '<button type="button" class="btn btn-secundario btn-pequeno" data-accion="rechazar" data-id="' + esc(x.id) + '">No admitir</button>'
+      : x.estado === "admitida" && x.socioId
+        ? '<a class="btn btn-secundario btn-pequeno" href="#/socios/ficha/' + encodeURIComponent(x.socioId) + '">Ver socio</a>'
+        : '<button type="button" class="btn btn-secundario btn-pequeno" data-accion="reabrir" data-id="' + esc(x.id) + '">Reabrir</button>' +
+          '<button type="button" class="btn btn-secundario btn-pequeno" data-accion="borrar" data-id="' + esc(x.id) + '">Borrar</button>';
+    var resuelta = x.estado !== "pendiente"
+      ? '<br><span class="detalle">' + (x.estado === "admitida" ? "Admitida" : "No admitida") + " el " + esc(F.corta(x.fechaResolucion)) +
+        (x.acuerdo ? " · " + esc(x.acuerdo) : "") + (x.motivo ? " · " + esc(x.motivo) : "") + "</span>" : "";
+    return "<tr>" +
+      '<td class="adm-fecha">' + esc(F.corta(x.fecha)) + "</td>" +
+      // El nombre abre la solicitud para corregirla mientras está pendiente.
+      '<th scope="row">' + (x.estado === "pendiente"
+        ? '<button type="button" class="btn-enlace enlace-tabla" data-accion="editar" data-id="' + esc(x.id) + '" title="Editar la solicitud">' + esc([x.nombre, x.apellidos].filter(Boolean).join(" ")) + "</button>"
+        : esc([x.nombre, x.apellidos].filter(Boolean).join(" "))) +
+      (x.presentadoPor ? '<br><span class="detalle">Presentado por ' + esc(x.presentadoPor) + "</span>" : "") + resuelta + "</th>" +
+      '<td class="adm-tipo">' + esc(nombreTipo(c.config, x.tipoSocioId)) + "</td>" +
+      '<td class="adm-estado"><span class="estado ' + CLASE_ESTADO[x.estado] + '">' + esc(A.ESTADOS[x.estado]) + "</span></td>" +
+      '<td class="solo-muy-ancho">' + (x.email ? esc(x.email) : "") + (x.telefono ? '<br><span class="detalle">' + esc(x.telefono) + "</span>" : "") + "</td>" +
+      '<td class="celda-acciones">' + acciones + "</td></tr>";
+  }
+
+  async function pintarAdmisiones(cont, datos) {
+    var c = await cargar(datos);
+    var lista = A.ordenar(c.solicitudes);
+    var pendientes = lista.filter(function (x) { return x.estado === "pendiente"; }).length;
+    cont.innerHTML =
+      '<div class="cabecera-pagina"><h1>Socios</h1><button type="button" class="btn btn-primario" id="a-nueva">Nueva solicitud</button></div>' +
+      '<p class="intro">' + (pendientes ? pendientes + (pendientes === 1 ? " solicitud pendiente" : " solicitudes pendientes") + " de decidir." : "Ninguna solicitud pendiente.") +
+      " Al admitir a alguien se le da de alta como socio, con su número y la fecha del acuerdo.</p>" +
+      pestanas("admisiones", c) + '<div id="a-lista">' +
+      (lista.length
+        ? '<div class="tabla-envoltorio"><table class="tabla tabla-admisiones"><caption class="sr">Solicitudes de admisión</caption><thead><tr>' +
+          '<th scope="col">Pedida</th><th scope="col">Nombre</th><th scope="col">Tipo</th><th scope="col">Estado</th><th scope="col" class="solo-muy-ancho">Contacto</th><th scope="col"><span class="sr">Acciones</span></th>' +
+          "</tr></thead><tbody>" + lista.map(function (x) { return filaSolicitud(x, c); }).join("") + "</tbody></table></div>"
+        : '<section class="tarjeta"><p class="vacio">Aún no hay solicitudes. Cuando alguien pida hacerse socio, apúntalo aquí con «Nueva solicitud»; ' +
+          "la junta decide después si se admite.</p></section>") + "</div>" +
+      '<p class="detalle">Quién decide las admisiones y con qué requisitos lo fijan vuestros estatutos. ' +
+      "Las solicitudes no admitidas guardan datos personales: bórralas cuando ya no hagan falta.</p>";
+
+    cont.querySelector("#a-nueva").addEventListener("click", function () { editarSolicitud(datos, c, null); });
+    // En la lista, no en cont: cont es el mismo en todas las pantallas y se acumularían.
+    cont.querySelector("#a-lista").addEventListener("click", function (e) {
+      var b = e.target.closest("button[data-accion]");
+      if (!b) return;
+      var x = c.solicitudes.filter(function (o) { return o.id === b.getAttribute("data-id"); })[0];
+      if (!x) return;
+      var accion = b.getAttribute("data-accion");
+      if (accion === "editar") editarSolicitud(datos, c, x);
+      else if (accion === "admitir") admitirSolicitud(datos, c, x);
+      else if (accion === "rechazar") rechazarSolicitud(datos, x);
+      else if (accion === "reabrir") guardarSolicitud(datos, A.reabrir(x), "Solicitud pendiente otra vez.");
+      else if (accion === "borrar") borrarSolicitud(datos, x);
+    });
+  }
+
+  async function guardarSolicitud(datos, x, texto) {
+    await datos.guardar("solicitudes", x);
+    UI.aviso(texto);
+    WA.App.repintar();
+  }
+
+  async function editarSolicitud(datos, c, x) {
+    var s = x || A.vacia(F.hoy());
+    var tipos = (c.config.tiposSocio || []).filter(function (t) { return t.activo !== false || t.id === s.tipoSocioId; }).map(function (t) { return [t.id, t.nombre]; });
+    var r = await UI.dialogo({
+      titulo: x ? "Editar la solicitud" : "Nueva solicitud de admisión",
+      contenido: '<form class="formulario" novalidate><div class="rejilla-12">' +
+        UI.campo({ nombre: "nombre", etiqueta: "Nombre", valor: s.nombre, requerido: true, clase: "col-5 col-movil-completo", atributos: 'autocomplete="off"' }) +
+        UI.campo({ nombre: "apellidos", etiqueta: "Apellidos", valor: s.apellidos, clase: "col-7 col-movil-completo", atributos: 'autocomplete="off"' }) +
+        UI.campo({ nombre: "tipoDocumento", etiqueta: "Documento", tipo: "select", valor: s.tipoDocumento, opciones: S.TIPOS_DOCUMENTO, clase: "col-4" }) +
+        UI.campo({ nombre: "documento", etiqueta: "Número", valor: s.documento, clase: "col-4", atributos: 'autocapitalize="characters" autocomplete="off"' }) +
+        UI.campo({ nombre: "fechaNacimiento", etiqueta: "Nacimiento", tipo: "date", valor: s.fechaNacimiento, clase: "col-4" }) +
+        UI.campo({ nombre: "email", etiqueta: "Correo", tipo: "email", valor: s.email, clase: "col-7 col-movil-completo", atributos: 'autocomplete="off"' }) +
+        UI.campo({ nombre: "telefono", etiqueta: "Teléfono", tipo: "tel", valor: s.telefono, clase: "col-5" }) +
+        UI.campo({ nombre: "tipoSocioId", etiqueta: "Tipo de socio que pide", tipo: "select", valor: s.tipoSocioId || (tipos[0] || [""])[0], opciones: tipos, clase: "col-7 col-movil-completo" }) +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha de la solicitud", tipo: "date", valor: s.fecha, requerido: true, clase: "col-5" }) +
+        UI.campo({ nombre: "presentadoPor", etiqueta: "Presentado por", valor: s.presentadoPor, clase: "col-12", ayuda: "Si los estatutos piden que le avale otro socio." }) +
+        UI.campo({ nombre: "notas", etiqueta: "Notas", tipo: "textarea", valor: s.notas, clase: "col-12" }) +
+        "</div></form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: x ? "Guardar" : "Apuntar la solicitud", valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) {
+        var e = A.validar(UI.leerFormulario(form));
+        ["nombre", "fecha", "fechaNacimiento", "email"].forEach(function (k) { UI.marcarError(form, k, e[k] || ""); });
+        return !Object.keys(e).length;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    var d = r.datos, V = WA.Validar;
+    var nueva = Object.assign({}, s, {
+      nombre: d.nombre.trim(), apellidos: d.apellidos.trim(), tipoDocumento: d.tipoDocumento,
+      documento: d.tipoDocumento === "Pasaporte" || d.tipoDocumento === "Otro" ? d.documento.toUpperCase() : V.normalizar(d.documento),
+      fechaNacimiento: d.fechaNacimiento, email: d.email.trim(), telefono: d.telefono, tipoSocioId: d.tipoSocioId,
+      fecha: d.fecha, presentadoPor: d.presentadoPor, notas: d.notas,
+    });
+    var co = A.coincidencias(nueva, c.socios, c.solicitudes);
+    if (co.socios.length || co.solicitudes.length) {
+      var quien = co.socios.length ? "Ya es socio: " + S.nombreCompleto(co.socios[0]) + " (n.º " + co.socios[0].numero + ")."
+        : "Ya hay otra solicitud pendiente de " + [co.solicitudes[0].nombre, co.solicitudes[0].apellidos].join(" ").trim() + ".";
+      var ok = await UI.confirmar(quien + " Coincide el documento o el correo. ¿Apuntar la solicitud igualmente?",
+        { titulo: "Puede estar repetida", aceptar: "Apuntarla", cancelar: "No" });
+      if (!ok) return;
+    }
+    guardarSolicitud(datos, nueva, x ? "Solicitud guardada." : "Solicitud apuntada.");
+  }
+
+  async function admitirSolicitud(datos, c, x) {
+    var r = await UI.dialogo({
+      titulo: "Admitir a " + [x.nombre, x.apellidos].join(" ").trim(),
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha del acuerdo", tipo: "date", valor: F.hoy() >= x.fecha ? F.hoy() : x.fecha, requerido: true, ayuda: "Será su fecha de alta." }) +
+        UI.campo({ nombre: "acuerdo", etiqueta: "Quién lo acordó", valor: "", lista: ["Junta directiva", "Asamblea general"] }) +
+        "</div><p>Se le dará de alta como socio n.º <strong>" + esc(S.siguienteNumero(c.socios, c.config.siguienteNumeroSocio)) + "</strong>, " +
+        "con los datos de la solicitud. Después podrás completar su ficha (dirección, cuenta, consentimientos).</p></form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "Admitir y dar de alta", valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) {
+        var f = form.elements.fecha.value, ok = F.esValida(f) && f >= x.fecha;
+        UI.marcarError(form, "fecha", ok ? "" : "Pon una fecha válida, no anterior a la solicitud (" + F.corta(x.fecha) + ").");
+        return ok;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    var res = A.admitir(x, { fecha: r.datos.fecha, acuerdo: r.datos.acuerdo, socios: c.socios, contador: c.config.siguienteNumeroSocio });
+    var socio = await datos.guardar("socios", res.socio);
+    c.config.siguienteNumeroSocio = res.contador;
+    await datos.escribir("config", c.config);
+    await datos.guardar("solicitudes", Object.assign(res.solicitud, { socioId: socio.id }));
+    UI.aviso("Admitido: socio n.º " + socio.numero + ". Completa su ficha.");
+    await ofrecerCuotaActual(datos, socio, c);
+    location.hash = "#/socios/ficha/" + encodeURIComponent(socio.id);
+  }
+
+  async function rechazarSolicitud(datos, x) {
+    var r = await UI.dialogo({
+      titulo: "No admitir a " + [x.nombre, x.apellidos].join(" ").trim(),
+      contenido: '<form class="formulario" novalidate><div class="rejilla">' +
+        UI.campo({ nombre: "fecha", etiqueta: "Fecha del acuerdo", tipo: "date", valor: F.hoy(), requerido: true }) +
+        UI.campo({ nombre: "acuerdo", etiqueta: "Quién lo acordó", valor: "", lista: ["Junta directiva", "Asamblea general"] }) +
+        UI.campo({ nombre: "motivo", etiqueta: "Motivo", tipo: "textarea", valor: "", ayuda: "Para el registro interno." }) +
+        "</div></form>",
+      botones: [{ texto: "Cancelar", valor: "cancelar" }, { texto: "No admitir", valor: "enviar", estilo: "btn-primario" }],
+      validar: function (form) {
+        var ok = F.esValida(form.elements.fecha.value);
+        UI.marcarError(form, "fecha", ok ? "" : "Pon una fecha válida.");
+        return ok;
+      },
+    });
+    if (r.valor !== "enviar") return;
+    guardarSolicitud(datos, A.rechazar(x, r.datos.fecha, r.datos.motivo, r.datos.acuerdo), "Solicitud no admitida.");
+  }
+
+  async function borrarSolicitud(datos, x) {
+    var ok = await UI.confirmar("Se borran los datos de la solicitud de " + [x.nombre, x.apellidos].join(" ").trim() + ". No se puede deshacer.",
+      { titulo: "Borrar la solicitud", aceptar: "Borrar" });
+    if (!ok) return;
+    await datos.borrar("solicitudes", x.id);
+    UI.aviso("Solicitud borrada.");
+    WA.App.repintar();
+  }
+
   async function pintar(cont, datos, ruta) {
     if (ruta[0] === "nuevo") return pintarFicha(cont, datos, null);
     if (ruta[0] === "ficha") return pintarFicha(cont, datos, ruta[1]);
     if (ruta[0] === "libro") return pintarLibro(cont, datos);
+    if (ruta[0] === "admisiones") return pintarAdmisiones(cont, datos);
     return pintarListado(cont, datos);
   }
 

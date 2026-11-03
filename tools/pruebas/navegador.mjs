@@ -611,6 +611,46 @@ async function main() {
       return sinSolvento && location.hash === "#app/agora" && !$("#marco-solvento").classList.contains("activo");`);
   });
 
+  // ── Agora, solo socios (TESORERIA.md, fase 5) ──
+  await prueba("con el dinero en Solvento, Agora no enseña Tesorería ni Facturas, y Tesorería no admite socios", () => E.js(`
+    const A = marco("agora"), doc = A.document;
+    A.location.hash = "#/inicio";
+    await hasta(() => doc.querySelector('nav a[href="#/socios"]') && !doc.querySelector('nav a[href="#/tesoreria"]'));
+    const menu = ["tesoreria", "facturas", "iva", "proyectos"].every((id) => !doc.querySelector('nav a[href="#/' + id + '"]'));
+    A.location.hash = "#/tesoreria";
+    const aviso = await hasta(() => doc.querySelector("h1") && doc.querySelector("h1").textContent === "Ahora está en Solvento");
+    A.location.hash = "#/socios/admisiones";
+    const lectura = await hasta(() => doc.getElementById("a-nueva") && doc.querySelector(".franja-lectura"));
+    await A.WA.Nube.subir();
+    return menu && !!aviso && !!lectura;`));
+  await prueba("…y Secretaría admite una solicitud: da de alta al socio", async () => {
+    await editarAbies(`f.querySelector('select[name="cargo-hafsa"]').value = "Secretaría";`);
+    await E.abrir(URL_SUITE);
+    return E.js(`${entrarAbies("hafsa", "hafsa-1234")}
+      location.hash = "#app/agora";
+      const A = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
+      const doc = A.document, d = A.WA.Sesion.datos;
+      await A.WA.Nube.sincronizar({ forzar: true });
+      A.location.hash = "#/socios/admisiones";
+      (await hasta(() => doc.getElementById("a-nueva") && !doc.querySelector(".franja-lectura") && doc.getElementById("a-nueva"))).click();
+      const fs = await hasta(() => doc.querySelector("dialog[open] form"));
+      fs.elements.nombre.value = "Irene"; fs.elements.apellidos.value = "Prueba Admitida"; fs.elements.email.value = "irene@ejemplo.org";
+      doc.querySelector('dialog[open] [data-valor="enviar"]').click();
+      const fila = await hasta(() => [...doc.querySelectorAll("#a-lista tbody tr")].find((tr) => tr.textContent.includes("Irene")));
+      const pendiente = fila.textContent.includes("Pendiente") && doc.querySelector(".pestanas .contador");
+      const antes = (await d.listar("socios")).length;
+      fila.querySelector('[data-accion="admitir"]').click();
+      (await hasta(() => doc.querySelector('dialog[open] [data-valor="enviar"]'))).click();
+      // Si ya se emitieron las cuotas del año, pregunta por la suya: ahora no
+      await hasta(() => { const c = doc.querySelector("dialog[open]"); if (c && c.textContent.includes("Cuota del periodo actual")) c.querySelector('[data-valor="cancelar"]').click();
+        return A.location.hash.startsWith("#/socios/ficha/"); }, 20000);
+      const socios = await d.listar("socios"), nuevo = socios.find((x) => x.nombre === "Irene");
+      const sol = (await d.listar("solicitudes")).find((x) => x.nombre === "Irene");
+      const sinDinero = !doc.querySelector('nav a[href="#/tesoreria"]');
+      return !!pendiente && sinDinero && socios.length === antes + 1 && nuevo.email === "irene@ejemplo.org" &&
+        sol.estado === "admitida" && sol.socioId === nuevo.id && A.location.hash === "#/socios/ficha/" + nuevo.id;`);
+  });
+
   await prueba("…y quien no es Admin no ve la Administración", async () => {
     await AdM.abrir(URL_SUITE);
     return AdM.js(`

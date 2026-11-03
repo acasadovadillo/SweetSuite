@@ -1,6 +1,6 @@
 # Agora
 
-La gestión de la asociación **ABIES**: socios y cuotas, tesorería, facturas, IVA, presupuestos, actividades, actas, obligaciones, documentos e informes. Antes se llamaba «ABIES · Gestión» (repositorio `webkit_asociaciones`); su plan dentro de SweetSuite está en `AGORA.md`, en la carpeta de apps.
+La gestión de la asociación **ABIES**: socios, admisiones y cuotas, actividades, actas, obligaciones, documentos e informes. El dinero (tesorería, facturas, IVA, presupuestos y subvenciones) se lleva en **Solvento** desde que Tesorería lo lleva allí (ver «El dinero, a Solvento»). Antes se llamaba «ABIES · Gestión» (repositorio `webkit_asociaciones`); su plan dentro de SweetSuite está en `AGORA.md`, en la carpeta de apps.
 
 | Inicio | Socios | Actividades | Móvil (tema oscuro) |
 |---|---|---|---|
@@ -14,8 +14,8 @@ Agora vive dentro de **SweetSuite** y solo la tiene la cuenta de empresa **ABIES
 
 - **Se entra por SweetSuite**, con las dos llaves de la empresa: ABIES y su contraseña, y el representante y la suya. SweetSuite le da a Agora su secreto, quién entra y su **cargo**. También se abre **suelta**, desde su carpeta (ver abajo).
 - **El cargo lo pone la Administración de SweetSuite**: al editar ABIES, junto a cada representante. Se guarda en `cuentas.json` (`"cargos": { "alberto": "Presidencia" }`) y cuenta desde la siguiente vez que entra. Todos ven todo y cada cargo modifica lo suyo:
-  - Tesorería y vicetesorería: cuotas, tesorería, facturas, IVA y presupuestos.
-  - Secretaría: asociación, socios, actas, obligaciones, documentos y textos de la memoria.
+  - Tesorería y vicetesorería: cuotas (y, hasta llevar el dinero a Solvento, tesorería, facturas, IVA y presupuestos).
+  - Secretaría: asociación, socios y admisiones, actas, obligaciones, documentos y textos de la memoria.
   - Vocalía: actividades.
   - Presidencia y vicepresidencia: todo. Presidencia, además, hace lo que hacía la cuenta de administración.
   - Coordinación, o sin cargo: solo ver.
@@ -59,7 +59,9 @@ En **Ajustes › Seguridad › Llevar el dinero a Solvento** (solo quien tambié
 - las facturas;
 - los proyectos y subvenciones, cada uno con su centro de coste.
 
-Solvento enseña lo que va a traer antes de guardarlo. No repite nada si se lleva dos veces y avisa a Agora, que lo apunta (`config.dineroEnSolvento`). Aquí no se borra nada: lo de dinero sale de Agora en la fase 5.
+Solvento enseña lo que va a traer antes de guardarlo. No repite nada si se lleva dos veces y avisa a Agora, que lo apunta (`config.dineroEnSolvento`).
+
+Desde ese momento (fase 5), Agora quita del menú Tesorería, Facturas, IVA y Presupuestos, e Inicio, Obligaciones e Informes dejan de enseñar el dinero. Los datos no se borran: siguen guardados en Agora, sin verse.
 
 Desde entonces (fase 4, `src/js/datos/cobros.js`), cada cuota o inscripción cobrada es un ingreso en Solvento:
 - tras cada cambio, Agora manda la lista entera de esos ingresos;
@@ -68,6 +70,10 @@ Desde entonces (fase 4, `src/js/datos/cobros.js`), cada cuota o inscripción cob
 - si no se puede en ese momento, queda pendiente.
 
 Cobrar o descobrar necesita tener Solvento, es decir, ser Tesorería.
+
+## Admisiones
+
+En **Socios › Admisiones** (`src/js/logica/admisiones.js`) se apunta quién pide hacerse socio. La junta decide: **Admitir** le da de alta con el número siguiente y la fecha del acuerdo como fecha de alta, y enlaza la solicitud con su ficha; **No admitir** guarda la fecha, el motivo y quién lo acordó, y se puede reabrir o borrar. Avisa si quien lo pide ya es socio o ya lo pidió. El procedimiento lo fijan los estatutos.
 
 ## Traer los datos de antes
 

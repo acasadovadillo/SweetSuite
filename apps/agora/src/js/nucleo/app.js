@@ -63,7 +63,33 @@
     { titulo: "Gobierno", ids: ["actas", "obligaciones", "documentos", "informes"] },
     { titulo: "Cuenta", ids: ["usuarios", "registro", "copias", "ajustes"] },
   ];
-  var BARRA_MOVIL = { inicio: "Inicio", socios: "Socios", cuotas: "Cuotas", tesoreria: "Tesorería", actividades: "Actividades" };
+  var BARRA_MOVIL = { inicio: "Inicio", socios: "Socios", cuotas: "Cuotas", tesoreria: "Tesorería", actividades: "Actividades", actas: "Actas" };
+
+  // ── El dinero, en Solvento (TESORERIA.md, fase 5) ──────────────────────────
+  // Una vez llevado (config.dineroEnSolvento), Tesorería, Facturas, IVA y
+  // Presupuestos salen del menú: el dinero se lleva en Solvento. Sus datos se
+  // quedan aquí, sin tocar; quien entre por su dirección ve dónde está ahora.
+  var DINERO = ["tesoreria", "facturas", "iva", "proyectos"];
+  var dineroFuera = false;
+  async function mirarDinero() {
+    var datos = WA.Sesion.datos;
+    if (!datos || WA.Sesion.modo === "cerrada") return;
+    var cfg = await datos.leer("config").catch(function () { return null; });
+    var fuera = !!(cfg && cfg.dineroEnSolvento);
+    if (fuera === dineroFuera) return;
+    dineroFuera = fuera;
+    modulos.forEach(function (m) { if (DINERO.indexOf(m.id) >= 0) m.oculto = fuera; });
+    pintarMenu();
+  }
+  function pintarEnSolvento(principal) {
+    var puede = WA.Suite && WA.Suite.puedeUsar && WA.Suite.puedeUsar("solvento");
+    principal.innerHTML = '<h1>Ahora está en Solvento</h1><section class="tarjeta"><p>La tesorería, las facturas, el IVA, los presupuestos y las subvenciones se llevan en ' +
+      "<strong>Solvento</strong>, en su apartado Contabilidad. Lo ve Tesorería.</p>" +
+      "<p class=\"detalle\">Lo que había aquí sigue guardado, sin tocar. Las cuotas que se cobran aquí apuntan su ingreso allí.</p>" +
+      (puede ? '<div class="acciones"><button type="button" class="btn btn-primario" id="ir-solvento">Abrir Solvento</button></div>' : "") + "</section>";
+    var b = principal.querySelector("#ir-solvento");
+    if (b) b.addEventListener("click", function () { WA.Suite.abrir("solvento"); });
+  }
   var svg = function (trazos, clase) {
     return '<svg' + (clase ? ' class="' + clase + '"' : "") + ' viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">' + trazos + "</svg>";
   };
@@ -103,7 +129,7 @@
       if (!html) return "";
       return (g.titulo ? '<li class="menu-grupo" aria-hidden="true">' + WA.UI.esc(g.titulo) + "</li>" : "") + html;
     }).join("") + menuSuite();
-    $("barra-movil").innerHTML = vis.filter(function (m) { return BARRA_MOVIL[m.id]; }).map(function (m) {
+    $("barra-movil").innerHTML = vis.filter(function (m) { return BARRA_MOVIL[m.id]; }).slice(0, 5).map(function (m) {
       return '<a href="#/' + m.id + '" data-modulo="' + m.id + '">' + svg(m.icono || "") + "<span>" + BARRA_MOVIL[m.id] + "</span></a>";
     }).join("");
     filtrarMenu($("menu-buscar").value);
@@ -143,6 +169,14 @@
   /** Pinta el módulo de la dirección actual. */
   async function navegar(opciones) {
     if (WA.Sesion.modo === "cerrada") return;
+    await mirarDinero();
+    if (dineroFuera && DINERO.indexOf(partesRuta()[0]) >= 0) {
+      actual = partesRuta()[0];
+      cerrarMenuMovil();
+      pintarEnSolvento($("principal"));
+      document.title = "Solvento · " + WA.Marca.NOMBRE;
+      return;
+    }
     var id = rutaActual();
     var m = modulos.find(function (x) { return x.id === id; });
     actual = id;
@@ -438,5 +472,5 @@
 
   WA.App = { registrar: registrar, iniciar: iniciar, entrarEnSuite: entrarEnSuite, navegar: navegar, repintar: repintar, actualizarFranjas: actualizarFranjas,
     pintarEstado: pintarEstado, guardarAhora: guardarAhora,
-    moduloActual: moduloActual, pintarMenu: pintarMenu, ponerAcento: ponerAcento, acentoGuardado: acentoGuardado, iniciales: iniciales };
+    moduloActual: moduloActual, pintarMenu: pintarMenu, dineroFuera: function () { return dineroFuera; }, ponerAcento: ponerAcento, acentoGuardado: acentoGuardado, iniciales: iniciales };
 })(typeof self !== "undefined" ? self : this);
