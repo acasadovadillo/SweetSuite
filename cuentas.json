@@ -32,8 +32,11 @@
   "cuentas": [
     { "usuario": "alberto", "nombre": "Alberto", "tipo": "persona", "apps": ["solvento", "ironrack"] },
     { "usuario": "hafsa", "nombre": "Hafsa", "tipo": "persona", "apps": ["solvento", "ironrack"] },
-    { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion", "apps": ["solvento", "agora"], "representantes": ["alberto"], "cargos": { "alberto": "Presidencia" } },
+    { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion", "apps": ["solvento", "agora"], "representantes": ["alberto", "nhara", "lauracoloradopedrero", "raquelgonzalezalgaba"], "cargos": {"alberto": "Tesorería", "nhara": "Vicetesorería", "lauracoloradopedrero": "Presidencia", "raquelgonzalezalgaba": "Vicepresidencia"}, "accesos": {"solvento": ["alberto", "nhara", "lauracoloradopedrero", "raquelgonzalezalgaba"], "agora": ["alberto", "nhara", "lauracoloradopedrero", "raquelgonzalezalgaba"]} },
     { "usuario": "paula", "nombre": "Paula", "tipo": "persona", "apps": ["solvento"] },
+    { "usuario": "nhara", "nombre": "Nhara", "tipo": "persona", "apps": [] },
+    { "usuario": "lauracoloradopedrero", "nombre": "Laura Colorado Pedrero", "tipo": "persona", "apps": [] },
+    { "usuario": "raquelgonzalezalgaba", "nombre": "Raquel González Algaba", "tipo": "persona", "apps": [] },
     { "usuario": "admin", "nombre": "Admin", "tipo": "admin", "apps": [] }
   ]
 }
