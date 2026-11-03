@@ -84,8 +84,10 @@
     el.setAttribute("role", tipo === "error" ? "alert" : "status");
     el.textContent = texto;
     zona.appendChild(el);
-    setTimeout(function () { el.classList.add("saliendo"); }, tipo === "error" ? 7000 : 3000);
-    setTimeout(function () { el.remove(); }, tipo === "error" ? 7400 : 3400);
+    // Lo que se lee: 3 s, o más si es largo (hasta 9 s); los errores, 7 s
+    var ms = tipo === "error" ? 7000 : Math.max(3000, Math.min(texto.length * 55, 9000));
+    setTimeout(function () { el.classList.add("saliendo"); }, ms);
+    setTimeout(function () { el.remove(); }, ms + 400);
   }
 
   /**

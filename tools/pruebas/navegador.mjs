@@ -610,6 +610,23 @@ async function main() {
         w.SolventoDB.state.doc.movimientos.some((x) => x.id === "agora-cuota:" + q.id) && w; }, 40000);
       return sinSolvento && location.hash === "#app/agora" && !$("#marco-solvento").classList.contains("activo");`);
   });
+  await prueba("Solvento de ABIES enseña lo traído de Agora: facturas, IVA, subvenciones y cuentas del ejercicio", () => E.js(`
+    location.hash = "#app/solvento";
+    const S = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.SolventoDB.state.doc && w; }, 40000);
+    const PAGS = ["facturas", "iva", "subvenciones", "ejercicio"], pag = (id) => S.document.getElementById("v2-page-" + id);
+    const menu = PAGS.every((id) => S.document.querySelector('.sn-item[data-page="' + id + '"]'));
+    S.v2Tab("facturas"); S.v2FacturasTipo("recibida");
+    const fac = await hasta(() => pag("facturas").textContent.includes("V-7"));
+    S.v2Tab("iva");
+    const iva = await hasta(() => pag("iva").textContent.includes("IVA"));
+    S.v2Tab("subvenciones");
+    const sub = await hasta(() => pag("subvenciones").textContent.includes("Huerto escolar"));
+    S.v2Tab("ejercicio"); S.v2EjAnio(2026);
+    const ej = await hasta(() => pag("ejercicio").textContent.includes("Cuotas"));
+    const raro = PAGS.filter((id) => /NaN|undefined/.test(pag(id).textContent));
+    if (raro.length) throw new Error("sale NaN o undefined en " + raro.join());
+    location.hash = "#app/agora";
+    return menu && fac && iva && sub && ej;`));
 
   // ── Agora, solo socios (TESORERIA.md, fase 5) ──
   await prueba("con el dinero en Solvento, Agora no enseña Tesorería ni Facturas, y Tesorería no admite socios", () => E.js(`
@@ -650,7 +667,37 @@ async function main() {
       return !!pendiente && sinDinero && socios.length === antes + 1 && nuevo.email === "irene@ejemplo.org" &&
         sol.estado === "admitida" && sol.socioId === nuevo.id && A.location.hash === "#/socios/ficha/" + nuevo.id;`);
   });
-
+  // Como quedará ABIES: Alberto en Tesorería y Nhara (aquí Hafsa) en Vicetesorería, los dos con Solvento
+  await prueba("Vicetesorería, con acceso a Solvento: recibe la llave y su cuota cobrada sale en Solvento al pegar su token", async () => {
+    await editarAbies(`f.querySelector('select[name="cargo-hafsa"]').value = "Vicetesorería";
+      marcar(await hasta(() => f.querySelector('.acc-rep[data-app="solvento"][value="hafsa"]')), true);`);
+    await E.abrir(URL_SUITE);
+    await E.js(`${entrarAbies("alberto", "prueba-1234")} return true;`);   // al entrar, Alberto le da la llave
+    await E.abrir(URL_SUITE);
+    return E.js(`${entrarAbies("hafsa", "hafsa-1234")}
+      location.hash = "#app/agora";
+      const A = await hasta(() => { const w = marco("agora"); return w && w.WA && w.WA.Sesion && w.WA.Sesion.modo === "abierta" && w; }, 40000);
+      const datos = A.WA.Sesion.datos;
+      await A.WA.Nube.sincronizar({ forzar: true });
+      const puede = A.WA.Sesion.puedeEditar("cuotas") && A.WA.Cobros.puedeCobrar(await datos.leer("config"));
+      const q = await datos.guardar("cuotas", { socioId: "", socioNumero: 11, socioNombre: "Rosa Prueba", concepto: "Cuota 2026", periodo: "anual-2026",
+        importe: 3000, estado: "pendiente", pago: null, historial: [] });
+      await datos.guardar("cuotas", A.WA.Cuotas.registrarPago(q, { fecha: "2026-11-02", forma: "Bizum", cuentaId: "banco", referencia: "" }));
+      // Aún no ha pegado su token de Solvento: Solvento la deja esperando y Agora lo dice
+      const id = "agora-cuota:" + q.id;
+      await hasta(() => A.document.getElementById("avisos").textContent.includes("cuando pegues tu token de Solvento"), 30000);
+      const S = marco("solvento"), esta = () => S.SolventoDB.state.doc.movimientos.some((x) => x.id === id);
+      const antes = esta();
+      // Lo pega: se apunta, junto con lo de Alberto (la lista entera)
+      location.hash = "#app/solvento";
+      S.document.getElementById("sync-token").value = "dev"; S.document.getElementById("sync-save-token").click();
+      await hasta(esta, 30000);
+      await hasta(async () => ((await datos.leer("config")).cobrosEnSolvento || {}).huella === (await A.WA.Cobros.estado(), A.WA.Traspaso.huella(A.WA.Traspaso.cobros({
+        config: await datos.leer("config"), movimientos: await datos.listar("movimientos"), cuotas: await datos.listar("cuotas"),
+        actividades: await datos.listar("actividades"), proyectos: await datos.listar("proyectos") }))), 20000);
+      const todas = S.SolventoDB.state.doc.movimientos.filter((x) => String(x.id).startsWith("agora-cuota:")).length;
+      return puede && !antes && todas >= 2;`);
+  });
   await prueba("…y quien no es Admin no ve la Administración", async () => {
     await AdM.abrir(URL_SUITE);
     return AdM.js(`

@@ -69,7 +69,7 @@ Desde entonces (fase 4, `src/js/datos/cobros.js`), cada cuota o inscripción cob
 - si Solvento no está abierto, SweetSuite lo abre por detrás;
 - si no se puede en ese momento, queda pendiente.
 
-Cobrar o descobrar necesita tener Solvento, es decir, ser Tesorería.
+Cobrar o descobrar necesita tener Solvento, es decir, ser Tesorería. Si quien cobra aún no ha pegado su token de Solvento, Solvento está en modo lectura: el ingreso se queda esperando, Agora lo avisa y se apunta al pegar el token (o cuando entra otra persona de Tesorería).
 
 ## Admisiones
 

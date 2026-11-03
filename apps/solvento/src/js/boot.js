@@ -427,6 +427,7 @@
     localStorage.setItem(EDITAR_IGUAL, "1");
     pintarLectura();
     render();                            // los botones de editar vuelven a su sitio
+    ponerCobros();                       // y se apuntan los cobros de Agora que esperaban
     toast("Puedes editar en este dispositivo · añade tu token para que se suba", "var(--ambar-2)");
   }
   function pintarLectura() {
@@ -875,6 +876,7 @@
     if (window.v2Tab) window.v2Tab("patrimonio");
     if (SS && SS.tokenGuardado) SS.tokenGuardado("solvento");        // ¿cuándo caduca?
     toast("Tus datos ya están en este dispositivo ✓", "var(--verde)");
+    ponerCobros();                       // los cobros de Agora que esperaban al token
   }
   // Primera vez de una cuenta: se pasa al panel de empezar con su nombre puesto
   // y, si ya venía escrita una contraseña en el login, se aprovecha.
@@ -1207,15 +1209,25 @@
   // Lo que otra app ha dejado para Solvento en SweetSuite (el dinero de Agora)
   function mirarCorreo() {
     if (!SS || !SS.recoger || !DB.state.doc || esperandoDatos) return;
-    SS.recoger("solvento").forEach(async (carta) => {
+    let cobros = false;
+    SS.recoger("solvento").forEach((carta) => {
       if (carta.tipo === "dinero-agora" && window.SolventoAsociacion) window.SolventoAsociacion.traerDeAgora(carta);
-      // Los cobros de cuotas de Agora (fase 4): se apuntan sin preguntar y se le contesta
-      if (carta.tipo === "cobros-agora" && window.WA && window.WA.Contabilidad && !esInvitado()) {
-        const r = window.WA.Contabilidad.ponerCobrosDeAgora(DB.state.doc, carta.movimientos);
-        if (r.altas || r.cambios || r.bajas) await saveDoc();
-        SS.enviar("solvento", "agora", { tipo: "cobros-recibidos", huella: carta.huella });
-      }
+      // Los cobros de cuotas de Agora (fase 4): vale la última carta, que es la lista entera
+      if (carta.tipo === "cobros-agora") { cobrosEnEspera = carta; cobros = true; }
     });
+    if (cobros) ponerCobros(true);
+  }
+  // Se apuntan sin preguntar y se le contesta. Sin token (solo lectura) se
+  // quedan esperando y se le dice a Agora; se apuntan al pegarlo.
+  let cobrosEnEspera = null;
+  async function ponerCobros(avisar) {
+    const carta = cobrosEnEspera;
+    if (!carta || !DB.state.doc || !window.WA || !window.WA.Contabilidad) return;
+    if (esInvitado()) { if (avisar) SS.enviar("solvento", "agora", { tipo: "cobros-sin-token" }); return; }
+    cobrosEnEspera = null;
+    const r = window.WA.Contabilidad.ponerCobrosDeAgora(DB.state.doc, carta.movimientos);
+    if (r.altas || r.cambios || r.bajas) await saveDoc();
+    SS.enviar("solvento", "agora", { tipo: "cobros-recibidos", huella: carta.huella });
   }
 
   // Al volver a SweetSuite o bloquear: guardar aquí y subir lo pendiente
@@ -1383,6 +1395,7 @@
                                            : "Token guardado ✓ · enciende el autoguardado o sube con ⌘S / Ctrl+S", "var(--verde)");
     if (hayPendiente()) await reintentarPendiente(); else pintarEstado("ok");
     if (SS && SS.tokenGuardado) SS.tokenGuardado("solvento");        // ¿cuándo caduca?
+    ponerCobros();                       // los cobros de Agora que esperaban al token
   }
   // El botón de Ajustes sube por la misma cola que todo lo demás: si ya había
   // una subida en marcha, espera a que termine en vez de cruzarse con ella.

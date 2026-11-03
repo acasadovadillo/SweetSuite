@@ -71,6 +71,7 @@
   // quedan aquí, sin tocar; quien entre por su dirección ve dónde está ahora.
   var DINERO = ["tesoreria", "facturas", "iva", "proyectos"];
   var dineroFuera = false;
+  var avisadoSinToken = false;   // «falta tu token de Solvento», una vez por sesión
   async function mirarDinero() {
     var datos = WA.Sesion.datos;
     if (!datos || WA.Sesion.modo === "cerrada") return;
@@ -376,6 +377,12 @@
         var cartas = SS.recoger ? SS.recoger("agora") : [];
         for (var i = 0; i < cartas.length; i++) {
           if (cartas[i].tipo === "cobros-recibidos") { try { await WA.Cobros.recibidos(cartas[i].huella); } catch (e) { /* se volverá a mandar */ } continue; }
+          // Solvento sin token (solo lectura): lo apunta al pegarlo. Se avisa una vez por sesión
+          if (cartas[i].tipo === "cobros-sin-token") {
+            if (!avisadoSinToken) WA.UI.aviso("Cobrado. Su ingreso irá a Solvento cuando pegues tu token de Solvento (Solvento › Ajustes) o entre otra persona de Tesorería.", "info");
+            avisadoSinToken = true;
+            continue;
+          }
           if (cartas[i].tipo !== "dinero-traido") continue;
           try {
             var datos = WA.Sesion.datos, cfg = await datos.leer("config");
