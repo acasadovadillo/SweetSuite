@@ -46,6 +46,7 @@ PUERTO = 4500
 CLAVE_DEV = "desarrollo"
 LIMITE_API = 1024 * 1024
 
+CUENTAS = None     # otra lista de cuentas en vez de cuentas.json (--cuentas)
 PERMITIDOS = {"/", "/index.html", "/manifest.json", "/sw.js", "/cuentas.json", "/version.json"}
 PREFIJOS = ("/src/", "/img/", "/apps/")
 PUBLICOS = {"prices.json", "tickers.json"}
@@ -223,6 +224,8 @@ class Manejador(SimpleHTTPRequestHandler):
             if not os.path.isfile(f):
                 return self._bytes(404, b"404: Not Found")
             return self._bytes(200, open(f, "rb").read())
+        if p == "/cuentas.json" and CUENTAS:
+            return self._bytes(200, open(CUENTAS, "rb").read(), "application/json; charset=utf-8")
         if p in PERMITIDOS or p.startswith(PREFIJOS):
             if ".." in p.split("/") or "/tools/" in p:
                 return self._bytes(404, b"404: Not Found")
@@ -306,9 +309,12 @@ def main():
     ap.add_argument("--puerto", type=int, default=PUERTO)
     ap.add_argument("--reiniciar", action="store_true", help="borrar dev-data/ y volver a sembrar")
     ap.add_argument("--datos", help="otra carpeta en vez de dev-data/ (las pruebas automáticas usan una propia)")
+    ap.add_argument("--cuentas", help="otra lista de cuentas en vez de cuentas.json (las pruebas automáticas usan la suya)")
     args = ap.parse_args()
 
-    global DATOS
+    global DATOS, CUENTAS
+    if args.cuentas:
+        CUENTAS = os.path.abspath(args.cuentas)
     if args.datos:
         DATOS = os.path.abspath(args.datos)
 

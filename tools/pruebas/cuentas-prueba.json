@@ -1,0 +1,39 @@
+{
+  "_": "La lista de cuentas de las pruebas de navegador, para que no dependan de las altas y bajas de verdad (cuentas.json).",
+  "apps": [
+    {
+      "id": "solvento",
+      "nombre": "Solvento",
+      "descripcion": "Tus finanzas: patrimonio, inversiones, ingresos y gastos.",
+      "ruta": "apps/solvento/",
+      "acento": "#1aac8c",
+      "icono": "apps/solvento/img/icono-solvento.svg",
+      "iconoApple": "apps/solvento/img/app/icon-180.png"
+    },
+    {
+      "id": "ironrack",
+      "nombre": "Ironrack",
+      "descripcion": "Tu gimnasio: entrenos, series, kilos y progreso.",
+      "ruta": "apps/ironrack/",
+      "acento": "#ff5c5c",
+      "icono": "apps/ironrack/img/icono.svg",
+      "iconoApple": "apps/ironrack/img/icono-180.png"
+    },
+    {
+      "id": "agora",
+      "nombre": "Agora",
+      "descripcion": "La asociación: socios, cuotas, tesorería, actividades y actas.",
+      "ruta": "apps/agora/",
+      "acento": "#3fb0a0",
+      "icono": "apps/agora/img/icono.svg",
+      "iconoApple": "apps/agora/img/icono-180.png"
+    }
+  ],
+  "cuentas": [
+    { "usuario": "alberto", "nombre": "Alberto", "tipo": "persona", "apps": ["solvento", "ironrack"] },
+    { "usuario": "hafsa", "nombre": "Hafsa", "tipo": "persona", "apps": ["solvento", "ironrack"] },
+    { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion", "apps": ["solvento", "agora"], "representantes": ["alberto"], "cargos": { "alberto": "Presidencia" } },
+    { "usuario": "paula", "nombre": "Paula", "tipo": "persona", "apps": ["solvento"] },
+    { "usuario": "admin", "nombre": "Admin", "tipo": "admin", "apps": [] }
+  ]
+}

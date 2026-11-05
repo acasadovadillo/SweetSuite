@@ -51,7 +51,7 @@ async function prueba(nombre, fn) {
 
 // ── El servidor de desarrollo, con sus datos aparte ──
 const datos = mkdtempSync(join(tmpdir(), "sweetsuite-pruebas-"));
-const servidor = spawn(process.env.PYTHON || "python3", ["tools/dev/servidor.py", "--puerto", String(PUERTO), "--datos", datos], {
+const servidor = spawn(process.env.PYTHON || "python3", ["tools/dev/servidor.py", "--puerto", String(PUERTO), "--datos", datos, "--cuentas", "tools/pruebas/cuentas-prueba.json"], {
   cwd: RAIZ, stdio: ["ignore", "ignore", "pipe"],
   env: Object.assign({}, process.env, { PATH: dirname(process.execPath) + ":" + (process.env.PATH || "") }),
 });
