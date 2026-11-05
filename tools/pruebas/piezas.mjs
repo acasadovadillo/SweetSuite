@@ -202,12 +202,21 @@ console.log("\nAdministración");
 const ca = contexto();
 vm.runInContext(leer("src/js/admin.js"), ca);
 const AD = ca.SweetAdmin;
-const cat = JSON.parse(leer("cuentas.json"));
+const real = JSON.parse(leer("cuentas.json"));
 await prueba("la lista de cuentas de verdad es válida y tiene un solo Admin", () => {
-  const e = AD.validar(cat);
+  const e = AD.validar(real);
   if (e.length) throw new Error(e[0]);
-  return cat.cuentas.filter((c) => c.tipo === "admin").length === 1;
+  return real.cuentas.filter((c) => c.tipo === "admin").length === 1;
 });
+// Las demás, con una lista inventada: las altas y bajas de verdad no deben romperlas
+const cat = {
+  apps: real.apps,
+  cuentas: [
+    { usuario: "alberto", nombre: "Alberto", tipo: "persona", apps: ["solvento", "ironrack"] },
+    { usuario: "abies", nombre: "ABIES", tipo: "organizacion", apps: ["solvento", "agora"], representantes: ["alberto"] },
+    { usuario: "admin", nombre: "Admin", tipo: "admin", apps: [] },
+  ],
+};
 await prueba("dos cuentas Admin no valen", () => {
   const otro = JSON.parse(JSON.stringify(cat)); otro.cuentas.push({ usuario: "admin2", nombre: "Otro", tipo: "admin", apps: [] });
   return AD.validar(otro).some((e) => e.includes("Admin"));
@@ -278,8 +287,8 @@ await prueba("los tokens de una app solo para algunos, solo para ellos", () => {
   return t.map((x) => x.nombre).sort().join() === "ABIES-Nhara-Agora,ABIES-Nhara-Solvento,ABIES-Pepa-Agora";
 });
 await prueba("cuentas.json se escribe como a mano y se vuelve a leer igual", () => {
-  const txt = AD.formatear(cat);
-  return JSON.stringify(JSON.parse(txt)) === JSON.stringify(cat) && txt.includes('\n    { "usuario": "alberto"');
+  const txt = AD.formatear(real);
+  return JSON.stringify(JSON.parse(txt)) === JSON.stringify(real) && txt.includes('\n    { "usuario": "alberto"');
 });
 
 // ── La mezcla de Ironrack ───────────────────────────────────────────────────
