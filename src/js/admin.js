@@ -141,7 +141,7 @@
     };
     const lista = [];
     const appDe = (id) => (despues.apps || []).find((a) => a.id === id) || { id, nombre: id };
-    const acceso = (app) => (repos[app] ? [repos[app].repo] : []).concat(app === "solvento" ? ["Solvento"] : []);
+    const acceso = (app) => (repos[app] ? [repos[app].repo] : []).concat(app === "solvento" ? ["Solvento-Price-Update"] : []);
     (despues.cuentas || []).forEach((c) => {
       if (c.tipo === "persona") {
         (c.apps || []).forEach((a) => {

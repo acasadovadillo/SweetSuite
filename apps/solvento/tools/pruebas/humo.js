@@ -605,16 +605,17 @@ var perfilDev = JSON.parse(leer(base + "perfil.dev.json"));
 comprobar("las cuentas de desarrollo lo son, y una que apunte a producción se rechaza",
   perfilDev.cuentas.length === 4 && perfilDev.cuentas.every(function (c) { return E.almacenNoValido(c.almacen) === null; }) &&
   E.almacenNoValido({ owner: "acasadovadillo", repo: "datos-cifrados", dev: true }) !== null &&
-  E.almacenNoValido({ owner: "acasadovadillo", repo: "Solvento", dev: true }) !== null);
+  E.almacenNoValido({ owner: "acasadovadillo", repo: "Solvento", dev: true }) !== null &&
+  E.almacenNoValido({ owner: "acasadovadillo", repo: "Solvento-Price-Update", dev: true }) !== null);
 var perfilProd = JSON.parse(leer(base + "perfil.json"));
-comprobar("en producción, cada cuenta lee de Solvento-Data (privado) y la app es Solvento",
+comprobar("en producción, cada cuenta lee de Solvento-Data (privado) y la app es Solvento-Price-Update",
   perfilProd.cuentas.length === 4 && perfilProd.cuentas.every(function (c) {
     var a = c.almacen || {};
     return a.repo === "Solvento-Data" && a.privado === true && a.path === c.usuario + "-solvento.enc";
-  }) && perfilProd.app && perfilProd.app.repo === "Solvento");
+  }) && perfilProd.app && perfilProd.app.repo === "Solvento-Price-Update");
 comprobar("ningún dato cifrado puede ir al repositorio público de SweetSuite",
   /^\*\.enc$/m.test(leer(base + "../../.gitignore")) &&
-  window.SolventoConfig.SYNC.repo !== "Solvento" && window.SolventoConfig.SYNC.privado === true);
+  !/^solvento(-price-update)?$/i.test(window.SolventoConfig.SYNC.repo) && window.SolventoConfig.SYNC.privado === true);
 
 // ── Mezclar dos copias sin perder cambios (mezcla.js) ───────────────────────
 // Dos dispositivos (o dos representantes de ABIES) que guardan a la vez: antes

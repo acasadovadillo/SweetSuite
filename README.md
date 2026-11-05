@@ -26,7 +26,7 @@ Web: <https://acasadovadillo.github.io/SweetSuite/> (se instala en el móvil con
   | Ironrack | `Ironrack-Data` | `<usuario>-ironrack.enc`, `<usuario>.llavero.json` |
   | Agora | `Agora-Data` | `<usuario>-agora.enc`, `adjuntos/<id>.enc`, `<usuario>.llavero.json` |
 
-- **Un token por cuenta y app.** *Fine-grained*, con *Contents: Read and write* solo sobre su repositorio (el de Solvento, además, sobre `Solvento`, donde publica la lista de precios). Se pega en los Ajustes de cada app, nunca al entrar, y se guarda cifrado en el dispositivo. Cambiarlo no toca los datos.
+- **Un token por cuenta y app.** *Fine-grained*, con *Contents: Read and write* solo sobre su repositorio (el de Solvento, además, sobre `Solvento-Price-Update`, donde publica la lista de precios). Se pega en los Ajustes de cada app, nunca al entrar, y se guarda cifrado en el dispositivo. Cambiarlo no toca los datos.
 - **Guardado.** Cada cambio se guarda al momento en el dispositivo, cifrado. El **autoguardado** (encendido de serie) lo sube a GitHub; también **Guardar**, **⌘S / Ctrl+S** y **volver al inicio de SweetSuite**, que sube lo pendiente de la app de la que sales.
 - **Cambios a la vez.** Si dos dispositivos (o dos representantes de una empresa) guardan a la vez, no se pierde nada: Ironrack mezcla elemento a elemento, y Solvento y Agora registro a registro (`apps/solvento/src/js/mezcla.js`, `apps/agora/src/js/datos/mezcla.js`). Gana el último cambio de cada registro y lo borrado no resucita.
 - **Otro dispositivo.** Se entra con «Ya uso SweetSuite en otro dispositivo». Al pegar el token de una app, SweetSuite trae el llavero de GitHub; si allí la contraseña es otra, la pide (o la clave de recuperación).
@@ -55,7 +55,7 @@ index.html, src/        SweetSuite: entrada, llavero, inicio y ajustes de la cue
 cuentas.json            quién entra y qué apps tiene
 apps/<id>/              cada app en su carpeta, todas con la misma forma:
                           index.html, manifest.json, img/, src/ (css y js), README.md y sus pruebas
-apps/solvento/          Solvento (copia de acasadovadillo/Solvento p218, adaptada)
+apps/solvento/          Solvento (viene del repositorio de antes, hoy Solvento-Price-Update)
 apps/ironrack/          Ironrack (con su historial, git subtree)
 apps/agora/             Agora, antes webkit-asociaciones (con su historial, git subtree); solo ABIES
 sw.js, manifest.json    la app instalable y sin conexión

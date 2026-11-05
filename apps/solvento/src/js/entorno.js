@@ -63,7 +63,7 @@
   function almacenNoValido(almacen) {
     if (prod) return null;
     if (!almacen || almacen.dev !== true) return "la cuenta no está marcada como de desarrollo (dev: true)";
-    if (String(almacen.repo || "").toLowerCase() === "solvento") return "la cuenta apunta al repositorio de producción";
+    if (/^solvento(-price-update)?$/i.test(String(almacen.repo || ""))) return "la cuenta apunta al repositorio de producción";
     // En desarrollo, solo repositorios de desarrollo (…-dev): aunque todo vaya
     // al servidor local, que no se confundan si algún día se copia el perfil.
     if (!/-dev$/i.test(String(almacen.repo || ""))) return "la cuenta no apunta a un repositorio de desarrollo (…-dev)";

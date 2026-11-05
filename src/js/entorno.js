@@ -39,10 +39,8 @@
     antiguo: prod
       ? { owner: "acasadovadillo", repo: "datos-cifrados", branch: "main" }
       : { owner: "dev", repo: "datos-cifrados-dev", branch: "main" },
-    // Los precios públicos de Solvento (prices.json, tickers.json). Al
-    // renombrar el repositorio Solvento a Solvento-Price-Update (fase 8), esto
-    // pasa a "/Solvento-Price-Update/".
-    precios: prod ? "/Solvento/" : "/__dev/publico/solvento/",
+    // Los precios públicos de Solvento (prices.json, tickers.json)
+    precios: prod ? "/Solvento-Price-Update/" : "/__dev/publico/solvento/",
   };
 
   // Que se vea siempre dónde se está

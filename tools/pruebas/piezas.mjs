@@ -243,7 +243,7 @@ await prueba("dice qué tokens crear para lo nuevo, sin tildes y solo sobre su r
   const t = AD.tokensQueCrear(cat, c, { solvento: { repo: "Solvento-Data" }, ironrack: { repo: "Ironrack-Data" }, agora: { repo: "Agora-Data" } });
   // ABIES tiene Solvento y Agora: su representante nuevo necesita un token para cada una
   return t.map((x) => x.nombre).sort().join() === "ABIES-Lucia-Agora,ABIES-Lucia-Solvento,Lucia-Solvento" &&
-    t.every((x) => x.acceso.join() === (x.app === "Agora" ? "Agora-Data" : "Solvento-Data,Solvento"));
+    t.every((x) => x.acceso.join() === (x.app === "Agora" ? "Agora-Data" : "Solvento-Data,Solvento-Price-Update"));
 });
 await prueba("el cargo de cada representante: solo de la lista y solo de quien representa", () => {
   let c = AD.alta(cat, { usuario: "lucia", nombre: "Lucía", tipo: "persona", apps: ["solvento"] });
