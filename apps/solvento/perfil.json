@@ -1,5 +1,5 @@
 {
-  "_": "Quién entra en Solvento dentro de SweetSuite y dónde guarda cada uno. La entrada es la de SweetSuite. Los datos NO están en este repositorio, que es público: cada cuenta tiene su archivo cifrado en el repositorio PRIVADO Solvento-Data (<usuario>-solvento.enc), con el llavero de SweetSuite al lado. «app» es el repositorio de Solvento de siempre: ahí se publica la lista de símbolos para el proceso de precios (en la fase 8 se renombra a Solvento-Price-Update).",
+  "_": "Quién entra en Solvento dentro de SweetSuite y dónde guarda cada uno. La entrada es la de SweetSuite. Los datos NO están en este repositorio, que es público: cada cuenta tiene su archivo cifrado en el repositorio PRIVADO Solvento-Data (<usuario>-solvento.enc), con el llavero de SweetSuite al lado. «app» es el repositorio del proceso de precios: ahí se publica la lista de símbolos.",
   "app": {
     "owner": "acasadovadillo",
     "repo": "Solvento-Price-Update",
