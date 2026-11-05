@@ -63,7 +63,7 @@ a { color: var(--acento); }
 /* ── Barra lateral ─────────────────────────────────────────────────────── */
 #sidebar {
   width: var(--lateral); background: var(--f0); border-right: 1px solid var(--filo);
-  padding: 14px 12px calc(12px + env(safe-area-inset-bottom));
+  padding: calc(env(safe-area-inset-top) + 14px) 12px calc(12px + env(safe-area-inset-bottom));
 }
 .sn-head { gap: 8px; padding: 2px 9px 30px; }
 .sn-head img { width: 25px; height: 15px; object-fit: contain; }   /* la escalera de monedas es apaisada */
@@ -172,7 +172,7 @@ a { color: var(--acento); }
   #sidebar { transform: none; visibility: visible; z-index: 900; max-width: none; }
   #sidebar-backdrop { display: none; }
   .sn-close, #brand-btn { display: none !important; }
-  body { padding: 6px 3rem 3rem calc(var(--lateral) + 3rem); }
+  body { padding: calc(6px + env(safe-area-inset-top)) 3rem 3rem calc(var(--lateral) + 3rem); }
   .header-block { margin-top: 0; }
   body .navbar { left: var(--lateral); background: transparent; border-bottom: none; pointer-events: none; }
   .navbar > * { pointer-events: auto; }

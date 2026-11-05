@@ -219,7 +219,7 @@
    forma de ver que está encendido. */
 @media (max-width: 640px) {
   body.modo-edicion .navbar::after {
-    content: "Modo edición"; position: absolute; left: 50%; transform: translateX(-50%); top: 22px;
+    content: "Modo edición"; position: absolute; left: 50%; transform: translateX(-50%); top: calc(env(safe-area-inset-top) + 22px);
     font-size: 12px; font-weight: 600; color: var(--acento);
     background: var(--acento-fondo); border: 1px solid var(--acento-borde); border-radius: 999px; padding: 2px 10px;
   }

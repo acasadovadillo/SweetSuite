@@ -10,6 +10,7 @@
  *
  *   node tools/pruebas/navegador.mjs
  *   NAVEGADOR=/ruta/al/navegador node tools/pruebas/navegador.mjs
+ *   PRUEBAS_LENTO=3 node tools/pruebas/navegador.mjs   (con el equipo cargado: esperas el triple)
  */
 import { spawn } from "node:child_process";
 import { existsSync, mkdtempSync, readFileSync, rmSync } from "node:fs";
@@ -19,6 +20,7 @@ import { fileURLToPath } from "node:url";
 
 const RAIZ = join(dirname(fileURLToPath(import.meta.url)), "..", "..");
 const PUERTO = Number(process.env.PUERTO_PRUEBAS || 4599);
+const LENTO = Number(process.env.PRUEBAS_LENTO || 1);
 const URL_SUITE = `http://127.0.0.1:${PUERTO}/`;
 const NAV = [
   process.env.NAVEGADOR,
@@ -98,6 +100,7 @@ function cdp(method, params, sessionId) {
 const AYUDA = `
   const espera = (ms) => new Promise((r) => setTimeout(r, ms));
   async function hasta(fn, ms = 15000) {
+    ms *= ${LENTO};
     const t0 = Date.now();
     while (Date.now() - t0 < ms) { try { const v = await fn(); if (v) return v; } catch (e) {} await espera(100); }
     throw new Error("no llegó a tiempo: " + fn.toString().replace(/\\s+/g, " ").slice(0, 140));
@@ -121,7 +124,8 @@ async function dispositivo({ movil = false } = {}) {
   if (movil) await cdp("Emulation.setDeviceMetricsOverride", { width: 375, height: 812, deviceScaleFactor: 2, mobile: true }, sessionId);
   else await cdp("Emulation.setDeviceMetricsOverride", { width: 1280, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
   const d = {
-    async js(codigo, ms = 90000) {
+    sesion: sessionId,
+    async js(codigo, ms = 90000 * LENTO) {
       const r = await Promise.race([
         cdp("Runtime.evaluate", { expression: `(async () => { ${AYUDA}\n${codigo}\n})()`, awaitPromise: true, returnByValue: true }, sessionId),
         espera(ms).then(() => { throw new Error("la página no contestó en " + ms / 1000 + " s"); }),
@@ -410,6 +414,17 @@ async function main() {
     W.SolventoBoot.elegirApp();
     const ir = await hasta(() => !$("#dialogo").hidden && $("#dialogo").querySelectorAll("[data-ir]").length);
     return pestañas && ir === 3;`));
+  await prueba("en un iPhone, Solvento deja sitio a la hora y a la cámara: la barra, el contenido y el cajón", async () => {
+    await cdp("Emulation.setSafeAreaInsetsOverride", { insets: { top: 47, bottom: 34, left: 0, right: 0 } }, M.sesion);
+    const r = await M.js(`
+      const W = marco("solvento"), d = W.document, cs = (el) => W.getComputedStyle(el);
+      const barra = d.querySelector(".navbar");
+      await hasta(() => barra.getBoundingClientRect().height === 111);
+      return barra.querySelector(".navbar-brand").getBoundingClientRect().top >= 47 && parseFloat(cs(d.body).paddingTop) >= 111 &&
+        parseFloat(cs(d.getElementById("sidebar")).paddingTop) >= 47 + 14;`);
+    await cdp("Emulation.setSafeAreaInsetsOverride", { insets: { top: 0, bottom: 0, left: 0, right: 0 } }, M.sesion);
+    return r;
+  });
 
   // ── Un tercer dispositivo con otra contraseña: la pide, y vale la clave de recuperación ──
   const C = await dispositivo();

@@ -46,5 +46,5 @@ body {
   background: var(--f0);
   color: var(--t1);
   min-height: 100vh;
-  padding: 5rem 1.5rem 3rem;
+  padding: calc(5rem + env(safe-area-inset-top)) 1.5rem 3rem;
 }

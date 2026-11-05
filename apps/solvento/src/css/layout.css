@@ -1,9 +1,11 @@
 /* ── Navbar ── */
+/* En un iPhone la página llega hasta arriba del todo: la barra deja sitio a la
+   hora y a la cámara, y el contenido baja lo mismo (fuera del móvil vale 0). */
 .navbar {
-  position: fixed; top: 0; left: 0; right: 0; height: 64px;
+  position: fixed; top: 0; left: 0; right: 0; height: calc(64px + env(safe-area-inset-top));
   background: var(--f3); border-bottom: 1px solid var(--b2);
   display: flex; align-items: center; justify-content: space-between;
-  padding: 0 1.5rem; z-index: 1000;
+  padding: env(safe-area-inset-top) 1.5rem 0; z-index: 1000;
 }
 /* Marca: el botón de menú abre el panel lateral; el logo, al lado, no es botón */
 .navbar-brand { display: flex; align-items: center; gap: 0.7rem; }
@@ -72,7 +74,7 @@ footer { text-align: center; margin-top: 5rem; font-size: 0.75rem; color: var(--
 /* ── Responsive ── */
 @media (max-width: 640px) {
   /* La marca no debe partirse en varias líneas ni empujar los botones fuera */
-  .navbar { padding: 0 0.85rem; gap: 0.5rem; }
+  .navbar { padding: env(safe-area-inset-top) 0.85rem 0; gap: 0.5rem; }
   #sync-estado { font-size: 0.7rem !important; }
   /* Solo el icono: con el texto, "Bloquear" se salía de la pantalla */
   #sync-btn, #logout-btn, #ajustes-btn { padding: 0.4rem 0.5rem; font-size: 0.95rem; }
@@ -90,7 +92,7 @@ footer { text-align: center; margin-top: 5rem; font-size: 0.75rem; color: var(--
 }
 
 @media (max-width: 900px) {
-  body { padding: 4.5rem 1rem 2rem; }
+  body { padding: calc(4.5rem + env(safe-area-inset-top)) 1rem 2rem; }
   .dashboard-main-grid { grid-template-columns: 1fr; gap: 1.5rem; }
   .chart-container-double { gap: 1.5rem; }
   .chart-block { min-width: unset; width: 100%; }

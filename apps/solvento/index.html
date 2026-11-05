@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover" />
   <meta name="robots" content="noindex, nofollow" />
   <!-- Solo se habla con este sitio y con GitHub: si algún día se colara un
        script ajeno, no podría mandar tus datos a ningún otro sitio. -->
@@ -14,13 +14,13 @@
   <!-- Se instala SweetSuite, no Solvento: esto vive dentro de ella -->
   <meta name="theme-color" content="#12141d" />
   <meta name="description" content="Tus finanzas, cifradas y siempre contigo." />
-  <script src="src/js/suite-puente.js?v=p234"></script>
+  <script src="src/js/suite-puente.js?v=p235"></script>
   <!-- El tema, antes que el CSS: si se aplicara después de pintar, quien use
        el tema claro vería un fogonazo oscuro en cada carga. -->
-  <script src="src/js/tema.js?v=p234"></script>
-  <link rel="stylesheet" href="src/css/base.css?v=p234" />
-  <link rel="stylesheet" href="src/css/layout.css?v=p234" />
-  <link rel="stylesheet" href="src/css/components.css?v=p234" />
+  <script src="src/js/tema.js?v=p235"></script>
+  <link rel="stylesheet" href="src/css/base.css?v=p235" />
+  <link rel="stylesheet" href="src/css/layout.css?v=p235" />
+  <link rel="stylesheet" href="src/css/components.css?v=p235" />
   <style>
     /* Arranque (login / importación) — cubre todo hasta desbloquear */
     #boot-overlay input {
@@ -64,7 +64,7 @@
     .registro-cab span { color: var(--t2); font-size: 0.78rem; white-space: nowrap; }
     .registro-que { font-size: 0.82rem; color: var(--t1b); margin-top: 0.15rem; }
     .aj-layout { display: grid; grid-template-columns: 200px 1fr; gap: 2rem; align-items: start; }
-    .aj-nav { display: flex; flex-direction: column; gap: 0.15rem; position: sticky; top: 5rem; }
+    .aj-nav { display: flex; flex-direction: column; gap: 0.15rem; position: sticky; top: calc(5rem + env(safe-area-inset-top)); }
     .aj-tab { background: none; border: none; text-align: left; color: var(--t1b); font-family: inherit; font-size: 0.88rem; font-weight: 500; padding: 0.55rem 0.75rem; border-radius: 8px; cursor: pointer; }
     .aj-tab:hover { background: var(--f4); color: var(--t1); }
     .aj-tab.active { background: var(--f4); color: var(--t0); font-weight: 700; }
@@ -123,10 +123,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="src/css/openclaw.css?v=p234" />
+  <link rel="stylesheet" href="src/css/openclaw.css?v=p235" />
   <!-- El móvil, lo último de todo: cuenta las cosas de otra manera (ver el archivo). -->
-  <link rel="stylesheet" href="src/css/asociacion.css?v=p234" />
-  <link rel="stylesheet" href="src/css/movil.css?v=p234" />
+  <link rel="stylesheet" href="src/css/asociacion.css?v=p235" />
+  <link rel="stylesheet" href="src/css/movil.css?v=p235" />
 </head>
 <body>
 
@@ -512,32 +512,32 @@
 <!-- ══ MODAL DE SINCRONIZACIÓN ══ -->
 
 
-<script src="src/js/entorno.js?v=p234"></script>
-<script src="src/js/crypto.js?v=p234"></script>
-<script src="src/js/config.js?v=p234"></script>
-<script src="src/js/model.js?v=p234"></script>
-<script src="src/js/charts.js?v=p234"></script>
-<script src="src/js/render.js?v=p234"></script>
-<script src="src/js/db.js?v=p234"></script>
-<script src="src/js/mezcla.js?v=p234"></script>
-<script src="src/js/sync.js?v=p234"></script>
-<script src="src/js/nav.js?v=p234"></script>
-<script src="src/js/plan.js?v=p234"></script>
-<script src="src/js/forms.js?v=p234"></script>
-<script src="src/js/perfil.js?v=p234"></script>
-<script src="src/js/exportar.js?v=p234"></script>
+<script src="src/js/entorno.js?v=p235"></script>
+<script src="src/js/crypto.js?v=p235"></script>
+<script src="src/js/config.js?v=p235"></script>
+<script src="src/js/model.js?v=p235"></script>
+<script src="src/js/charts.js?v=p235"></script>
+<script src="src/js/render.js?v=p235"></script>
+<script src="src/js/db.js?v=p235"></script>
+<script src="src/js/mezcla.js?v=p235"></script>
+<script src="src/js/sync.js?v=p235"></script>
+<script src="src/js/nav.js?v=p235"></script>
+<script src="src/js/plan.js?v=p235"></script>
+<script src="src/js/forms.js?v=p235"></script>
+<script src="src/js/perfil.js?v=p235"></script>
+<script src="src/js/exportar.js?v=p235"></script>
 <!-- La contabilidad de una asociación (TESORERIA.md): las piezas de cálculo
      vienen de Agora; paginas.js pinta Facturas, IVA, Subvenciones y Cuentas -->
-<script src="src/js/asociacion/dinero.js?v=p234"></script>
-<script src="src/js/asociacion/fechas.js?v=p234"></script>
-<script src="src/js/asociacion/csv.js?v=p234"></script>
-<script src="src/js/asociacion/xlsx.js?v=p234"></script>
-<script src="src/js/asociacion/facturas.js?v=p234"></script>
-<script src="src/js/asociacion/iva.js?v=p234"></script>
-<script src="src/js/asociacion/extracto.js?v=p234"></script>
-<script src="src/js/asociacion/contabilidad.js?v=p234"></script>
-<script src="src/js/asociacion/paginas.js?v=p234"></script>
-<script src="src/js/boot.js?v=p234"></script>
+<script src="src/js/asociacion/dinero.js?v=p235"></script>
+<script src="src/js/asociacion/fechas.js?v=p235"></script>
+<script src="src/js/asociacion/csv.js?v=p235"></script>
+<script src="src/js/asociacion/xlsx.js?v=p235"></script>
+<script src="src/js/asociacion/facturas.js?v=p235"></script>
+<script src="src/js/asociacion/iva.js?v=p235"></script>
+<script src="src/js/asociacion/extracto.js?v=p235"></script>
+<script src="src/js/asociacion/contabilidad.js?v=p235"></script>
+<script src="src/js/asociacion/paginas.js?v=p235"></script>
+<script src="src/js/boot.js?v=p235"></script>
   <!-- Sin service worker propio: el de SweetSuite guarda también Solvento -->
 </body>
 </html>
