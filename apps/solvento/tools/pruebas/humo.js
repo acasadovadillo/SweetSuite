@@ -598,13 +598,13 @@ comprobar("producción es solo acasadovadillo.github.io; lo demás es desarrollo
   !E.prod && E.esProduccion("acasadovadillo.github.io") && !E.esProduccion("localhost") &&
   !E.esProduccion("acasadovadillo.github.io.evil.com") && E.perfil === "perfil.dev.json");
 comprobar("en desarrollo no sale ni una llamada a GitHub",
-  bloquea("https://api.github.com/repos/acasadovadillo/datos-cifrados/contents/Solvento/alberto-solvento.enc") &&
-  bloquea("https://raw.githubusercontent.com/acasadovadillo/Solvento/main/x") &&
-  !bloquea("http://localhost:4400/__dev/api/repos/dev/datos-cifrados-dev/contents/a") && E.base.api.indexOf("/__dev/api") > 0);
+  bloquea("https://api.github.com/repos/acasadovadillo/Solvento-Data/contents/alberto-solvento.enc") &&
+  bloquea("https://raw.githubusercontent.com/acasadovadillo/Solvento-Price-Update/main/x") &&
+  !bloquea("http://localhost:4400/__dev/api/repos/dev/solvento-data-dev/contents/a") && E.base.api.indexOf("/__dev/api") > 0);
 var perfilDev = JSON.parse(leer(base + "perfil.dev.json"));
 comprobar("las cuentas de desarrollo lo son, y una que apunte a producción se rechaza",
   perfilDev.cuentas.length === 4 && perfilDev.cuentas.every(function (c) { return E.almacenNoValido(c.almacen) === null; }) &&
-  E.almacenNoValido({ owner: "acasadovadillo", repo: "datos-cifrados", dev: true }) !== null &&
+  E.almacenNoValido({ owner: "acasadovadillo", repo: "Solvento-Data", dev: true }) !== null &&
   E.almacenNoValido({ owner: "acasadovadillo", repo: "Solvento", dev: true }) !== null &&
   E.almacenNoValido({ owner: "acasadovadillo", repo: "Solvento-Price-Update", dev: true }) !== null);
 var perfilProd = JSON.parse(leer(base + "perfil.json"));

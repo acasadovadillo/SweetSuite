@@ -5,7 +5,7 @@
  *   · Hay bloque cifrado local → login (contraseña → descifra → desbloquea).
  *   · No hay local pero SÍ en el repositorio de datos → se baja y se pide la
  *     contraseña. Esto hace que funcione en cualquier dispositivo. Como ese
- *     repositorio es privado (datos-cifrados), la primera vez en un dispositivo
+ *     repositorio es privado (Solvento-Data), la primera vez en un dispositivo
  *     el login pide también el token de la cuenta.
  *   · Nada en local ni en el repo → cuenta nueva: elige contraseña y empieza vacía.
  *
@@ -863,7 +863,7 @@
     try { ({ doc, actual } = await abrirBlob(r.blob)); }
     catch (e) {
       setError("sync-status", e.code === "BAD_PASSWORD"
-        ? "Estos datos no se abren con tu cuenta de SweetSuite. Si son del Solvento de antes, tráelos aquí abajo."
+        ? "Estos datos no se abren con tu cuenta de SweetSuite."
         : "Error al abrir tus datos: " + e.message);
       return;
     }
@@ -1240,61 +1240,6 @@
       : { estado: "ok", texto: "guardado en GitHub" };
   }
 
-  // ── Traer del Solvento de antes ──
-  // Guardaba en este mismo dominio (llaves «solvento_…») y en datos-cifrados/
-  // Solvento/, cifrado con la contraseña de entonces. Se trae lo último: lo de
-  // GitHub, salvo que aquí quedara algo sin subir.
-  async function traerAntigua(pwAntigua, tokenAntiguo) {
-    const u = P().actual().usuario, K = P().clavesAntiguas(u);
-    let local = null;
-    try { local = JSON.parse(localStorage.getItem(K.blob)); } catch (e) { local = null; }
-    let token = (tokenAntiguo || "").trim();
-    if (!token && localStorage.getItem(K.token)) {
-      try { token = await C.decryptString(JSON.parse(localStorage.getItem(K.token)), pwAntigua); } catch (e) { token = ""; }
-    }
-    let blob = null, origen = "";
-    if (token && !(local && localStorage.getItem(K.pendiente) === "1")) {
-      try {
-        const r = await SYNC.leerArchivo(token, "Solvento/" + u + "-solvento.enc", SS.entorno.antiguo);
-        if (r) { blob = JSON.parse(r.texto); origen = "GitHub"; }
-      } catch (e) { if (!local) throw e; }
-    }
-    if (!blob && local) { blob = local; origen = "este dispositivo"; }
-    if (!blob) {
-      throw new Error(token ? "No hay datos tuyos en el Solvento de antes"
-        : "En este dispositivo no hay datos del Solvento de antes: pega también el token que usabas en él");
-    }
-    return { doc: await C.decryptDoc(blob, pwAntigua), origen };
-  }
-  async function doTraerAntigua() {
-    const pass = $("antiguo-pass"), tok = $("antiguo-token");
-    if (!pass || !pass.value) { setError("sync-status", "Escribe la contraseña del Solvento de antes"); return; }
-    setError("sync-status", "Buscando tus datos de antes…", "var(--t1b)");
-    let r;
-    try { r = await traerAntigua(pass.value, tok && tok.value); }
-    catch (e) { setError("sync-status", e.code === "BAD_PASSWORD" ? "Esa no es la contraseña del Solvento de antes" : e.message); return; }
-    const ahora = DB.state.doc || {};
-    const n = (d, k) => (Array.isArray(d[k]) ? d[k].length : 0);
-    if (!esperandoDatos && (n(ahora, "movimientos") || n(ahora, "inversiones")) && !window.confirm(
-      `Se va a SUSTITUIR lo que hay ahora en Solvento por tus datos de antes (de ${r.origen}):
-
-` +
-      `  movimientos  ${n(ahora, "movimientos")} → ${n(r.doc, "movimientos")}
-` +
-      `  operaciones  ${n(ahora, "inversiones")} → ${n(r.doc, "inversiones")}
-
-¿Sigo?`)) { setError("sync-status", ""); return; }
-    pass.value = ""; if (tok) tok.value = "";
-    const venia = esperandoDatos;
-    esperandoDatos = false; cuentaEsperando = null;
-    DB.state.doc = r.doc;
-    if (venia) await unlock(r.doc, DB.state.password);
-    if (DB.state.token) await saveDoc();
-    else { anotarCambio(); await guardarLocal(); marcarPendiente(true); localStorage.setItem(EDITAR_IGUAL, "1"); pintarLectura(); render(); }
-    setError("sync-status", `Traídos ${n(r.doc, "movimientos")} movimientos y ${n(r.doc, "inversiones")} operaciones de ${r.origen} ✓`, "var(--verde)");
-    toast("Tus datos de antes ya están en Solvento ✓", "var(--verde)");
-  }
-
   // ── Sincronización (UI) ──
   function updateSyncUi() {
     pintarAutoguardado();
@@ -1548,8 +1493,6 @@
     $("logout-btn").addEventListener("click", () => SS.bloquear());
     const salirBtn = $("salir-btn");
     if (salirBtn) salirBtn.addEventListener("click", () => SS.cerrarSesion());
-    const traer = $("antiguo-traer");
-    if (traer) traer.addEventListener("click", doTraerAntigua);
     const auto = $("sync-auto");
     if (auto) auto.addEventListener("change", () => ponerAutoguardado(auto.checked));
     // ⌘S / Ctrl+S: subir lo que haya. Dentro de la app, nunca «guardar la página».

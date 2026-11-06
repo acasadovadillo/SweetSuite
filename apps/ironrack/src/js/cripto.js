@@ -1,8 +1,7 @@
 /*
  * Ironrack — Cifrado zero-knowledge (Web Crypto API).
  *
- * Mismo formato que Solvento, para que todo lo que vive en datos-cifrados se
- * abra igual:
+ * Mismo formato que Solvento, para que los datos de las dos se abran igual:
  *   Derivación de clave : PBKDF2-HMAC-SHA256, 310.000 iteraciones
  *   Cifrado             : AES-256-GCM (contraseña errónea → falla al descifrar)
  *   Bloque              : JSON { v: 1, kdf, iter, salt, iv, ct } en base64

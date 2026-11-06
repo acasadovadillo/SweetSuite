@@ -3,7 +3,7 @@
  *
  * El bloque cifrado de cada cuenta vive en un repositorio. Si es público, LEERLO
  * no requiere token; si es PRIVADO («privado»: true en perfil.json, que es como
- * está ahora: datos-cifrados), hace falta el token hasta para leer, y se lee
+ * está ahora: Solvento-Data), hace falta el token hasta para leer, y se lee
  * siempre por la API. ESCRIBIRLO usa un token fine-grained (Contents: Read and
  * write) que se guarda CIFRADO en localStorage con la contraseña del usuario y
  * solo se descifra a memoria tras el login. El token nunca se versiona ni se

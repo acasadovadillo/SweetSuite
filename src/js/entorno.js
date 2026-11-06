@@ -34,11 +34,6 @@
           cuentas: { owner: "acasadovadillo", repo: "SweetSuite", branch: "main", ruta: "cuentas.json" } }
       : { llavero: { owner: "dev", repo: "sweetsuite-admin-dev", branch: "main" },
           cuentas: { owner: "dev", repo: "sweetsuite-dev", branch: "main", ruta: "cuentas.json" } },
-    // Donde guardaban las apps antes de SweetSuite. Solo se lee, para traer
-    // los datos de cada cuenta la primera vez.
-    antiguo: prod
-      ? { owner: "acasadovadillo", repo: "datos-cifrados", branch: "main" }
-      : { owner: "dev", repo: "datos-cifrados-dev", branch: "main" },
     // Los precios públicos de Solvento (prices.json, tickers.json)
     precios: prod ? "/Solvento-Price-Update/" : "/__dev/publico/solvento/",
   };

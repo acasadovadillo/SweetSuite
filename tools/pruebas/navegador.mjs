@@ -107,6 +107,17 @@ const AYUDA = `
   }
   const $ = (s) => document.querySelector(s);
   const marco = (id) => { const f = document.querySelector("#marco-" + id); return f && f.contentWindow; };
+  // Unas finanzas de mentira: dos cuentas y tres apuntes, apuntados y guardados
+  const apuntarFinanzas = async (W, nombre) => {
+    const d = W.SolventoDB.state.doc;
+    d.movimientos = [
+      { id: "m1", fecha: "05/09/2026", tipo: "Ingreso", importe: "1800", cuenta_destino: "Banco de prueba", tipo_ingreso: "Nómina", detalle: "Nómina de " + nombre + " (ficticio)" },
+      { id: "m2", fecha: "12/09/2026", tipo: "Gasto", importe: "62.4", cuenta_origen: "Banco de prueba", tipo_gasto: "Supermercado", detalle: "Compra (ficticio)" },
+      { id: "m3", fecha: "20/09/2026", tipo: "Traspaso", importe: "100", cuenta_origen: "Banco de prueba", cuenta_destino: "Efectivo", detalle: "Sacar efectivo (ficticio)" },
+    ];
+    d.config = Object.assign(d.config || {}, { cuentas: [{ cuenta: "Banco de prueba", accent: "#0ea5e9" }, { cuenta: "Efectivo", accent: "#2d9e5f", emoji: "💵" }], activos: [] });
+    await W.SolventoBoot.saveDoc();
+  };
   const sinDialogo = async () => { await espera(400); if (!$("#dialogo").hidden && $('#dialogo [data-r="no"]')) $('#dialogo [data-r="no"]').click(); };
   async function entrar(usuario, pw) {
     const m = $('[data-modo="particular"]'); if (m && m.getAttribute("aria-checked") !== "true") m.click();
@@ -146,7 +157,7 @@ async function dispositivo({ movil = false } = {}) {
 }
 
 async function main() {
-  // Esperar al servidor (siembra los datos de antes) y al navegador
+  // Esperar al servidor y al navegador
   await hastaQue(async () => (await fetch(URL_SUITE + "cuentas.json")).ok, 60000, "el servidor de desarrollo").catch((e) => {
     throw new Error(e.message + (errServidor ? "\n" + errServidor.slice(-400) : ""));
   });
@@ -191,16 +202,14 @@ async function main() {
     const r = await fetch("/__dev/api/repos/dev/ironrack-data-dev/contents/alberto-ironrack.enc", { headers: { Authorization: "Bearer dev" } });
     return pendiente && r.ok;`));
 
-  await prueba("Solvento: con el token se traen los datos del Solvento de antes y se suben", () => A.js(`
+  await prueba("Solvento: con el token empieza vacío, y lo que se apunta se sube", () => A.js(`
     location.hash = "#app/solvento";
     const W = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.document.getElementById("boot-overlay").style.display === "none" && w; }, 30000);
     const d = W.document;
     d.getElementById("sync-token").value = "dev"; d.getElementById("sync-save-token").click();
     await hasta(() => d.getElementById("sync-status").textContent.includes("empieza vacío"), 30000);
     await sinDialogo();
-    d.getElementById("antiguo-pass").value = "desarrollo"; d.getElementById("antiguo-token").value = "dev";
-    W.confirm = () => true; d.getElementById("antiguo-traer").click();
-    await hasta(() => W.SolventoDB.state.doc.movimientos.length === 3, 30000);
+    await apuntarFinanzas(W, "Alberto");
     await hasta(async () => (await fetch("/__dev/api/repos/dev/solvento-data-dev/contents/alberto-solvento.enc", { headers: { Authorization: "Bearer dev" } })).ok, 30000);
     return true;`));
 
@@ -257,8 +266,7 @@ async function main() {
     W.document.getElementById("sync-token").value = "dev"; W.document.getElementById("sync-save-token").click();
     await hasta(() => W.document.getElementById("sync-status").textContent.includes("empieza vacío"), 30000);
     await sinDialogo();
-    W.document.getElementById("antiguo-pass").value = "desarrollo"; W.document.getElementById("antiguo-token").value = "dev";
-    W.confirm = () => true; W.document.getElementById("antiguo-traer").click();
+    await apuntarFinanzas(W, "ABIES");
     const reg = await hasta(() => (W.SolventoDB.state.doc.registro || [])[0], 30000);
     return reg.nombre === "Alberto" && $("#nombre-usuario").textContent === "ABIES · Alberto";`));
   await prueba("empresa: con una contraseña mal no se abre", () => E.js(`

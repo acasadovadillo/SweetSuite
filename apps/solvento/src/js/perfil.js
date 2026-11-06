@@ -5,15 +5,15 @@
  * almacén: el sitio del que se lee y al que se escribe su bloque cifrado.
  *
  * El catálogo vive en `perfil.json` (en el repositorio de la app; los datos,
- * en el privado datos-cifrados), NO en el código:
+ * en el privado Solvento-Data), NO en el código:
  *
  *   { "cuentas": [
  *       { "usuario": "alberto", "nombre": "Alberto", "tipo": "persona",
- *         "almacen": { "owner": "…", "repo": "datos-cifrados", "branch": "main",
- *                      "path": "Solvento/alberto-solvento.enc", "privado": true } },
+ *         "almacen": { "owner": "…", "repo": "Solvento-Data", "branch": "main",
+ *                      "path": "alberto-solvento.enc", "privado": true } },
  *       { "usuario": "abies", "nombre": "ABIES", "tipo": "organizacion",
- *         "almacen": { "owner": "…", "repo": "datos-cifrados", "branch": "main",
- *                      "path": "Solvento/abies-solvento.enc", "privado": true } } ] }
+ *         "almacen": { "owner": "…", "repo": "Solvento-Data", "branch": "main",
+ *                      "path": "abies-solvento.enc", "privado": true } } ] }
  *
  * El login solo pide usuario y contraseña, como cualquier login: el usuario dice
  * QUÉ cuenta abrir y la contraseña la abre. Dónde guarda cada una es
@@ -64,9 +64,9 @@
     ? catalogo[0]
     : catalogo.find((c) => normal(c.usuario) === normal(u));
 
-  // Las llaves del navegador, con el prefijo de SweetSuite y el usuario: en el
-  // mismo dominio vive todavía el Solvento de antes, con las suyas
-  // («solvento_…»), que no se tocan (se leen al traer los datos de antes).
+  // Las llaves del navegador, con el prefijo de SweetSuite y el usuario. Las
+  // «solvento_…» que queden en algún navegador son del Solvento de antes: ya
+  // no se leen, y tampoco se borran.
   const sufijo = () => ":" + (actual().usuario || actualId);
   // Cualquier otra llave de este navegador que sea de una cuenta y no de todas.
   const claveDe = (base) => "sweetsuite_" + base + sufijo();
@@ -79,15 +79,6 @@
   };
   const claveToken = () => "sweetsuite_solvento_gh_token" + sufijo() + (rep ? "@" + rep : "");
   const claveSha = () => "sweetsuite_solvento_data_sha" + sufijo();
-  // Las del Solvento de antes: la primera cuenta (alberto) sin sufijo y las
-  // demás con «:<usuario>»
-  const sufijoAntiguo = (u) => (normal(u) === "alberto" ? "" : ":" + normal(u).replace(/[^a-z0-9]+/g, "-"));
-  const clavesAntiguas = (u) => ({
-    blob: "solvento_data_enc" + sufijoAntiguo(u),
-    token: "solvento_gh_token" + sufijoAntiguo(u),
-    pendiente: "solvento_sync_pendiente" + sufijoAntiguo(u),
-  });
-
   function normalizarCuenta(c, i) {
     const id = i === 0 ? PRINCIPAL : (normal(c.usuario || c.nombre || "").replace(/[^a-z0-9]+/g, "-") || "cuenta" + i);
     return {
@@ -165,7 +156,7 @@
 
   window.SolventoPerfil = {
     cargar, aplicar, entrar, usar, cuentas, actual, porUsuario, esOrganizacion,
-    claveBlob, claveToken, claveSha, claveDe, clavesAntiguas, representante,
+    claveBlob, claveToken, claveSha, claveDe, representante,
     app: () => app,
     datos: () => actual(),
     PRINCIPAL,
