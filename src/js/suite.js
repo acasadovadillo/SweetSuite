@@ -25,7 +25,7 @@
 (function () {
   "use strict";
   const E = window.SweetEntorno, L = window.SweetLlavero, T = window.SweetTema;
-  const VERSION = "1.14.0";
+  const VERSION = "1.14.1";
   const $ = (s) => document.querySelector(s);
   const esc = (s) => String(s == null ? "" : s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
   const fallo = (msg, code) => { const e = new Error(msg); e.code = code; return e; };
@@ -1429,7 +1429,7 @@
         // Su cargo en la asociación (Agora), que pone la Administración en cuentas.json
         cargo: S.representante && S.cuenta.cargos ? S.cuenta.cargos[S.representante.usuario] || "" : "",
         secreto, anteriores,
-        repo: E.repos[app], antiguo: E.antiguo,
+        repo: E.repos[app],
       };
     },
     registrar(app, api) { S.apis[app] = api; },

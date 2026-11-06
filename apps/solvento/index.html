@@ -14,13 +14,13 @@
   <!-- Se instala SweetSuite, no Solvento: esto vive dentro de ella -->
   <meta name="theme-color" content="#12141d" />
   <meta name="description" content="Tus finanzas, cifradas y siempre contigo." />
-  <script src="src/js/suite-puente.js?v=p236"></script>
+  <script src="src/js/suite-puente.js?v=p237"></script>
   <!-- El tema, antes que el CSS: si se aplicara después de pintar, quien use
        el tema claro vería un fogonazo oscuro en cada carga. -->
-  <script src="src/js/tema.js?v=p236"></script>
-  <link rel="stylesheet" href="src/css/base.css?v=p236" />
-  <link rel="stylesheet" href="src/css/layout.css?v=p236" />
-  <link rel="stylesheet" href="src/css/components.css?v=p236" />
+  <script src="src/js/tema.js?v=p237"></script>
+  <link rel="stylesheet" href="src/css/base.css?v=p237" />
+  <link rel="stylesheet" href="src/css/layout.css?v=p237" />
+  <link rel="stylesheet" href="src/css/components.css?v=p237" />
   <style>
     /* Arranque (login / importación) — cubre todo hasta desbloquear */
     #boot-overlay input {
@@ -123,10 +123,10 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Albert+Sans:wght@400;500;600;700;800&display=swap" />
-  <link rel="stylesheet" href="src/css/openclaw.css?v=p236" />
+  <link rel="stylesheet" href="src/css/openclaw.css?v=p237" />
   <!-- El móvil, lo último de todo: cuenta las cosas de otra manera (ver el archivo). -->
-  <link rel="stylesheet" href="src/css/asociacion.css?v=p236" />
-  <link rel="stylesheet" href="src/css/movil.css?v=p236" />
+  <link rel="stylesheet" href="src/css/asociacion.css?v=p237" />
+  <link rel="stylesheet" href="src/css/movil.css?v=p237" />
 </head>
 <body>
 
@@ -433,7 +433,7 @@
       <button id="sync-token-ver" type="button" title="Mostrar u ocultar el token"
         style="background:var(--f4);border:1px solid var(--b2);border-radius:8px;color:var(--t1b);font-size:0.9rem;padding:0 0.7rem;cursor:pointer;font-family:inherit;">👁</button>
     </div>
-    <small style="display:block;margin:0.4rem 0 0.5rem;">Token <b>fine-grained</b> con permiso <b>Contents: Read and write</b> en <b>Solvento-Data</b> (tus datos) y en <b>Solvento</b> (la lista de precios). Se guarda cifrado con tu cuenta <b>en este dispositivo</b>, y no viaja con tus datos: en otro dispositivo hay que pegarlo otra vez.</small>
+    <small style="display:block;margin:0.4rem 0 0.5rem;">Token <b>fine-grained</b> con permiso <b>Contents: Read and write</b> en <b>Solvento-Data</b> (tus datos) y en <b>Solvento-Price-Update</b> (la lista de precios). Se guarda cifrado con tu cuenta <b>en este dispositivo</b>, y no viaja con tus datos: en otro dispositivo hay que pegarlo otra vez.</small>
     <small id="sync-token-nombre" style="display:block;margin:0 0 0.5rem;"></small>
     <div id="sync-token-status" style="font-size:0.78rem;margin-bottom:0.5rem;"></div>
     <button id="sync-save-token" class="primary" style="width:100%;margin-bottom:1.25rem;">Guardar token</button>
@@ -457,13 +457,6 @@
     </div>
                 <div id="sync-status" style="font-size:0.82rem;font-weight:600;margin-top:1rem;text-align:center;display:none;"></div>
 
-    <!-- La primera vez: los datos del Solvento de antes de SweetSuite -->
-    <h3 style="margin-top:2rem;">Traer tus datos del Solvento de antes</h3>
-    <p>Con la contraseña que usabas en él. Se trae lo último que guardaste —de GitHub o de este dispositivo— y
-       <b>sustituye</b> lo que haya ahora aquí.</p>
-    <input id="antiguo-pass" type="password" placeholder="Contraseña del Solvento de antes" autocomplete="off" style="width:100%;margin-bottom:0.6rem;" />
-    <input id="antiguo-token" type="password" placeholder="Token de antes (solo si no estaba en este dispositivo)" autocomplete="off" style="width:100%;margin-bottom:0.6rem;" />
-    <button id="antiguo-traer" type="button" style="width:100%;">Traer del Solvento de antes</button>
           </section>
 
           <section class="aj-sec solo-org" id="aj-sec-registro">
@@ -512,32 +505,32 @@
 <!-- ══ MODAL DE SINCRONIZACIÓN ══ -->
 
 
-<script src="src/js/entorno.js?v=p236"></script>
-<script src="src/js/crypto.js?v=p236"></script>
-<script src="src/js/config.js?v=p236"></script>
-<script src="src/js/model.js?v=p236"></script>
-<script src="src/js/charts.js?v=p236"></script>
-<script src="src/js/render.js?v=p236"></script>
-<script src="src/js/db.js?v=p236"></script>
-<script src="src/js/mezcla.js?v=p236"></script>
-<script src="src/js/sync.js?v=p236"></script>
-<script src="src/js/nav.js?v=p236"></script>
-<script src="src/js/plan.js?v=p236"></script>
-<script src="src/js/forms.js?v=p236"></script>
-<script src="src/js/perfil.js?v=p236"></script>
-<script src="src/js/exportar.js?v=p236"></script>
+<script src="src/js/entorno.js?v=p237"></script>
+<script src="src/js/crypto.js?v=p237"></script>
+<script src="src/js/config.js?v=p237"></script>
+<script src="src/js/model.js?v=p237"></script>
+<script src="src/js/charts.js?v=p237"></script>
+<script src="src/js/render.js?v=p237"></script>
+<script src="src/js/db.js?v=p237"></script>
+<script src="src/js/mezcla.js?v=p237"></script>
+<script src="src/js/sync.js?v=p237"></script>
+<script src="src/js/nav.js?v=p237"></script>
+<script src="src/js/plan.js?v=p237"></script>
+<script src="src/js/forms.js?v=p237"></script>
+<script src="src/js/perfil.js?v=p237"></script>
+<script src="src/js/exportar.js?v=p237"></script>
 <!-- La contabilidad de una asociación (TESORERIA.md): las piezas de cálculo
      vienen de Agora; paginas.js pinta Facturas, IVA, Subvenciones y Cuentas -->
-<script src="src/js/asociacion/dinero.js?v=p236"></script>
-<script src="src/js/asociacion/fechas.js?v=p236"></script>
-<script src="src/js/asociacion/csv.js?v=p236"></script>
-<script src="src/js/asociacion/xlsx.js?v=p236"></script>
-<script src="src/js/asociacion/facturas.js?v=p236"></script>
-<script src="src/js/asociacion/iva.js?v=p236"></script>
-<script src="src/js/asociacion/extracto.js?v=p236"></script>
-<script src="src/js/asociacion/contabilidad.js?v=p236"></script>
-<script src="src/js/asociacion/paginas.js?v=p236"></script>
-<script src="src/js/boot.js?v=p236"></script>
+<script src="src/js/asociacion/dinero.js?v=p237"></script>
+<script src="src/js/asociacion/fechas.js?v=p237"></script>
+<script src="src/js/asociacion/csv.js?v=p237"></script>
+<script src="src/js/asociacion/xlsx.js?v=p237"></script>
+<script src="src/js/asociacion/facturas.js?v=p237"></script>
+<script src="src/js/asociacion/iva.js?v=p237"></script>
+<script src="src/js/asociacion/extracto.js?v=p237"></script>
+<script src="src/js/asociacion/contabilidad.js?v=p237"></script>
+<script src="src/js/asociacion/paginas.js?v=p237"></script>
+<script src="src/js/boot.js?v=p237"></script>
   <!-- Sin service worker propio: el de SweetSuite guarda también Solvento -->
 </body>
 </html>
