@@ -64,6 +64,24 @@
     ? catalogo[0]
     : catalogo.find((c) => normal(c.usuario) === normal(u));
 
+  // Una cuenta que SweetSuite dice que tiene Solvento y que no está en
+  // perfil.json (la ha dado de alta la Administración, que solo escribe
+  // cuentas.json): su archivo es el de siempre, <usuario>-solvento.enc, en el
+  // repositorio privado de datos que da la sesión. Igual que Ironrack.
+  function desdeSesion(s) {
+    if (!s || !s.usuario) return null;
+    const hay = porUsuario(s.usuario);
+    if (hay) return hay;
+    if (!s.repo || !s.repo.repo) return null;
+    const almacen = { owner: s.repo.owner, repo: s.repo.repo, branch: s.repo.branch || "main",
+                      path: normal(s.usuario) + "-solvento.enc", privado: true };
+    if (E && !E.prod) almacen.dev = true;
+    if (E && E.almacenNoValido(almacen)) return null;
+    const c = normalizarCuenta({ usuario: s.usuario, nombre: s.nombre, tipo: s.tipo, almacen }, Math.max(1, catalogo.length));
+    catalogo.push(c);
+    return c;
+  }
+
   // Las llaves del navegador, con el prefijo de SweetSuite y el usuario. Las
   // «solvento_…» que queden en algún navegador son del Solvento de antes: ya
   // no se leen, y tampoco se borran.
@@ -155,7 +173,7 @@
   function entrar(si) { dentro = si !== false; aplicar(); }
 
   window.SolventoPerfil = {
-    cargar, aplicar, entrar, usar, cuentas, actual, porUsuario, esOrganizacion,
+    cargar, aplicar, entrar, usar, cuentas, actual, porUsuario, desdeSesion, esOrganizacion,
     claveBlob, claveToken, claveSha, claveDe, representante,
     app: () => app,
     datos: () => actual(),

@@ -1165,7 +1165,7 @@
   async function entrarEnSuite() {
     panel("checking");
     const s = await SS.sesion("solvento");
-    const cuenta = s && P() && P().porUsuario(s.usuario);
+    const cuenta = s && P() && P().desdeSesion(s);
     if (!cuenta) { pantallaSuite("Tu cuenta no tiene Solvento."); return; }
     P().usar(cuenta.id);
     REP = s.representante || null;

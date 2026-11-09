@@ -487,7 +487,8 @@ async function main() {
     await hasta(() => $('[data-adm="nueva"]'), 30000); await sinDialogo();
     $('[data-adm="nueva"][data-tipo="persona"]').click();
     await hasta(() => $("#f-cuenta")); const f = $("#f-cuenta");
-    f.usuario.value = "lucia"; f.nombre.value = "Lucía"; f.querySelector('input[name="app"][value="ironrack"]').checked = true; f.requestSubmit();
+    f.usuario.value = "lucia"; f.nombre.value = "Lucía"; f.querySelector('input[name="app"][value="ironrack"]').checked = true;
+    f.querySelector('input[name="app"][value="solvento"]').checked = true; f.requestSubmit();
     await hasta(() => $('[data-adm="guardar"]')); $('[data-adm="guardar"]').click();
     await hasta(() => !$("#dialogo").hidden && $("#dialogo").textContent.includes("Lucia-Ironrack"), 20000);
     $('#dialogo [data-r="ok"]').click();
@@ -746,15 +747,22 @@ async function main() {
       const todas = S.SolventoDB.state.doc.movimientos.filter((x) => String(x.id).startsWith("agora-cuota:")).length;
       return puede && !antes && todas >= 2;`);
   });
-  await prueba("…y quien no es Admin no ve la Administración", async () => {
+  await prueba("…y quien no es Admin no ve la Administración, y abre el Solvento que le ha dado", async () => {
     await AdM.abrir(URL_SUITE);
     return AdM.js(`
       await entrar("lucia", "lucia-1234");
       await hasta(() => $("#b-nueva")); $("#b-nueva").click();
       await hasta(() => $("#f-crear")); const c = $("#f-crear"); c.repetir.value = "lucia-1234"; c.requestSubmit();
       await hasta(() => $("#c-guardada"), 30000); $("#c-guardada").click(); $("#b-seguir").click();
-      await hasta(() => marco("ironrack"), 20000);
-      return !document.querySelector("[data-adm]") && !window.SweetSuite.apps().some((a) => a.id === "admin");`);
+      await hasta(() => location.hash === "#inicio" || marco("ironrack"), 20000);
+      const sinAdmin = !document.querySelector("[data-adm]") && !window.SweetSuite.apps().some((a) => a.id === "admin");
+      // Solvento la abre aunque no esté en su perfil.json: su archivo sale de la cuenta
+      location.hash = "#app/solvento";
+      const W = await hasta(() => { const w = marco("solvento"); return w && w.SolventoPerfil && w.SolventoPerfil.actual().usuario === "lucia" && w; }, 30000);
+      await espera(500);
+      const a = W.SolventoPerfil.actual().almacen;
+      return sinAdmin && a.path === "lucia-solvento.enc" && a.repo === "solvento-data-dev" && a.privado === true &&
+        !W.document.body.textContent.includes("no tiene Solvento");`);
   });
 
   // ── Una app suelta: su carpeta (apps/ironrack/) ──

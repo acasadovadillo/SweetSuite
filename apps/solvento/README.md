@@ -34,7 +34,8 @@ Abrir su carpeta, `apps/solvento/` (en la web, <https://acasadovadillo.github.io
 ```
 index.html        la página (SweetSuite la abre en un marco)
 manifest.json     para instalarla suelta
-perfil.json       qué es cada cuenta y activo (y perfil.dev.json, el de desarrollo)
+perfil.json       dónde guarda cada cuenta (y perfil.dev.json, el de desarrollo); una cuenta
+                  que no está aquí usa <usuario>-solvento.enc en Solvento-Data
 img/              logos de bancos y activos, e iconos de la app (img/app/)
 src/css/          estilos
 src/js/
