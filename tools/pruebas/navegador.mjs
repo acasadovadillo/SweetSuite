@@ -249,6 +249,31 @@ async function main() {
   // ── Una empresa ──
   const E = await dispositivo();
   await E.abrir(URL_SUITE);
+  await prueba("Caja: al pulsar una cuenta se abre su página, con solo sus apuntes y el saldo tras cada uno", () => A.js(`
+    location.hash = "#app/solvento";
+    const W = await hasta(() => { const w = marco("solvento"); return w && w.SolventoDB && w.SolventoDB.state.doc && w; }, 30000);
+    const d = W.document;
+    W.v2Tab("caja");
+    const fila = await hasta(() => [...d.querySelectorAll("#v2-page-caja tr.cta-fila")].find((f) => f.textContent.includes("Banco de prueba")));
+    fila.click();
+    const pg = await hasta(() => { const p = d.getElementById("v2-page-cuenta"); return p.classList.contains("active") && p.querySelector(".cta-libro") && p; });
+    // Solo los de esa cuenta: los tres de mentira y los dos de los dos dispositivos (el traspaso a Efectivo sale como salida)
+    const filas = [...pg.querySelectorAll(".cta-libro tr.table-row")];
+    const saldoCaja = W.SolventoModel.computeSaldos(W.SolventoDB.state.doc.movimientos, W.SolventoDB.state.doc.inversiones).saldos.find((s) => s.cuenta === "Banco de prueba").saldo;
+    const ultimo = filas[0].querySelector('td[title="Saldo después de este apunte"]').textContent;
+    const cabecera = pg.querySelector(".section-subtitle").textContent;
+    // En el menú sigue marcada Caja, y se vuelve a ella
+    const enCaja = d.querySelector('#sidebar .sn-item[data-page="caja"]').classList.contains("active");
+    // «＋ Movimiento» sale con la cuenta puesta
+    W.v2CuentaMov();
+    const origen = await hasta(() => d.getElementById("m-origen") && d.getElementById("form-modal").style.display !== "none" && d.getElementById("m-origen").value);
+    d.getElementById("form-modal").style.display = "none";
+    pg.querySelector(".cta-volver").click();
+    await hasta(() => d.getElementById("v2-page-caja").classList.contains("active"));
+    if (filas.length !== 5) throw new Error(filas.length + " apuntes; debían ser 5");
+    if (ultimo !== cabecera || Math.abs(saldoCaja - 1627.6) > 0.005) throw new Error("saldo " + ultimo + " / " + cabecera + " / " + saldoCaja);
+    return enCaja && origen === "Banco de prueba";`));
+
   await prueba("empresa: quien no es representante no pasa del segundo paso", () => E.js(`
     $('[data-modo="empresa"]').click();
     await hasta(() => $("#f-empresa")); let f = $("#f-empresa"); f.empresa.value = "abies"; f.contrasena.value = "empresa-1234"; f.requestSubmit();

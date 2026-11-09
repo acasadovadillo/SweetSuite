@@ -632,7 +632,8 @@
   };
 
   // ── El extracto del banco (en Caja, para cualquiera) ──────────────────────
-  window.v2ImportarExtracto = () => {
+  // Desde la página de una cuenta llega su nombre, y la cuenta ya sale elegida
+  window.v2ImportarExtracto = (cuentaElegida) => {
     const sel = document.createElement("input");
     sel.type = "file";
     sel.accept = ".csv,.xlsx,.txt,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet";
@@ -653,11 +654,11 @@
           filas = [l.cabecera].concat(l.filas);
         }
       } catch (e) { aviso("No se ha podido leer: " + e.message, "var(--rojo)"); return; }
-      abrirExtracto(archivo.name, filas);
+      abrirExtracto(archivo.name, filas, cuentaElegida);
     });
     sel.click();
   };
-  function abrirExtracto(nombre, filas) {
+  function abrirExtracto(nombre, filas, cuentaElegida) {
     const ui = FU(), d = docu();
     const det = WA.Extracto.detectarColumnas(filas) || { fila: 0, columnas: {} };
     const cab = filas[det.fila] || [];
@@ -666,7 +667,7 @@
     const cuentas = ui.CUENTAS();
     let resultado = null;
     const body = nota("«" + esc(nombre) + "»: " + Math.max(filas.length - det.fila - 1, 0) + " filas.") +
-      ui.field("ex-cuenta", "¿De qué cuenta es?", ui.select("ex-cuenta", cuentas, cuentas[0])) +
+      ui.field("ex-cuenta", "¿De qué cuenta es?", ui.select("ex-cuenta", cuentas, cuentas.indexOf(cuentaElegida) >= 0 ? cuentaElegida : cuentas[0])) +
       ui.field("ex-fila", "Fila de los títulos", ui.input("ex-fila", "number", det.fila + 1, 'min="1"')) +
       `<div class="fl-dos">${campos.map(([k, t]) => ui.field("ex-" + k, t, ui.selectKV("ex-" + k, opcCol, det.columnas[k] === undefined ? "" : String(det.columnas[k])))).join("")}</div>` +
       `<div id="ex-previa" aria-live="polite"></div>` +

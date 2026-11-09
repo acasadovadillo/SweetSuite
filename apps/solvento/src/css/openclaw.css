@@ -352,3 +352,46 @@ a { color: var(--acento); }
 }
 @keyframes hoja-sube { from { transform: translateY(100%); } to { transform: none; } }
 @media (prefers-reduced-motion: reduce) { #form-modal .modal-card { animation: none; } }
+
+/* ── La página de una cuenta (se abre desde Caja) ── */
+.cta-fila { cursor: pointer; }
+.cta-volver-fila { margin-top: 1.5rem; }
+.cta-volver {
+  background: none; border: 0; padding: 4px 0; color: var(--t1b); font: inherit; font-size: 13px; font-weight: 600; cursor: pointer;
+}
+.cta-volver:hover { color: var(--t0); }
+.cta-cabecera { margin-top: 0.75rem !important; }
+.cta-titulo { display: flex; align-items: center; gap: 10px; }
+.cta-titulo img, .cta-titulo > span:first-child { flex-shrink: 0; }
+.cta-marcas { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.cta-marcas span {
+  font-size: 12px; font-weight: 600; color: var(--t1b); border: 1px solid var(--b2); border-radius: 999px; padding: 2px 10px;
+}
+.cta-panel { padding: 16px !important; margin-bottom: 1rem; }
+.cta-datos { display: flex; flex-wrap: wrap; gap: 10px; }
+.cta-dato { flex: 1 1 140px; background: var(--campo); border: 1px solid var(--b1); border-radius: 10px; padding: 10px 12px; }
+.cta-dato-etq { font-size: 10.8px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: var(--t2); }
+.cta-dato-val { font-size: 18px; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.cta-acciones { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.cta-nota { font-size: 13px; color: var(--t2); margin-top: 12px; }
+.cta-enlace {
+  background: none; border: 0; padding: 0; color: var(--acento); font: inherit; font-weight: 600; cursor: pointer;
+  text-decoration: underline; text-decoration-style: dotted; text-underline-offset: 2px;
+}
+.cta-libro td { font-variant-numeric: tabular-nums; }
+.cta-volver:focus-visible, .cta-enlace:focus-visible { outline: 2px solid var(--acento); outline-offset: 2px; border-radius: 4px; }
+@media (max-width: 640px) {
+  .cta-volver-fila { margin-top: 0.5rem; }
+  .cta-dato { flex-basis: calc(50% - 5px); }
+  .cta-dato:last-child { display: none; }
+  .cta-acciones > * { flex: 1 1 auto; }
+}
+
+/* Lo que se puede tocar: las cuentas de Caja (con su flecha) y cada apunte de una cuenta */
+body:not(.modo-lectura) .cta-apunte { cursor: pointer; }
+.cta-flecha { color: var(--t2); font-weight: 600; margin-left: 10px; font-size: 1.05em; }
+.cta-fila:hover .cta-flecha { color: var(--acento); }
+@media (max-width: 640px) {
+  #v2-page-cuenta .filtros input[type="search"] { flex: 1 1 100% !important; }
+  #v2-page-cuenta .filtros input[type="date"] { flex: 1 1 0; min-width: 0; }
+}

@@ -974,6 +974,152 @@
   }
 
   const NO_LIQUIDO_COLOR = "#64748b";
+  // ── La página de una cuenta ──────────────────────────────────────────────
+  // Lo que se ve en la app del banco al entrar en una cuenta: su saldo, lo que
+  // ha entrado y salido este mes y sus apuntes con el saldo después de cada
+  // uno, para ir copiando el extracto banco a banco y ver que cuadra. Se abre
+  // desde Caja (v2VerCuenta) y no está en el menú: se vuelve con «‹ Caja».
+  let CUENTA = null;
+  const LIBRO = { q: "", desde: "", hasta: "", limite: PAGINA };
+  // Para meter un nombre de cuenta en un onclick="…" sin que unas comillas lo rompan
+  const argJs = (s) => esc(JSON.stringify(String(s))).replace(/"/g, "&quot;");
+
+  function pageCuenta(m) {
+    const volver = `<div class="v2-wrap cta-volver-fila"><button type="button" class="cta-volver" onclick="v2Tab('caja')">‹ Caja</button></div>`;
+    const cfg = CFG.cuentas().find((c) => c.cuenta === CUENTA);
+    if (!cfg) {
+      return volver + header("Cuenta", "") +
+        `<div class="v2-wrap"><div class="dashboard-panel" style="text-align:center;padding:2.5rem 1.5rem;color:var(--t2);">
+           Esta cuenta ya no existe: puede que la hayas renombrado o borrado en Ajustes.</div></div>`;
+    }
+    const s = (m.saldosCaja || m.saldos || []).find((x) => x.cuenta === CUENTA) ||
+      { saldo: 0, titularidad: 100, liquida: true, colchon: false, propio: 0 };
+    const hijos = (m.saldosCaja || m.saldos || []).filter((x) => x.dentroDe === CUENTA);
+    const enBanco = Math.round((s.saldo + hijos.reduce((t, x) => t + x.saldo, 0)) * 100) / 100;
+    const L = window.SolventoModel.libroCuenta(CURRENT_DOC, CUENTA);
+
+    // Lo de este mes, como en la cabecera de la app del banco
+    const hoy = new Date();
+    const delMes = L.filas.filter((f) => { const d = parseFechaES(f.fecha); return d.getFullYear() === hoy.getFullYear() && d.getMonth() === hoy.getMonth(); });
+    const entra = delMes.reduce((t, f) => t + Math.max(0, f.efecto), 0);
+    const sale = delMes.reduce((t, f) => t + Math.min(0, f.efecto), 0);
+    const mes = hoy.toLocaleDateString("es-ES", { month: "long" });
+    const dato = (etq, valor, color) => `<div class="cta-dato"><div class="cta-dato-etq">${etq}</div><div class="cta-dato-val" style="color:${color};">${valor}</div></div>`;
+
+    const marcas = [
+      !s.liquida ? "no líquida" : (s.colchon ? "colchón" : ""),
+      s.titularidad < 100 ? `${s.titularidad} % tuya · ${fmtEur(s.propio)} en tu patrimonio` : "",
+    ].filter(Boolean);
+    const apartados = hijos.length
+      ? `<div class="cta-nota">En el banco ${esc(fmtEur(enBanco))}: ${esc(fmtEur(s.saldo))} ${s.colchon ? "de colchón" : "sin apartar"} (el saldo de esta lista) y ${hijos.map((h) =>
+          `<button type="button" class="cta-enlace" onclick="v2VerCuenta(${argJs(h.cuenta)})">${esc(h.cuenta)} ${esc(fmtEur(h.saldo))}</button>`).join(", ")}.</div>`
+      : (cfg.dentro_de ? `<div class="cta-nota">Apartado dentro de <button type="button" class="cta-enlace" onclick="v2VerCuenta(${argJs(cfg.dentro_de)})">${esc(cfg.dentro_de)}</button>.</div>` : "");
+
+    return volver +
+      `<div class="header-block cta-cabecera">
+         <h2 class="section-title cta-titulo">${iconoCuenta(cfg, 30)}<span>${esc(CUENTA)}</span></h2>
+         <div class="section-subtitle">${fmtEur(hijos.length ? enBanco : s.saldo)}</div>
+         ${marcas.length ? `<div class="cta-marcas">${marcas.map((x) => `<span>${esc(x)}</span>`).join("")}</div>` : ""}
+       </div>` +
+      `<div class="v2-wrap"><div class="dashboard-panel cta-panel">
+         <div class="cta-datos">
+           ${dato("Entra en " + mes, "+" + fmtEur(entra), GREEN)}
+           ${dato("Sale en " + mes, "−" + fmtEur(Math.abs(sale)), "var(--t0)")}
+           ${dato("Apuntes", String(L.filas.length), "var(--t0)")}
+         </div>
+         <div class="cta-acciones">
+           ${addBtn("＋ Movimiento", "v2CuentaMov()")}
+           ${addBtn("＋ Extracto del banco", "v2CuentaExtracto()")}
+           <button class="solo-editor" onclick="v2Cuadrar(${argJs(CUENTA)},${hijos.length ? enBanco : s.saldo})" title="Cuadrar con el saldo real del banco"
+             style="background:none;border:1px solid var(--b2);border-radius:8px;color:var(--t1b);font-size:0.8rem;font-weight:600;padding:0.4rem 0.75rem;cursor:pointer;font-family:inherit;white-space:nowrap;">⚖️ Cuadrar</button>
+         </div>
+         ${apartados}
+       </div></div>` +
+      `<div class="v2-wrap" style="padding-bottom:2rem;"><div class="table-container">
+         <div class="filtros" style="display:flex;flex-wrap:wrap;gap:0.5rem;align-items:center;margin-bottom:0.25rem;">
+           <input id="v2-cta-q" type="search" value="${esc(LIBRO.q)}" placeholder="Buscar en ${esc(CUENTA)}…" aria-label="Buscar en los movimientos de esta cuenta"
+                  oninput="v2CuentaFiltro()" style="${estiloFiltro}flex:1;min-width:190px;">
+           <input id="v2-cta-desde" type="date" value="${esc(LIBRO.desde)}" onchange="v2CuentaFiltro()" title="Desde" aria-label="Desde" style="${estiloFiltro}">
+           <input id="v2-cta-hasta" type="date" value="${esc(LIBRO.hasta)}" onchange="v2CuentaFiltro()" title="Hasta" aria-label="Hasta" style="${estiloFiltro}">
+         </div>
+         <div id="v2-cta-lista">${libroTabla(L)}</div>
+       </div></div>`;
+  }
+
+  // Las filas del libro, de la más reciente a la más antigua. El filtro solo
+  // esconde filas: el saldo de cada una es el de verdad, se vea lo que se vea.
+  function libroTabla(L) {
+    const esLiquidacion = liquidaciones();
+    const pendiente = window.SolventoModel.esPendiente;
+    const filas = L.filas.slice().reverse().filter((f) => {
+      if (!enRango(f.fecha, LIBRO.desde, LIBRO.hasta)) return false;
+      const r = f.item;
+      return !LIBRO.q || contiene([r.detalle, r.tipo_gasto, r.tipo_ingreso, r.persona_prestamo, r.cuenta_origen,
+        r.cuenta_destino, r.nombre, r.isin, r.importe, r.coste, r.fecha].join(" "), LIBRO.q);
+    });
+    const visibles = filas.slice(0, LIBRO.limite);
+    const hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    const rotuloDia = (fch) => {
+      const d = parseFechaES(fch), dias = Math.round((hoy - d) / 864e5);
+      if (dias === 0) return "Hoy";
+      if (dias === 1) return "Ayer";
+      const t = d.toLocaleDateString("es-ES", { weekday: "long", day: "numeric", month: "long",
+        year: d.getFullYear() === hoy.getFullYear() ? undefined : "numeric" });
+      return t.charAt(0).toUpperCase() + t.slice(1);
+    };
+    let diaAnterior = null;
+    const rows = visibles.map((f) => {
+      const r = f.item;
+      const cabDia = f.fecha !== diaAnterior ? `<tr class="m-dia"><td colspan="5">${esc(rotuloDia(f.fecha))}</td></tr>` : "";
+      diaAnterior = f.fecha;
+      let det, sub, color, acciones, abrir, aviso = "";
+      if (f.clase === "op") {
+        const venta = f.efecto > 0;
+        det = esc(r.nombre || r.isin || "Inversión");
+        sub = (venta ? "Venta" : "Compra") + (r.isin ? " · " + esc(r.isin) : "");
+        color = "var(--t1b)";
+        acciones = rowActions(`v2EditInv('${r.id}')`, `v2DelInv('${r.id}')`);
+        abrir = `v2EditInv('${r.id}')`;
+      } else {
+        const liq = esLiquidacion(r);
+        det = esc(r.detalle || r.tipo_gasto || r.tipo_ingreso || r.tipo || "—");
+        const otra = f.efecto < 0 ? r.cuenta_destino : r.cuenta_origen;
+        const partes = [];
+        if (r.tipo === "Traspaso") partes.push(liq ? "Pago de " + esc(r.cuenta_destino) : (f.efecto < 0 ? "→ " : "← ") + esc(otra || "—"));
+        else if (r.tipo === "Préstamo") partes.push(esc((r.tipo_prestamo || "Préstamo") + (r.persona_prestamo ? " · " + r.persona_prestamo : "")));
+        const cat = r.tipo_gasto || r.tipo_ingreso;
+        if (cat && cat !== r.detalle) partes.push(esc(cat));
+        sub = partes.join(" · ");
+        color = liq ? AZUL : (r.tipo === "Ingreso" ? GREEN : (r.tipo === "Gasto" ? RED : "var(--t1b)"));
+        if (pendiente && pendiente(r)) aviso = ` <span title="Sin categoría o pendiente de identificar" style="color:var(--ambar);font-size:0.75rem;font-weight:700;">⚠</span>`;
+        acciones = rowActions(`v2EditMov('${r.id}')`, `v2DelMov('${r.id}')`);
+        abrir = `v2EditMov('${r.id}')`;
+      }
+      const signo = f.efecto > 0 ? "+" : (f.efecto < 0 ? "−" : "");
+      return cabDia + `<tr class="table-row cta-apunte" onclick="${abrir}" title="Abrir para cambiarlo">
+        <td class="m-oculta" style="text-align:left;color:var(--t1b);font-size:0.82rem;white-space:nowrap;">${esc(f.fecha)}</td>
+        <td class="m-cab" style="text-align:left;"><span class="m-nombre" style="color:var(--t1);">${det}</span>${aviso}
+          ${sub ? `<div class="m-sub" style="color:var(--t2);font-size:0.74rem;">${sub}</div>` : ""}</td>
+        <td style="text-align:right;color:${color};font-weight:600;white-space:nowrap;">${signo}${fmtEur(Math.abs(f.efecto))}</td>
+        <td class="m-mini" title="Saldo después de este apunte" style="text-align:right;white-space:nowrap;font-size:0.8rem;color:${f.saldo < -0.005 ? RED : "var(--t2)"};">${fmtEur(f.saldo)}</td>
+        ${acciones}</tr>`;
+    }).join("");
+    const quedan = filas.length - visibles.length;
+    const vacio = L.filas.length
+      ? "Ningún apunte coincide con la búsqueda"
+      : "Aún no hay movimientos en esta cuenta. Añade el primero o trae el extracto del banco.";
+    return `<div style="font-size:0.78rem;color:var(--t2);margin:0.6rem 0 0.4rem;">
+        ${filas.length}${filas.length !== L.filas.length ? " de " + L.filas.length : ""} ${filas.length === 1 ? "apunte" : "apuntes"}</div>
+      <table class="minimal-table m-lista m-movs cta-libro">
+        <thead><tr><th style="text-align:left;">Fecha</th><th style="text-align:left;">Concepto</th><th style="text-align:right;">Importe</th><th style="text-align:right;">Saldo</th><th></th></tr></thead>
+        <tbody>${rows || `<tr><td colspan="5" style="color:var(--t2);padding:1rem;">${vacio}</td></tr>`}</tbody></table>
+      ${quedan > 0 ? `<div style="text-align:center;margin-top:0.75rem;">${addBtn("Ver " + Math.min(quedan, PAGINA) + " más (quedan " + quedan + ")", "v2CuentaMas()")}</div>` : ""}`;
+  }
+  function pintarLibro() {
+    const l = document.getElementById("v2-cta-lista");
+    if (l && CUENTA) l.innerHTML = libroTabla(window.SolventoModel.libroCuenta(CURRENT_DOC, CUENTA));
+  }
+
   // La caja por uso: el colchón contra su objetivo, el resto de lo disponible
   // y lo que es tuyo pero no se puede tocar. Suman lo mismo que «Tuyo»: es
   // otra forma de leer la misma caja.
@@ -1029,7 +1175,7 @@
       const deudas = ((m.pas && m.pas.items) || []).filter((d) => d.cuenta === s.cuenta && d.importe >= 0);
       const colgando = deudas.length
         ? `<div style="font-size:0.74rem;color:var(--t2);margin-top:0.2rem;padding-left:1.55rem;">
-             pasivos → <button onclick="v2Tab('pasivos')" title="Ver en Pasivos"
+             pasivos → <button onclick="event.stopPropagation();v2Tab('pasivos')" title="Ver en Pasivos"
                style="background:none;border:none;padding:0;color:var(--t1b);font-family:inherit;font-size:inherit;cursor:pointer;text-decoration:underline dotted;">
                ${deudas.length} ${deudas.length === 1 ? "deuda" : "deudas"}</button>
              · <span style="color:var(--rojo);font-weight:600;">−${esc(fmtEur(deudas.reduce((t, d) => t + d.importe, 0)).replace("-", ""))}</span></div>`
@@ -1045,10 +1191,10 @@
         ? `<span style="font-size:0.66rem;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:0.08rem 0.4rem;border-radius:999px;
              border:1px solid ${s.liquida ? "color-mix(in srgb, " + GREEN + " 45%, transparent)" : "var(--b3)"};color:${s.liquida ? GREEN : "var(--t2)"};white-space:nowrap;">${marca}</span>`
         : "";
-      const nombre = `<button onclick="v2VerCuenta('${cuentaJs}')" title="Ver los movimientos de ${esc(s.cuenta)}" style="background:none;border:none;padding:0;color:${hijo ? "var(--t1)" : "var(--t0)"};font-weight:600;font-family:inherit;font-size:inherit;cursor:pointer;text-align:left;">${esc(s.cuenta)}</button>`;
+      const nombre = `<button onclick="event.stopPropagation();v2VerCuenta(${argJs(s.cuenta)})" title="Abrir ${esc(s.cuenta)}: sus movimientos y su saldo" style="background:none;border:none;padding:0;color:${hijo ? "var(--t1)" : "var(--t0)"};font-weight:600;font-family:inherit;font-size:inherit;cursor:pointer;text-align:left;">${esc(s.cuenta)}</button>`;
       // Un apartado se cuadra desde su cuenta: el banco no lo ve por separado.
-      const cuadrar = hijo ? "" : `<button class="solo-editor fila-acc" onclick="v2Cuadrar('${cuentaJs}',${total})" title="Cuadrar con el saldo real del banco${hijos.length ? " (cuenta y apartados juntos)" : ""}" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:0.9rem;padding:0.2rem 0.4rem;">⚖️</button>`;
-      return `<tr class="table-row" onmouseenter="v2Reparto('caja','${cuentaJs}',true)" onmouseleave="v2Reparto('caja',null)"><td style="text-align:left;${hijo ? "padding-left:1.6rem;" : ""}"><div style="display:flex;align-items:center;gap:0.6rem;">${hijo ? `<span style="color:var(--t3);">↳</span>` : ""}<span style="width:9px;height:9px;border-radius:50%;background:${s.accent};flex-shrink:0;"></span>${icon}${nombre}${etiqueta}</div>${resto}${propio(s)}${colgando}</td><td style="text-align:right;color:${hijo ? "var(--t1)" : "var(--t0)"};font-weight:600;white-space:nowrap;">${fmtEur(total)}</td><td class="col-secundaria" style="text-align:right;color:var(--t1b);">${(m.patrimonioLiquido ? total / m.patrimonioLiquido * 100 : 0).toFixed(2)}%</td><td class="td-acc" style="text-align:right;width:1%;">${cuadrar}</td></tr>` +
+      const cuadrar = hijo ? "" : `<button class="solo-editor fila-acc" onclick="event.stopPropagation();v2Cuadrar('${cuentaJs}',${total})" title="Cuadrar con el saldo real del banco${hijos.length ? " (cuenta y apartados juntos)" : ""}" style="background:none;border:none;color:var(--t2);cursor:pointer;font-size:0.9rem;padding:0.2rem 0.4rem;">⚖️</button>`;
+      return `<tr class="table-row cta-fila" onclick="v2VerCuenta(${argJs(s.cuenta)})" onmouseenter="v2Reparto('caja','${cuentaJs}',true)" onmouseleave="v2Reparto('caja',null)"><td style="text-align:left;${hijo ? "padding-left:1.6rem;" : ""}"><div style="display:flex;align-items:center;gap:0.6rem;">${hijo ? `<span style="color:var(--t3);">↳</span>` : ""}<span style="width:9px;height:9px;border-radius:50%;background:${s.accent};flex-shrink:0;"></span>${icon}${nombre}${etiqueta}</div>${resto}${propio(s)}${colgando}</td><td style="text-align:right;color:${hijo ? "var(--t1)" : "var(--t0)"};font-weight:600;white-space:nowrap;">${fmtEur(total)}<span class="cta-flecha" aria-hidden="true">›</span></td><td class="col-secundaria" style="text-align:right;color:var(--t1b);">${(m.patrimonioLiquido ? total / m.patrimonioLiquido * 100 : 0).toFixed(2)}%</td><td class="td-acc" style="text-align:right;width:1%;">${cuadrar}</td></tr>` +
         hijos.map((h) => fila(h, true)).join("");
     };
     const arriba = cuentas.filter((s) => !s.dentroDe).sort((a, b) => enBanco(b) - enBanco(a));
@@ -2579,10 +2725,12 @@
   document.addEventListener("keydown", (ev) => { if (ev.key === "Escape") cerrarUserMenu(); });
 
   // ── Navegación ──
-  function showPage(id) {
+  function showPage(idPagina) {
     document.querySelectorAll("#app .page").forEach((p) => p.classList.remove("active"));
-    const pg = document.getElementById("v2-page-" + id);
+    const pg = document.getElementById("v2-page-" + idPagina);
     if (pg) pg.classList.add("active");
+    // La página de una cuenta no está en el menú: cuenta como Caja, de donde se abre
+    const id = idPagina === "cuenta" ? "caja" : idPagina;
     document.querySelectorAll(".sn-item").forEach((b) => b.classList.toggle("active", b.dataset.page === id));
     // En la barra del móvil, la entrada de un grupo (Activos) se marca cuando
     // se está en cualquiera de sus páginas.
@@ -2853,6 +3001,8 @@
     catch (e) { window.__GASTOS = null; }
     document.getElementById("v2-page-patrimonio").innerHTML = pagePatrimonio(m);
     document.getElementById("v2-page-caja").innerHTML = pageCaja(m);
+    const pgCuenta = document.getElementById("v2-page-cuenta");
+    if (pgCuenta) pgCuenta.innerHTML = CUENTA ? pageCuenta(m) : "";
     document.getElementById("v2-page-balance").innerHTML = pageBalance(m);
     document.getElementById("v2-page-cartera").innerHTML = pageCartera(m, prices);
     document.getElementById("v2-page-propiedades").innerHTML = pagePropiedades(m);
@@ -2948,14 +3098,23 @@
     Object.assign(OPS, { q: "", tipo: "", desde: "", hasta: "", limite: 40 });
     render(CURRENT_DOC, window.__PRICES);
   };
-  // Clic en una cuenta de Caja: ver solo sus movimientos
+  // Clic en una cuenta de Caja: su página, con solo sus movimientos
   window.v2VerCuenta = (cuenta) => {
-    Object.assign(MOV, { q: "", tipo: "", cuenta, cat: "", desde: "", hasta: "", limite: PAGINA });
-    render(CURRENT_DOC, window.__PRICES);
-    showPage("caja");
-    const l = document.getElementById("v2-mov-lista");
-    if (l) l.scrollIntoView({ behavior: "smooth", block: "center" });
+    if (CUENTA !== cuenta) Object.assign(LIBRO, { q: "", desde: "", hasta: "", limite: PAGINA });
+    CUENTA = cuenta;
+    const pg = document.getElementById("v2-page-cuenta");
+    if (pg && window.__MODEL) pg.innerHTML = pageCuenta(window.__MODEL);
+    showPage("cuenta");
   };
+  window.v2CuentaFiltro = () => {
+    LIBRO.q = valDe("v2-cta-q"); LIBRO.desde = valDe("v2-cta-desde"); LIBRO.hasta = valDe("v2-cta-hasta");
+    LIBRO.limite = PAGINA;
+    pintarLibro();
+  };
+  window.v2CuentaMas = () => { LIBRO.limite += PAGINA; pintarLibro(); };
+  // Lo nuevo, ya con la cuenta puesta: de ella sale un gasto y a ella llega un ingreso
+  window.v2CuentaMov = () => F() && CUENTA && F().openMovimiento({ cuenta_origen: CUENTA, cuenta_destino: CUENTA });
+  window.v2CuentaExtracto = () => window.v2ImportarExtracto && window.v2ImportarExtracto(CUENTA);
 
   // Acciones de formularios (globales para onclick)
   const F = () => window.SolventoForms;
