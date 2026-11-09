@@ -37,6 +37,7 @@
     { "usuario": "nhara", "nombre": "Nhara", "tipo": "persona", "apps": [] },
     { "usuario": "lauracoloradopedrero", "nombre": "Laura Colorado Pedrero", "tipo": "persona", "apps": [] },
     { "usuario": "raquelgonzalezalgaba", "nombre": "Raquel González Algaba", "tipo": "persona", "apps": [] },
+    { "usuario": "peleleman", "nombre": "Mario", "tipo": "persona", "apps": ["solvento"] },
     { "usuario": "admin", "nombre": "Admin", "tipo": "admin", "apps": [] }
   ]
 }
