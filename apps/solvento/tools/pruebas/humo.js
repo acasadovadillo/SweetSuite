@@ -699,6 +699,41 @@ comprobar("la rentabilidad pura de la cartera no depende de cuándo se aporta",
   pura && pura.puntos.slice(0, 3).map(function (p) { return p[1]; }).join(" · ") + " … " + ultimo(pura));
 window.SolventoConfig.usarDoc(doc);
 
+// La página de una cuenta enseña el saldo después de cada apunte. Ese saldo
+// tiene que acabar siempre en el de Caja: si no, al copiar el extracto del
+// banco la cuenta parecería descuadrada sin estarlo.
+print("\nLa página de una cuenta\n");
+window.SolventoConfig.usarDoc(doc);
+var saldosEj = M.computeSaldos(doc.movimientos, doc.inversiones).saldos;
+var descuadres = saldosEj.filter(function (s) { return !cerca(M.libroCuenta(doc, s.cuenta).saldo, s.saldo); });
+comprobar("en los datos de ejemplo, el libro de cada cuenta acaba en su saldo de Caja",
+  saldosEj.length > 0 && descuadres.length === 0, descuadres.map(function (s) { return s.cuenta + " " + s.saldo + " ≠ " + M.libroCuenta(doc, s.cuenta).saldo; }).join("; "));
+var docLibro = {
+  movimientos: [
+    { id: "a", fecha: "03/02/2026", tipo: "Gasto", importe: "40", cuenta_origen: "Banco A", tipo_gasto: "Super" },
+    { id: "b", fecha: "01/02/2026", tipo: "Ingreso", importe: "1000", cuenta_destino: "Banco A", tipo_ingreso: "Nómina" },
+    { id: "c", fecha: "03/02/2026", tipo: "Traspaso", importe: "200", cuenta_origen: "Banco A", cuenta_destino: "Bróker" },
+    { id: "d", fecha: "04/02/2026", tipo: "Préstamo", tipo_prestamo: "Dinero prestado", importe: "50", cuenta_origen: "Banco A", persona_prestamo: "Ana" },
+    { id: "e", fecha: "05/02/2026", tipo: "Préstamo", tipo_prestamo: "Incobrable", importe: "50", persona_prestamo: "Ana" },
+    { id: "f", fecha: "06/02/2026", tipo: "Gasto", importe: "99", cuenta_origen: "Bróker", tipo_gasto: "Inversiones" }],
+  inversiones: [
+    { id: "i1", fecha: "05/02/2026", tipo_movimiento: "Compra", nombre: "Fondo", coste: "150", unidades: "1", cuenta: "Bróker" },
+    { id: "i2", fecha: "07/02/2026", tipo_movimiento: "Venta", nombre: "Fondo", coste: "-30", unidades: "-0.2", cuenta: "Bróker" },
+    { id: "i3", fecha: "08/02/2026", tipo_movimiento: "Traspaso", nombre: "Fondo", coste: "500", cuenta: "Bróker" }],
+  config: { cuentas: [{ cuenta: "Banco A" }, { cuenta: "Bróker" }] } };
+window.SolventoConfig.usarDoc(docLibro);
+var la = M.libroCuenta(docLibro, "Banco A"), lb = M.libroCuenta(docLibro, "Bróker");
+var sl = M.computeSaldos(docLibro.movimientos, docLibro.inversiones).saldos;
+var deCaja = function (n) { return sl.filter(function (s) { return s.cuenta === n; })[0].saldo; };
+comprobar("una cuenta: por fechas, con el saldo tras cada apunte, y en un mismo día en el orden de alta",
+  la.filas.map(function (f) { return f.item.id + ":" + f.saldo; }).join(" ") === "b:1000 a:960 c:760 d:710" && cerca(la.saldo, deCaja("Banco A")),
+  la.filas.map(function (f) { return f.item.id + ":" + f.saldo; }).join(" "));
+comprobar("un bróker: el traspaso que entra, las compras y ventas pagadas con él, y nada de lo que no mueve su dinero",
+  lb.filas.map(function (f) { return f.item.id + ":" + f.efecto; }).join(" ") === "c:200 i1:-150 i2:30" && cerca(lb.saldo, 80) && cerca(lb.saldo, deCaja("Bróker")),
+  lb.filas.map(function (f) { return f.item.id + ":" + f.efecto; }).join(" ") + " = " + lb.saldo);
+comprobar("una cuenta que no existe tiene el libro vacío", M.libroCuenta(docLibro, "Ninguna").filas.length === 0);
+window.SolventoConfig.usarDoc(doc);
+
 print("");
 if (fallos.length) { print(fallos.length + " comprobación(es) fallidas"); salir(1); }
 print("todo en orden");

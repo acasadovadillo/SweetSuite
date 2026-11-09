@@ -93,31 +93,45 @@
     return tit && tit[cuenta] != null ? tit[cuenta] : 1;
   }
 
+  // Qué hace un movimiento al saldo de cada cuenta que toca: una lista de
+  // [cuenta, cambio]. Es la única regla: de ella salen los saldos de Caja y el
+  // saldo tras cada apunte en la página de una cuenta, que así no pueden
+  // dejar de cuadrar entre sí.
+  function efectosMovimiento(m) {
+    if (esMovInversion(m)) return []; // el efectivo lo mueve la operación, no este apunte
+    const imp = num(m.importe) || 0;
+    const o = String(m.cuenta_origen || "").trim();
+    const d = String(m.cuenta_destino || "").trim();
+    switch (m.tipo) {
+      case "Ingreso":  return [[d, imp]];
+      case "Gasto":    return [[o, -imp]];
+      case "Traspaso": return [[o, -imp], [d, imp]];
+      case "Préstamo":
+        if (m.tipo_prestamo === "Dinero prestado") return [[o, -imp]];
+        if (m.tipo_prestamo === "Devolución") return [[d, imp]];
+        return [];
+      default: return [];
+    }
+  }
+  // Lo mismo para una operación de inversión: una compra resta su coste de la
+  // cuenta y una venta (coste negativo) lo suma. Un traspaso entre fondos o una
+  // herencia no tocan ninguna cuenta.
+  function efectoOperacion(r) {
+    if (SIN_EFECTIVO.has(r.tipo_movimiento || "Compra")) return null;
+    const coste = num(r.coste);
+    return isFinite(coste) ? [String(r.cuenta || "").trim(), -coste] : null;
+  }
+
   function computeSaldos(movimientos, inversiones) {
     const bal = {};
     CFG.cuentas().forEach((c) => (bal[c.cuenta] = 0));
     const isC = (c) => c && c !== "-" && (c in bal);
     for (const m of movimientos || []) {
-      if (esMovInversion(m)) continue; // el efectivo lo mueve la operación, no este apunte
-      const imp = num(m.importe) || 0;
-      const o = String(m.cuenta_origen || "").trim();
-      const d = String(m.cuenta_destino || "").trim();
-      switch (m.tipo) {
-        case "Ingreso":  if (isC(d)) bal[d] += imp; break;
-        case "Gasto":    if (isC(o)) bal[o] -= imp; break;
-        case "Traspaso": if (isC(o)) bal[o] -= imp; if (isC(d)) bal[d] += imp; break;
-        case "Préstamo":
-          if (m.tipo_prestamo === "Dinero prestado" && isC(o)) bal[o] -= imp;
-          else if (m.tipo_prestamo === "Devolución" && isC(d)) bal[d] += imp;
-          break;
-      }
+      for (const [c, v] of efectosMovimiento(m)) if (isC(c)) bal[c] += v;
     }
-    // Efecto en efectivo de las operaciones de inversión (Compra/Venta).
     for (const r of inversiones || []) {
-      if (SIN_EFECTIVO.has(r.tipo_movimiento || "Compra")) continue;
-      const coste = num(r.coste);
-      const cuenta = String(r.cuenta || "").trim();
-      if (isFinite(coste) && isC(cuenta)) bal[cuenta] -= coste; // Compra(+coste)→resta, Venta(−coste)→suma
+      const e = efectoOperacion(r);
+      if (e && isC(e[0])) bal[e[0]] += e[1];
     }
     const tit = titularidades();
     const nombres = new Set(CFG.cuentas().map((c) => c.cuenta));
@@ -1982,5 +1996,37 @@
     return { caja, cartera, patrimonio };
   }
 
-  window.SolventoModel = { build, buildSeries, rentabilidadBien, xirr, buildAnalitica, buildGastos, resumenCentros, pendientes, esPendiente, computeSaldos, resumenPrestamos, revision, arreglarTexto, textosMalCodificados, cobrosPendientes, porCobrar, planMensual, seguimientoPlan, tarjetas, tarjetaDeLiquidacion, cicloTarjeta, revisarLiquidacion, fechaEnTarjeta, signoOperacion, presupuestoAnual, aniosConDatos, flujoMensual, partirCategoria, rutaCategoria, agruparCategorias, arbolCategorias, arbolCentros, repartoRegla, clasificarCategoria, REGLA_DEFECTO, _internals: { computeSaldos, valuate, valuatePropiedades, parseFechaES, round2 } };
+  // ── El libro de una cuenta ───────────────────────────────────────────────
+  // Lo que ves en la app del banco al entrar en una cuenta: sus apuntes, del
+  // más antiguo al más reciente, con el saldo después de cada uno. Entran los
+  // movimientos que la tocan y las compras y ventas de inversiones pagadas con
+  // ella (en un bróker, es casi todo). El último saldo es el de Caja.
+  // En un mismo día, el orden es el de alta: el banco tampoco dice la hora.
+  function libroCuenta(doc, cuenta) {
+    const nombre = String(cuenta || "").trim();
+    const filas = [];
+    ((doc && doc.movimientos) || []).forEach((m, i) => {
+      const efecto = efectosMovimiento(m).filter(([c]) => c === nombre).reduce((s, [, v]) => s + v, 0);
+      const toca = [m.cuenta_origen, m.cuenta_destino].some((c) => String(c || "").trim() === nombre);
+      // Un apunte que nombra la cuenta pero no mueve su dinero (un traspaso de
+      // una cuenta a sí misma) también sale, con 0: si no, no habría forma de
+      // encontrarlo para arreglarlo. Salvo un gasto en «Inversiones», que es
+      // la compra que ya sale aquí como operación: saldría dos veces.
+      if (esMovInversion(m) || (!toca && !efecto)) return;
+      filas.push({ clase: "mov", item: m, fecha: m.fecha, efecto: round2(efecto), orden: i });
+    });
+    const base = filas.length;
+    ((doc && doc.inversiones) || []).forEach((r, i) => {
+      const e = efectoOperacion(r);
+      if (!e || e[0] !== nombre) return;
+      filas.push({ clase: "op", item: r, fecha: r.fecha, efecto: round2(e[1]), orden: base + i });
+    });
+    const t = (f) => { const d = parseFechaES(f); return d && isFinite(d.getTime()) ? d.getTime() : 0; };
+    filas.sort((a, b) => t(a.fecha) - t(b.fecha) || a.orden - b.orden);
+    let saldo = 0;
+    filas.forEach((f) => { saldo = round2(saldo + f.efecto); f.saldo = saldo; });
+    return { cuenta: nombre, saldo, filas };
+  }
+
+  window.SolventoModel = { build, buildSeries, libroCuenta, efectosMovimiento, rentabilidadBien, xirr, buildAnalitica, buildGastos, resumenCentros, pendientes, esPendiente, computeSaldos, resumenPrestamos, revision, arreglarTexto, textosMalCodificados, cobrosPendientes, porCobrar, planMensual, seguimientoPlan, tarjetas, tarjetaDeLiquidacion, cicloTarjeta, revisarLiquidacion, fechaEnTarjeta, signoOperacion, presupuestoAnual, aniosConDatos, flujoMensual, partirCategoria, rutaCategoria, agruparCategorias, arbolCategorias, arbolCentros, repartoRegla, clasificarCategoria, REGLA_DEFECTO, _internals: { computeSaldos, valuate, valuatePropiedades, parseFechaES, round2 } };
 })();
